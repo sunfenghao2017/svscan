@@ -307,6 +307,7 @@ namespace svutil{
      * @param gqval genotype quality of each alleles at the site
      */
     inline void computeGL(const std::vector<uint8_t>& mapqRef, const std::vector<uint8_t>& mapqAlt, float* gls, int32_t* gts, int32_t* gqval){
+        const double minGL = -1000;
         double gl[3] = {0}; // gl[0] = log10(p(ALT|ReadsObserved)), gl[2] = log10(p(REF|ReadsObserved)), gl[1] = log10(p(RandomALT/REF| ReadsObserved))
         // Compute genotype likelihoods
         int32_t depth = mapqRef.size() + mapqAlt.size();
@@ -321,8 +322,8 @@ namespace svutil{
         gl[1] += -(double)(depth) * std::log10(2.0);// log10(p(Random ALT/REF of each read));
         // Get largest genotype likelihood
         uint32_t glbesti = 0;
-        uint32_t glbestv = gl[glbesti];
-        for(int geno = 0; geno < 3; ++geno){
+        double glbestv = gl[glbesti];
+        for(int geno = 1; geno < 3; ++geno){
             if(gl[geno] > glbestv){
                 glbestv = gl[geno];
                 glbesti = geno;
@@ -331,16 +332,16 @@ namespace svutil{
         // Rescale genotype likelihoods by minus largest likelihood
         for(int geno = 0; geno < 3; ++geno){
             gl[geno] -= glbestv;
-            gl[geno] = std::max(-10000.0, gl[geno]);
+            gl[geno] = (gl[geno] > minGL ) ? gl[geno] : minGL;// cap at minGL
         }
         // Phred-scaled genotype liklihoods
         uint32_t pl[3] = {0};// pl[0] = phredQ of ALT, pl[2] = phredQ of REF, pl[1] = phredQ of REF/ALT
         pl[0] = (uint32_t)std::round(-10 * gl[0]);
         pl[1] = (uint32_t)std::round(-10 * gl[1]);
         pl[2] = (uint32_t)std::round(-10 * gl[2]);
-        if(depth && (pl[0] + pl[1] + pl[2] > 0)){
+        if(depth && (pl[0] + pl[1] + pl[2]) > 0){
             double likelihood = std::log10(1 - 1 / (std::pow(10, gl[0]) + std::pow(10, gl[1]) + std::pow(10, gl[2])));
-            likelihood = std::max(likelihood, -10000.0);
+            likelihood = likelihood > minGL ? likelihood : minGL;
             gqval[0] = std::round(-10 * likelihood);
             if(glbesti == 0){
                 gts[0] = bcf_gt_unphased(1); ///< 110
