@@ -262,7 +262,7 @@ namespace svutil{
      * @return string representation of svt
      */
     inline std::string addOrientation(int svt){
-        if(svt > 5) svt -= 5;
+        if(svt >= 5) svt -= 5;
         switch(svt){
             case 0:
                 return "5to5";
