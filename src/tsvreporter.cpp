@@ -6,7 +6,7 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "Chr1\tBreakpoint1\tGene1\t";
     fw << "Chr2\tBreakpoing2\tGene2\t";
     fw << "SRSupports\tDPSupports\t";
-    fw << "RefCount\tAltCount\tFreq\t";
+    fw << "RefCount\tAltCount\tAltFreq\t";
     fw << "Strand1\tTranscripts1\t";
     fw << "Strand2\tTranscripts2\tSVID\n";
     for(uint32_t i = 0; i < gl.size(); ++i){

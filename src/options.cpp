@@ -10,7 +10,7 @@ Options::Options(){
     msaOpt = new MSAOpt();
     passOpt = new PassOptions();
     softEnv->cmp += "version: " + softEnv->version + "\n";
-    softEnv->cmp += "updated: " + std::string(__TIME__);
+    softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
     libInfo = NULL;
     contigNum = 0;
 }
