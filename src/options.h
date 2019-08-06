@@ -46,7 +46,7 @@ struct LibraryInfo{
         ss << "Maximum ISize cutoff: " << mMaxISizeCutoff << "\n";
         ss << "Abnormal DP read: " << mAbnormalPairs << "\n";
         ss << "Library Haplotype Tagged: " << std::boolalpha << mIsHaploTagged << "\n";
-        ss << "Contig/Chrssome Number: " << mContigNum << "\n";
+        ss << "Contig/Chrosome Number: " << mContigNum << "\n";
         ss << "Maximum Varsize : " << mVarisize;
         return ss.str();
     }
@@ -166,11 +166,12 @@ class Options{
     public:
         std::string bamfile;          ///< bam file used to analysis currently
         std::string genome;           ///< reference genome file input bam used
+        std::string annodb;           ///< annotation feature database file
+        std::string reg;              ///< valid region file to discovery SVs
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output tab seperated values file
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
         RegionList validRegions;      ///< valid regions to discovery SV
-        std::string excludeReg;       ///< excluded regions in bed file
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment

@@ -50,8 +50,8 @@ void SVScanner::scanDPandSR(){
                 if(Stats::firstInPair(b, lastAlignedPosReads)){// First in pair
                     size_t hv = svutil::hashPairCurr(b);
                     lastAlignedPosReads.insert(hv);
-                    if(svt >= 5) matetra[hv] = std::make_pair(b->core.pos, bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b)));
-                    else matemap[hv] = std::make_pair(b->core.pos, bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b)));
+                    if(svt >= 5) matetra[hv] = std::make_pair(b->core.qual, bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b)));
+                    else matemap[hv] = std::make_pair(b->core.qual, bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b)));
                 }else{// Second in pair
                     size_t hv = svutil::hashPairMate(b);
                     int32_t matealn = 0;
@@ -107,13 +107,20 @@ void SVScanner::scanDPandSR(){
     // Get Allele info of SVs
     for(uint32_t i = 0; i < mDPSVs.size(); ++i) mDPSVs[i].addAlleles();
     // Annotate junction reads and spaning coverage
-    util::loginfo("Start annotating SVs");
+    util::loginfo("Start annotating SV coverage");
     Annotator* covAnn = new Annotator(mOpt);
     Stats* covStat = covAnn->covAnnotate(mDPSVs);
-    util::loginfo("Finish annotating SVs");
+    util::loginfo("Finish annotating SV coverage");
     util::loginfo("Start writing SVs to BCF file");
     covStat->reportBCF(mDPSVs);
     util::loginfo("Finish writing SVs to BCF file");
+    util::loginfo("Start annotating SV gene information");
+    GeneInfoList gl;
+    covAnn->geneAnnotate(mDPSVs, gl);
+    util::loginfo("Finish annotating SV gene information");
+    util::loginfo("Start writing SVs to TSV file");
+    covStat->reportTSV(mDPSVs, gl);
+    util::loginfo("Finish writing SVs to TSV file");
     delete covAnn;
     delete covStat;
 }

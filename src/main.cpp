@@ -15,9 +15,10 @@ int main(int argc, char** argv){
     app.get_formatter()->column_width(36);
     app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General");
     app.add_option("-g,--genome", opt->genome, "reference genome")->required(true)->check(CLI::ExistingFile)->group("General");
-    app.add_option("-o,--outfile", opt->bcfOut, "output bcf file", true)->required(false)->group("General");
-    app.add_option("-c,--madcutoff", opt->madCutoff, "isize mad cutoff for Del deletion", true)->group("General");
-    app.add_option("-e,--excreg", opt->excludeReg, "invalid region bed file", true)->check(CLI::ExistingFile)->group("General");
+    app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General");
+    app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General");
+    app.add_option("-o,--bcfout", opt->bcfOut, "output bcf file", true)->required(false)->group("General");
+    app.add_option("-t,--tsvout", opt->tsvOut, "output tsv file", true)->required(false)->group("General");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 20))->group("General");
     CLI_PARSE(app, argc, argv);

@@ -1,7 +1,10 @@
 #ifndef ANNOTATOR_H
 #define ANNOTATOR_H
 
+#include "util.h"
 #include "stats.h"
+#include <htslib/tbx.h>
+#include <htslib/kstring.h>
 
 /** SV breakpoint coverage annotator */
 class Annotator{
@@ -21,6 +24,12 @@ class Annotator{
          * @param svs reference of SVRecords
          */
         Stats* covAnnotate(SVSet& svs);
+
+        /** annotate SV gene information
+         * @param svs reference of SVRecords
+         * @param gl reference of GeneInfoList
+         */
+        void geneAnnotate(SVSet& svs, GeneInfoList& gl);
 
         /** get first overlap of an region against an region set
          * @param s region sets

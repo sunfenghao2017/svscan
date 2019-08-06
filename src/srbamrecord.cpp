@@ -360,9 +360,10 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     svs[svid].mSVRef = "";
                     svs[svid].mSRSupport = 0;
                     svs[svid].mSRAlignQuality = 0;
+                    svs[svid].mSRMapQuality = 0;
                 }else{// SR support and qualities
                     svs[svid].mSRSupport = seqStore[svid].size();
-                    svs[svid].mSRMapQuality = util::median(qualStore[svid]);
+                    svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
                 }
                 delete msa;
             }

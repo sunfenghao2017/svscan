@@ -4,6 +4,7 @@ Options::Options(){
     madCutoff = 9;
     nthread = 8;
     bcfOut = "out.bcf";
+    tsvOut = "out.tsv";
     filterOpt = new SVFilter();
     softEnv = new Software();
     msaOpt = new MSAOpt();
@@ -82,7 +83,7 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
     libInfo->mMinNormalISize = std::max(0, libInfo->mMedian - (5 * libInfo->mMad));
     libInfo->mMinISizeCutoff = std::max(0, libInfo->mMedian - (madCutoff * libInfo->mMad));
     libInfo->mMaxISizeCutoff = std::max(libInfo->mMedian + (madCutoff * libInfo->mMad), 2 * libInfo->mReadLen);
-    libInfo->mMaxISizeCutoff = std::max(libInfo->mMaxISizeCutoff, 500);
+    libInfo->mMaxISizeCutoff = std::max(libInfo->mMaxISizeCutoff, 600);
     libInfo->mContigNum = h->n_targets;
     libInfo->mVarisize = std::max(libInfo->mReadLen, libInfo->mMaxNormalISize);
     sam_close(fp);
@@ -95,27 +96,20 @@ void Options::getValidRegion(){
     samFile* fp = sam_open(bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     validRegions.resize(h->n_targets);
-    // Parse invalid region if exists
-    RegionList invalidRegions;
-    invalidRegions.resize(h->n_targets);
-    if(!excludeReg.empty()){
-        std::ifstream fr(excludeReg);
+    // Parse valid region if exists
+    if(!reg.empty()){
+        std::ifstream fr(reg);
         std::vector<std::string> vstr;
         std::string tmpStr;
         while(std::getline(fr, tmpStr)){
             util::split(tmpStr, vstr, "\t");
             int32_t tid = bam_name2id(h, vstr[0].c_str());
-            invalidRegions[tid].insert({std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str())});
+            validRegions[tid].insert({std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str())});
         }
-    }
-    // Create valid regions
-    for(int32_t i = 0; i < h->n_targets; ++i){
-        int32_t istart = 0;
-        for(auto iter = invalidRegions[i].begin(); iter != invalidRegions[i].end(); ++iter){
-            if(istart < iter->first) validRegions[i].insert({istart, iter->first - 1});
-            istart = iter->second + 1;
+    }else{// Set valid region to whole genome if valid region list does not exists
+        for(int32_t i = 0; i < h->n_targets; ++i){
+            validRegions[i].insert({0, (int32_t)h->target_len[i] - 1});
         }
-        if(istart < (int32_t)h->target_len[i]) validRegions[i].insert({istart, (int32_t)h->target_len[i] - 1});
     }
     // Clean-up
     sam_close(fp);

@@ -152,7 +152,7 @@ int DPBamRecord::getSVType(const bam1_t* b, Options* opt){
     }
     // isize checking for DP on same chr
     if(b->core.mpos == b->core.pos) return -1; // NO SV
-    if(svt == 2 && std::abs(b->core.isize) < opt->filterOpt->mMinInDelSize) return -1; // Too short Del
+    if(svt == 2 && std::abs(b->core.isize) < opt->libInfo->mMaxISizeCutoff) return -1; // Too short Del
     if(svt == 3 && std::abs(b->core.pos - b->core.mpos) < opt->filterOpt->mMinDupSize) return -1; // Too short Dup
     return svt;
 }

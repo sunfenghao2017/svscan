@@ -109,6 +109,7 @@ void Stats::reportBCF(const SVSet& svs){
     int* gqval = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     const char* ftarr = {NULL};
     bcf1_t* rec = bcf_init1();
+    int32_t tmpi = 0;
     for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
         // Prepare Filter field
         int filter = bcf_hdr_id2int(hdr, BCF_DT_ID, "PASS");
@@ -139,7 +140,8 @@ void Stats::reportBCF(const SVSet& svs){
         bcf_update_info_string(hdr, rec, "CHR2", bamhdr->target_name[itsv->mChr2]);
         bcf_update_info_int32(hdr, rec, "END", &itsv->mSVEnd, 1);
         bcf_update_info_int32(hdr, rec, "PE", &itsv->mPESupport, 1);
-        bcf_update_info_int32(hdr, rec, "PEMAPQ", &itsv->mPEMapQuality, 1);
+        tmpi = itsv->mPEMapQuality;
+        bcf_update_info_int32(hdr, rec, "PEMAPQ", &tmpi, 1);
         bcf_update_info_string(hdr, rec, "CT", svutil::addOrientation(itsv->mSVT).c_str());
         int32_t tmpai[2];
         tmpai[0] = itsv->mCiPosLow;
@@ -151,7 +153,8 @@ void Stats::reportBCF(const SVSet& svs){
         // Precise SV specific tags
         if(itsv->mPrecise){
             bcf_update_info_int32(hdr, rec, "SR", &itsv->mSRSupport, 1);
-            bcf_update_info_int32(hdr, rec, "SRMAPQ", &itsv->mSRMapQuality, 1);
+            tmpi = itsv->mSRMapQuality;
+            bcf_update_info_int32(hdr, rec, "SRMAPQ", &tmpi, 1);
             bcf_update_info_float(hdr, rec, "SRALNQ", &itsv->mSRAlignQuality, 1);
             bcf_update_info_int32(hdr, rec, "INSLEN", &itsv->mInsLen, 1);
             bcf_update_info_int32(hdr, rec, "HOMLEN", &itsv->mHomLen, 1);
