@@ -4,7 +4,7 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
     fw << "SVType\tCatType\t";
     fw << "Chr1\tBreakpoint1\tGene1\t";
-    fw << "Chr2\tBreakpoing2\tGene2\t";
+    fw << "Chr2\tBreakpoint2\tGene2\t";
     fw << "SRSupports\tDPSupports\t";
     fw << "RefCount\tAltCount\tAltFreq\t";
     fw << "Strand1\tTranscripts1\t";
