@@ -30,3 +30,6 @@ Installation
 
 3. execute  
 `/path/to/install/dir/sver` 
+
+4. test  
+`/path/to/install/dir/sver -b testdata/test.bam -g /Users/wood/Database/hg19/hg19.fa -a testdata/refGene.Anno.sorted.gz -r testdata/valid.bed -o testdata/sv.bcf -t testdata/sv.tsv` 
