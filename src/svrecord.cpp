@@ -170,9 +170,9 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mGapCoord[3] = ad.mRefEnd;
     // Get probe sequences used for allele fraction computation
     mProbeBegC = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
-    mProbeBegR = mSVRef.substr(std::max(0, ad.mRefStart -opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
+    mProbeBegR = mSVRef.substr(std::max(0, ad.mRefStart -opt->filterOpt->mMinFlankSize), std::min(2 * opt->filterOpt->mMinFlankSize + 1, bp.mSVStartEnd - bp.mSVStartBeg));
     mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
-    mProbeEndR = mSVRef.substr(std::max(0, ad.mRefEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
+    mProbeEndR = mSVRef.substr(std::max(0, ad.mRefEnd - std::min(bp.mSVStartEnd - bp.mSVStartBeg, opt->filterOpt->mMinFlankSize)), 2 * opt->filterOpt->mMinFlankSize + 1);
     // Consensus of SRs and reference aligned successfully
     return true;
 }
