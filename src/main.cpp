@@ -13,14 +13,27 @@ int main(int argc, char** argv){
     Options* opt = new Options();
     CLI::App app("program: " + std::string(argv[0]) + "\n" + opt->softEnv->cmp);
     app.get_formatter()->column_width(36);
-    app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General");
-    app.add_option("-g,--genome", opt->genome, "reference genome")->required(true)->check(CLI::ExistingFile)->group("General");
-    app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General");
-    app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General");
-    app.add_option("-o,--bcfout", opt->bcfOut, "output bcf file", true)->required(false)->group("General");
-    app.add_option("-t,--tsvout", opt->tsvOut, "output tsv file", true)->required(false)->group("General");
-    app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General");
-    app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 20))->group("General");
+    // General Options options
+    app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-g,--genome", opt->genome, "reference genome")->required(true)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-o,--bcfout", opt->bcfOut, "output bcf file", true)->required(false)->group("General Options");
+    app.add_option("-t,--tsvout", opt->tsvOut, "output tsv file", true)->required(false)->group("General Options");
+    app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
+    app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 20))->group("General Options");
+    // Control options
+    app.add_option("--min_ref_sep", opt->filterOpt->mMinRefSep, "min sv length to compute", true)->group("Threshold Options");
+    app.add_option("--max_read_sep", opt->filterOpt->mMaxReadSep, "max read split mapping pos allowed to compute sv", true)->group("Threshold Options");
+    app.add_option("--min_flk_len", opt->filterOpt->mMinFlankSize, "min flank length needed on each side of breakpoint", true)->group("Threshold Options");
+    app.add_option("--min_map_qual", opt->filterOpt->minMapQual, "min mapping quality of read used to compute sv", true)->group("Threshold Options");
+    app.add_option("--min_clip_len", opt->filterOpt->minClipLen, "min clip length needed to compute sv", true)->group("Threshold Options");
+    app.add_option("--min_tra_qual", opt->filterOpt->mMinTraQual, "min mapping quality of read pair used to compute sv", true)->group("Threshold Options");
+    app.add_option("--min_dup_dp", opt->filterOpt->mMinDupSize, "min duplication size needed for an DP to compute sv", true)->group("Threshold Options");
+    app.add_option("--min_inv_rpt", opt->filterOpt->mMinInversionRpt, "min inversion size to report", true)->group("Threshold Options");
+    app.add_option("--min_del_rpt", opt->filterOpt->mMinDeletionRpt, "min deletion size to report", true)->group("Threshold Options");
+    app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
+    // parse arguments
     CLI_PARSE(app, argc, argv);
     // validate arguments
     util::loginfo("Command line arguments parsed");

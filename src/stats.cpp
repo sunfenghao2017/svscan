@@ -340,7 +340,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     // Compute read counts
     int32_t lastID = svs.size();
     for(uint32_t id = 0; id < svs.size(); ++id){
-        if(svs[id].mSize <= mOpt->filterOpt->mMinInDelSize){
+        if(svs[id].mSize <= mOpt->libInfo->mMaxNormalISize){
             mReadCnts[id].mRC = mCovCnts[id].first;
             mReadCnts[id].mLeftRC = mCovCnts[id + lastID].first;
             mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].first;

@@ -33,7 +33,7 @@ bool SVRecord::coordTransform(TBreakPoint& bp, AlignDescriptor& ad, int32_t& fin
     }
     if(mSVT == 4){// insertion
         finalGapStart = bp.mSVStartBeg + ad.mRefStart;
-        finalGapEnd = bp.mSVStartEnd + ad.mRefEnd;
+        finalGapEnd = bp.mSVStartBeg + ad.mRefStart;
         return true;
     }
     return false;
@@ -173,6 +173,8 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mProbeBegR = mSVRef.substr(std::max(0, ad.mRefStart -opt->filterOpt->mMinFlankSize), std::min(2 * opt->filterOpt->mMinFlankSize + 1, bp.mSVStartEnd - bp.mSVStartBeg));
     mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
     mProbeEndR = mSVRef.substr(std::max(0, ad.mRefEnd - std::min(bp.mSVStartEnd - bp.mSVStartBeg, opt->filterOpt->mMinFlankSize)), 2 * opt->filterOpt->mMinFlankSize + 1);
+    // Get inserted sequence if it's an insertion event
+    if(mSVT == 4) mInsSeq = mConsensus.substr(ad.mCSStart, ad.mCSEnd - ad.mCSStart - 1);
     // Consensus of SRs and reference aligned successfully
     return true;
 }

@@ -2,22 +2,40 @@
 
 void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
-    fw << "SVType\tCatType\t";
-    fw << "Chr1\tBreakpoint1\tGene1\t";
-    fw << "Chr2\tBreakpoint2\tGene2\t";
-    fw << "SRSupports\tDPSupports\t";
-    fw << "RefCount\tAltCount\tAltFreq\t";
-    fw << "Strand1\tTranscripts1\t";
-    fw << "Strand2\tTranscripts2\tSVID\n";
+    fw << "svType\tsvSize\tbpMark\t";
+    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";
+    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";
+    fw << "srCount\tdpCount\t";
+    fw << "refCount\tAF\t";
+    fw << "bp1Trs\tbp2Trs\tsvSeq\tsvID\n";
     for(uint32_t i = 0; i < gl.size(); ++i){
-        fw << svutil::addID(gl[i].mSVT) << "\t" << svutil::addOrientation(gl[i].mSVT) << "\t";
-        fw << gl[i].mChr1 << "\t" << gl[i].mPos1 << "\t" << gl[i].mGene1 << "\t";
-        fw << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t" << gl[i].mGene2 << "\t";
-        fw << mJctCnts[i].mAltQual.size() << "\t" << mSpnCnts[i].mAltQual.size() << "\t";
-        fw << mJctCnts[i].mRefQual.size() + mSpnCnts[i].mRefQual.size() << "\t" << mJctCnts[i].mAltQual.size() + mSpnCnts[i].mAltQual.size() << "\t";
-        fw << (double)(mJctCnts[i].mAltQual.size() + mSpnCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mSpnCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size() + mSpnCnts[i].mAltQual.size());
-        fw << util::join(gl[i].mStrand1, ",") << "\t" << util::join(gl[i].mTrans1, ",") << "\t";
-        fw << util::join(gl[i].mStrand2, ",") << "\t" << util::join(gl[i].mTrans2, ",") << "\t";
+        // svType
+        fw << svutil::addID(svs[i].mSVT) << "\t";
+        // svSize
+        if(svs[i].mSVT >= 5) fw << "-" << "\t";
+        else if(svs[i].mSVT == 4) fw << svs[i].mInsSeq.size() << "\t";
+        else fw << svs[i].mSize << "\t";
+        // bpMark
+        fw << svutil::getBpMark(svs[i].mSVT) << "\t";
+        // bp1Chr bp1Pos bp1Gene
+        fw << svs[i].mChr1 << "\t" << svs[i].mSVStart << "\t" << gl[i].mGene1 << "\t";
+        // bp2Chr bp2Pos bp2Gene
+        fw << svs[i].mChr2 << "\t" << svs[i].mSVEnd << "\t" << gl[i].mGene2 << "\t";
+        // srCount dpCount
+        fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t";
+        // refCount AF
+        if(svs[i].mPrecise){
+            fw << mRefAlignedReadCount[svs[i].mID] << "\t" << (double)svs[i].mSRSupport/(double)(svs[i].mSRSupport + mRefAlignedReadCount[svs[i].mID]) << "\t";
+        }else{
+            fw << mRefAlignedSpanCount[svs[i].mID] << "\t" << (double)svs[i].mPESupport/(double)(svs[i].mPESupport + mRefAlignedSpanCount[svs[i].mID]) << "\t";
+        }
+        // bp1Trs bp2Trs svID
+        fw << util::join(gl[i].mTrans1, ",") << "\t";
+        fw << util::join(gl[i].mTrans2, ",") << "\t";
+        // svSeq
+        if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t";
+        else fw << "-" << "\t";
+        // svID
         fw << svs[i].mID << "\n";
     }
     fw.close();

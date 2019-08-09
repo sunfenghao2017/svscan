@@ -1,12 +1,17 @@
 #include "breakpoint.h"
 
 void BreakPoint::init(int32_t largeChrLen, int32_t smallChrLen){
-    if(mSVT >= 4){// insetion and translocation
+    if(mSVT > 4){// translocation
         mSVStartBeg = std::max(0, mSVStart - mBoundary);
         mSVStartEnd = std::min(largeChrLen, mSVStart + mBoundary);
         mSVEndBeg = std::max(0, mSVEnd - mBoundary);
         mSVEndEnd = std::min(smallChrLen, mSVEnd + mBoundary);
-    }else{
+    }else if(mSVT == 4){
+        mSVStartBeg = std::max(0, mSVStart - mBoundary);
+        mSVStartEnd = std::min(largeChrLen, mSVStart + mBoundary);
+        mSVEndBeg = mSVStartEnd;
+        mSVEndEnd = std::min(smallChrLen, mSVEnd + mBoundary);
+    }else if( mSVT < 4){
         mSVStartBeg = std::max(0, mSVStart - mBoundary);
         mSVStartEnd = std::min(mSVStart + mBoundary, (mSVStart + mSVEnd)/2);
         mSVEndBeg = std::max(mSVEnd - mBoundary, (mSVStart + mSVEnd)/2 + 1);

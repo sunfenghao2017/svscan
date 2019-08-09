@@ -7,7 +7,18 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     int32_t rst = -1;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){
         // Skip split read which has only one part mapped
-        if(iter->second.size() < 2) continue;
+        if(iter->second.size() < 2){
+            svtIdx = 4;
+            mSRs[svtIdx].push_back(SRBamRecord(iter->second[0].mRefidx,
+                                               iter->second[0].mRefpos,
+                                               iter->second[0].mRefidx,
+                                               iter->second[0].mRefpos,
+                                               rst,
+                                               std::abs(iter->second[0].mSeqpos - iter->second[0].mSeqpos),
+                                               iter->first));
+
+            continue;
+        }
         for(uint32_t i = 0; i < iter->second.size(); ++i){
             for(uint32_t j = i + 1; j < iter->second.size(); ++j){
                 // get read starting mapping position

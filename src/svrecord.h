@@ -44,6 +44,7 @@ class SVRecord{
         std::string mProbeBegR = ""; ///< an reference sequence segment spanning the SV starting position
         std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
         std::string mProbeEndR = ""; ///< an reference sequence segment spanning the SV ending position
+        std::string mInsSeq = "";    ///< insertion sequence of insertion event
 
     public:
         /** SVRecord constructor */
@@ -85,6 +86,7 @@ class SVRecord{
             os << "Consensus sequence segment spanning the SV ending position: " << sv.mProbeEndC << "\n";
             os << "Reference sequence segment spanning the SV starting position: " << sv.mProbeBegR << "\n";
             os << "Reference sequence segment spanning the SV ending position: " << sv.mProbeEndR << "\n";
+            if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
             os << "======================================================================================================\n";
             return os;
         }

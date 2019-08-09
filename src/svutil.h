@@ -257,6 +257,45 @@ namespace svutil{
         }
     }
 
+    /** get bp description str of SV type
+     * @param svt SV type
+     * @return string description of bp
+     */
+    inline std::string getBpMark(int svt){
+        switch(svt){
+            case 0:
+                return "Inversion Left BP";
+                break;
+            case 1:
+                return "Inversion Right BP";
+                break;
+            case 2:
+                return "Deletion BP";
+                break;
+            case 3:
+                return "Duplication BP";
+                break;
+            case 4:
+                return "Insertion BP";
+                break;
+            case 5:
+                return "5'->5' Across Chr BP";
+                break;
+            case 6:
+                return "3'->3' Across Chr BP";
+                break;
+            case 7:
+                return "5'->3' Across Chr BP";
+                break;
+            case 8:
+                return "3'->5' Across Chr BP";
+                break;
+            default:
+                return "-";
+                break;
+        }
+    }
+
     /** get string representation of SV type
      * @param svt SV type
      * @return string representation of svt

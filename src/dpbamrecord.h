@@ -219,7 +219,7 @@ class DPBamRecordSet{
         inline bool validSVSize(int32_t svStart, int32_t svEnd, int32_t svt){
             if(svt == 0 || svt == 1) return svEnd - svStart >= mOpt->filterOpt->mMinInversionRpt;
             if(svt == 2) return svEnd - svStart >= mOpt->filterOpt->mMinDeletionRpt;
-            if(svt == 3) return svEnd - svStart >= mOpt->filterOpt->mMinDuplicationRpt;
+            if(svt == 3) return svEnd - svStart >= mOpt->filterOpt->mMinDupRpt;
             return true;
         }
 };

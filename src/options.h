@@ -87,12 +87,10 @@ struct SVFilter{
     int32_t mMinRefSep = 50;           ///< minimal reference seperation needed for an split alignment used to compute SV
     int32_t mMaxReadSep = 10;          ///< maximal read split alignment position(both from 5') allowed to be used to compute SV
     double mFlankQuality = 0.95;       ///< flank identity ratio...
-    int32_t mMinFlankSize = 13;        ///< minimal flank length needed for consensus split read length on each side of breakpoint
+    int32_t mMinFlankSize = 10;        ///< minimal flank length needed for consensus split read length on each side of breakpoint
     int32_t minMapQual = 1;            ///< minimal paired-end(PE) mapping quality
     int32_t minClipLen = 20;           ///< minimal clipping length used to compute SV
-    int32_t mMinTraQual = 20;          ///< minimal PE mapping quality for translocation
-    int32_t mMinInDelSize = 500;       ///< minimal indel size needed for an DP record used to compute SV
-    int32_t mMaxDPVarSize = 300;       ///< maximum leftmost mapping pos and pos+refalnlen diff allowed for two DP to support an same SV
+    int32_t mMinTraQual = 1;           ///< minimal PE mapping quality for translocation
     int32_t mMinDupSize = 100;         ///< minimal duplication size needed for an DP record used to compute SV
     uint32_t mMinGenoQual = 5;         ///< minimal mapping quality for genotyping
     uint32_t mGraphPruning = 100000;   ///< PE graph pruning cutoff
@@ -101,7 +99,7 @@ struct SVFilter{
     int32_t mMaxCoordDevOfCSSVRef = 5; ///< maximum gap start/end length allowed for the non-gapped partner of an valid SR consensus ~ SV ref seq alignment
     int32_t mMinInversionRpt = 100;    ///< minimum inversion size to report
     int32_t mMinDeletionRpt = 300;     ///< minimum deletion size to report
-    int32_t mMinDuplicationRpt = 100;  ///< minimum duplication size to report
+    int32_t mMinDupRpt = 100;  ///< minimum duplication size to report
 
 
     /** SVFilter constructor */
