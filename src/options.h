@@ -99,7 +99,8 @@ struct SVFilter{
     int32_t mMaxCoordDevOfCSSVRef = 5; ///< maximum gap start/end length allowed for the non-gapped partner of an valid SR consensus ~ SV ref seq alignment
     int32_t mMinInversionRpt = 100;    ///< minimum inversion size to report
     int32_t mMinDeletionRpt = 300;     ///< minimum deletion size to report
-    int32_t mMinDupRpt = 100;  ///< minimum duplication size to report
+    int32_t mMinDupRpt = 100;          ///< minimum duplication size to report
+    int32_t mMinInsRpt = 15;           ///< minimum insertion size to report
 
 
     /** SVFilter constructor */

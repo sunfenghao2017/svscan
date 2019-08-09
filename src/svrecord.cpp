@@ -193,6 +193,10 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& pe, int32_t peMergeSearchWindow, int32_
     for(int32_t i = 0; i < (int32_t)sr.size(); ++i){
         util::loginfo("Start processing SR supported candidate: " + std::to_string(i));
         if(sr[i].mSRSupport == 0 || sr[i].mSRAlignQuality == 0) continue; // SR assembly failed
+        if(sr[i].mSVT == 4){// append insertion anyway
+            pe.push_back(sr[i]);
+            continue;
+        }
         // Precise duplicates
         bool svExists = false;
         SVRecord searchSV;
