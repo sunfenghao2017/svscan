@@ -150,6 +150,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     int32_t finalGapStart = 0;
     int32_t finalGapEnd = 0;
     if(!coordTransform(bp, ad, finalGapStart, finalGapEnd)) return false;
+    if(mSVT < 4 && mSVStart >= mSVEnd) return false;
     // Precise SV from SR and SVRef split alignment found
     mPrecise = true;
     mSVStart = finalGapStart;
