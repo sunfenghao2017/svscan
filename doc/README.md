@@ -1,14 +1,14 @@
 ## FAQ of sver
 
 ##### 1. What is sver?
-    sver is a software aimed at discovering structural variants. 
+    sver is a software aimed at discovering structural variants from DNA alignment result.
   
 ##### 2. What kind of structural variants sver can discover?
     In principle, sver supports discovery of 5 classes of structural variants: inversion, deletion, duplication, insertion, translocation.  
-    In practice, as long as a structural variant event has at least 2 split reads supporting or 2 discordant paired-end reads supports, sver will discover it.  
+    In practice, as long as a structural variant event has at least 2 split reads supporting or 2 discordant paired-end reads supports, sver will discover it. However, due to sequencing error and mapping ambiguity in some region of genome, some structural variant might not be discovered cofidently or even missed. 
     
-##### 3. What is the size limitation of structural variants sver can discover? 
-|structural variant type| length sver can discover
+##### 3. What is the size limitations of structural variants sver can discover? 
+|structural variant type| size limitations sver can discover
 |-----------------------|--------------------------------------
 |inversion              | > 100(default)
 |deletion               | > 300(default)
@@ -17,9 +17,11 @@
 |translocation          | no limit
 
 ##### 4. How is sver implemented?  
-    sver is implemented totally in C++, it does not need any third part scripts or software to assist its discovery of structural events. After compilation, it is a standalone binary executable program and can work on its own. During compilation, it only depends on the excellent gorgeous htslib. 
-    
-##### 5. What kind of sample can feed to sver?  
+    sver is implemented totally in C++, it does not need any third part scripts or software to assist its discovery of structural events. 
+    After compilation, it is a standalone binary executable program and can work on its own. During compilation, it only depends on the excellent gorgeous htslib. 
+    sver supports macos and linux palatform at the moment.  
+
+##### 5. What kind of sample can be fed to sver?  
      From whole genome to little panel, whether it is paired end library or single ended library, sver can handle all of them as long as they have FASTQ of massive parallel sequencing reads. At the moment it does not support RNA samples. 
       
 ##### 6. What result formats does sver support?  
@@ -74,5 +76,6 @@
     7) Annotate structural variants     
 
 ##### 14. To do...
-    1) sver has can not discovery some complicated insertion event so good
-    2) use local assembly to assist discover of more complicated structural variants
+- [ ] handle some complicated structural variant events such as complicated insertion.
+- [ ] use local assembly to assist discover of more complicated structural variants.
+- [ ] calculate the allele counts more precisely, especially for duplication events.
