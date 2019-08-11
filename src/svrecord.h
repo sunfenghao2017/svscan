@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include "bamutil.h"
 #include "options.h"
 #include "aligner.h"
 #include "aligncfg.h"
@@ -25,7 +26,8 @@ class SVRecord{
         int32_t mCiEndHigh = 0;      ///< largest sv ending position is mSVEnd + mCiEndHigh(mCiEndHigh is an positive value)
         int32_t mPESupport = 0;      ///< number of Paired-end discordant reads supporting this SV
         int32_t mSRSupport = 0;      ///< number of Split-reads supporting this SV(one split read consists two part)
-        int32_t mInsLen = 0;         ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
+        int32_t mAlnInsLen = 0;      ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
+        std::string mBpInsSeq = "";  ///< insertion sequence after breakpoint position
         int32_t mHomLen = 0;         ///< total homology length of left/right part of consensus seq out of gap range with their gap elonged partner
         int32_t mSVT = -1;           ///< SV type[0-9]
         int32_t mID = -1;            ///< SV ID, is just the index at which this SVRecord is stored in the vector
@@ -73,7 +75,7 @@ class SVRecord{
             os << "Positive offset of ending position on reference of 3' end of SV: " << sv.mCiEndHigh << "\n";
             os << "Number of discordant paired-end reads supporting this SV: " << sv.mPESupport << "\n";
             os << "Number of split reads supporting this SV: " << sv.mSRSupport << "\n";
-            os << "Insertion size of this SV contributed by split read: " << sv.mInsLen << "\n";
+            os << "Insertion size of this SV contributed by split read: " << sv.mAlnInsLen << "\n";
             os << "Total homology length between both end of consensus read vs the reference sequence: " << sv.mHomLen << "\n";
             os << "Identity percentage of consensus split read against reference outside of inner longest gap: " << sv.mSRAlignQuality << "\n";
             os << "Median mapping quality of all split read alignment record which support this SV: " << sv.mSRMapQuality << "\n";
@@ -87,6 +89,7 @@ class SVRecord{
             os << "Reference sequence segment spanning the SV starting position: " << sv.mProbeBegR << "\n";
             os << "Reference sequence segment spanning the SV ending position: " << sv.mProbeEndR << "\n";
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
+            if(sv.mBpInsSeq.length() > 0) os << "Sequence inserted after break point: " << sv.mBpInsSeq << "\n";
             os << "======================================================================================================\n";
             return os;
         }
@@ -158,6 +161,27 @@ class SVRecord{
             else if(mSVT == 4) return "INS";
             else return "BND";
         };
+
+         /** get read sequence with inserted sequence extarcted away
+          * @param b pointer to bam1_t struct
+          * @param rseq read seq without inserted sequences
+          * @param iseq inserted sequence
+          */
+        inline void getSCIns(const bam1_t* b, std::string& rseq, std::string& iseq, int32_t inslen){
+            std::string wseq = bamutil::getSeq(b);
+            std::pair<int, int> sclen = bamutil::getSoftClipLength(b);
+            if(sclen.first != 0){
+                if(sclen.first < inslen) return;
+                rseq = wseq.substr(0, sclen.first - inslen);
+                rseq.append(wseq.substr(sclen.first));
+                iseq = wseq.substr(sclen.first - inslen, inslen);
+            }else{
+                if(sclen.second < inslen) return;
+                rseq = wseq.substr(0, b->core.l_qseq - sclen.second);
+                rseq.append(wseq.substr(b->core.l_qseq - sclen.second + inslen));
+                iseq = wseq.substr(b->core.l_qseq - sclen.second, inslen);
+            }
+        }
 
         /** add allele information of this SV
          * @param ref reference sequence of mChr1 in [mSVStart-1, mSVStart]

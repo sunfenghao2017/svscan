@@ -264,31 +264,31 @@ namespace svutil{
     inline std::string getBpMark(int svt){
         switch(svt){
             case 0:
-                return "Inversion Left BP";
+                return "L";
                 break;
             case 1:
-                return "Inversion Right BP";
+                return "R";
                 break;
             case 2:
-                return "Deletion BP";
+                return "-";
                 break;
             case 3:
-                return "Duplication BP";
+                return "-";
                 break;
             case 4:
-                return "Insertion BP";
+                return "-";
                 break;
             case 5:
-                return "5'->5' Across Chr BP";
+                return "5'->5'";
                 break;
             case 6:
-                return "3'->3' Across Chr BP";
+                return "3'->3'";
                 break;
             case 7:
-                return "5'->3' Across Chr BP";
+                return "5'->3'";
                 break;
             case 8:
-                return "3'->5' Across Chr BP";
+                return "3'->5'";
                 break;
             default:
                 return "-";

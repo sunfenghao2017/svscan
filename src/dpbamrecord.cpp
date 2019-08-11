@@ -289,7 +289,7 @@ void DPBamRecordSet::searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& c
             svr.mSRAlignQuality = 0;
             svr.mPrecise = 0;
             svr.mSVT = svt;
-            svr.mInsLen = 0;
+            svr.mAlnInsLen = 0;
             svr.mHomLen = 0;
             svs.push_back(svr);
         }

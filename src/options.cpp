@@ -49,10 +49,14 @@ void Options::update(int argc, char** argv){
             if(e == 0){// Inversion
                 SVTSet.insert(0);
                 SVTSet.insert(1);
+            }else if(e == 1){// Deletion
+                SVTSet.insert(2);
+            }else if(e == 2){// Duplication
+                SVTSet.insert(3);
+            }else if(e == 3){// Insertion
+                SVTSet.insert(4);
             }else if(e == 4){// translocation
                 SVTSet.insert({5, 6, 7, 8});
-            }else{// Deletion, Duplication, Insertion
-                SVTSet.insert(e);
             }
         }
     }

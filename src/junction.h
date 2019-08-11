@@ -11,12 +11,14 @@
 /** class to store junction alignment record */
 class Junction{
     public:
-        bool mForward;   ///< junction read is from forward strand if true (eg. !b->core.BAM_FREVERSE)
-        bool mSCleft;    ///< softclip is at leading left part of alignment if true
-        int32_t mRefidx; ///< junction record alignment reference tid (b->core.tid)
-        int32_t mRstart; ///< junction record alignment starting position on reference(b->core.pos)
-        int32_t mRefpos; ///< b->core.pos + reference length consumed before junction point
-        int32_t mSeqpos; ///< sequence length consumed before junction point(count from read 5'->3')
+        bool mForward;     ///< junction read is from forward strand if true (eg. !b->core.BAM_FREVERSE)
+        bool mSCleft;      ///< softclip is at leading left part of alignment if true
+        int32_t mSCLen;    ///< softclip length of this junction alignment record
+        int32_t mRefidx;   ///< junction record alignment reference tid (b->core.tid)
+        int32_t mRstart;   ///< junction record alignment starting position on reference(b->core.pos)
+        int32_t mRefpos;   ///< b->core.pos + reference length consumed before junction point
+        int32_t mSeqpos;   ///< sequence length consumed before junction point(count from read 5'->3')
+        int32_t mSeqmatch; ///< sequence length consumed before junction point(count from read alignment direction)
     public:
         /** Junction object constructor 
          * @param forward junction read is from forward strand if true
@@ -25,14 +27,17 @@ class Junction{
          * @param rstart junction record alignment starting position on reference(b->core.pos)
          * @param refpos b->core.pos + reference length consumed before junction point
          * @param seqpos sequence length consumed before junction point(count from read 5'->3')
+         * @param seqmatch sequence length consumed before junction point(count from read alignment direction)
          */
-        Junction(bool forward, bool scleft, int32_t refidx, int32_t rstart, int32_t refpos, int32_t seqpos){
+        Junction(bool forward, bool scleft, int32_t sclen, int32_t refidx, int32_t rstart, int32_t refpos, int32_t seqpos, int32_t seqmatch){
             mForward = forward;
             mSCleft = scleft;
+            mSCLen = sclen;
             mRefidx = refidx;
             mRstart = rstart;
             mRefpos = refpos;
             mSeqpos = seqpos;
+            mSeqmatch = seqmatch;
         }
 
         /** operator to output an Junction object to ostream
@@ -44,10 +49,12 @@ class Junction{
             os << "==========================================\n";
             os << std::boolalpha << "From Forward Strand: " << jct.mForward << "\n";
             os << std::boolalpha << "Leading Soft Clip: " << jct.mSCleft << "\n";
+            os << "Soft clip length: " << jct.mSCLen << "\n";
             os << "Reference ID: " << jct.mRefidx << "\n";
             os << "Reference Mapping Pos: " << jct.mRstart << "\n";
             os << "Clip position on Ref: " << jct.mRefpos << "\n";
             os << "Clip position on Read: " << jct.mSeqpos << "\n";
+            os << "Length eat before/after Clip: " << jct.mSeqmatch << "\n";
             os << "==========================================\n";
             return os;
         }

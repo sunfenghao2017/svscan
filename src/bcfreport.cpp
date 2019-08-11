@@ -156,7 +156,7 @@ void Stats::reportBCF(const SVSet& svs){
             tmpi = itsv->mSRMapQuality;
             bcf_update_info_int32(hdr, rec, "SRMAPQ", &tmpi, 1);
             bcf_update_info_float(hdr, rec, "SRALNQ", &itsv->mSRAlignQuality, 1);
-            bcf_update_info_int32(hdr, rec, "INSLEN", &itsv->mInsLen, 1);
+            bcf_update_info_int32(hdr, rec, "INSLEN", &itsv->mAlnInsLen, 1);
             bcf_update_info_int32(hdr, rec, "HOMLEN", &itsv->mHomLen, 1);
             bcf_update_info_string(hdr, rec, "CONSENSUS", itsv->mConsensus.c_str());
         }

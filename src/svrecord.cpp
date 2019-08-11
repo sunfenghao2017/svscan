@@ -156,7 +156,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mSVStart = finalGapStart;
     mSVEnd = finalGapEnd;
     mSRAlignQuality = ad.mPercID;
-    mInsLen = ad.mCSEnd - ad.mCSStart - 1;
+    mAlnInsLen = ad.mCSEnd - ad.mCSStart - 1;
     mHomLen = std::max(0, ad.mHomLeft + ad.mHomRight - 2);
     int32_t ciWiggle = std::max(ad.mHomLeft, ad.mHomRight);
     mCiPosLow = -ciWiggle;
@@ -220,7 +220,8 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& pe, int32_t peMergeSearchWindow, int32_
                 itOther->mCiEndHigh = sr[i].mCiEndHigh;
                 itOther->mSRSupport = sr[i].mSRSupport;
                 itOther->mSRMapQuality = sr[i].mSRMapQuality;
-                itOther->mInsLen = sr[i].mInsLen;
+                itOther->mAlnInsLen = sr[i].mAlnInsLen;
+                itOther->mBpInsSeq = sr[i].mBpInsSeq;
                 itOther->mHomLen = sr[i].mHomLen;
                 itOther->mSRAlignQuality = sr[i].mSRAlignQuality;
                 itOther->mPrecise = true;

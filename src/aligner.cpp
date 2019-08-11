@@ -310,7 +310,7 @@ bool Aligner::splitAligner(const std::string& s1, const std::string& s2, Matrix2
     delete bestRev;
     bestRev = NULL;
     // Check if better split found
-    if(bestScore == mat->get(m, n)){
+    if(bestScore < mat->get(m, n)){
         delete mat;
         mat = NULL;
         delete rev;

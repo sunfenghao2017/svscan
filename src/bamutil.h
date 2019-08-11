@@ -190,6 +190,20 @@ namespace bamutil{
         return r;
     }
 
+    /** return total length of query seq(include hard clips)
+     * @param b pointer to bam1_t struct
+     * @return length of query seq
+     */
+    inline int getSeqLen(const bam1_t* b){
+        uint32_t* data = bam_get_cigar(b);
+        int q = 0; // query consumed length
+        for(uint32_t i = 0; i < b->core.n_cigar; ++i){
+            int opint = bam_cigar_op(data[i]);
+            if(opint == BAM_CINS || opint == BAM_CDIFF || opint == BAM_CEQUAL || opint == BAM_CMATCH || 
+               opint == BAM_CHARD_CLIP || opint == BAM_CSOFT_CLIP) q += bam_cigar_oplen(data[i]);
+        }
+        return q;
+    }
 
     /** set read name of one alignment record 
      * @param b pointer to bam1_t struct

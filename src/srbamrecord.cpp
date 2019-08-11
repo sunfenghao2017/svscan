@@ -5,29 +5,43 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     if(!jctMap->mSorted) jctMap->sortJunctions();
     int svtIdx = 0;
     int32_t rst = -1;
+    bool hasSA = false;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){
-        // Skip split read which has only one part mapped
-        if(iter->second.size() < 2){
-            svtIdx = 4;
-            mSRs[svtIdx].push_back(SRBamRecord(iter->second[0].mRefidx,
-                                               iter->second[0].mRefpos,
-                                               iter->second[0].mRefidx,
-                                               iter->second[0].mRefpos,
-                                               rst,
-                                               std::abs(iter->second[0].mSeqpos - iter->second[0].mSeqpos),
-                                               iter->first));
+        // find insertion candidates which have no supplementary alignments
+        hasSA = false;
+        for(uint32_t i = 0; i < iter->second.size(); ++i){
+            if(iter->second[i].mRstart > 0){
+                hasSA = true;
+                break;
+            }
+        }
+        if(!hasSA){
+            for(uint32_t i = 0; i < iter->second.size(); ++i){
+                svtIdx = 4;
+                mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
+                                                   iter->second[i].mRefpos,
+                                                   iter->second[i].mRefidx,
+                                                   iter->second[i].mRefpos,
+                                                   rst,
+                                                   std::abs(iter->second[i].mSeqpos - iter->second[i].mSeqpos),
+                                                   iter->first));
 
+            }
             continue;
         }
         for(uint32_t i = 0; i < iter->second.size(); ++i){
             for(uint32_t j = i + 1; j < iter->second.size(); ++j){
+                if(iter->second[i].mRstart > 0 && iter->second[j].mRstart > 0) continue;
+                if(iter->second[i].mSCLen && iter->second[j].mSCLen && 
+                   (iter->second[j].mSCLen < iter->second[i].mSeqmatch - mOpt->filterOpt->mMaxReadSep ||
+                   iter->second[i].mSCLen < iter->second[j].mSeqmatch - mOpt->filterOpt->mMaxReadSep)){
+                    continue;
+                }
                 // get read starting mapping position
                 rst = iter->second[i].mRstart;
                 if(rst == -1) rst = iter->second[j].mRstart;
                 // check possible translocation split read
                 if(iter->second[j].mRefidx != iter->second[i].mRefidx){
-                    // skip two split parts which have abnormal starting split position in read(5'->3')
-                    if(iter->second[j].mSeqpos - iter->second[i].mSeqpos > mOpt->filterOpt->mMaxReadSep) break;
                     int32_t littleChrIdx = i;
                     int32_t largerChrIdx = j;
                     if(iter->second[j].mRefidx < iter->second[i].mRefidx){
@@ -71,43 +85,29 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                         leftPart = j;
                         rightPart = i;
                     }
-                    // check possible insertion split read
-                    if(iter->second[j].mSeqpos - iter->second[i].mSeqpos > mOpt->filterOpt->mMaxReadSep){
-                        // Same chr, same direction, opposing soft-clips
-                        if(iter->second[j].mForward == iter->second[i].mForward && 
-                           iter->second[j].mSCleft != iter->second[i].mSCleft  && 
-                           std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) < mOpt->filterOpt->mMaxReadSep){
-                            svtIdx = 4;
-                        }
-                    }else{
-                        // Same chr, same direction, opposing soft-clips
-                        if(iter->second[j].mForward == iter->second[i].mForward && 
-                           iter->second[j].mSCleft != iter->second[i].mSCleft &&
-                           std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){
-                            if(iter->second[leftPart].mSCleft){
-                                svtIdx = 3; // left part leading soft-clip, duplication
-                            }else{
-                                svtIdx = 2; // left part tailing soft-clip, deletion
-                            }
-                        // Same chr, opposing direction, same soft-clips
-                        }else if(iter->second[j].mForward != iter->second[i].mForward &&
-                                 iter->second[j].mSCleft == iter->second[i].mSCleft &&
-                                 std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){
-                            if(iter->second[j].mSCleft){
-                                svtIdx = 1; // 3to3 right spanning inversion breakpoint
-                            }else{
-                                svtIdx = 0; // 5to5 left spanning inversion breakpoint
-                            }
-                        }
+                    if(iter->second[j].mForward == iter->second[i].mForward && // same direction
+                       iter->second[j].mSCleft != iter->second[i].mSCleft  &&  // opposing soft-clips
+                       std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) < mOpt->filterOpt->mMaxReadSep){// breakpoint close
+                        svtIdx = 4; 
+                    }else if(iter->second[j].mForward == iter->second[i].mForward && // same direction
+                             iter->second[j].mSCleft != iter->second[i].mSCleft && // opposing soft-clips
+                             std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint faraway
+                        if(iter->second[leftPart].mSCleft) svtIdx = 3; // left part leading soft-clip, duplication
+                        else svtIdx = 2; // left part tailing soft-clip, deletion
+                    }else if(iter->second[j].mForward != iter->second[i].mForward && // opposing direction
+                             iter->second[j].mSCleft == iter->second[i].mSCleft && // same soft-clips
+                             std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint farway
+                        if(iter->second[j].mSCleft) svtIdx = 1; // 3to3 right spanning inversion breakpoint
+                        else svtIdx = 0; // 5to5 left spanning inversion breakpoint
                     }
                     if(svtIdx != -1 && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
                         mSRs[svtIdx].push_back(SRBamRecord(iter->second[leftPart].mRefidx,
-                                                        iter->second[leftPart].mRefpos,
-                                                        iter->second[rightPart].mRefidx,
-                                                        iter->second[rightPart].mRefpos,
-                                                        rst,
-                                                        std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
-                                                        iter->first));
+                                                           iter->second[leftPart].mRefpos,
+                                                           iter->second[rightPart].mRefidx,
+                                                           iter->second[rightPart].mRefpos,
+                                                           rst,
+                                                           std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
+                                                           iter->first));
                     }
                 }
             }
@@ -262,7 +262,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
             svr.mCiPosHigh = ciposhigh - svStart;
             svr.mCiEndLow = ciendlow - svEnd;
             svr.mCiEndHigh = ciendhigh - svEnd;
-            svr.mInsLen = svISize;
+            svr.mAlnInsLen = svISize;
             svr.mID = svid;
             svr.mSVT = svt;
             svs.push_back(svr);
@@ -301,6 +301,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     }
     const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP);
     std::vector<std::multiset<std::string>> traSeqStore(svs.size()); // translocation SR read sequence
+    std::vector<std::multiset<std::string>> triSeqStore(svs.size()); // translocation insertion sequence nearby bp
     std::vector<std::vector<uint8_t>> traQualStore(svs.size());      // translocation SR read mapping quality
     // Parse BAM
     for(auto& refIdx : mOpt->svRefID){
@@ -315,6 +316,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
         }
         // Sequences and quality
         std::vector<std::multiset<std::string>> seqStore(svs.size());
+        std::vector<std::multiset<std::string>> insStore(svs.size());
         std::vector<std::vector<uint8_t>> qualStore(svs.size());
         // Collect reads
         hts_itr_t* bamIter = sam_itr_queryi(idx, refIdx, 0, hdr->target_len[refIdx]);
@@ -330,6 +332,15 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             int32_t svt = svs[svid].mSVT;
             // Get SR sequence
             std::string srseq = bamutil::getSeq(b);
+            std::string siseq = "";
+            int32_t bpInslen = 0;
+            for(auto& rec : mSRs[svs[svid].mSVT]){
+                if(rec.mID == seed){
+                    bpInslen = rec.mInslen;
+                    break;
+                }
+            }
+            if(bpInslen > mOpt->filterOpt->minClipLen && svs[svid].mSVT != 4) svs[svid].getSCIns(b, srseq, siseq, bpInslen);
             // Adjust orientation
             bool bpPoint = false;
             if(svt >= 5){// translocation
@@ -344,13 +355,16 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                 }
             }
             SRBamRecord::adjustOrientation(srseq, bpPoint, svt);
+            if(!siseq.empty()) SRBamRecord::adjustOrientation(siseq, bpPoint, svt);
             // At most n split-reads used to to one SV event analysis
             if((int32_t)seqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
                 if(svt >= 5){
                     traSeqStore[svid].insert(srseq);
                     traQualStore[svid].push_back(b->core.qual);
+                    if(!siseq.empty()) triSeqStore[svid].insert(siseq);
                 }else{
                     seqStore[svid].insert(srseq);
+                    if(!siseq.empty()) insStore[svid].insert(siseq);
                     qualStore[svid].push_back(b->core.qual);
                 }
             } 
@@ -365,6 +379,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                 AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
                 MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                 msa->msa(svs[svid].mConsensus);
+                delete msa;
                 if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, NULL)) bpRefined = true;
                 if(!bpRefined){
                     svs[svid].mConsensus = "";
@@ -375,8 +390,12 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                 }else{// SR support and qualities
                     svs[svid].mSRSupport = seqStore[svid].size();
                     svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
+                    if(insStore[svid].size() > 1){
+                        MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                        imsa->msa(svs[svid].mBpInsSeq);
+                        delete imsa;
+                    }
                 }
-                delete msa;
             }
         }
         if(chr1Seq) free(chr1Seq);

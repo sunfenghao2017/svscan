@@ -16,14 +16,14 @@
 /** class to store split read alignment record */
 class SRBamRecord{
     public:
-        int32_t mChr1;   ///< reference id part1 of read mapped
-        int32_t mPos1;   ///< break point position of part1 read on reference
-        int32_t mChr2;   ///< reference id part2 of read mapped
-        int32_t mPos2;   ///< break point position of part2 read on reference
-        int32_t mRstart; ///< starting mapping position on reference of one part read which is not -1
-        int32_t mInslen; ///< insert size of two part of one read contributed
-        int32_t mSVID;   ///< default -1, if allocated to an StructuralVariant, it is the index at which to store a StructuralVariant in vector
-        size_t mID;      ///< hash value of the read name
+        int32_t mChr1;     ///< reference id part1 of read mapped
+        int32_t mPos1;     ///< break point position of part1 read on reference
+        int32_t mChr2;     ///< reference id part2 of read mapped
+        int32_t mPos2;     ///< break point position of part2 read on reference
+        int32_t mRstart;   ///< starting mapping position on reference of one part read which is not -1
+        int32_t mInslen;   ///< insert size of two part of one read contributed, this might caused by insertion or sequence error
+        int32_t mSVID;     ///< default -1, if allocated to an StructuralVariant, it is the index at which to store a StructuralVariant in vector
+        size_t mID;        ///< hash value of the read name
 
     public:
         /** construct SRBamRecord object
