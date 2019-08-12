@@ -79,5 +79,5 @@
 - [ ] handle some complicated structural variant events such as complicated insertion.
 - [ ] use local assembly to assist discover of more complicated structural variants.
 - [ ] calculate the allele counts more precisely, especially for duplication events.
-- [ ] merge same structural events explained by different data.
+- [x] merge same structural events explained by different data.
 - [ ] refin AF calculation, especially duplication.

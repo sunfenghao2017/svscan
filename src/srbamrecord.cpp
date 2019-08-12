@@ -380,7 +380,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                 MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
-                if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, NULL)) bpRefined = true;
+                if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
                 if(!bpRefined){
                     svs[svid].mConsensus = "";
                     svs[svid].mSVRef = "";
@@ -423,6 +423,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
                     MSA* msa = new MSA(&traSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                     msa->msa(svs[svid].mConsensus);
+                    delete msa;
                     if(svs[svid].refineSRBp(mOpt, hdr, liteChrSeq, largeChrSeq)) bpRefined = true;
                     if(!bpRefined){
                         svs[svid].mConsensus = "";
@@ -432,8 +433,12 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     }else{// SR support and qualities
                         svs[svid].mSRSupport = traSeqStore[svid].size();
                         svs[svid].mSRMapQuality = util::median(traQualStore[svid]);
+                        if(triSeqStore.size() > 0){
+                            MSA* imsa = new MSA(&triSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                            imsa->msa(svs[svid].mBpInsSeq);
+                            delete imsa;
+                        }
                     }
-                    delete msa;
                 }
             }
             if(largeChrSeq) free(largeChrSeq);

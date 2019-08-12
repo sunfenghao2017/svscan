@@ -346,6 +346,15 @@ namespace svutil{
      * @param gqval genotype quality of each alleles at the site
      */
     inline void computeGL(const std::vector<uint8_t>& mapqRef, const std::vector<uint8_t>& mapqAlt, float* gls, int32_t* gts, int32_t* gqval){
+        if(mapqRef.empty() || mapqAlt.empty()){
+            gqval[0] = 0;
+            gts[0] = bcf_gt_missing;
+            gts[1] = bcf_gt_missing;
+            gls[0] = 0;
+            gls[1] = 0;
+            gls[2] = 0;
+            return;
+        }
         const double minGL = -1000;
         double gl[3] = {0}; // gl[0] = log10(p(ALT|ReadsObserved)), gl[2] = log10(p(REF|ReadsObserved)), gl[1] = log10(p(RandomALT/REF| ReadsObserved))
         // Compute genotype likelihoods

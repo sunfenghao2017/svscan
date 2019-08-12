@@ -20,6 +20,8 @@ class BreakPoint{
         int32_t mSVT = 0;        ///< SV type
         int32_t mChr1 = 0;       ///< (larger) chr of SV
         int32_t mChr2 = 0;       ///< (little) chr of SV
+        int32_t mChr1Len = 0;    ///< (larger) chr length of SV
+        int32_t mChr2Len = 0;    ///< (little) chr length of SV
         int32_t mBoundary = 0;   ///< boundary of start and end position of SV(in SR, it's the consensus seq of SRs)
 
     public:
@@ -31,7 +33,7 @@ class BreakPoint{
          * @param sv reference of SVRecord 
          * @param hdr bam header
          */
-        BreakPoint(const SVRecord& sv, const bam_hdr_t* hdr = NULL){
+        BreakPoint(const SVRecord& sv, const bam_hdr_t* hdr){
             mSVStartBeg = sv.mSVStart;
             mSVStartEnd = sv.mSVStart;
             mSVEndBeg = sv.mSVEnd;
@@ -43,8 +45,10 @@ class BreakPoint{
             mSVT = sv.mSVT;
             mChr1 = sv.mChr1;
             mChr2 = sv.mChr2;
+            mChr1Len = hdr->target_len[mChr1];
+            mChr2Len = hdr->target_len[mChr2];
             mBoundary = sv.mConsensus.size();
-            if(hdr) init(hdr->target_len[mChr1], hdr->target_len[mChr2]);
+            if(hdr) init(mChr1Len, mChr2Len);
         }
 
         /** BreakPoint default destructor */

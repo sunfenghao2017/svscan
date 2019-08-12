@@ -151,6 +151,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
                         // Get sequence
                         std::string readSeq = bamutil::getSeq(b);
+                        std::string readOri = readSeq;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
                         // Compute alignment to alternative haplotype
                         Aligner* altAligner = new Aligner(consProbe, readSeq, &alnCfg);
@@ -159,7 +160,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         int matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
                         // Compute alignment to reference haplotype
-                        Aligner* refAligner = new Aligner(refProbe, readSeq, &alnCfg);
+                        Aligner* refAligner = new Aligner(refProbe, readOri, &alnCfg);
                         Matrix2D<char>* refResult = new Matrix2D<char>();
                         alnScore = refAligner->needle(refResult);
                         matchThreshold = mOpt->filterOpt->mFlankQuality * refProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * refProbe.size() * alnCfg.mMisMatch;

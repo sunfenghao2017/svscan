@@ -169,111 +169,69 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mGapCoord[2] = ad.mRefStart;
     mGapCoord[3] = ad.mRefEnd;
     // Get probe sequences used for allele fraction computation
+    mProbeBegR = std::string(chr1Seq + std::max(0, mSVStart - opt->filterOpt->mMinFlankSize), chr1Seq + std::min(bp.mChr1Len, mSVStart + opt->filterOpt->mMinFlankSize));
+    mProbeEndR = std::string(chr2Seq + std::max(0, mSVEnd - opt->filterOpt->mMinFlankSize), chr2Seq + std::min(bp.mChr2Len, mSVEnd + opt->filterOpt->mMinFlankSize));
+    if(mBpInsSeq.length() > 0){// Put inserted sequence after breakpoint back if possible
+        mConsensus = mConsensus.substr(0, ad.mCSStart) + mBpInsSeq + mConsensus.substr(ad.mCSStart);
+        ad.mCSEnd += mBpInsSeq.length();
+    }
     mProbeBegC = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
-    mProbeBegR = mSVRef.substr(std::max(0, ad.mRefStart -opt->filterOpt->mMinFlankSize), std::min(2 * opt->filterOpt->mMinFlankSize + 1, bp.mSVStartEnd - bp.mSVStartBeg));
     mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
-    mProbeEndR = mSVRef.substr(std::max(0, ad.mRefEnd - std::min(bp.mSVStartEnd - bp.mSVStartBeg, opt->filterOpt->mMinFlankSize)), 2 * opt->filterOpt->mMinFlankSize + 1);
     // Get inserted sequence if it's an insertion event
     if(mSVT == 4) mInsSeq = mConsensus.substr(ad.mCSStart, ad.mCSEnd - ad.mCSStart - 1);
     // Consensus of SRs and reference aligned successfully
     return true;
 }
 
-void mergeAndSortSVSet(SVSet& sr, SVSet& pe, int32_t peMergeSearchWindow, int32_t srDupSearchWindow){
-    // Sort PE records for look-up
-    util::loginfo("Start sorting DP supported SV candidates");
-    std::sort(pe.begin(), pe.end());
-    util::loginfo("Finish sorting DP supported SV candidates");
-    // Sort SR records for look-up
-    util::loginfo("Start sorting SR supported SV candidates");
+void mergeSRSVs(SVSet& sr, SVSet& msr){
+    util::loginfo("Starting merge SR supported SVs");
     std::sort(sr.begin(), sr.end());
-    util::loginfo("Finish sorting SR supported SV candidates");
-    // Augment PE SVs and append missing SR SVs
-    util::loginfo("Start search DP supports for each SR supported SV candidates");
-    for(int32_t i = 0; i < (int32_t)sr.size(); ++i){
-        util::loginfo("Start processing SR supported candidate: " + std::to_string(i));
-        if(sr[i].mSRSupport == 0 || sr[i].mSRAlignQuality == 0) continue; // SR assembly failed
-        if(sr[i].mSVT == 4){// append insertion anyway
-            pe.push_back(sr[i]);
-            continue;
+    for(uint32_t i = 0; i < sr.size(); ++i){
+        if(sr[i].mMerged) continue;
+        if(sr[i].mSVT == 4 && sr[i].mInsSeq.length() > 0){ // Keep all insertions
+            msr.push_back(sr[i]);
+            sr[i].mMerged = true;
         }
-        // Precise duplicates
-        bool svExists = false;
-        SVRecord searchSV;
-        searchSV.mChr1 = sr[i].mChr1;
-        searchSV.mSVStart = sr[i].mSVStart - peMergeSearchWindow;
-        searchSV.mSVEnd = sr[i].mSVEnd;
-        auto itOther = std::lower_bound(pe.begin(), pe.end(), searchSV);
-        for(;itOther != pe.end() && (std::abs(itOther->mSVStart - sr[i].mSVStart) < peMergeSearchWindow); ++itOther){
-            if(itOther->mSVT != sr[i].mSVT || itOther->mPrecise) continue;
-            if(sr[i].mChr1 != itOther->mChr1 || sr[i].mChr2 != itOther->mChr2) continue;
-            // Test whether breakpoint is within PE confidence interval
-            if((itOther->mSVStart + itOther->mCiPosLow) < sr[i].mSVStart && (itOther->mSVStart + itOther->mCiPosHigh) > sr[i].mSVStart &&
-               (itOther->mSVEnd + itOther->mCiEndLow) < sr[i].mSVEnd && (itOther->mSVEnd + itOther->mCiEndHigh) > sr[i].mSVEnd){
-                svExists = true;
-                // Augment PE record
-                itOther->mSVStart = sr[i].mSVStart;
-                itOther->mSVEnd = sr[i].mSVEnd;
-                itOther->mCiPosLow = sr[i].mCiPosLow;
-                itOther->mCiPosHigh = sr[i].mCiPosHigh;
-                itOther->mCiEndLow = sr[i].mCiEndLow;
-                itOther->mCiEndHigh = sr[i].mCiEndHigh;
-                itOther->mSRSupport = sr[i].mSRSupport;
-                itOther->mSRMapQuality = sr[i].mSRMapQuality;
-                itOther->mAlnInsLen = sr[i].mAlnInsLen;
-                itOther->mBpInsSeq = sr[i].mBpInsSeq;
-                itOther->mHomLen = sr[i].mHomLen;
-                itOther->mSRAlignQuality = sr[i].mSRAlignQuality;
-                itOther->mPrecise = true;
-                itOther->mConsensus = sr[i].mConsensus;
-                itOther->mSVRef = sr[i].mSVRef;
-                itOther->mProbeBegC = sr[i].mProbeBegC;
-                itOther->mProbeBegR = sr[i].mProbeBegR;
-                itOther->mProbeEndC = sr[i].mProbeEndC;
-                itOther->mProbeEndR = sr[i].mProbeEndR;
-                itOther->mNameChr1 = sr[i].mNameChr1;
-                itOther->mNameChr2 = sr[i].mNameChr2;
-                for(int c = 0; c < 4; ++c) itOther->mGapCoord[c] = sr[i].mGapCoord[c];
+        if(sr[i].mSRSupport == 0 || sr[i].mSRAlignQuality == 0){
+            sr[i].mMerged = true;
+            continue; // SR assembly failed
+        }
+        for(uint32_t j = 0; j < sr.size(); ++j){
+            if(i == j || sr[j].mMerged) continue;
+            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
+            // Test whether breakpoints within SR condidence interval
+            if(sr[i].mSVStart >= sr[j].mSVStart + sr[j].mCiPosLow && sr[i].mSVStart <= sr[j].mSVStart + sr[j].mCiPosHigh &&
+               sr[i].mSVEnd >= sr[j].mSVEnd + sr[j].mCiEndLow && sr[i].mSVEnd <= sr[j].mSVEnd + sr[j].mCiEndHigh){
+                if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) sr[i].mMerged = true;
             }
         }
-        // SR only SV
-        if(!svExists){
-            // Make sure there is no precise duplicate
-            bool preciseDup = false;
-            for(int32_t j = i + 1; j < (int32_t)sr.size(); ++j){
-                if(std::abs(sr[i].mSVStart - sr[j].mSVStart) > srDupSearchWindow) break;
-                if(sr[i].mSVT != sr[j].mSVT) continue;
-                if(sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
-                // Test whether breakpoints within SR condidence interval
-                if((sr[j].mSVStart + sr[j].mCiPosLow) <= sr[i].mSVStart && (sr[j].mSVStart + sr[j].mCiPosHigh) >= sr[i].mSVStart &&
-                   (sr[j].mSVEnd + sr[j].mCiEndLow) <= sr[i].mSVEnd && (sr[j].mSVEnd + sr[j].mCiPosHigh) >= sr[i].mSVEnd){
-                    // Duplicate, keep better call
-                    if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) preciseDup = true;
-                }
-            }
-            for(int32_t j = i - 1;  j >= 0; --j){
-                if(std::abs(sr[i].mSVStart - sr[j].mSVStart) > srDupSearchWindow) break;
-                if(sr[i].mSVT != sr[j].mSVT) continue;
-                if(sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
-                // Test whether breakpoints within SR condidence interval
-                if((sr[j].mSVStart + sr[j].mCiPosLow) <= sr[i].mSVStart && (sr[j].mSVStart + sr[j].mCiPosHigh) >= sr[i].mSVStart &&
-                   (sr[j].mSVEnd + sr[j].mCiEndLow) <= sr[i].mSVEnd && (sr[j].mSVEnd + sr[j].mCiPosHigh) >= sr[i].mSVEnd){
-                    // Duplicate, keep better call
-                    if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) preciseDup = true;
-                }
-
-            }
-            if(!preciseDup) pe.push_back(sr[i]);
-        }
-        util::loginfo("Finish processing SR supported candidate: " + std::to_string(i));
     }
-    // Re-number SVs
-    util::loginfo("Start sorting merged SVs");
-    std::sort(pe.begin(), pe.end());
-    util::loginfo("Finish sorting merged SVs");
-    util::loginfo("Starting reallocating ID of SVs");
-    for(uint32_t i = 0; i < pe.size(); ++i) pe[i].mID = i;
-    util::loginfo("Finish reallocating ID of SVs");
+    std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
+    util::loginfo(std::to_string(sr.size()) + " SVs merged into " + std::to_string(msr.size()) + " ones");
+    sr.clear();
+}
+
+void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs){
+    // Merge SR SVSet
+    mergeSRSVs(sr, svs);
+    // Augment SR SVs with PE records
+    util::loginfo("Start augmenting SR supported SV candidates with DPs");
+    for(uint32_t i = 0; i < svs.size(); ++i){
+        for(auto itpe = pe.begin(); itpe != pe.end(); ++itpe){
+            if(itpe->mSVT != svs[i].mSVT || svs[i].mChr1 != itpe->mChr1 || svs[i].mChr2 != itpe->mChr2 || itpe->mMerged) continue;
+            // Test whether breakpoint is within PE confidence interval
+            if(svs[i].mSVStart >= itpe->mSVStart + itpe->mCiPosLow && svs[i].mSVStart <= itpe->mSVStart + itpe->mCiPosHigh &&
+               svs[i].mSVEnd >= itpe->mSVEnd + itpe->mCiEndLow && svs[i].mSVEnd <= itpe->mSVEnd + itpe->mCiEndHigh){
+                svs[i].mPESupport = itpe->mPESupport;
+                svs[i].mPEMapQuality = itpe->mPEMapQuality;
+                itpe->mMerged = true;
+            }
+        }
+    }
+    util::loginfo("Finish augmenting SR supported SV candidates with DPs");
+    // Append DP supported only SV 
+    std::copy_if(pe.begin(), pe.end(), std::back_inserter(svs), [&](const SVRecord& sv){return !sv.mMerged;});
+    pe.clear();
 }
 
 void getDPSVRef(SVSet& pe, Options* opt){

@@ -99,28 +99,33 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
     // Merge SR and DP SVs
     util::loginfo("Start merging SVs from SRs and DPs");
-    mergeAndSortSVSet(mSRSVs, mDPSVs, 500, 10);
+    SVSet mergedSVs;
+    mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs);
     util::loginfo("Finish merging SVs from SRs and DPs");
     util::loginfo("Start fetching reference of SV supported by DP only");
-    getDPSVRef(mDPSVs, mOpt);
+    getDPSVRef(mergedSVs, mOpt);
+    std::sort(mergedSVs.begin(), mergedSVs.end());
     util::loginfo("Finish fetching reference of SV supported by DP only");
     // Get Allele info of SVs
-    for(uint32_t i = 0; i < mDPSVs.size(); ++i) mDPSVs[i].addAlleles();
+    for(uint32_t i = 0; i < mergedSVs.size(); ++i){
+        mergedSVs[i].addAlleles();
+        mergedSVs[i].mID = i;
+    }
     // Annotate junction reads and spaning coverage
     util::loginfo("Start annotating SV coverage");
     Annotator* covAnn = new Annotator(mOpt);
-    Stats* covStat = covAnn->covAnnotate(mDPSVs);
+    Stats* covStat = covAnn->covAnnotate(mergedSVs);
     util::loginfo("Finish annotating SV coverage");
-    util::loginfo("Start writing SVs to BCF file");
-    covStat->reportBCF(mDPSVs);
-    util::loginfo("Finish writing SVs to BCF file");
-    util::loginfo("Start annotating SV gene information");
     GeneInfoList gl;
-    covAnn->geneAnnotate(mDPSVs, gl);
+    util::loginfo("Start annotating SV gene information");
+    covAnn->geneAnnotate(mergedSVs, gl);
     util::loginfo("Finish annotating SV gene information");
     util::loginfo("Start writing SVs to TSV file");
-    covStat->reportTSV(mDPSVs, gl);
+    covStat->reportTSV(mergedSVs, gl);
     util::loginfo("Finish writing SVs to TSV file");
+    util::loginfo("Start writing SVs to BCF file");
+    covStat->reportBCF(mergedSVs);
+    util::loginfo("Finish writing SVs to BCF file");
     delete covAnn;
     delete covStat;
 }

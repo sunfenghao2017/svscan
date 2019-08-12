@@ -47,6 +47,7 @@ class SVRecord{
         std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
         std::string mProbeEndR = ""; ///< an reference sequence segment spanning the SV ending position
         std::string mInsSeq = "";    ///< insertion sequence of insertion event
+        bool mMerged = false;        ///< this SV has been merged if true
 
     public:
         /** SVRecord constructor */
@@ -216,10 +217,15 @@ inline std::ostream& operator<<(std::ostream& os, const SVSet& svs){
 /** merge SVSet supported by SR and PE, refine PE SV with SR SV and keep better SR SV if dup exists
  * @param sr SVSet supported by SR
  * @param pe SVSet supported by PE
- * @param peMergeSearchWindow the SV starting pos range to search for each SV in sr for PE support
- * @param srDupSearchWindow the SV starting pos range to search for an non-PE support SR SV for dup
+ * @param svs SVSet to store merged SVs
  */
-void mergeAndSortSVSet(SVSet& sr, SVSet& pe, int32_t peMergeSearchWindow = 500, int32_t srDupSearchWindow = 10);
+void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs);
+
+/** merge SVSet supported by SR only
+ * @param sr SVSet supported by SR
+ * @param msr SVSet merged
+ */
+void mergeSRSVs(SVSet& sr, SVSet& msr);
 
 /** get reference of  SV supported by PE
  * @param pe SVSet supported by PE
