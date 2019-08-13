@@ -170,7 +170,9 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mGapCoord[3] = ad.mRefEnd;
     // Get probe sequences used for allele fraction computation
     mProbeBegR = std::string(largeChrSeq + std::max(0, mSVStart - opt->filterOpt->mMinFlankSize), largeChrSeq + std::min(bp.mChr1Len, mSVStart + opt->filterOpt->mMinFlankSize));
+    util::str2upper(mProbeBegR);
     mProbeEndR = std::string(liteChrSeq + std::max(0, mSVEnd - opt->filterOpt->mMinFlankSize), liteChrSeq + std::min(bp.mChr2Len, mSVEnd + opt->filterOpt->mMinFlankSize));
+    util::str2upper(mProbeEndR);
     if(mBpInsSeq.length() > 0){// Put inserted sequence after breakpoint back if possible
         mConsensus = mConsensus.substr(0, ad.mCSStart) + mBpInsSeq + mConsensus.substr(ad.mCSStart);
         ad.mCSEnd += mBpInsSeq.length();

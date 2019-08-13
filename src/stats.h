@@ -100,6 +100,7 @@ struct BpRegion{
         os << "======================================\n";
         os << "Region starting position: " << br.mRegStart << "\n";
         os << "Region ending position: " << br.mRegEnd << "\n";
+        os << "Breakpoint position: " << br.mBpPos << "\n";
         os << "SVT: " << br.mSVT << "\n";
         os << "ID: " << br.mID << "\n";
         os << std::boolalpha << "Span SV ending position ? " << br.mIsSVEnd << "\n";

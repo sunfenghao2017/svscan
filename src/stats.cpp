@@ -131,7 +131,8 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
             int32_t rbegin = std::max(0, b->core.pos - leadingSC);
-            for(int32_t k = rbegin; k < (b->core.pos + b->core.l_qseq) && k < (int32_t)h->target_len[mRefIdx]; ++k){
+            int32_t rend = std::min(b->core.pos + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
+            for(int32_t k = rbegin; k < rend; ++k){
                 if(bpOccupied[k]){
                     bpvalid = true;
                     break;
@@ -140,11 +141,9 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             if(bpvalid){
                 // Fetch all relevant SVs
                 auto itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
-                for(; itbp != bpRegs[mRefIdx].end() && (b->core.pos + b->core.l_qseq) >= itbp->mBpPos; ++itbp){
+                for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
-                    if(hasSoftClip ||
-                       ((!hasClip) && ((b->core.pos + mOpt->filterOpt->mMinFlankSize) <= itbp->mBpPos &&
-                        (b->core.pos + b->core.l_qseq) >= (itbp->mBpPos + mOpt->filterOpt->mMinFlankSize)))){
+                    if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
                         std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
                         // Get sequence
