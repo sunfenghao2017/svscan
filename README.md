@@ -75,13 +75,7 @@
 |3    |sort and index     | [tabix](https://github.com/samtools/htslib)
 
 ##### 13. What strategy does sver used?  
-    1) Finds all split reads, cluster them by breakpoint positions and structural variant type they support to get raw strutural variant breakpoint positions   
-    2) Generate consensus sequence of reads supportint one structural variant  
-    3) Generate pseudo structural variant reference sequence based on breakpoint positions and  structural variant types  
-    4) Alignment consensus sequence to pseudo reference sequence to refine breakpoint position
-    5) Find all discordant paired reads, cluster them by breakpoint positions and structural variant type they support to get raw structural variant breakpoint ranges  
-    6) Merge overlapped structural variants into one  
-    7) Annotate structural variants     
+![sver algorithm](./fig/sver.svg)
 
 ##### 14. To do list
 - [ ] handle some complicated structural variant events such as complicated insertion.
