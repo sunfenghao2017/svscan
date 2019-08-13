@@ -92,7 +92,7 @@ struct SVFilter{
     int32_t minClipLen = 20;           ///< minimal clipping length used to compute SV
     int32_t mMinTraQual = 1;           ///< minimal PE mapping quality for translocation
     int32_t mMinDupSize = 100;         ///< minimal duplication size needed for an DP record used to compute SV
-    uint32_t mMinGenoQual = 5;         ///< minimal mapping quality for genotyping
+    uint32_t mMinGenoQual = 1;         ///< minimal mapping quality for genotyping
     uint32_t mGraphPruning = 100000;   ///< PE graph pruning cutoff
     int32_t mMaxReadPerSV = 100000;    ///< maximum valid split-reads sampled to analysis one SV event
     int32_t mMinGapOfCSSVRef = 15;     ///< minimal middle gap length needed for an SR consensus against SV ref seq alignment

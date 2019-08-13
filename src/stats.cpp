@@ -108,14 +108,12 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             int oplen = bam_cigar_oplen(cigar[i]);
             if(opint == BAM_CMATCH || opint == BAM_CDIFF || opint == BAM_CEQUAL){
                 // Assign base counts to SVs
-                int32_t rpos = rp + oplen;
+                int32_t rcep = rp + oplen;
                 for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
-                    if(covRecs[mRefIdx][rc].mStart < rpos &&  covRecs[mRefIdx][rc].mEnd > rp){
-                        int32_t minPos = std::min(covRecs[mRefIdx][rc].mStart, rp);
-                        int32_t maxPos = std::max(covRecs[mRefIdx][rc].mEnd, rpos);
-                        for(int32_t ki = minPos; ki < maxPos; ++ki){
-                            mCovCnts[covRecs[mRefIdx][rc].mID].first += 1;
-                        }
+                    if(covRecs[mRefIdx][rc].mStart < rcep &&  covRecs[mRefIdx][rc].mEnd > rp){
+                        int32_t minPos = std::max(covRecs[mRefIdx][rc].mStart, rp);
+                        int32_t maxPos = std::min(covRecs[mRefIdx][rc].mEnd, rcep);
+                        for(int32_t ki = minPos; ki < maxPos; ++ki) mCovCnts[covRecs[mRefIdx][rc].mID].first += 1;
                     }
                 }
                 rp += oplen;

@@ -88,9 +88,10 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         covMiddle.mEnd = itsv->mSVEnd;
         if(itsv->mSVT >= 4){
             covMiddle.mStart = std::max(itsv->mSVStart - halfsize, 0);
-            covMiddle.mEnd = std::min((int32_t)h->target_len[itsv->mChr2], itsv->mSVStart + halfsize);
+            covMiddle.mEnd = std::min((int32_t)h->target_len[itsv->mChr2], itsv->mSVEnd + halfsize);
         }
         itsv->mSize = itsv->mSVEnd - itsv->mSVStart;
+        if(itsv->mSVT == 4) itsv->mSize = itsv->mInsSeq.size();
         if(itsv->mSVT >= 5) itsv->mSize = 666666666;
         covRecs[itsv->mChr1].push_back(covMiddle);
         // Right control region
@@ -107,9 +108,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         covRecs[itsv->mChr2].push_back(covRight);
     }
     // Sort Coverage Records
-    for(auto& refIndex : mOpt->svRefID){
-        std::sort(covRecs[refIndex].begin(), covRecs[refIndex].end());
-    }
+    for(auto& refIndex : mOpt->svRefID) std::sort(covRecs[refIndex].begin(), covRecs[refIndex].end());
     util::loginfo("Finish extracting left/middle/right regions for each SV");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(h->n_targets);
@@ -129,11 +128,11 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
             }else{// SV starting position region
                 regChr = itsv->mChr1;
                 regStart = std::max(0, itsv->mSVStart - mOpt->filterOpt->mMinFlankSize);
-                regEnd = std::min(itsv->mSVStart + mOpt->filterOpt->mMinFlankSize, (int32_t)h->target_len[itsv->mChr2]);
+                regEnd = std::min(itsv->mSVStart + mOpt->filterOpt->mMinFlankSize, (int32_t)h->target_len[itsv->mChr1]);
                 bpPos = itsv->mSVStart;
             }
             BpRegion br;
-            br.mIsSVEnd = bpPoint;
+            br.mIsSVEnd = (bpPoint == 0 ? false : true);
             br.mBpPos = bpPos;
             br.mID = itsv->mID;
             br.mRegEnd = regEnd;
