@@ -177,8 +177,8 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
         mConsensus = mConsensus.substr(0, ad.mCSStart) + mBpInsSeq + mConsensus.substr(ad.mCSStart);
         ad.mCSEnd += mBpInsSeq.length();
     }
-    mProbeBegC = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
-    mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize + 1);
+    mProbeBegC = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
+    mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
     // Get inserted sequence if it's an insertion event
     if(mSVT == 4) mInsSeq = mConsensus.substr(ad.mCSStart, ad.mCSEnd - ad.mCSStart - 1);
     // Consensus of SRs and reference aligned successfully

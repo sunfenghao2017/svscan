@@ -25,9 +25,9 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
         fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t";
         // refCount AF insBp insSeq
         if(svs[i].mPrecise){
-            fw << 2 * mJctCnts[i].mRefQual.size() << "\t" << (double)(svs[i].mSRSupport)/(double)(2 * mJctCnts[i].mRefQual.size() + svs[i].mSRSupport) << "\t";
+            fw << mJctCnts[i].mRefQual.size() << "\t" << (double)(svs[i].mSRSupport)/(double)(mJctCnts[i].mRefQual.size() + svs[i].mSRSupport) << "\t";
         }else{
-            fw << 2 * mSpnCnts[i].mRefQual.size() << "\t" << (double)(svs[i].mPESupport)/(double)(2 * mSpnCnts[i].mRefQual.size() + svs[i].mPESupport) << "\t";
+            fw << mSpnCnts[i].mRefQual.size() << "\t" << (double)(svs[i].mPESupport)/(double)(mSpnCnts[i].mRefQual.size() + svs[i].mPESupport) << "\t";
         }
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
         // bp1Trs bp2Trs svID
