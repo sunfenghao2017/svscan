@@ -89,4 +89,5 @@
 - [x] calculate the allele counts more precisely, especially for duplication events.
 - [x] merge same structural events explained by different data.
 - [x] refine AF calculation, especially duplication.
-- [ ] use consensus probe sequence to capture possible supporting reads of structural variants
+- [ ] use consensus probe sequence to capture possible supporting reads of structural variants.
+- [ ] use single unmapped reads to capture more structural variants.
