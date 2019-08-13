@@ -299,7 +299,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             }
         }
     }
-    const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP);
+    const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP | BAM_FSUPPLEMENTARY);
     std::vector<std::multiset<std::string>> traSeqStore(svs.size()); // translocation SR read sequence
     std::vector<std::multiset<std::string>> triSeqStore(svs.size()); // translocation insertion sequence nearby bp
     std::vector<std::vector<uint8_t>> traQualStore(svs.size());      // translocation SR read mapping quality
@@ -340,13 +340,13 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     break;
                 }
             }
-            if(bpInslen > mOpt->filterOpt->minClipLen && svs[svid].mSVT != 4) svs[svid].getSCIns(b, srseq, siseq, bpInslen);
+            if(bpInslen > mOpt->filterOpt->mMaxReadSep && svs[svid].mSVT != 4) svs[svid].getSCIns(b, srseq, siseq, bpInslen);
             // Adjust orientation
             bool bpPoint = false;
             if(svt >= 5){// translocation
                 if(b->core.tid == svs[svid].mChr2) bpPoint = true;// bpPoint is true if b is on little chr
             }else{
-                if(svt == 0){ // bpPoint is true if b is on 3' part of breakpoint
+                if(svt == 0){ //  bpPoint is true if b mapped on the second spanning breakpoint of inversion
                     if(b->core.pos > svs[svid].mSVStart - mOpt->filterOpt->minClipLen) bpPoint = true;
                     else bpPoint = false;
                 }else if(svs[svid].mSVT == 1){
@@ -433,7 +433,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     }else{// SR support and qualities
                         svs[svid].mSRSupport = traSeqStore[svid].size();
                         svs[svid].mSRMapQuality = util::median(traQualStore[svid]);
-                        if(triSeqStore.size() > 0){
+                        if(triSeqStore[svid].size() > 0){
                             MSA* imsa = new MSA(&triSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                             imsa->msa(svs[svid].mBpInsSeq);
                             delete imsa;

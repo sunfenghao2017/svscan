@@ -63,7 +63,9 @@ class BreakPoint{
             os << "====================================\n";
             os << "SV Type: " << bp.mSVT << "\n";
             os << "SV larger chr: " << bp.mChr1 << "\n";
+            os << "SV larger chr len: " << bp.mChr1Len << "\n";
             os << "SV little chr: " << bp.mChr2 << "\n";
+            os << "SV little chr len: " << bp.mChr2Len << "\n";
             os << "SV leftmost starting position: " << bp.mSVStartBeg << "\n";
             os << "SV starting position: " << bp.mSVStart << "\n";
             os << "SV rightmost starting position: " << bp.mSVStartEnd << "\n";
