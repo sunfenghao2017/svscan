@@ -74,14 +74,15 @@
 |2    |extract information| [getFeatureTsv](https://github.com/vanNul/util/blob/master/getFeatureTsv.cpp)
 |3    |sort and index     | [tabix](https://github.com/samtools/htslib)
 
-##### 13. What strategy does sver used?  
+##### 13. How does sver work?  
 ![sver algorithm](./fig/sver.svg)
 
 ##### 14. To do list
-- [ ] handle some complicated structural variant events such as complicated insertion.
+- [ ] process some complicated structural variant events such as complicated insertion.
 - [ ] use local assembly to assist discover of more complicated structural variants.
 - [x] calculate the allele counts more precisely, especially for duplication events.
 - [x] merge same structural events explained by different data.
 - [x] refine AF calculation, especially duplication.
 - [ ] use consensus probe sequence to capture possible supporting reads of structural variants.
 - [ ] use single unmapped reads to capture more structural variants.
+- [ ] add filter module.
