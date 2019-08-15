@@ -87,6 +87,6 @@
 - [x] rescue split reads on breakpoint with short insertion sequence aftwards.
 - [x] rescue discordant paired ends read for each cross-chrosome breakpoint.
 - [ ] remove false positive insertion sequence coming from alignment without supplementary records.
-- [ ] use consensus probe sequence to capture possible supporting reads of structural variants.
+- [x] use consensus probe sequence to capture possible supporting reads of structural variants.
 - [ ] use single unmapped reads to capture more structural variants.
 - [ ] add filter module.
