@@ -24,7 +24,7 @@ std::string BreakPoint::getSVRef(const char* smallChrSeq, const char* largeChrSe
     // Get chr2 seq for tranclocation
     if(mSVT == 5){
         chr2Part = std::string(smallChrSeq + mSVEndBeg, smallChrSeq + mSVEndEnd);
-        util::reverseComplement(chr2Part);
+        util::reverseComplementInplace(chr2Part);
     }else if(mSVT > 5){
         chr2Part = std::string(smallChrSeq + mSVEndBeg, smallChrSeq + mSVEndEnd);
         util::str2upper(chr2Part);
@@ -37,7 +37,7 @@ std::string BreakPoint::getSVRef(const char* smallChrSeq, const char* largeChrSe
             return chr1Part + chr2Part;
         }else if(mSVT == 6){// 3to3
             std::string chr1Part = std::string(largeChrSeq + mSVStartBeg, largeChrSeq + mSVStartEnd);
-            util::reverseComplement(chr1Part);
+            util::reverseComplementInplace(chr1Part);
             return chr1Part + chr2Part;
         }else{// 3to5
             std::string chr1Part = std::string(largeChrSeq + mSVStartBeg, largeChrSeq + mSVStartEnd);
@@ -48,14 +48,14 @@ std::string BreakPoint::getSVRef(const char* smallChrSeq, const char* largeChrSe
     // Get full ref seq for SV on same chr
     if(mSVT == 0){// 5to5 left breakpoint of inversion
         std::string refEnd = std::string(smallChrSeq + mSVEndBeg, smallChrSeq + mSVEndEnd);
-        util::reverseComplement(refEnd);
+        util::reverseComplementInplace(refEnd);
         std::string refBeg = std::string(smallChrSeq + mSVStartBeg, smallChrSeq + mSVStartEnd);
         util::str2upper(refBeg);
         return refBeg + refEnd;
     }
     if(mSVT == 1){// 3to3 right breakpoing of inversion
         std::string refBeg = std::string(smallChrSeq + mSVStartBeg, smallChrSeq + mSVStartEnd);
-        util::reverseComplement(refBeg);
+        util::reverseComplementInplace(refBeg);
         std::string refEnd = std::string(smallChrSeq + mSVEndBeg, smallChrSeq + mSVEndEnd);
         util::str2upper(refEnd);
         return refBeg + refEnd;

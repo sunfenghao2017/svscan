@@ -1,4 +1,5 @@
 #include "stats.h"
+#include <cstring>
 
 Stats::Stats(Options* opt, int32_t n, int32_t refidx){
     mOpt = opt;
@@ -95,6 +96,10 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     std::unordered_map<size_t, uint8_t> qualities;
     std::unordered_map<size_t, bool> clip;
     while(sam_itr_next(fp, itr, b) >= 0){
+        std::string qname = bamutil::getQName(b);
+        if(qname == "simchr16_4829_4992_1:0:0_3:0:0_735d"){
+            bamutil::dump(b);
+        }
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         // Count aligned basepair (small InDels)
@@ -122,14 +127,14 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 rp += oplen;
             }else if(opint == BAM_CSOFT_CLIP){
                 hasSoftClip = true;
-                if(i == 0) leadingSC = opint;
+                if(i == 0) leadingSC = oplen;
             }
         }
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
             int32_t rbegin = std::max(0, b->core.pos - leadingSC);
-            int32_t rend = std::min(b->core.pos + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
+            int32_t rend = std::min(rbegin + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
             for(int32_t k = rbegin; k < rend; ++k){
                 if(bpOccupied[k]){
                     bpvalid = true;

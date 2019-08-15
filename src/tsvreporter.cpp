@@ -5,7 +5,7 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "svType\tsvSize\tbpMark\t";
     fw << "bp1Chr\tbp1Pos\tbp1Gene\t";
     fw << "bp2Chr\tbp2Pos\tbp2Gene\t";
-    fw << "srCount\tdpCount\t";
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";
     fw << "refCount\tAF\tinsBp\tinsSeq\t";
     fw << "bp1Trs\tbp2Trs\tsvSeq\tsvID\n";
     for(uint32_t i = 0; i < gl.size(); ++i){
@@ -21,8 +21,8 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
         fw << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" << gl[i].mGene1 << "\t";
         // bp2Chr bp2Pos bp2Gene
         fw << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" << gl[i].mGene2 << "\t";
-        // srCount dpCount
-        fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t";
+        // srCount dpCount srRescued dpRescued
+        fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t" << mJctCnts[i].mAltQual.size() << "\t" << mSpnCnts[i].mAltQual.size() << "\t";
         // refCount AF insBp insSeq
         if(svs[i].mPrecise){
             fw << mJctCnts[i].mRefQual.size() << "\t" << (double)(svs[i].mSRSupport)/(double)(mJctCnts[i].mRefQual.size() + svs[i].mSRSupport) << "\t";

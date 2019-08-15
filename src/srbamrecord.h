@@ -57,7 +57,7 @@ class SRBamRecord{
         inline static void adjustOrientation(std::string& seq, bool bpPoint, int32_t svt){
             if((svt == 5 && bpPoint) || (svt == 6 && !bpPoint) ||
                (svt == 0 && bpPoint) || (svt == 1 && !bpPoint)){
-                util::reverseComplement(seq);
+                util::reverseComplementInplace(seq);
             }
         }
 
@@ -98,7 +98,7 @@ typedef std::vector<std::map<std::pair<int32_t, size_t>, int32_t>> ContigSRs; //
 class SRBamRecordSet{
     public:
         Options* mOpt;                              ///< pointer to Options object
-        std::vector<std::vector<SRBamRecord>> mSRs; ///< vector to store SRBamRecords accordint the SV they support
+        std::vector<std::vector<SRBamRecord>> mSRs; ///< vector to store SRBamRecords according to the SV they support
         ContigSRs mSRMapPos;                        ///< SR mapping starting position on each contig with SV Type defined
         bool mSorted = false;                       ///< all SRBamRecords have been sorted if true
     public:

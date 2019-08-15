@@ -10,12 +10,12 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
         // find insertion candidates which have no supplementary alignments
         hasSA = false;
         for(uint32_t i = 0; i < iter->second.size(); ++i){
-            if(iter->second[i].mRstart > 0){
+            if(iter->second[i].mRstart < 0){
                 hasSA = true;
                 break;
             }
         }
-        if(!hasSA){
+        if(!hasSA){// may be duplication candidates or other sv supporting reads
             for(uint32_t i = 0; i < iter->second.size(); ++i){
                 svtIdx = 4;
                 mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
@@ -343,14 +343,13 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             if(bpInslen > mOpt->filterOpt->mMaxReadSep && svs[svid].mSVT != 4) svs[svid].getSCIns(b, srseq, siseq, bpInslen);
             // Adjust orientation
             bool bpPoint = false;
-            if(svt >= 5){// translocation
-                if(b->core.tid == svs[svid].mChr2) bpPoint = true;// bpPoint is true if b is on little chr
-            }else{
-                if(svt == 0){ //  bpPoint is true if b mapped on the second spanning breakpoint of inversion
-                    if(b->core.pos > svs[svid].mSVStart - mOpt->filterOpt->minClipLen) bpPoint = true;
+            if(svt >= 5 && b->core.tid == svs[svid].mChr2) bpPoint = true;
+            else{
+                if(svt == 0){
+                    if(svs[svid].mSVStart - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
                     else bpPoint = false;
-                }else if(svs[svid].mSVT == 1){
-                    if(b->core.pos > svs[svid].mSVEnd - mOpt->filterOpt->minClipLen) bpPoint = true;
+                }else if(svt == 1){
+                    if(svs[svid].mSVEnd - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
                     else bpPoint = false;
                 }
             }

@@ -132,7 +132,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
                 bpPos = itsv->mSVStart;
             }
             BpRegion br;
-            br.mIsSVEnd = (bpPoint == 0 ? false : true);
+            br.mIsSVEnd = bpPoint;
             br.mBpPos = bpPos;
             br.mID = itsv->mID;
             br.mRegEnd = regEnd;
