@@ -330,9 +330,6 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             if(vsrIter == mSRMapPos[refIdx].end()) continue;
             int32_t svid = vsrIter->second;
             int32_t svt = svs[svid].mSVT;
-            // Get SR sequence
-            std::string srseq = bamutil::getSeq(b);
-            std::string siseq = "";
             int32_t bpInslen = 0;
             for(auto& rec : mSRs[svs[svid].mSVT]){
                 if(rec.mID == seed){
@@ -340,7 +337,9 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     break;
                 }
             }
-            if(bpInslen > mOpt->filterOpt->mMaxReadSep && svs[svid].mSVT != 4) svs[svid].getSCIns(b, srseq, siseq, bpInslen);
+            std::string srseq = ""; // read sequence excluding insertiong after clip pos
+            std::string siseq = ""; // inserted sequence after clip pos
+            svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep);
             // Adjust orientation
             bool bpPoint = false;
             if(svt >= 5 && b->core.tid == svs[svid].mChr2) bpPoint = true;
@@ -379,6 +378,11 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                 MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
+                if(insStore[svid].size() > 1){
+                    MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                    imsa->msa(svs[svid].mBpInsSeq);
+                    delete imsa;
+                }
                 if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
                 if(!bpRefined){
                     svs[svid].mConsensus = "";
@@ -389,11 +393,6 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                 }else{// SR support and qualities
                     svs[svid].mSRSupport = seqStore[svid].size();
                     svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
-                    if(insStore[svid].size() > 1){
-                        MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                        imsa->msa(svs[svid].mBpInsSeq);
-                        delete imsa;
-                    }
                 }
             }
         }
@@ -423,6 +422,11 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     MSA* msa = new MSA(&traSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                     msa->msa(svs[svid].mConsensus);
                     delete msa;
+                    if(triSeqStore[svid].size() > 0){
+                        MSA* imsa = new MSA(&triSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                        imsa->msa(svs[svid].mBpInsSeq);
+                        delete imsa;
+                    }
                     if(svs[svid].refineSRBp(mOpt, hdr, liteChrSeq, largeChrSeq)) bpRefined = true;
                     if(!bpRefined){
                         svs[svid].mConsensus = "";
@@ -432,11 +436,6 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                     }else{// SR support and qualities
                         svs[svid].mSRSupport = traSeqStore[svid].size();
                         svs[svid].mSRMapQuality = util::median(traQualStore[svid]);
-                        if(triSeqStore[svid].size() > 0){
-                            MSA* imsa = new MSA(&triSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                            imsa->msa(svs[svid].mBpInsSeq);
-                            delete imsa;
-                        }
                     }
                 }
             }
