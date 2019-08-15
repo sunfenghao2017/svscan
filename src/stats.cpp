@@ -1,5 +1,4 @@
 #include "stats.h"
-#include <cstring>
 
 Stats::Stats(Options* opt, int32_t n, int32_t refidx){
     mOpt = opt;

@@ -244,6 +244,7 @@ void getDPSVRef(SVSet& pe, Options* opt){
     faidx_t* fai = fai_load(opt->genome.c_str());
     // get SVRef on same chr
     for(auto sviter = pe.begin(); sviter != pe.end(); ++sviter){
+        if(sviter->mChr1 != sviter->mChr2) opt->traRefPair.insert({sviter->mChr1, sviter->mChr2});
         if(sviter->mPrecise) continue;
         sviter->mNameChr1 = h->target_name[sviter->mChr1];
         sviter->mNameChr2 = h->target_name[sviter->mChr2];
