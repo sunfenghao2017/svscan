@@ -171,14 +171,16 @@ class Options{
         std::string annodb;           ///< annotation feature database file
         std::string reg;              ///< valid region file to discovery SVs
         std::string bcfOut;           ///< output SV bcf result file
-        std::string tsvOut;           ///< output tab seperated values file
+        std::string tsvOut;           ///< output SV tab seperated values file
+        std::string bamout;           ///< output SV supporting bam record file
+        samFile* fbamout;             ///< file pointer of sv bam output 
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
         RegionList validRegions;      ///< valid regions to discovery SV
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment
         std::mutex logMtx;            ///< mutex locked to output log information
-        std::mutex traMtx;            ///< mutex locked to process translocations
+        std::mutex outMtx;            ///< mutex locked to output sv supporting bam
         int32_t contigNum;            ///< max contig numbers in library bam
         std::set<int32_t> svRefID;    ///< SV occuring reference id
         TransChrPairs traRefPair;     ///< translocation chrosome pairs<large, little>

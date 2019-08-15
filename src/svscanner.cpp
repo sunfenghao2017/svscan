@@ -111,11 +111,15 @@ void SVScanner::scanDPandSR(){
         mergedSVs[i].addAlleles();
         mergedSVs[i].mID = i;
     }
+    // open bamout for write
+    mOpt->fbamout = sam_open(mOpt->bamout.c_str(), "w");
+    assert(sam_hdr_write(mOpt->fbamout, h) >= 0);
     // Annotate junction reads and spaning coverage
     util::loginfo("Start annotating SV coverage");
     Annotator* covAnn = new Annotator(mOpt);
     Stats* covStat = covAnn->covAnnotate(mergedSVs);
     util::loginfo("Finish annotating SV coverage");
+    sam_close(mOpt->fbamout);
     GeneInfoList gl;
     util::loginfo("Start annotating SV gene information");
     covAnn->geneAnnotate(mergedSVs, gl);
@@ -128,4 +132,6 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Finish writing SVs to BCF file");
     delete covAnn;
     delete covStat;
+    sam_close(fp);
+    bam_hdr_destroy(h);
 }

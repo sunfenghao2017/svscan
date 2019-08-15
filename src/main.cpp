@@ -18,8 +18,9 @@ int main(int argc, char** argv){
     app.add_option("-g,--genome", opt->genome, "reference genome")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General Options");
-    app.add_option("-o,--bcfout", opt->bcfOut, "output bcf file", true)->required(false)->group("General Options");
-    app.add_option("-t,--tsvout", opt->tsvOut, "output tsv file", true)->required(false)->group("General Options");
+    app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
+    app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
+    app.add_option("-v,--bamout", opt->bamout, "output sv bam file", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 20))->group("General Options");
     // Control options

@@ -159,9 +159,6 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     sam_close(fp);
     hts_idx_destroy(idx);
     fai_destroy(fai);
-    // Translocation quality and clip status recorders
-    std::unordered_map<size_t, uint8_t> transQuals;
-    std::unordered_map<size_t, bool> transClips;
     // Get coverage from each contig in parallel
     ThreadPool::ThreadPool pool(std::min(mOpt->nthread, (int32_t)(mOpt->svRefID.size() + mOpt->traRefPair.size())));
     std::vector<Stats*> covStats(mOpt->svRefID.size());

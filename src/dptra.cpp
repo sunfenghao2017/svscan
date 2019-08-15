@@ -78,6 +78,10 @@ void TraDPStat::dptra(const ContigSpanPoints& spPts){
                         if(hap == 1) ++mSpnCnts[itspan->mID].mAlth1;
                         else ++mSpnCnts[itspan->mID].mAlth2;
                     }
+                    mOpt->outMtx.lock();
+                    bam_aux_update_int(b, "SVID", itspan->mID);
+                    assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                    mOpt->outMtx.unlock();
                 }
             }
         }

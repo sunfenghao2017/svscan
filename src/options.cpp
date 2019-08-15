@@ -3,8 +3,9 @@
 Options::Options(){
     madCutoff = 9;
     nthread = 8;
-    bcfOut = "out.bcf";
-    tsvOut = "out.tsv";
+    bcfOut = "sv.bcf";
+    tsvOut = "sv.tsv";
+    bamout = "sv.bam";
     filterOpt = new SVFilter();
     softEnv = new Software();
     msaOpt = new MSAOpt();
