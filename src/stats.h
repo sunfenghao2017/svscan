@@ -330,10 +330,8 @@ class Stats{
          * @param covRecs coverage records of 3-part of each SV events on each contig
          * @param bpRegs SV breakpoint regions on each contig
          * @param spPts SV DP read mapping position on each contig
-         * @param transQuals translocation reads mapping quality records
-         * @param transClips translocation reads clipping status records
          */
-        void stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs,  const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, std::unordered_map<size_t, uint8_t>& transQuals, std::unordered_map<size_t, bool>& transClips);
+        void stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs,  const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts);
 
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats

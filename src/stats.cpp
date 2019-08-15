@@ -71,7 +71,7 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n){
     return ret;
 }
 
-void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, std::unordered_map<size_t, uint8_t>& transQuals, std::unordered_map<size_t, bool>& transClips){
+void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts){
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     util::loginfo("Start gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
@@ -96,10 +96,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     std::unordered_map<size_t, uint8_t> qualities;
     std::unordered_map<size_t, bool> clip;
     while(sam_itr_next(fp, itr, b) >= 0){
-        std::string qname = bamutil::getQName(b);
-        if(qname == "simchr16_4829_4992_1:0:0_3:0:0_735d"){
-            bamutil::dump(b);
-        }
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         // Count aligned basepair (small InDels)
@@ -223,11 +219,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             if(b->core.tid == b->core.mtid){
                 qualities[hv] = b->core.qual;
                 clip[hv] = hasSoftClip;
-            }else{
-                mOpt->traMtx.lock();
-                transQuals[hv] = b->core.qual;
-                transClips[hv] = hasSoftClip;
-                mOpt->traMtx.unlock();
             }
         }else{
             // Second read in pair
@@ -235,22 +226,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             uint8_t pairQual = 0;
             bool pairClip = false;
             if(b->core.tid == b->core.mtid){
-                if(qualities.find(hv) == qualities.end()) continue;
-                pairQual = std::min(qualities[hv], b->core.qual);
-                if(clip[hv] || hasSoftClip) pairClip = true;
-                qualities[hv] = 0;
-                clip[hv] = false;
-            }else{
-                mOpt->traMtx.lock();
-                if(transQuals.find(hv) == transQuals.end()){
-                    mOpt->traMtx.unlock();
-                    continue;
-                }
-                pairQual = std::min(transQuals[hv], b->core.qual);
-                if(transClips[hv] || hasSoftClip) pairClip = true;
-                transQuals[hv] = 0;
-                transClips[hv] = false;
-                mOpt->traMtx.unlock();
+                auto itq = qualities.find(hv);
+                if(itq == qualities.end()) continue;
+                pairQual = std::min(itq->second, b->core.qual);
+                auto itc = clip.find(hv);
+                if(itc->second || hasSoftClip) pairClip = true;
+                itq->second = 0;
+                itc->second = false;
             }
             // Pair quality
             if(pairQual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
@@ -301,7 +283,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 }
             }
             // Abnormal spanning coverage
-            if((DPBamRecord::getSVType(b) != 2) || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize || b->core.tid != b->core.mtid){
+            if(((DPBamRecord::getSVType(b) != 2) || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) && b->core.tid == b->core.mtid){
                 // Get SV type
                 int32_t svt =  DPBamRecord::getSVType(b, mOpt);
                 if(svt == -1) continue;

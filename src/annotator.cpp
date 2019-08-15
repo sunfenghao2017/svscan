@@ -169,7 +169,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     int32_t i = 0;
     for(auto& refidx: mOpt->svRefID){
         covStats[i] = new Stats(mOpt, svs.size(), refidx);
-        statRets[i] = pool.enqueue(&Stats::stat, covStats[i], std::ref(svs), std::ref(covRecs), std::ref(bpRegion), std::ref(spanPoint), std::ref(transQuals), std::ref(transClips));
+        statRets[i] = pool.enqueue(&Stats::stat, covStats[i], std::ref(svs), std::ref(covRecs), std::ref(bpRegion), std::ref(spanPoint));
         ++i;
     }
     for(auto& e: statRets) e.get();

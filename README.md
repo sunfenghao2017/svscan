@@ -84,8 +84,8 @@
 - [x] calculate the allele counts more precisely, especially for duplication events.
 - [x] merge same structural events explained by different data.
 - [x] rescue split reads for each breakpoint without inertion sequence afterwards.
-- [ ] rescue split reads on breakpoint with short insertion sequence aftwards.
-- [ ] rescue discordant paired ends read for each breakpoint.
+- [x] rescue split reads on breakpoint with short insertion sequence aftwards.
+- [ ] rescue discordant paired ends read for each cross-chrosome breakpoint.
 - [ ] remove false positive insertion sequence coming from alignment without supplementary records.
 - [ ] use consensus probe sequence to capture possible supporting reads of structural variants.
 - [ ] use single unmapped reads to capture more structural variants.
