@@ -190,7 +190,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                         else ++mJctCnts[itbp->mID].mAlth2;
                                     }
                                     mOpt->outMtx.lock();
-                                    bam_aux_update_int(b, "SVID", itbp->mID);
+                                    bam_aux_update_int(b, "ZF", itbp->mID);
                                     assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                                     mOpt->outMtx.unlock();
                                 }
@@ -318,7 +318,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                 else ++mSpnCnts[itspan->mID].mAlth2;
                             }
                             mOpt->outMtx.lock();
-                            bam_aux_update_int(b, "SVID", itspan->mID);
+                            bam_aux_update_int(b, "ZF", itspan->mID);
                             assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                             mOpt->outMtx.unlock();
                         }
