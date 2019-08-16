@@ -357,13 +357,17 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             // At most n split-reads used to to one SV event analysis
             if((int32_t)seqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
                 if(svt >= 5){
-                    traSeqStore[svid].insert(srseq);
-                    traQualStore[svid].push_back(b->core.qual);
+                    if(!srseq.empty()){
+                        traSeqStore[svid].insert(srseq);
+                        traQualStore[svid].push_back(b->core.qual);
+                    }
                     if(!siseq.empty()) triSeqStore[svid].insert(siseq);
                 }else{
-                    seqStore[svid].insert(srseq);
+                    if(!srseq.empty()){
+                        seqStore[svid].insert(srseq);
+                        qualStore[svid].push_back(b->core.qual);
+                    }
                     if(!siseq.empty()) insStore[svid].insert(siseq);
-                    qualStore[svid].push_back(b->core.qual);
                 }
             } 
         }
