@@ -217,6 +217,7 @@ struct JunctionCount{
     int32_t mRefh2 = 0;            ///< count HP tag with value not 1 supporting reference reads
     int32_t mAlth1 = 0;            ///< count HP tag with value 1 supporting SV reads
     int32_t mAlth2 = 0;            ///< count HP tag with value not 1 supporting SV reads
+    int32_t mFPIns = 0;            ///< false positive insertion supporting number
     std::vector<uint8_t> mRefQual; ///< Reads which are more likely to be reference mapping quality
     std::vector<uint8_t> mAltQual; ///< Reads which are more likely to be SV supporting mapping quality
     

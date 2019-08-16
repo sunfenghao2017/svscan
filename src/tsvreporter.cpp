@@ -9,6 +9,8 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";
     fw << "bp1Trs\tbp2Trs\tsvSeq\tsvID\n";
     for(uint32_t i = 0; i < gl.size(); ++i){
+        // skip false positive insertions
+        if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].mAltQual.size() * mOpt->filterOpt->mMaxFPIns) continue;
         // svType
         fw << svutil::addID(svs[i].mSVT) << "\t";
         // svSize

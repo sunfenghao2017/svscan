@@ -46,13 +46,14 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n){
             ret->mReadCnts[j].mLeftRC += sts[i]->mReadCnts[j].mLeftRC;
             ret->mReadCnts[j].mRightRC += sts[i]->mReadCnts[j].mRightRC;
             ret->mReadCnts[j].mRC += sts[i]->mReadCnts[j].mRC;
-            // JC
+            // SC
             ret->mJctCnts[j].mAlth1 += sts[i]->mJctCnts[j].mAlth1;
             ret->mJctCnts[j].mAlth2 += sts[i]->mJctCnts[j].mAlth2;
             ret->mJctCnts[j].mRefh1 += sts[i]->mJctCnts[j].mRefh1;
+            ret->mJctCnts[j].mFPIns += sts[i]->mJctCnts[j].mFPIns;
             ret->mJctCnts[j].mAltQual.insert(ret->mJctCnts[j].mAltQual.end(), sts[i]->mJctCnts[j].mAltQual.begin(), sts[i]->mJctCnts[j].mAltQual.end());
             ret->mJctCnts[j].mRefQual.insert(ret->mJctCnts[j].mRefQual.end(), sts[i]->mJctCnts[j].mRefQual.begin(), sts[i]->mJctCnts[j].mRefQual.end());
-            // SC
+            // DP
             ret->mSpnCnts[j].mAlth1 += sts[i]->mSpnCnts[j].mAlth1;
             ret->mSpnCnts[j].mAlth2 += sts[i]->mSpnCnts[j].mAlth2;
             ret->mSpnCnts[j].mRefh1 += sts[i]->mSpnCnts[j].mRefh1;
@@ -137,6 +138,8 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 }
             }
             if(bpvalid){
+                bool onlySupportIns = true;
+                std::vector<int32_t> supportInsID;
                 // Fetch all relevant SVs
                 auto itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
                 for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
@@ -173,11 +176,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                             mOpt->libInfo->mIsHaploTagged = true;
                                             int hapv = bam_aux2i(hpptr);
                                             if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
-                                            else ++mJctCnts[itbp->mID].mRefh2;
+                                            else ++mJctCnts[itbp->mID].mRefh2; 
                                         }
                                     }
                                 }
                             }else{
+                                if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
+                                if(itbp->mSVT != 4) onlySupportIns = false;
                                 uint8_t* qual = bam_get_qual(b);
                                 uint32_t aq = getAlignmentQual(altResult, qual);
                                 if(aq >= mOpt->filterOpt->mMinGenoQual){
@@ -205,6 +210,9 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         delete refResult;
                         refResult = NULL;
                     }
+                }
+                if(supportInsID.size() > 0 && (!onlySupportIns)){
+                    for(auto& insid : supportInsID) ++mJctCnts[insid].mFPIns;
                 }
             }
         }
