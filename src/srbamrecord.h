@@ -57,7 +57,7 @@ class SRBamRecord{
         inline static void adjustOrientation(std::string& seq, bool bpPoint, int32_t svt){
             if((svt == 5 && bpPoint) || (svt == 6 && !bpPoint) ||
                (svt == 0 && bpPoint) || (svt == 1 && !bpPoint)){
-                util::reverseComplementInplace(seq);
+                util::reverseComplement(seq);
             }
         }
 

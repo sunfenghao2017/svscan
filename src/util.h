@@ -489,7 +489,7 @@ namespace util{
      * @param seq a nucleotide sequence
      * @return the reverse completement sequence of seq
      */
-    inline std::string reverseComplementKeepOrig(const std::string& seq){
+    inline std::string reverseComplement(const std::string& seq){
         std::string retSeq(seq.length(), '\0');
         for(int32_t i = retSeq.length() - 1; i >= 0; --i){
             retSeq[i] = complement(seq[seq.length() - 1 - i]);
@@ -500,7 +500,7 @@ namespace util{
     /** reverse completement an sequence of a nucleotide sequence
      * @param seq a nucleotide sequence to be reverse complemented
      */
-    inline void reverseComplementInplace(std::string& seq){
+    inline void reverseComplement(std::string& seq){
         int32_t i = seq.size() - 1;
         int32_t j = 0;
         char tmpChr = '\0';

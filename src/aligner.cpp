@@ -257,8 +257,8 @@ bool Aligner::splitAligner(const std::string& s1, const std::string& s2, Matrix2
         }
     }
     // Reverse alignment
-    std::string sRev1 = util::reverseComplementKeepOrig(s1);
-    std::string sRev2 = util::reverseComplementKeepOrig(s2);
+    std::string sRev1 = util::reverseComplement(s1);
+    std::string sRev2 = util::reverseComplement(s2);
     Matrix2D<int>* rev = new Matrix2D<int>(m + 1, n + 1);
     for(int col = 1; col <= n; ++col) rev->set(0, col) = rev->get(0, col - 1) + horizontalGapExtend(0, m);
     for(int row = 1; row <= m; ++row) rev->set(row, 0) = rev->get(row - 1, 0) + verticalGapExtend(0, n);
