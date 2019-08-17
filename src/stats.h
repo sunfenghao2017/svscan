@@ -248,10 +248,11 @@ struct JunctionCount{
 /** class to store gene information of an SV */
 class GeneInfo{
     public:
-        std::string mGene1 = "-";                         ///< gene name of breakpoint position on larger chrosome
-        std::string mGene2 = "-";                         ///< gene name of breakpoint position on small chrosome
-        std::vector<std::string> mTrans1;                 ///< transcript names of breakpoint position on larger chrosome
-        std::vector<std::string> mTrans2;                 ///< transcript names of breakpoint position on small chrosome
+        std::string mGene1 = "-";         ///< gene name of breakpoint position on larger chrosome
+        std::string mGene2 = "-";         ///< gene name of breakpoint position on small chrosome
+        std::string mFuseGene = "-";      ///< fusion gene information(5'partner->3'partner)
+        std::vector<std::string> mTrans1; ///< transcript names of breakpoint position on larger chrosome
+        std::vector<std::string> mTrans2; ///< transcript names of breakpoint position on small chrosome
 
     public:
         /** default constructor */

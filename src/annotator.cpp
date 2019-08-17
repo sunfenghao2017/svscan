@@ -197,12 +197,15 @@ void Annotator::geneAnnotate(SVSet& svs, GeneInfoList& gl){
     kstring_t rec = {0, 0, 0};
     htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
+    char strand1 = '\0';
+    char strand2 = '\0';
     for(uint32_t i = 0; i < svs.size(); ++i){
         hts_itr_t* itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr1.c_str()), svs[i].mSVStart, svs[i].mSVStart + 1);
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             gl[i].mTrans1.push_back(vstr[6] + "(" + vstr[4] + "|" +vstr[5] + "|" + vstr[3] + ")");
             gl[i].mGene1 = vstr[7];
+            strand1 = vstr[3][0];
         }
         tbx_itr_destroy(itr);
         itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr2.c_str()), svs[i].mSVEnd, svs[i].mSVEnd + 1);
@@ -210,8 +213,10 @@ void Annotator::geneAnnotate(SVSet& svs, GeneInfoList& gl){
             util::split(rec.s, vstr, "\t");
             gl[i].mTrans2.push_back(vstr[6] + "(" + vstr[4] + ":" +vstr[5] + "|" + vstr[3] + ")"); 
             gl[i].mGene2 = vstr[7];
+            strand2 = vstr[3][0];
         }
         tbx_itr_destroy(itr);
+        gl[i].mFuseGene = svutil::getFusionGene(gl[i].mGene1, gl[i].mGene2, strand1, strand2, svs[i].mSVT);
     }
     tbx_destroy(tbx);
     hts_close(fp);

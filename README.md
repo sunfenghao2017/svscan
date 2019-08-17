@@ -88,5 +88,6 @@
 - [x] rescue discordant paired ends read for each cross-chrosome breakpoint.
 - [x] remove false positive insertion sequence coming from alignment without supplementary records.
 - [x] use consensus probe sequence to capture possible supporting reads of structural variants.
+- [x] annotate fusion gene if both breakpoint spanning a gene
 - [ ] use single unmapped reads to capture more structural variants.
 - [ ] add filter module.

@@ -2,7 +2,7 @@
 
 void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
-    fw << "svType\tsvSize\tbpMark\t";
+    fw << "svType\tsvSize\tbpMark\tfuseGene\t";
     fw << "bp1Chr\tbp1Pos\tbp1Gene\t";
     fw << "bp2Chr\tbp2Pos\tbp2Gene\t";
     fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";
@@ -19,6 +19,8 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
         else fw << svs[i].mSize << "\t";
         // bpMark
         fw << svutil::getBpMark(svs[i].mSVT) << "\t";
+        // fuseGene
+        fw << gl[i].mFuseGene << "\t";
         // bp1Chr bp1Pos bp1Gene
         fw << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" << gl[i].mGene1 << "\t";
         // bp2Chr bp2Pos bp2Gene

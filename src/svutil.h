@@ -410,6 +410,53 @@ namespace svutil{
         gls[1] = gl[1];
         gls[2] = gl[0];
     }
+
+    /** get fusion gene information at a breakpoint
+     * @param gene1 gene name of first breakpoint(lower coordinate breakpoint if sv on same chr, else breakpoint on bigger chr)
+     * @param gene2 gene name of second breakpoint(higher coordinate breakpoint if sv on same chr, else breakpoint on little chr)
+     * @param strand1 strand of gene1
+     * @param strand2 strand of gene2
+     * @param svt SV type
+     */
+    inline std::string getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
+        if(gene1 == "-" || gene2 == "-") return "-";
+        if(svt >= 5) svt -= 5;
+        if(svt == 0){// left spanning breakpoint of inversion
+            if(strand1 == '+' && strand2 == '+'){
+                return gene1 + "->" + gene2 + "(5+5-)";
+            }else if(strand1 == '+' && strand2 == '-'){
+                return gene1 + "->" + gene2 + "(5+3+)";
+            }else if(strand1 == '-' && strand2 == '+'){
+                return gene2 + "->" + gene1 + "(5+3+)";
+            }else if(strand1 == '-' && strand2 == '-'){
+                return gene2 + "->" + gene1 + "(3-3+)";
+            }
+        }else if(svt == 1){// right spanning breakpoint of inversion
+            if(strand1 == '+' && strand2 == '+'){
+                return gene1 + "->" + gene2 + "(3-3+)";
+            }else if(strand1 == '+' && strand2 == '-'){
+                return gene2 + "->" + gene1 + "(5+3+)";
+            }else if(strand1 == '-' && strand2 == '+'){
+                return gene1 + "->" + gene2 + "(5+3+)";
+            }else if(strand1 == '-' && strand2 == '-'){
+                return gene1 + "->" + gene2 + "(5+5-)";
+            }
+        }
+        if(svt == 3){// duplication(ps: in breakpoint it is gene2 on left and gene1 on right)
+            std::swap(gene1, gene2);
+            std::swap(strand1, strand2);
+        }
+        if(strand1 == '+' && strand2 == '+'){
+            return gene1 + "->" + gene2 + "(5+3+)";
+        }else if(strand1 == '+' && strand2 == '-'){
+            return gene1 + "->" + gene2 + "(5+5-)";
+        }else if(strand1 == '-' && strand2 == '+'){
+            return gene1 + "->" + gene2 + "(3-3+)";
+        }else if(strand1 == '-' && strand2 == '-'){
+            return gene2 + "->" + gene1 + "(5+3+)";
+        }
+        return "-";
+    }
 }
 
 #endif
