@@ -419,7 +419,7 @@ namespace svutil{
      * @param svt SV type
      */
     inline std::string getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
-        if(gene1 == "-" || gene2 == "-") return "-";
+        if(gene1 == "-" || gene2 == "-" || svt == 4) return "-";
         if(svt >= 5) svt -= 5;
         if(svt == 0){// left spanning breakpoint of inversion
             if(strand1 == '+' && strand2 == '+'){
