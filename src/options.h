@@ -203,7 +203,7 @@ class Options{
 
         /** update options after command arguments parsed
          * @param argc number of arguments feed to main
-         * @param parg array of arguments feed to main
+         * @param argv array of arguments feed to main
          */
         void update(int argc, char** argv);
 

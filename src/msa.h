@@ -112,7 +112,7 @@ class MSA{
         void consensus(Matrix2D<char>* aln, std::string& cs);
         
         /** do multiple seqeuence alignment of mSeqs\n
-         * @paramm cs consensus sequence got from msa
+         * @param cs consensus sequence got from msa
          * @return consensus sequence supporting seq number
          */
         int msa(std::string& cs);

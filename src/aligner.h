@@ -102,6 +102,8 @@ class Aligner{
          * ...                                                                                                *
          * a[m]                                                                                               *
          * ****************************************************************************************************
+         */
+        /** gotoh aligner
          * @param alnResult result of alignment
          * @return alignment score
          */
@@ -123,6 +125,8 @@ class Aligner{
          * ...                                                                                                *
          * a[m]                                                                                               *
          * ****************************************************************************************************
+         */
+        /** needleman aligner
          * @param alnResult result of alignment
          * @return alignment score
          */

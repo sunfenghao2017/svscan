@@ -190,9 +190,7 @@ class SVRecord{
             }
         }
 
-        /** add allele information of this SV
-         * @param ref reference sequence of mChr1 in [mSVStart-1, mSVStart]
-         */
+        /** add allele information of this SV */
         inline void addAlleles(){
             std::string ref = mSVRef;
             if(mPrecise) ref = mSVRef.substr(mGapCoord[2] - 1, 1);

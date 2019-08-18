@@ -24,7 +24,7 @@ class Region{
 
         /** merge and sort regions of one contig
          * @param regs regions of one contig
-         * @param merged and sorted regions
+         * @return merged and sorted regions
          */
         static std::vector<std::pair<int32_t, int32_t>> mergeAndSortRegions(std::vector<std::pair<int32_t, int32_t>>& regs);
 

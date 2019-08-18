@@ -52,7 +52,7 @@ class SRBamRecord{
         /** adjust orientation of SR read sequence to restore natural sequence in sample, only needed in 5to5 and 3to3 catenation
          * @param seq SR bam record seq
          * @param bpPoint if(SR mapped on little chr in translocation || mapped on higher coordinate in inversion) bpPoint = true;
-         * @parm svt SV type
+         * @param svt SV type
          */
         inline static void adjustOrientation(std::string& seq, bool bpPoint, int32_t svt){
             if((svt == 5 && bpPoint) || (svt == 6 && !bpPoint) ||
@@ -126,7 +126,7 @@ class SRBamRecordSet{
         
         /** operator to output an SRBamRecordSet object to ostream
          * @param os reference of ostream object
-         * @param sr reference of SRBamRecordSet object
+         * @param srs reference of SRBamRecordSet object
          * @return reference of ostream
          */
         inline friend std::ostream& operator<<(std::ostream& os, const SRBamRecordSet& srs){

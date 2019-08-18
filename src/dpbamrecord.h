@@ -198,7 +198,7 @@ class DPBamRecordSet{
         void cluster(std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt);
         
         /** cluster all kinds SV supporting DPBamRecord
-         * @param dps SVSet which support various kind of SVs
+         * @param svs SVSet which support various kind of SVs
          */
         void cluster(SVSet& svs);
         

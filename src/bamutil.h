@@ -207,7 +207,7 @@ namespace bamutil{
 
     /** set read name of one alignment record 
      * @param b pointer to bam1_t struct
-     * @param n new name to be used in this read
+     * @param qname new name to be used in this read
      */
     inline void setQName(bam1_t* b, const std::string qname){
         int nonQnameLen = b->l_data - b->core.l_qname;
@@ -393,7 +393,7 @@ namespace bamutil{
     }
 
     /** get indel position on read of an alignment record
-     * @param p pointer to bam1_t struct
+     * @param b pointer to bam1_t struct
      * @param indelPosVec list of indel positions on read, 0 based
      */
     inline void getIndelPos(const bam1_t* b, std::vector<int>& indelPosVec){
@@ -534,7 +534,7 @@ namespace bamutil{
     }
 
     /** get average base quality around predefined range of of pileup posision
-     * @pram p pointer to bam_pileup1_t 
+     * @param p pointer to bam_pileup1_t 
      * @param range max number of bases to counted around p->qpos
      * @return average base quality around qpos±range
      */

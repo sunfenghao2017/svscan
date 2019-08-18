@@ -11,18 +11,31 @@
 #include <functional>
 #include <stdexcept>
 
+/** name space of ThreadPool */
 namespace ThreadPool{
-    class ThreadPool {
+    /** class of thread pool */
+    class ThreadPool{
         public:
-            ThreadPool(size_t);
+            /** constructor of ThreadPool
+             * @param n number of threads used to construct thread pool
+             */
+            ThreadPool(size_t n);
+            
+            /** put an task enqueue into thread pool
+             * @param f function/object to call
+             * @param args arguments to feed to
+             */
             template<class F, class... Args>
-                auto enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
+            auto enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
+            
+            /** ThreadPool destructor */
             ~ThreadPool();
+
         private:
             // need to keep track of threads so we can join them
-            std::vector< std::thread > workers;
+            std::vector<std::thread> workers;
             // the task queue
-            std::queue< std::function<void()> > tasks;
+            std::queue<std::function<void()>> tasks;
             // synchronization
             std::mutex queue_mutex;
             std::condition_variable condition;

@@ -76,7 +76,7 @@ struct BpRegion{
     BpRegion(){}
 
     /** constructor
-     * @param bppos breakpoint position on ref
+     * @param bpPos breakpoint position on ref
      */
     BpRegion(int32_t bpPos) : mBpPos(bpPos) {}
 
@@ -123,7 +123,7 @@ struct ReadCount{
 
     /** operator to output ReadCount object to ostream
      * @param os reference of ostream object
-     * @param br reference of ReadCount object
+     * @param rc reference of ReadCount object
      * @return reference of ostream object
      */
     inline friend std::ostream& operator<<(std::ostream& os, const ReadCount& rc){
@@ -165,7 +165,7 @@ struct CovRecord{
 
     /** operator to output CovRecord object to ostream
      * @param os reference of ostream object
-     * @param br reference of CovRecord object
+     * @param cr reference of CovRecord object
      * @return reference of ostream object
      */
     inline friend std::ostream& operator<<(std::ostream& os, const CovRecord& cr){
@@ -195,7 +195,7 @@ struct SpanningCount{
 
     /** operator to output SpanningCount object to ostream
      * @param os reference of ostream object
-     * @param br reference of SpanningCount object
+     * @param sc reference of SpanningCount object
      * @return reference of ostream object
      */
     inline friend std::ostream& operator<<(std::ostream& os, const SpanningCount& sc){
@@ -229,7 +229,7 @@ struct JunctionCount{
     
     /** operator to output JunctionCount object to ostream
      * @param os reference of ostream object
-     * @param br reference of JunctionCount object
+     * @param jc reference of JunctionCount object
      * @return reference of ostream object
      */
     inline friend std::ostream& operator<<(std::ostream& os, const JunctionCount& jc){
@@ -378,7 +378,7 @@ class Stats{
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats
          * @param n number of svs in total
-         * @param return merged stat info
+         * @return merged stat info
          */
         static Stats* merge(const std::vector<Stats*>& sts, int32_t n);
 

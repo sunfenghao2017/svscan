@@ -23,6 +23,7 @@ class Junction{
         /** Junction object constructor 
          * @param forward junction read is from forward strand if true
          * @param scleft softclip is at leading left part of alignment if true
+         * @param sclen softclip length
          * @param refidx junction record alignment reference tid (b->core.tid)
          * @param rstart junction record alignment starting position on reference(b->core.pos)
          * @param refpos b->core.pos + reference length consumed before junction point
@@ -74,7 +75,7 @@ class Junction{
 class JunctionMap{
     public:
         Options* mOpt;                                          ///< pointer to Options
-        std::map<size_t, std::vector<Junction>> mJunctionReads; ///< <hash value of read name, <junction read parts>>
+        std::map<size_t, std::vector<Junction>> mJunctionReads; ///< key:hash value of read name, value: junction read part list
         bool mSorted;                                           ///< Junction records in mJunctionReads are all sorted if true
 
     public:
@@ -101,7 +102,7 @@ class JunctionMap{
         
         /** operator to output an JunctionMap object to ostream
          * @param os reference of ostream object
-         * @param jct reference of JunctionMap object
+         * @param jctMap reference of JunctionMap object
          * @return reference of ostream object
          */
         inline friend std::ostream& operator<<(std::ostream& os, const JunctionMap& jctMap){
