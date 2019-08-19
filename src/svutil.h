@@ -476,6 +476,30 @@ namespace svutil{
         }
         return "-";
     }
+
+    /** convert string representation of SV event back to integer representation
+     * @param ct catenation type of SV
+     * @param svt string representation of SV
+     * @return integer representation of SV
+     */
+    inline int32_t str2svt(const std::string& ct, const std::string& svt){
+        if(svt == "INV"){
+            if(ct == "5to5") return 0;
+            if(ct == "3to3") return 1;
+        }else if(svt == "DEL"){
+            if(ct == "5to3") return 2;
+        }else if(svt == "DUP"){
+            if(ct == "3to5") return 3;
+        }else if(svt == "INS"){
+            if(ct == "NtoN") return 4;
+        }else if(svt == "BND"){
+            if(ct == "5to5") return 5;
+            if(ct == "3to3") return 6;
+            if(ct == "5to3") return 7;
+            if(ct == "3to5") return 8;
+        }
+        return -1;
+    }
 }
 
 #endif

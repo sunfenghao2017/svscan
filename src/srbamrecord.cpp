@@ -140,7 +140,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             // Search possible connectable node
             for(uint32_t j = i + 1; j < srs.size(); ++j){
                 if(srs[j].mChr1 != refIdx) continue; // same chr
-                if(srs[j].mPos1 - srs[i].mPos1 > mOpt->filterOpt->mMaxReadSep) break; // mapping position in valid range
+                if(srs[j].mPos1 - srs[i].mPos1 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
                 // Update last connected node
                 if(j > lastConnectedNodesEnd) lastConnectedNodesEnd = j;
                 // Assign components
