@@ -1,4 +1,4 @@
-bin_PROGRAMS = sver svmerge
+bin_PROGRAMS = sver svmerge getAlnByZF prepAnnoDB
 
 sver_LDADD = $(LDFLAGS)
 
@@ -8,6 +8,14 @@ sver_SOURCES = aligner.cpp breakpoint.cpp annotator.cpp dpbamrecord.cpp junction
 svmerge_LDADD = $(LDFLAGS)
 
 svmerge_SOURCES = mergevcf.cpp
+
+getAlnByZF_LDADD = $(LDFLAGS)
+
+getAlnByZF_SOURCES = getAlnByZF.cpp
+
+prepAnnoDB_LDADD = $(LDFLAGS)
+
+prepAnnoDB_SOURCES = prepAnnoDB.cpp
 
 clean:
 	rm -rf .deps Makefile.in Makefile *.o ${bin_PROGRAMS}
