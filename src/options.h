@@ -14,17 +14,18 @@
 
 /** class to store library information */
 struct LibraryInfo{
-    int32_t mReadLen = 0;        ///< read length
-    int32_t mMedian = 0;         ///< isize median
-    int32_t mMad = 0;            ///< isize mad (median of abs(isize - median)
-    int32_t mMinNormalISize = 0; ///< normal minimum isize max(0, median - 5 * mad)
-    int32_t mMinISizeCutoff = 0; ///< customized isize minimum cutoff
-    int32_t mMaxNormalISize = 0; ///< normal maximum isize (median + 5 * mad)
-    int32_t mMaxISizeCutoff = 0; ///< max(0, median + cutoff * mad, 2 * readlen, 500)
-    int32_t mAbnormalPairs = 0;  ///< abnormal discordant pairs count
-    bool mIsHaploTagged = false; ///< bam has HP tag if true
-    int32_t mContigNum = 0;      ///< maximum contig number in library
-    int32_t mVarisize = 0;       ///< std::max(mMaxNormalISize, mReadLen), mMaxDPVarSize equqls this value
+    int32_t mMaxSample = 1000000; ///< maximum number of reads used to generate library information
+    int32_t mReadLen = 0;         ///< read length
+    int32_t mMedian = 0;          ///< isize median
+    int32_t mMad = 0;             ///< isize mad (median of abs(isize - median)
+    int32_t mMinNormalISize = 0;  ///< normal minimum isize max(0, median - 5 * mad)
+    int32_t mMinISizeCutoff = 0;  ///< customized isize minimum cutoff
+    int32_t mMaxNormalISize = 0;  ///< normal maximum isize (median + 5 * mad)
+    int32_t mMaxISizeCutoff = 0;  ///< max(0, median + cutoff * mad, 2 * readlen, 500)
+    int32_t mAbnormalPairs = 0;   ///< abnormal discordant pairs count
+    bool mIsHaploTagged = false;  ///< bam has HP tag if true
+    int32_t mContigNum = 0;       ///< maximum contig number in library
+    int32_t mVarisize = 0;        ///< std::max(mMaxNormalISize, mReadLen), mMaxDPVarSize equqls this value
     
     /** LibraryInfo constructor */
     LibraryInfo(){}

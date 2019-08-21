@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <cstring>
 #include <cstdint>
 #include <fstream>
 #include <htslib/vcf.h>

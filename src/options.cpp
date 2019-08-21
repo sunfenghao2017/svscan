@@ -69,6 +69,7 @@ void Options::update(int argc, char** argv){
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){
     LibraryInfo* libInfo = new LibraryInfo();
+    int32_t nread = 0;
     samFile* fp = sam_open(bam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
@@ -79,6 +80,7 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
         readLen.push_back(b->core.l_qseq);
         if(b->core.flag & BAM_FPAIRED && b->core.tid == b->core.mtid){
             vecISize.push_back(std::abs(b->core.isize));
+            if(++nread > libInfo->mMaxSample) break;
         }
     }
     libInfo->mReadLen = statutil::median(readLen);

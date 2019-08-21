@@ -1,5 +1,6 @@
 #include <htslib/sam.h>
 #include <iostream>
+#include <cassert>
 #include <string>
 #include <vector>
 

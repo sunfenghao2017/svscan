@@ -1,6 +1,7 @@
 #include <map>
 #include <util.h>
 #include <stdio.h>
+#include <cassert>
 #include <fstream>
 #include <sstream>
 #include <htslib/bgzf.h>
