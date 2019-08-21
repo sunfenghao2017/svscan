@@ -22,7 +22,7 @@ int main(int argc, char** argv){
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
-    app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 20))->group("General Options");
+    app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");
     // Control options
     app.add_option("--min_ref_sep", opt->filterOpt->mMinRefSep, "min sv length to compute", true)->group("Threshold Options");
     app.add_option("--max_read_sep", opt->filterOpt->mMaxReadSep, "max read split mapping pos allowed to compute sv", true)->group("Threshold Options");
