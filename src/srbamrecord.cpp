@@ -440,7 +440,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             std::vector<std::future<void>> casret;
             for(uint32_t svid = 0; svid < mTraSeqStore.size(); ++svid){
                 if(svs[svid].mChr1 == (*largeRefIdx) && svs[svid].mChr2 == (*liteRefIdx) && mTraSeqStore[svid].size() > 1){
-                    casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), svid, alnCfg, hdr, largeChrSeq, liteChrSeq));
+                    casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), svid, alnCfg, hdr, liteChrSeq, largeChrSeq));
                 }
             }
             for(auto& e: casret) e.get();
