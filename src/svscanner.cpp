@@ -47,29 +47,24 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
 }
 
 void SVScanner::scanDPandSR(){
-    util::loginfo("Start scanning bam for SRs and DPs");
-    // Parallel processing all contigs
-    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    bam_hdr_t* h = sam_hdr_read(fp);
-    int32_t ntargets = h->n_targets;
+    util::loginfo("Beg scanning bam for SRs and DPs");
     // Preset SR and DP result storing objects
-    std::vector<JunctionMap*> jct(ntargets, NULL);
-    std::vector<DPBamRecordSet*> dps(ntargets, NULL);
-    for(int32_t i = 0; i < ntargets; ++i){
+    std::vector<JunctionMap*> jct(mOpt->contigNum, NULL);
+    std::vector<DPBamRecordSet*> dps(mOpt->contigNum, NULL);
+    for(int32_t i = 0; i < mOpt->contigNum; ++i){
         jct[i] = new JunctionMap(mOpt);
         dps[i] = new DPBamRecordSet(mOpt);
     }
-    // Construct thread pool
-    ThreadPool::ThreadPool pool(ntargets);
-    std::vector<std::future<void>> scanret(ntargets);
-    for(int32_t i = 0; i < ntargets; ++i){
-        scanret[i] = pool.enqueue(&SVScanner::scanDPandSROne, this, i, jct[i], dps[i]);
+    // parallel processing each contig
+    std::vector<std::future<void>> scanret(mOpt->contigNum);
+    for(int32_t i = 0; i < mOpt->contigNum; ++i){
+        scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, i, jct[i], dps[i]);
     }
     for(auto& e: scanret) e.get();
     // Merge and clean
     JunctionMap* jctMap = JunctionMap::merge(jct, mOpt);
     DPBamRecordSet* dprSet = DPBamRecordSet::merge(dps, mOpt);
-    for(int32_t i = 0; i < ntargets; ++i){
+    for(int32_t i = 0; i < mOpt->contigNum; ++i){
         delete jct[i];
         jct[i] = NULL;
         delete dps[i];
@@ -83,7 +78,7 @@ void SVScanner::scanDPandSR(){
         }
     }
     // Process all SRs
-    util::loginfo("Finish scanning bam for SRs and DPs");
+    util::loginfo("End scanning bam for SRs and DPs");
     SRBamRecordSet srs(mOpt, jctMap);
     // Update all valid Ref ID s of SR
     for(auto& e: srs.mSRs){
@@ -92,51 +87,53 @@ void SVScanner::scanDPandSR(){
             mOpt->svRefID.insert(f.mChr2);
         }
     }
-    util::loginfo("Start clustering SRs");
+    util::loginfo("Beg clustering SRs");
     srs.cluster(mSRSVs);
-    util::loginfo("Finish clustering SRs");
-    util::loginfo("Start assembling SRs and refining breakpoints");
+    util::loginfo("End clustering SRs");
+    util::loginfo("Beg assembling SRs and refining breakpoints");
     srs.assembleSplitReads(mSRSVs);
-    util::loginfo("Finish assembling SRs and refining breakpoints");
+    util::loginfo("End assembling SRs and refining breakpoints");
     util::loginfo("Found SRSV Candidates: " + std::to_string(mSRSVs.size()));
     // Process all DPs
-    util::loginfo("Start clustering DPs");
+    util::loginfo("Beg clustering DPs");
     dprSet->cluster(mDPSVs);
-    util::loginfo("Finish clustering DPs");
+    util::loginfo("End clustering DPs");
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
     // Merge SR and DP SVs
-    util::loginfo("Start merging SVs from SRs and DPs");
+    util::loginfo("Beg merging SVs from SRs and DPs");
     SVSet mergedSVs;
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs);
-    util::loginfo("Finish merging SVs from SRs and DPs");
-    util::loginfo("Start fetching reference of SV supported by DP only");
+    util::loginfo("End merging SVs from SRs and DPs");
+    util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
     std::sort(mergedSVs.begin(), mergedSVs.end());
-    util::loginfo("Finish fetching reference of SV supported by DP only");
+    util::loginfo("End fetching reference of SV supported by DP only");
     // Get Allele info of SVs
     for(uint32_t i = 0; i < mergedSVs.size(); ++i){
         mergedSVs[i].addAlleles();
         mergedSVs[i].mID = i;
     }
     // open bamout for write
+    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
+    bam_hdr_t* h = sam_hdr_read(fp);
     mOpt->fbamout = sam_open(mOpt->bamout.c_str(), "w");
     assert(sam_hdr_write(mOpt->fbamout, h) >= 0);
     // Annotate junction reads and spaning coverage
-    util::loginfo("Start annotating SV coverage");
+    util::loginfo("Beg annotating SV coverage");
     Annotator* covAnn = new Annotator(mOpt);
     Stats* covStat = covAnn->covAnnotate(mergedSVs);
-    util::loginfo("Finish annotating SV coverage");
+    util::loginfo("End annotating SV coverage");
     sam_close(mOpt->fbamout);
     GeneInfoList gl;
-    util::loginfo("Start annotating SV gene information");
+    util::loginfo("Beg annotating SV gene information");
     covAnn->geneAnnotate(mergedSVs, gl);
-    util::loginfo("Finish annotating SV gene information");
-    util::loginfo("Start writing SVs to TSV file");
+    util::loginfo("End annotating SV gene information");
+    util::loginfo("Beg writing SVs to TSV file");
     covStat->reportTSV(mergedSVs, gl);
-    util::loginfo("Finish writing SVs to TSV file");
-    util::loginfo("Start writing SVs to BCF file");
+    util::loginfo("End writing SVs to TSV file");
+    util::loginfo("Beg writing SVs to BCF file");
     covStat->reportBCF(mergedSVs);
-    util::loginfo("Finish writing SVs to BCF file");
+    util::loginfo("End writing SVs to BCF file");
     delete covAnn;
     delete covStat;
     sam_close(fp);

@@ -50,7 +50,7 @@ int main(int argc, char** argv){
     util::loginfo("Valid region parsed");
     // calling SV
     SVScanner* svScanner = new SVScanner(opt);
-    util::loginfo("Start scanning SV");
+    util::loginfo("Beg scanning SV");
     svScanner->scanDPandSR();
-    util::loginfo("Finish scanning SV");
+    util::loginfo("End scanning SV");
 }

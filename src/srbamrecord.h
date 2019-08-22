@@ -97,10 +97,15 @@ typedef std::vector<std::map<std::pair<int32_t, size_t>, int32_t>> ContigSRs; //
 /** class to store SRBamRecord supporting various SVs */
 class SRBamRecordSet{
     public:
-        Options* mOpt;                              ///< pointer to Options object
-        std::vector<std::vector<SRBamRecord>> mSRs; ///< vector to store SRBamRecords according to the SV they support
-        ContigSRs mSRMapPos;                        ///< SR mapping starting position on each contig with SV Type defined
-        bool mSorted = false;                       ///< all SRBamRecords have been sorted if true
+        Options* mOpt;                                        ///< pointer to Options object
+        std::vector<std::vector<SRBamRecord>> mSRs;           ///< vector to store SRBamRecords according to the SV they support
+        ContigSRs mSRMapPos;                                  ///< SR mapping starting position on each contig with SV Type defined
+        bool mSorted = false;                                 ///< all SRBamRecords have been sorted if true
+        std::vector<std::multiset<std::string>> mTraSeqStore; ///< translocation SR read sequence
+        std::vector<std::multiset<std::string>> mTriSeqStore; ///< translocation insertion sequence nearby bp
+        std::vector<std::vector<uint8_t>> mTraQualStore;      ///< translocation SR read mapping quality
+        std::mutex mLock;                                     ///< lock used to update translocation info
+
     public:
         /** SRBamRecordSet constructor 
          * @param opt pointer to Options
@@ -173,6 +178,8 @@ class SRBamRecordSet{
          * @param svs reference of SVSet
          */
         void assembleSplitReads(SVSet& svs);
+
+        void assembleOneContig(SVSet& svs, int32_t refIdx);
 };
 
 #endif

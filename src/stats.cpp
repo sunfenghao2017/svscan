@@ -74,7 +74,7 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n){
 void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts){
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
-    util::loginfo("Start gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
+    util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
     // Flag breakpoint regions
     std::vector<bool> bpOccupied(h->target_len[mRefIdx], false);
     for(uint32_t i = 0; i < bpRegs[mRefIdx].size(); ++i){
@@ -348,7 +348,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].second;
         }
     }
-    util::loginfo("Finish gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
+    util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);

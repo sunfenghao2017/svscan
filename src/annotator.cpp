@@ -37,7 +37,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     faidx_t* fai = fai_load(mOpt->genome.c_str());
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     // Find Ns in reference genome
-    util::loginfo("Starting gathering N regions in reference");
+    util::loginfo("Beg gathering N regions in reference");
     std::vector<std::set<std::pair<int32_t, int32_t>>> nreg(h->n_targets);
     for(auto& refIndex : mOpt->svRefID){
         int32_t refSeqLen = -1;
@@ -61,8 +61,8 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         if(nrun) nreg[refIndex].insert(std::make_pair(nstart, refSeqLen - 1));
         if(seq) free(seq);
     }
-    util::loginfo("Finish gathering N regions in reference");
-    util::loginfo("Start extracting left/middle/right regions for each SV");
+    util::loginfo("End gathering N regions in reference");
+    util::loginfo("Beg extracting left/middle/right regions for each SV");
     // Add control regions
     std::vector<std::vector<CovRecord>> covRecs(h->n_targets); //coverage records of 3-part of each SV events
     int32_t lastID = svs.size();
@@ -109,12 +109,12 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     // Sort Coverage Records
     for(auto& refIndex : mOpt->svRefID) std::sort(covRecs[refIndex].begin(), covRecs[refIndex].end());
-    util::loginfo("Finish extracting left/middle/right regions for each SV");
+    util::loginfo("End extracting left/middle/right regions for each SV");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(h->n_targets);
     std::vector<int32_t> refAlignedReadCount(svs.size());
     std::vector<int32_t> refAlignedSpanCount(svs.size());
-    util::loginfo("Start extracting breakpoint regions of each precisely classified SV");
+    util::loginfo("Beg extracting breakpoint regions of each precisely classified SV");
     for(auto itsv = svs.begin(); itsv != svs.end(); ++ itsv){
         if(!itsv->mPrecise) continue;
         // Iterate all break point
@@ -143,9 +143,9 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     // Sort all BpRegion by breakpoint position on reference
     for(auto& refIndex : mOpt->svRefID) std::sort(bpRegion[refIndex].begin(), bpRegion[refIndex].end());
-    util::loginfo("Finish extracting breakpoint regions of each precisely classified SV");
+    util::loginfo("End extracting breakpoint regions of each precisely classified SV");
     // Get spanning point regions
-    util::loginfo("Start extracting PE supported breakpoints of each SV");
+    util::loginfo("Beg extracting PE supported breakpoints of each SV");
     ContigSpanPoints spanPoint;
     spanPoint.resize(mOpt->contigNum);
     for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
@@ -154,26 +154,25 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         spanPoint[itsv->mChr2].push_back(SpanPoint(itsv->mSVEnd, itsv->mSVT, itsv->mID));
     }
     for(uint32_t i = 0; i < spanPoint.size(); ++i) std::sort(spanPoint[i].begin(), spanPoint[i].end());
-    util::loginfo("Finish extracting PE supported breakpoints of each SV");
+    util::loginfo("End extracting PE supported breakpoints of each SV");
     // Clean-up
     sam_close(fp);
     hts_idx_destroy(idx);
     fai_destroy(fai);
     // Get coverage from each contig in parallel
-    ThreadPool::ThreadPool pool(std::min(mOpt->nthread, (int32_t)(mOpt->svRefID.size() + mOpt->traRefPair.size())));
     std::vector<Stats*> covStats(mOpt->svRefID.size());
     std::vector<TraDPStat*> traStats(mOpt->traRefPair.size());
     std::vector<std::future<void>> statRets(mOpt->svRefID.size() + mOpt->traRefPair.size());
     int32_t i = 0;
     for(auto& refidx: mOpt->svRefID){
         covStats[i] = new Stats(mOpt, svs.size(), refidx);
-        statRets[i] = pool.enqueue(&Stats::stat, covStats[i], std::ref(svs), std::ref(covRecs), std::ref(bpRegion), std::ref(spanPoint));
+        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats[i], std::ref(svs), std::ref(covRecs), std::ref(bpRegion), std::ref(spanPoint));
         ++i;
     }
     int32_t j = 0;
     for(auto& chrp: mOpt->traRefPair){
         traStats[j] = new TraDPStat(mOpt, chrp.second, chrp.first, svs.size());
-        statRets[i] = pool.enqueue(&TraDPStat::dptra, traStats[j], std::ref(spanPoint));
+        statRets[i] = mOpt->pool->enqueue(&TraDPStat::dptra, traStats[j], std::ref(spanPoint));
         ++i;
         ++j;
     }

@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <sstream>
 #include <htslib/sam.h>
+#include "ThreadPool.h"
 #include "statutil.h"
 #include "util.h"
 
@@ -104,7 +105,6 @@ struct SVFilter{
     int32_t mMinInsRpt = 15;           ///< minimum insertion size to report
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
 
-
     /** SVFilter constructor */
     SVFilter(){}
 
@@ -181,6 +181,7 @@ class Options{
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment
+        ThreadPool::ThreadPool* pool; ///< thread pool used to do parallel work
         std::mutex logMtx;            ///< mutex locked to output log information
         std::mutex outMtx;            ///< mutex locked to output sv supporting bam
         int32_t contigNum;            ///< max contig numbers in library bam

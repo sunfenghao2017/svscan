@@ -67,7 +67,7 @@ class SVRecord{
             os << "SV type: " << sv.mSVT << "\n";
             os << "SV ID: " << sv.mID << "\n";
             os << "Reference ID on 5' end of SV: " << sv.mChr1 << "(" << sv.mNameChr1 << ")\n";
-            os << "Starting position on reference of 5' end of SV: " << sv.mSVStart << "\n";
+            os << "Beg position on reference of 5' end of SV: " << sv.mSVStart << "\n";
             os << "Reference ID on 3' end of SV: " << sv.mChr2 << "(" << sv.mNameChr2 << ")\n";
             os << "Ending position on reference of 3' end of SV: " << sv.mSVEnd << "\n";
             os << "Negative offset of starting position on reference of 5' end of SV: " << sv.mCiPosLow << "\n";
@@ -192,21 +192,19 @@ class SVRecord{
 
         /** add allele information of this SV */
         inline void addAlleles(){
-            std::string ref = mSVRef;
-            if(mPrecise) ref = mSVRef.substr(mGapCoord[2] - 1, 1);
             if(mSVT >= 5){
                 if(mSVT == 5){// 5to5 translocation
-                    mAlleles = ref + "," + ref + "]" + mNameChr2 + ":" + std::to_string(mSVEnd) + "]";
+                    mAlleles = mSVRef + "," + mSVRef + "]" + mNameChr2 + ":" + std::to_string(mSVEnd) + "]";
                 }else if(mSVT == 6){// 3to3 translocation
-                    mAlleles = ref + "," + "[" + mNameChr2 + ":" + std::to_string(mSVEnd) + "[" + ref;
+                    mAlleles = mSVRef + "," + "[" + mNameChr2 + ":" + std::to_string(mSVEnd) + "[" + mSVRef;
                 }else if(mSVT == 7){// 5to3 translocation
-                    mAlleles = ref + "," + ref + "[" + mNameChr2 + ":" + std::to_string(mSVEnd) + "[";
+                    mAlleles = mSVRef + "," + mSVRef + "[" + mNameChr2 + ":" + std::to_string(mSVEnd) + "[";
                 }else if(mSVT == 8){// 3to5 translocation
-                    mAlleles = ref + "," + "]" + mNameChr2 + ":" + std::to_string(mSVEnd) + "]" + ref;
+                    mAlleles = mSVRef + "," + "]" + mNameChr2 + ":" + std::to_string(mSVEnd) + "]" + mSVRef;
                 }else{
-                    mAlleles = ref + ",<" + addID() + ">";
+                    mAlleles = mSVRef + ",<" + addID() + ">";
                 }
-            }else mAlleles = ref + ",<" + addID() + ">";
+            }else mAlleles = mSVRef + ",<" + addID() + ">";
         }
 };
 

@@ -6,6 +6,7 @@ Options::Options(){
     bcfOut = "sv.bcf";
     tsvOut = "sv.tsv";
     bamout = "sv.bam";
+    pool = NULL;
     filterOpt = new SVFilter();
     softEnv = new Software();
     msaOpt = new MSAOpt();
@@ -20,6 +21,7 @@ Options::~Options(){
     if(filterOpt) delete filterOpt;
     if(softEnv) delete softEnv;
     if(libInfo) delete libInfo;
+    if(pool) delete pool;
 }
 
 void Options::validate(){
@@ -63,6 +65,8 @@ void Options::update(int argc, char** argv){
     }
     // update contigNum
     contigNum = libInfo->mContigNum;
+    // construct threadpool
+    pool = new ThreadPool::ThreadPool(std::min(contigNum, nthread));
     // show SV types to discover
     util::loginfo("SV types to discover: " + allSVT);
 }

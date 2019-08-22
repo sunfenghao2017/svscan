@@ -186,7 +186,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
 }
 
 void mergeSRSVs(SVSet& sr, SVSet& msr){
-    util::loginfo("Starting merge SR supported SVs");
+    util::loginfo("Beg merge SR supported SVs");
     std::sort(sr.begin(), sr.end());
     for(uint32_t i = 0; i < sr.size(); ++i){
         if(sr[i].mMerged) continue;
@@ -217,7 +217,7 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs){
     // Merge SR SVSet
     mergeSRSVs(sr, svs);
     // Augment SR SVs with PE records
-    util::loginfo("Start augmenting SR supported SV candidates with DPs");
+    util::loginfo("Beg augmenting SR supported SV candidates with DPs");
     for(uint32_t i = 0; i < svs.size(); ++i){
         for(auto itpe = pe.begin(); itpe != pe.end(); ++itpe){
             if(itpe->mSVT != svs[i].mSVT || svs[i].mChr1 != itpe->mChr1 || svs[i].mChr2 != itpe->mChr2 || itpe->mMerged) continue;
@@ -230,7 +230,7 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs){
             }
         }
     }
-    util::loginfo("Finish augmenting SR supported SV candidates with DPs");
+    util::loginfo("End augmenting SR supported SV candidates with DPs");
     // Append DP supported only SV 
     std::copy_if(pe.begin(), pe.end(), std::back_inserter(svs), [&](const SVRecord& sv){return !sv.mMerged;});
     pe.clear();

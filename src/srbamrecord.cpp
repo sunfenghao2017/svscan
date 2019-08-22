@@ -1,7 +1,7 @@
 #include "srbamrecord.h"
 
 void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
-    util::loginfo("Start classifing SRs into various SV candidates");
+    util::loginfo("Beg classifing SRs into various SV candidates");
     if(!jctMap->mSorted) jctMap->sortJunctions();
     int svtIdx = 0;
     int32_t rst = -1;
@@ -113,11 +113,11 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
             }
         }
     }
-    util::loginfo("Finish classifing SRs into various SV candidates");
+    util::loginfo("End classifing SRs into various SV candidates");
 }
 
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
-    util::loginfo("Start clustering SRs for SV type:" + std::to_string(svt));
+    util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
     for(auto&refIdx : mOpt->svRefID){
         // Components assigned marker
         std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
@@ -197,7 +197,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             compEdge.clear();
         }
     }
-    util::loginfo("Finish clustering SRs for SV type:" + std::to_string(svt));
+    util::loginfo("End clustering SRs for SV type:" + std::to_string(svt));
 }
 
 void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
@@ -279,7 +279,8 @@ void SRBamRecordSet::cluster(SVSet& svs){
     }
 }
 
-void SRBamRecordSet::assembleSplitReads(SVSet& svs){
+void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
+    if(mSRMapPos[refIdx].empty()) return;
     // Open file handles
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_set_fai_filename(fp, mOpt->genome.c_str());
@@ -287,7 +288,123 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     bam_hdr_t* hdr = sam_hdr_read(fp);
     faidx_t* fai = fai_load(mOpt->genome.c_str());
     bam1_t* b = bam_init1();
+    util::loginfo("Beg assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
+    const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP | BAM_FSUPPLEMENTARY);
+    // Load sequence
+    int32_t seqlen = -1;
+    char* chr1Seq = faidx_fetch_seq(fai, hdr->target_name[refIdx], 0, hdr->target_len[refIdx], &seqlen);
+    std::vector<bool> hits(hdr->target_len[refIdx], false);
+    // Collect all split-read pos
+    for(auto vsrIter = mSRMapPos[refIdx].begin(); vsrIter != mSRMapPos[refIdx].end(); ++vsrIter){
+        hits[vsrIter->first.first] = true;
+    }
+    // Sequences and quality
+    std::vector<std::multiset<std::string>> seqStore(svs.size());
+    std::vector<std::multiset<std::string>> insStore(svs.size());
+    std::vector<std::vector<uint8_t>> qualStore(svs.size());
+    // Collect reads
+    hts_itr_t* bamIter = sam_itr_queryi(idx, refIdx, 0, hdr->target_len[refIdx]);
+    while(sam_itr_next(fp, bamIter, b) >= 0){
+        if(b->core.flag & BAM_RDSKIP_MASK) continue;
+        if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;
+        if(!hits[b->core.pos]) continue;
+        // Valid split-read
+        size_t seed = svutil::hashString(bam_get_qname(b));
+        auto vsrIter = mSRMapPos[refIdx].find(std::make_pair(b->core.pos, seed));
+        if(vsrIter == mSRMapPos[refIdx].end()) continue;
+        int32_t svid = vsrIter->second;
+        int32_t svt = svs[svid].mSVT;
+        int32_t bpInslen = 0;
+        for(auto& rec : mSRs[svs[svid].mSVT]){
+            if(rec.mID == seed){
+                bpInslen = rec.mInslen;
+                break;
+            }
+        }
+        std::string srseq = ""; // read sequence excluding insertiong after clip pos
+        std::string siseq = ""; // inserted sequence after clip pos
+        svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep);
+        // Adjust orientation
+        bool bpPoint = false;
+        if(svt >= 5 && b->core.tid == svs[svid].mChr2) bpPoint = true;
+        else{
+            if(svt == 0){
+                if(svs[svid].mSVStart - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
+                else bpPoint = false;
+            }else if(svt == 1){
+                if(svs[svid].mSVEnd - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
+                else bpPoint = false;
+            }
+        }
+        SRBamRecord::adjustOrientation(srseq, bpPoint, svt);
+        if(!siseq.empty()) SRBamRecord::adjustOrientation(siseq, bpPoint, svt);
+        // At most n split-reads used to to one SV event analysis
+        if((int32_t)seqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
+            if(svt >= 5){
+                mLock.lock();
+                if(!srseq.empty()){
+                    mTraSeqStore[svid].insert(srseq);
+                    mTraQualStore[svid].push_back(b->core.qual);
+                }
+                if(!siseq.empty()) mTriSeqStore[svid].insert(siseq);
+                mLock.unlock();
+            }else{
+                if(!srseq.empty()){
+                    seqStore[svid].insert(srseq);
+                    qualStore[svid].push_back(b->core.qual);
+                }
+                if(!siseq.empty()) insStore[svid].insert(siseq);
+            }
+        } 
+    }
+    // Process all SVs on this chromosome
+    for(uint32_t svid = 0; svid < seqStore.size(); ++svid){
+        if(svs[svid].mSVT >= 5) continue;
+        if(svs[svid].mChr1 != refIdx) continue;
+        // MSA
+        bool bpRefined = false;
+        if(seqStore[svid].size() > 1){
+            AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
+            MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+            msa->msa(svs[svid].mConsensus);
+            delete msa;
+            if(insStore[svid].size() > 1){
+                MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                imsa->msa(svs[svid].mBpInsSeq);
+                delete imsa;
+            }
+            if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
+            if(!bpRefined){
+                svs[svid].mConsensus = "";
+                svs[svid].mSVRef = "";
+                svs[svid].mSRSupport = 0;
+                svs[svid].mSRAlignQuality = 0;
+                svs[svid].mSRMapQuality = 0;
+            }else{// SR support and qualities
+                svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
+                svs[svid].mSRSupport = seqStore[svid].size();
+                svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
+            }
+        }
+    }
+    if(chr1Seq) free(chr1Seq);
+    sam_close(fp);
+    bam_hdr_destroy(hdr);
+    hts_idx_destroy(idx);
+    fai_destroy(fai);
+    bam_destroy1(b);
+    util::loginfo("End assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
+}
+
+
+void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // Construct bool filter of SR mapping positions
+    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
+    hts_set_fai_filename(fp, mOpt->genome.c_str());
+    hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
+    bam_hdr_t* hdr = sam_hdr_read(fp);
+    faidx_t* fai = fai_load(mOpt->genome.c_str());
+    bam1_t* b = bam_init1();
     for(uint32_t svt = 0; svt < mSRs.size(); ++svt){
         for(uint32_t i = 0; i < mSRs[svt].size(); ++i){
             if(mSRs[svt][i].mSVID == -1 || mSRs[svt][i].mRstart == -1) continue;
@@ -299,110 +416,17 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
             }
         }
     }
-    const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP | BAM_FSUPPLEMENTARY);
-    std::vector<std::multiset<std::string>> traSeqStore(svs.size()); // translocation SR read sequence
-    std::vector<std::multiset<std::string>> triSeqStore(svs.size()); // translocation insertion sequence nearby bp
-    std::vector<std::vector<uint8_t>> traQualStore(svs.size());      // translocation SR read mapping quality
-    // Parse BAM
-    for(auto& refIdx : mOpt->svRefID){
-        if(mSRMapPos[refIdx].empty()) continue;
-        // Load sequence
-        int32_t seqlen = -1;
-        char* chr1Seq = faidx_fetch_seq(fai, hdr->target_name[refIdx], 0, hdr->target_len[refIdx], &seqlen);
-        std::vector<bool> hits(hdr->target_len[refIdx], false);
-        // Collect all split-read pos 
-        for(auto vsrIter = mSRMapPos[refIdx].begin(); vsrIter != mSRMapPos[refIdx].end(); ++vsrIter){
-            hits[vsrIter->first.first] = true;
-        }
-        // Sequences and quality
-        std::vector<std::multiset<std::string>> seqStore(svs.size());
-        std::vector<std::multiset<std::string>> insStore(svs.size());
-        std::vector<std::vector<uint8_t>> qualStore(svs.size());
-        // Collect reads
-        hts_itr_t* bamIter = sam_itr_queryi(idx, refIdx, 0, hdr->target_len[refIdx]);
-        while(sam_itr_next(fp, bamIter, b) >= 0){
-            if(b->core.flag & BAM_RDSKIP_MASK) continue;
-            if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;
-            if(!hits[b->core.pos]) continue;
-            // Valid split-read
-            size_t seed = svutil::hashString(bam_get_qname(b));
-            auto vsrIter = mSRMapPos[refIdx].find(std::make_pair(b->core.pos, seed));
-            if(vsrIter == mSRMapPos[refIdx].end()) continue;
-            int32_t svid = vsrIter->second;
-            int32_t svt = svs[svid].mSVT;
-            int32_t bpInslen = 0;
-            for(auto& rec : mSRs[svs[svid].mSVT]){
-                if(rec.mID == seed){
-                    bpInslen = rec.mInslen;
-                    break;
-                }
-            }
-            std::string srseq = ""; // read sequence excluding insertiong after clip pos
-            std::string siseq = ""; // inserted sequence after clip pos
-            svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep);
-            // Adjust orientation
-            bool bpPoint = false;
-            if(svt >= 5 && b->core.tid == svs[svid].mChr2) bpPoint = true;
-            else{
-                if(svt == 0){
-                    if(svs[svid].mSVStart - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
-                    else bpPoint = false;
-                }else if(svt == 1){
-                    if(svs[svid].mSVEnd - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
-                    else bpPoint = false;
-                }
-            }
-            SRBamRecord::adjustOrientation(srseq, bpPoint, svt);
-            if(!siseq.empty()) SRBamRecord::adjustOrientation(siseq, bpPoint, svt);
-            // At most n split-reads used to to one SV event analysis
-            if((int32_t)seqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
-                if(svt >= 5){
-                    if(!srseq.empty()){
-                        traSeqStore[svid].insert(srseq);
-                        traQualStore[svid].push_back(b->core.qual);
-                    }
-                    if(!siseq.empty()) triSeqStore[svid].insert(siseq);
-                }else{
-                    if(!srseq.empty()){
-                        seqStore[svid].insert(srseq);
-                        qualStore[svid].push_back(b->core.qual);
-                    }
-                    if(!siseq.empty()) insStore[svid].insert(siseq);
-                }
-            } 
-        }
-        // Process all SVs on this chromosome
-        for(uint32_t svid = 0; svid < seqStore.size(); ++svid){
-            if(svs[svid].mSVT >= 5) continue;
-            if(svs[svid].mChr1 != refIdx) continue;
-            // MSA
-            bool bpRefined = false;
-            if(seqStore[svid].size() > 1){
-                AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
-                MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                msa->msa(svs[svid].mConsensus);
-                delete msa;
-                if(insStore[svid].size() > 1){
-                    MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                    imsa->msa(svs[svid].mBpInsSeq);
-                    delete imsa;
-                }
-                if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
-                if(!bpRefined){
-                    svs[svid].mConsensus = "";
-                    svs[svid].mSVRef = "";
-                    svs[svid].mSRSupport = 0;
-                    svs[svid].mSRAlignQuality = 0;
-                    svs[svid].mSRMapQuality = 0;
-                }else{// SR support and qualities
-                    svs[svid].mSRSupport = seqStore[svid].size();
-                    svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
-                }
-            }
-        }
-        if(chr1Seq) free(chr1Seq);
-    }
-    // Process translocations
+    // reserve space for translocation information
+    mTraSeqStore.resize(svs.size());
+    mTraQualStore.resize(svs.size());
+    mTriSeqStore.resize(svs.size());
+    // parallel assemble on each contig
+    std::vector<std::future<void>> asret(mOpt->svRefID.size());
+    int i = 0;
+    for(auto& refIdx: mOpt->svRefID) asret[i++] = mOpt->pool->enqueue(&SRBamRecordSet::assembleOneContig, this, std::ref(svs), refIdx);
+    for(auto& e: asret) e.get();
+    // assemble translocation srs
+    util::loginfo("Beg assembling SRs across chromosomes", mOpt->logMtx);
     for(auto liteRefIdx = mOpt->svRefID.begin(); liteRefIdx != mOpt->svRefID.end(); ++liteRefIdx){
         char* liteChrSeq = NULL;
         auto largeRefIdx = liteRefIdx;
@@ -410,10 +434,10 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
         for(; largeRefIdx !=mOpt->svRefID.end(); ++largeRefIdx){
             char* largeChrSeq = NULL;
             // Iterate SVs
-            for(uint32_t svid = 0; svid < traSeqStore.size(); ++svid){
+            for(uint32_t svid = 0; svid < mTraSeqStore.size(); ++svid){
                 if(svs[svid].mChr1 != (*largeRefIdx) || svs[svid].mChr2 != (*liteRefIdx)) continue;
                 bool bpRefined = false;
-                if(traSeqStore[svid].size() > 1){
+                if(mTraSeqStore[svid].size() > 1){
                     if(!liteChrSeq){
                         int32_t liteChrSeqLen = -1;
                         liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[*liteRefIdx], 0, hdr->target_len[*liteRefIdx], &liteChrSeqLen);
@@ -423,11 +447,11 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                         largeChrSeq = faidx_fetch_seq(fai, hdr->target_name[*largeRefIdx], 0, hdr->target_len[*largeRefIdx], &largeChrSeqLen);
                     }
                     AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
-                    MSA* msa = new MSA(&traSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                    MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                     msa->msa(svs[svid].mConsensus);
                     delete msa;
-                    if(triSeqStore[svid].size() > 0){
-                        MSA* imsa = new MSA(&triSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                    if(mTriSeqStore[svid].size() > 0){
+                        MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                         imsa->msa(svs[svid].mBpInsSeq);
                         delete imsa;
                     }
@@ -438,8 +462,9 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
                         svs[svid].mSRSupport = 0;
                         svs[svid].mSRAlignQuality = 0;
                     }else{// SR support and qualities
-                        svs[svid].mSRSupport = traSeqStore[svid].size();
-                        svs[svid].mSRMapQuality = util::median(traQualStore[svid]);
+                        svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
+                        svs[svid].mSRSupport = mTraSeqStore[svid].size();
+                        svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
                     }
                 }
             }
@@ -458,4 +483,5 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     bam_hdr_destroy(hdr);
     fai_destroy(fai);
     bam_destroy1(b);
+    util::loginfo("End assembling SRs across chromosomes", mOpt->logMtx);
 }

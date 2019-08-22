@@ -15,7 +15,7 @@ TraDPStat* TraDPStat::merge(const std::vector<TraDPStat*>& sts, int32_t n){
 void TraDPStat::dptra(const ContigSpanPoints& spPts){
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
-    util::loginfo("Start processing alt DPs on: " + std::string(h->target_name[mBigChr]) + " and " + std::string(h->target_name[mLiteChr]), mOpt->logMtx);
+    util::loginfo("Beg processing alt DPs on: " + std::string(h->target_name[mBigChr]) + " and " + std::string(h->target_name[mLiteChr]), mOpt->logMtx);
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     // Flag spanning breakpoints
     std::set<int32_t> spnBp;
@@ -86,7 +86,7 @@ void TraDPStat::dptra(const ContigSpanPoints& spPts){
             }
         }
     }
-    util::loginfo("Finish processing alt DPs on: " + std::string(h->target_name[mBigChr]) + " and " + std::string(h->target_name[mLiteChr]), mOpt->logMtx);
+    util::loginfo("End processing alt DPs on: " + std::string(h->target_name[mBigChr]) + " and " + std::string(h->target_name[mLiteChr]), mOpt->logMtx);
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);
