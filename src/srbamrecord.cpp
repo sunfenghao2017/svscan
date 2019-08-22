@@ -434,6 +434,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
         liteChrSet.insert(e.second);
         largeChrSet.insert(e.first);
     }
+    util::loginfo("Number of  cross-chr pairs: " + std::to_string(mOpt->traRefPair.size()) + ",Unique" + std::to_string(liteChrSet.size()) + "L|" + std::to_string(largeChrSet.size()) +  "R", mOpt->logMtx);
     for(auto& liteRefIdx : liteChrSet){
         int32_t liteChrSeqLen = -1;
         char* liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[liteRefIdx], 0, hdr->target_len[liteRefIdx], &liteChrSeqLen);
