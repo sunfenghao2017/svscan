@@ -209,13 +209,36 @@ void mergeSRSVs(SVSet& sr, SVSet& msr){
         }
     }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
-    util::loginfo(std::to_string(sr.size()) + " SVs merged into " + std::to_string(msr.size()) + " ones");
+    util::loginfo(std::to_string(sr.size()) + " SR supported SVs merged into " + std::to_string(msr.size()) + " ones");
     sr.clear();
 }
 
-void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs){
+void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
+    util::loginfo("Beg merge DP supported SVs");
+    std::sort(dp.begin(), dp.end());
+    for(uint32_t i = 0; i < dp.size(); ++i){
+        if(dp[i].mMerged) continue;
+        for(uint32_t j = 0; j < dp.size(); ++j){
+            if(i == j || dp[j].mMerged) continue;
+            if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr1 != dp[j].mChr1 || dp[i].mChr2 != dp[j].mChr2) continue;
+            // Test whether breakpoints within SR condidence interval
+            if((std::abs(dp[i].mSVStart - dp[j].mSVStart) < opt->libInfo->mMaxNormalISize) &&
+               (std::abs(dp[i].mSVEnd - dp[j].mSVEnd) < opt->libInfo->mMaxNormalISize)){
+                if(dp[i].mPESupport < dp[j].mPESupport || (i < j && dp[i].mPESupport == dp[j].mPESupport)) dp[i].mMerged = true;
+            }
+        }
+    }
+    std::copy_if(dp.begin(), dp.end(), std::back_inserter(mdp), [&](const SVRecord& sv){return !sv.mMerged;});
+    util::loginfo(std::to_string(dp.size()) + " DP supported SVs merged into " + std::to_string(mdp.size()) + " ones");
+    dp.clear();
+}
+
+void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
     // Merge SR SVSet
     mergeSRSVs(sr, svs);
+    // Merge DP SVset
+    SVSet pe;
+    mergeDPSVs(dp, pe, opt);
     // Augment SR SVs with PE records
     util::loginfo("Beg augmenting SR supported SV candidates with DPs");
     for(uint32_t i = 0; i < svs.size(); ++i){

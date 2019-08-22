@@ -220,14 +220,23 @@ inline std::ostream& operator<<(std::ostream& os, const SVSet& svs){
  * @param sr SVSet supported by SR
  * @param pe SVSet supported by PE
  * @param svs SVSet to store merged SVs
+ * @param opt pointer to Options
  */
-void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs);
+void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs, Options* opt);
 
 /** merge SVSet supported by SR only
  * @param sr SVSet supported by SR
  * @param msr SVSet merged
  */
 void mergeSRSVs(SVSet& sr, SVSet& msr);
+
+
+/** merge SVSet supported by DP only
+ * @param dp SVSet supported by SR
+ * @param mdp SVSet merged
+ * @param opt pointer to Options
+ */
+void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt);
 
 /** get reference of  SV supported by PE
  * @param pe SVSet supported by PE

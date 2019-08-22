@@ -277,6 +277,7 @@ class Stats{
         std::vector<std::pair<int32_t, int32_t>> mCovCnts; ///< base and fragment coverage count of each SV event
         std::vector<int32_t> mRefAlignedReadCount;         ///< REF like read count of each SV
         std::vector<int32_t> mRefAlignedSpanCount;         ///< REF like read pair count of each SV
+        std::mutex mLock;                                  ///< lock
 
     public:
         /** Stats constructor */
