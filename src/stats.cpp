@@ -89,12 +89,8 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     hts_itr_t* itr = sam_itr_queryi(idx, mRefIdx, 0, h->target_len[mRefIdx]);
     bam1_t* b = bam_init1();
-    int32_t lastAlignedPos = 0;
-    std::set<size_t> lastAlignedPosReads;
     AlignConfig alnCfg(5, -4, -4, -4, false, true);   
     const uint16_t COV_STAT_SKIP_MASK = (BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP | BAM_FMUNMAP);
-    std::unordered_map<size_t, uint8_t> qualities;
-    std::unordered_map<size_t, bool> clip;
     while(sam_itr_next(fp, itr, b) >= 0){
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
@@ -218,35 +214,8 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         }
         // Read-count and spanning annotation
         if((!(b->core.flag & BAM_FPAIRED)) || covRecs[b->core.mtid].empty()) continue;
-        // Clean-up the read store for identical alignment positions
-        if(b->core.pos > lastAlignedPos){
-            lastAlignedPosReads.clear();
-            lastAlignedPos = b->core.pos;
-        }
-        if(firstInPair(b, lastAlignedPosReads)){
-            // First read in pair
-            lastAlignedPosReads.insert(svutil::hashString(bam_get_qname(b)));
-            size_t hv = svutil::hashPairCurr(b);
-            if(b->core.tid == b->core.mtid){
-                qualities[hv] = b->core.qual;
-                clip[hv] = hasSoftClip;
-            }
-        }else{
-            // Second read in pair
-            size_t hv = svutil::hashPairMate(b);
-            uint8_t pairQual = 0;
-            bool pairClip = false;
-            if(b->core.tid == b->core.mtid){
-                auto itq = qualities.find(hv);
-                if(itq == qualities.end()) continue;
-                pairQual = std::min(itq->second, b->core.qual);
-                auto itc = clip.find(hv);
-                if(itc->second || hasSoftClip) pairClip = true;
-                itq->second = 0;
-                itc->second = false;
-            }
-            // Pair quality
-            if(pairQual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
+        if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
+            if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
             // Read-depth fragment counting
             if(b->core.tid == b->core.mtid){
                 // Count mid point (fragment counting)
@@ -262,7 +231,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             // Spanning counting
             int32_t outerISize = b->core.pos + b->core.l_qseq - b->core.mpos;
             // Normal spanning pair
-            if((!pairClip) && (DPBamRecord::getSVType(b) == 2) && outerISize >= mOpt->libInfo->mMinNormalISize &&
+            if((DPBamRecord::getSVType(b) == 2) && outerISize >= mOpt->libInfo->mMinNormalISize &&
                outerISize <= mOpt->libInfo->mMaxNormalISize && b->core.mtid == b->core.tid){
                 // Take 80% of the outersize as the spanned interval
                 int32_t spanlen = 0.8 * outerISize;
@@ -280,9 +249,9 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
                     for(; itspan != spPts[mRefIdx].end() && (st + spanlen) >= itspan->mBpPos; ++itspan){
                         // Account for reference bias
-                        if(++mRefAlignedSpanCount[itspan->mID] % 2){
+                        if(++mRefAlignedSpanCount[itspan->mID]){
                             uint8_t* hpptr = bam_aux_get(b, "HP");
-                            mSpnCnts[itspan->mID].mRefQual.push_back(pairQual);
+                            mSpnCnts[itspan->mID].mRefQual.push_back(b->core.qual);
                             if(hpptr){
                                 mOpt->libInfo->mIsHaploTagged = true;
                                 int hap = bam_aux2i(hpptr);
@@ -294,7 +263,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 }
             }
             // Abnormal spanning coverage
-            if(((DPBamRecord::getSVType(b) != 2) || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) && b->core.tid == b->core.mtid){
+            if(((DPBamRecord::getSVType(b) != 2) || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) || (b->core.tid != b->core.mtid)){
                 // Get SV type
                 int32_t svt =  DPBamRecord::getSVType(b, mOpt);
                 if(svt == -1) continue;
@@ -318,7 +287,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     for(; itspan != spPts[mRefIdx].end() && pend >= itspan->mBpPos; ++itspan){
                         if(svt == itspan->mSVT){
                             uint8_t* hpptr = bam_aux_get(b, "HP");
-                            mSpnCnts[itspan->mID].mAltQual.push_back(pairQual);
+                            mSpnCnts[itspan->mID].mAltQual.push_back(b->core.qual);
                             if(hpptr){
                                 mOpt->libInfo->mIsHaploTagged = true;
                                 int hap = bam_aux2i(hpptr);

@@ -266,46 +266,6 @@ typedef std::vector<GeneInfo> GeneInfoList;
 typedef std::vector<std::vector<BpRegion>> ContigBpRegions;
 typedef std::vector<std::vector<SpanPoint>> ContigSpanPoints;
 
-/** class to do DP coverage statistics of tranlocation */
-class TraDPStat{
-    public:
-        Options* mOpt;///< pointer to Options
-        int32_t mLiteChr;///< little chrosome
-        int32_t mBigChr;///< large chrosome
-        std::vector<SpanningCount> mSpnCnts;///< Paired-end read spanning SV breakpoint stats
-    public:
-        /** TraDPStats cosntructor */
-        TraDPStat(){}
-
-        /** TraDPStat constructor */
-        TraDPStat(int32_t n){
-            mSpnCnts.resize(n);
-        }
-
-        /** TraDPStat constructor */
-        TraDPStat(Options* opt, int32_t litechr, int32_t bigchr, int32_t n){
-            mOpt = opt;
-            mLiteChr = litechr;
-            mBigChr = bigchr;
-            mSpnCnts.resize(n);
-        }
-
-        /** TraDPStat destructor */
-        ~TraDPStat(){}
-        
-        /** gather discordant pairend read supports of each SV events
-         * @param spPts SV DP read mapping position on each contig
-         */
-        void dptra(const ContigSpanPoints& spPts);
-
-        /** merge a list of TraDPStat
-         * @param tradps a list of TraDPStat pointers
-         * @param n number of SVs
-         * @return pointer to merged TraDPStat object 
-         */
-        static TraDPStat* merge(const std::vector<TraDPStat*>& tradps, int32_t n );
-};
-
 /** class to do coverage statistics of REF and ALT on contigs */
 class Stats{
     public:

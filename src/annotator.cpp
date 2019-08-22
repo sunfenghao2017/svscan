@@ -161,32 +161,16 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     fai_destroy(fai);
     // Get coverage from each contig in parallel
     std::vector<Stats*> covStats(mOpt->svRefID.size());
-    std::vector<TraDPStat*> traStats(mOpt->traRefPair.size());
-    std::vector<std::future<void>> statRets(mOpt->svRefID.size() + mOpt->traRefPair.size());
+    std::vector<std::future<void>> statRets(mOpt->svRefID.size());
     int32_t i = 0;
     for(auto& refidx: mOpt->svRefID){
         covStats[i] = new Stats(mOpt, svs.size(), refidx);
         statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats[i], std::ref(svs), std::ref(covRecs), std::ref(bpRegion), std::ref(spanPoint));
         ++i;
     }
-    int32_t j = 0;
-    for(auto& chrp: mOpt->traRefPair){
-        traStats[j] = new TraDPStat(mOpt, chrp.second, chrp.first, svs.size());
-        statRets[i] = mOpt->pool->enqueue(&TraDPStat::dptra, traStats[j], std::ref(spanPoint));
-        ++i;
-        ++j;
-    }
     for(auto& e: statRets) e.get();
     Stats* finalStat = Stats::merge(covStats, svs.size());
-    TraDPStat* finalDps = TraDPStat::merge(traStats, svs.size());
-    for(uint32_t s = 0; s < svs.size(); ++s){
-        finalStat->mSpnCnts[s].mAlth1 += finalDps->mSpnCnts[s].mAlth1;
-        finalStat->mSpnCnts[s].mAlth2 += finalDps->mSpnCnts[s].mAlth2;
-        finalStat->mSpnCnts[s].mAltQual.insert(finalStat->mSpnCnts[s].mAltQual.end(), finalDps->mSpnCnts[s].mAltQual.begin(), finalDps->mSpnCnts[s].mAltQual.end());
-    }
     for(auto& e: covStats) delete e;
-    for(auto& e: traStats) delete e;
-    delete finalDps;
     return finalStat;
 }
 
