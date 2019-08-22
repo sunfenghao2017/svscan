@@ -5,8 +5,8 @@ Options::Options(){
     nthread = 8;
     bcfOut = "sv.bcf";
     tsvOut = "sv.tsv";
-    bamout = "sv.bam";
     pool = NULL;
+    fbamout = NULL;
     filterOpt = new SVFilter();
     softEnv = new Software();
     msaOpt = new MSAOpt();

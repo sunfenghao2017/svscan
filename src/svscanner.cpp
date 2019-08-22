@@ -115,16 +115,20 @@ void SVScanner::scanDPandSR(){
         mergedSVs[i].mID = i;
     }
     // open bamout for write
-    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    bam_hdr_t* h = sam_hdr_read(fp);
-    mOpt->fbamout = sam_open(mOpt->bamout.c_str(), "w");
-    assert(sam_hdr_write(mOpt->fbamout, h) >= 0);
+    if(!mOpt->bamout.empty()){
+        samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
+        bam_hdr_t* h = sam_hdr_read(fp);
+        mOpt->fbamout = sam_open(mOpt->bamout.c_str(), "w");
+        assert(sam_hdr_write(mOpt->fbamout, h) >= 0);
+        sam_close(fp);
+        bam_hdr_destroy(h);
+    }
     // Annotate junction reads and spaning coverage
     util::loginfo("Beg annotating SV coverage");
     Annotator* covAnn = new Annotator(mOpt);
     Stats* covStat = covAnn->covAnnotate(mergedSVs);
     util::loginfo("End annotating SV coverage");
-    sam_close(mOpt->fbamout);
+    if(!mOpt->bamout.empty()) sam_close(mOpt->fbamout);
     GeneInfoList gl;
     util::loginfo("Beg annotating SV gene information");
     covAnn->geneAnnotate(mergedSVs, gl);
@@ -137,6 +141,4 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End writing SVs to BCF file");
     delete covAnn;
     delete covStat;
-    sam_close(fp);
-    bam_hdr_destroy(h);
 }
