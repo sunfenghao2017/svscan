@@ -160,7 +160,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     hts_idx_destroy(idx);
     fai_destroy(fai);
     // Get coverage from each contig in parallel
-    std::vector<Stats*> covStats(mOpt->svRefID.size());
+    std::vector<Stats*> covStats(mOpt->svRefID.size(), NULL);
     std::vector<std::future<void>> statRets(mOpt->svRefID.size());
     int32_t i = 0;
     for(auto& refidx: mOpt->svRefID){

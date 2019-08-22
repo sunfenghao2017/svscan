@@ -76,15 +76,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     bam_hdr_t* h = sam_hdr_read(fp);
     util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
     // Flag breakpoint regions
-    std::vector<bool> bpOccupied(h->target_len[mRefIdx], false);
+    std::set<bool> bpOccupied;
     for(uint32_t i = 0; i < bpRegs[mRefIdx].size(); ++i){
-        for(int32_t k = bpRegs[mRefIdx][i].mRegStart; k < bpRegs[mRefIdx][i].mRegEnd; ++k){
-            bpOccupied[k] = true;
-        }
+        for(int32_t k = bpRegs[mRefIdx][i].mRegStart; k < bpRegs[mRefIdx][i].mRegEnd; ++k) bpOccupied.insert(k);
     }
     // Flag spanning breakpoints
-    std::vector<bool> spanBp(h->target_len[mRefIdx], false);
-    for(uint32_t i = 0; i < spPts[mRefIdx].size(); ++i) spanBp[spPts[mRefIdx][i].mBpPos] = true;
+    std::set<bool> spanBp;
+    for(uint32_t i = 0; i < spPts[mRefIdx].size(); ++i) spanBp.insert(spPts[mRefIdx][i].mBpPos);
     // Count reads
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     hts_itr_t* itr = sam_itr_queryi(idx, mRefIdx, 0, h->target_len[mRefIdx]);
@@ -126,7 +124,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             int32_t rbegin = std::max(0, b->core.pos - leadingSC);
             int32_t rend = std::min(rbegin + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
             for(int32_t k = rbegin; k < rend; ++k){
-                if(bpOccupied[k]){
+                if(bpOccupied.find(k) != bpOccupied.end()){
                     bpvalid = true;
                     break;
                 }
@@ -237,7 +235,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 int32_t st = pbegin + 0.1 * outerISize;
                 bool spanvalid = false;
                 for(int32_t i = st; i < st + spanlen && i < (int32_t)h->target_len[mRefIdx]; ++i){
-                    if(spanBp[i]){
+                    if(spanBp.find(i) != spanBp.end()){
                         spanvalid = true;
                         break;
                     }
@@ -274,7 +272,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     pend = std::min(b->core.pos + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
                 }
                 for(int32_t i = pbegin; i < pend; ++i){
-                    if(spanBp[i]){
+                    if(spanBp.find(i) != spanBp.end()){
                         spanvalid = true;
                         break;
                     }
