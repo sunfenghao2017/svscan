@@ -388,12 +388,12 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         }
     }
     if(chr1Seq) free(chr1Seq);
+    util::loginfo("End assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
     sam_close(fp);
     bam_hdr_destroy(hdr);
     hts_idx_destroy(idx);
     fai_destroy(fai);
     bam_destroy1(b);
-    util::loginfo("End assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
 }
 
 
