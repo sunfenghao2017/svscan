@@ -117,6 +117,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 }
 
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
+    int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
     for(auto&refIdx : mOpt->svRefID){
         // Components assigned marker
@@ -197,7 +198,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             compEdge.clear();
         }
     }
-    util::loginfo("End clustering SRs for SV type:" + std::to_string(svt));
+    util::loginfo("End clustering SRs for SV type:" + std::to_string(svt) + ", got: " + std::to_string(svs.size() - origSize) + " SV candidates.");
 }
 
 void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
@@ -428,23 +429,28 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // assemble translocation srs
     util::loginfo("Beg assembling SRs across chromosomes", mOpt->logMtx);
     AlignConfig* alnCfg = new AlignConfig(5, -4, -10, -1, true, true);
-    for(auto liteRefIdx = mOpt->svRefID.begin(); liteRefIdx != mOpt->svRefID.end(); ++liteRefIdx){
+    std::set<int32_t> liteChrSet, largeChrSet;
+    for(auto& e: mOpt->traRefPair){
+        liteChrSet.insert(e.second);
+        largeChrSet.insert(e.first);
+    }
+    for(auto& liteRefIdx : liteChrSet){
         int32_t liteChrSeqLen = -1;
-        char* liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[*liteRefIdx], 0, hdr->target_len[*liteRefIdx], &liteChrSeqLen);
-        auto largeRefIdx = liteRefIdx;
-        ++largeRefIdx;
-        for(; largeRefIdx !=mOpt->svRefID.end(); ++largeRefIdx){
-            int32_t largeChrSeqLen = -1;
-            char* largeChrSeq =faidx_fetch_seq(fai, hdr->target_name[*largeRefIdx], 0, hdr->target_len[*largeRefIdx], &largeChrSeqLen);
-            // Iterate SVs
-            std::vector<std::future<void>> casret;
-            for(uint32_t svid = 0; svid < mTraSeqStore.size(); ++svid){
-                if(svs[svid].mChr1 == (*largeRefIdx) && svs[svid].mChr2 == (*liteRefIdx) && mTraSeqStore[svid].size() > 1){
-                    casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), svid, alnCfg, hdr, liteChrSeq, largeChrSeq));
+        char* liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[liteRefIdx], 0, hdr->target_len[liteRefIdx], &liteChrSeqLen);
+        for(auto& largeRefIdx : largeChrSet){
+            if(mOpt->traRefPair.find({largeRefIdx, liteRefIdx}) != mOpt->traRefPair.end()){
+                int32_t largeChrSeqLen = -1;
+                char* largeChrSeq =faidx_fetch_seq(fai, hdr->target_name[largeRefIdx], 0, hdr->target_len[largeRefIdx], &largeChrSeqLen);
+                // Iterate SVs
+                std::vector<std::future<void>> casret;
+                for(uint32_t svid = 0; svid < mTraSeqStore.size(); ++svid){
+                    if(svs[svid].mChr1 == largeRefIdx && svs[svid].mChr2 == liteRefIdx && mTraSeqStore[svid].size() > 1){
+                        casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), svid, alnCfg, hdr, liteChrSeq, largeChrSeq));
+                    }
                 }
+                for(auto& e: casret) e.get();
+                free(largeChrSeq);
             }
-            for(auto& e: casret) e.get();
-            free(largeChrSeq);
         }
         free(liteChrSeq);
     }

@@ -55,7 +55,7 @@ void SVScanner::scanDPandSR(){
         jct[i] = new JunctionMap(mOpt);
         dps[i] = new DPBamRecordSet(mOpt);
     }
-    // parallel processing each contig
+    // Parallel processing each contig
     std::vector<std::future<void>> scanret(mOpt->contigNum);
     for(int32_t i = 0; i < mOpt->contigNum; ++i){
         scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, i, jct[i], dps[i]);
@@ -85,6 +85,7 @@ void SVScanner::scanDPandSR(){
         for(auto& f: e){
             mOpt->svRefID.insert(f.mChr1);
             mOpt->svRefID.insert(f.mChr2);
+            if(f.mChr1 != f.mChr2) mOpt->traRefPair.insert({f.mChr1, f.mChr2});
         }
     }
     util::loginfo("Beg clustering SRs");
