@@ -283,7 +283,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     // Fetch all relevant SVs
                     auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(pbegin));
                     for(; itspan != spPts[mRefIdx].end() && pend >= itspan->mBpPos; ++itspan){
-                        if(svt == itspan->mSVT){
+                        if(svt == itspan->mSVT && svs[itspan->mID].mChr1 == b->core.tid && svs[itspan->mID].mChr2 == b->core.mtid){
                             uint8_t* hpptr = bam_aux_get(b, "HP");
                             mSpnCnts[itspan->mID].mAltQual.push_back(b->core.qual);
                             if(hpptr){
