@@ -179,7 +179,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                 uint32_t aq = getAlignmentQual(altResult, qual);
                                 if(aq >= mOpt->filterOpt->mMinGenoQual){
                                     uint8_t* hpptr = bam_aux_get(b, "HP");
-                                    mLock.lock();
                                     mJctCnts[itbp->mID].mAltQual.push_back(std::min(aq, (uint32_t)b->core.qual));
                                     if(hpptr){
                                         mOpt->libInfo->mIsHaploTagged = true;
@@ -187,7 +186,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                         if(hapv == 1) ++mJctCnts[itbp->mID].mAlth1;
                                         else ++mJctCnts[itbp->mID].mAlth2;
                                     }
-                                    mLock.unlock();
                                     if(mOpt->fbamout){
                                         mOpt->outMtx.lock();
                                         bam_aux_update_int(b, "ZF", itbp->mID);
@@ -249,7 +247,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
                     for(; itspan != spPts[mRefIdx].end() && (st + spanlen) >= itspan->mBpPos; ++itspan){
                         // Account for reference bias
-                        mLock.lock(); 
                         if(++mRefAlignedSpanCount[itspan->mID]){
                             uint8_t* hpptr = bam_aux_get(b, "HP");
                             mSpnCnts[itspan->mID].mRefQual.push_back(b->core.qual);
@@ -260,7 +257,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                 else ++mSpnCnts[itspan->mID].mRefh2;
                             }
                         }
-                        mLock.unlock();
                     }
                 }
             }
@@ -289,7 +285,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     for(; itspan != spPts[mRefIdx].end() && pend >= itspan->mBpPos; ++itspan){
                         if(svt == itspan->mSVT){
                             uint8_t* hpptr = bam_aux_get(b, "HP");
-                            mLock.lock();
                             mSpnCnts[itspan->mID].mAltQual.push_back(b->core.qual);
                             if(hpptr){
                                 mOpt->libInfo->mIsHaploTagged = true;
@@ -297,7 +292,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                 if(hap == 1) ++mSpnCnts[itspan->mID].mAlth1;
                                 else ++mSpnCnts[itspan->mID].mAlth2;
                             }
-                            mLock.unlock();
                             if(mOpt->fbamout){
                                 mOpt->outMtx.lock();
                                 bam_aux_update_int(b, "ZF", itspan->mID);
