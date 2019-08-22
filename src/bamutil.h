@@ -207,7 +207,7 @@ namespace bamutil{
 
     /** set read name of one alignment record 
      * @param b pointer to bam1_t struct
-     * @param qname new name to be used in this read
+     * @param n new name to be used in this read
      */
     inline void setQName(bam1_t* b, const std::string qname){
         int nonQnameLen = b->l_data - b->core.l_qname;
@@ -393,7 +393,7 @@ namespace bamutil{
     }
 
     /** get indel position on read of an alignment record
-     * @param b pointer to bam1_t struct
+     * @param p pointer to bam1_t struct
      * @param indelPosVec list of indel positions on read, 0 based
      */
     inline void getIndelPos(const bam1_t* b, std::vector<int>& indelPosVec){
@@ -534,7 +534,7 @@ namespace bamutil{
     }
 
     /** get average base quality around predefined range of of pileup posision
-     * @param p pointer to bam_pileup1_t 
+     * @pram p pointer to bam_pileup1_t 
      * @param range max number of bases to counted around p->qpos
      * @return average base quality around qpos±range
      */
@@ -623,7 +623,18 @@ namespace bamutil{
         }
         return false;
     }
-  
+
+    /** parse a cigar string to opchr, oplen pair list
+     * @param cigar cigar string
+     * @param ret result vector
+     */
+    inline void parseCigar(const std::string& cigar, std::vector<std::pair<int32_t, char>>& ret){
+        std::string::size_type cpos = 0, lpos = 0;
+        while((cpos = cigar.find_first_of(BAM_CIGAR_STR, lpos)) != std::string::npos){
+            ret.push_back({std::atoi(cigar.substr(lpos, cpos - lpos).c_str()), cigar[cpos]});
+            lpos = cpos + 1;
+        }
+    }
 }
 
 #endif

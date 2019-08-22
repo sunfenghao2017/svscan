@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <cstdint>
+#include <algorithm>
 #include "svutil.h"
 #include "options.h"
 #include <htslib/sam.h>
@@ -93,9 +94,10 @@ class JunctionMap{
 
         /** insert an read to JunctionMap if it is junction read
          * @param b pointer to bam1_t struct
+         * @param h pointer to bam_hdr_t struct
          * @return true if b is an junction read and inserted successfuly
          */
-        bool insertJunction(const bam1_t* b);
+        bool insertJunction(const bam1_t* b, bam_hdr_t* h);
 
         /** sort all Junction records in mJunctionReads */
         void sortJunctions();
@@ -113,6 +115,19 @@ class JunctionMap{
                 os << "\n";
             }
             return os;
+        }
+
+        /** merge a list of JunctionMap into one
+         * @param jct a list of JunctionMap
+         * @param opt pointer to Options
+         * @return merged JunctionMap
+         */
+        static inline JunctionMap* merge(const std::vector<JunctionMap*>& jct, Options* opt){
+            JunctionMap* ret = new JunctionMap(opt);
+            for(auto& e: jct){
+                std::copy(e->mJunctionReads.begin(), e->mJunctionReads.end(), std::inserter(ret->mJunctionReads, ret->mJunctionReads.end()));
+            }
+            return ret;
         }
 };
 

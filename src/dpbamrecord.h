@@ -18,24 +18,32 @@ class DPBamRecord{
         int32_t mMatePos;  ///< mate read(first read in coordinate sorted bam) bam record mapping starting pos b->core.mpos
         int32_t mCurAlen;  ///< current read(second read in coordinate sorted bam) bam record consumed reference length bam_cigar2rlen(b)
         int32_t mMateAlen; ///< mate read(first read in coordinate sorted bam) bam record consumed reference length bam_cigar2rlen(mateb)
-        uint8_t mMapQual;  ///< std::min(b->core.qual, mate->core.qual)
+        uint8_t mMapQual;  ///< b->core.qual, b is the record of read on large rcoordinate or larger chr in a pair
         int32_t mSVT;      ///< SV type this DPBamRecord supports
 
     public:
         /** DPBamRecord constructor
          * @param b pointer to bam1_t struct(one read in a pair mapping at higher position or larger chromosome)
-         * @param mateAlen mate read bam record consumed reference length bam_cigar2rlen(mateb)
-         * @param mapQual std::min(b->core.qual, mate->core.qual)
          * @param svt SV type this DPBamRecord supports
          */
-        DPBamRecord(const bam1_t* b, int32_t mateAlen, uint8_t mapQual, int32_t svt){
+        DPBamRecord(const bam1_t* b, int32_t svt){
             mCurTid = b->core.tid;
             mCurPos = b->core.pos;
             mMateTid = b->core.mtid;
             mMatePos = b->core.mpos;
-            mCurAlen = bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b));
-            mMateAlen = mateAlen;
-            mMapQual = mapQual;
+            mCurAlen = bamutil::getSeqLen(b);
+            std::vector<std::pair<int32_t, char>> pcigar;
+            uint8_t* mctag = bam_aux_get(b, "MC");
+            if(mctag){
+                bamutil::parseCigar(bam_aux2Z(mctag), pcigar);
+                mMateAlen = 0;
+                for(auto& e: pcigar){
+                    if(e.second == 'I' || e.second == 'X' || e.second == '=' || e.second == 'M' || e.second == 'S') mMateAlen += e.first;
+                 }
+            }else{
+                mMateAlen = mCurAlen;
+            }
+            mMapQual = b->core.qual;
             mSVT = svt;
         }
 
@@ -158,6 +166,21 @@ class DPBamRecordSet{
         ~DPBamRecordSet(){}
 
     public:
+        /** merge a list of DPBamRecordSet into one
+         * @param dps list of DPBamRecordSet
+         * @param opt pointer to Options
+         * @return merged DPBamRecordSet
+         */
+        static inline DPBamRecordSet* merge(const std::vector<DPBamRecordSet*> dps, Options* opt){
+            DPBamRecordSet* ret = new DPBamRecordSet(opt);
+            for(auto& e: dps){
+                for(int32_t i = 0; i < 9; ++i){
+                    std::copy(e->mDPs[i].begin(), e->mDPs[i].end(), std::back_inserter(ret->mDPs[i]));
+                }
+            }
+            return ret;
+        }
+
         /** operator to output an DPBamRecordSet to ostream
          * @param os reference of ostream object
          * @param dps reference of DPBamRecordSet object
@@ -176,12 +199,10 @@ class DPBamRecordSet{
 
         /** inert an DPBamRecord
          * @param b pointer to bam1_t* struct which is the latter read in coordinate sorted bam which is DP
-         * @param mateAlen the earlier found mate consumed reference length during alignment
-         * @param mapQual the minimum mapq of the pair of read
          * @param svt SV type this bam record supports
          */
-        inline void insertDP(const bam1_t* b, int32_t mateAlen, uint8_t mapQual, int32_t svt){
-            mDPs[svt].push_back(DPBamRecord(b, mateAlen, mapQual, svt));
+        inline void insertDP(const bam1_t* b, int32_t svt){
+            mDPs[svt].push_back(DPBamRecord(b, svt));
         }
 
         /** cluster sorted DPBamRecords of one type SV and find all supporting SV of this type\n

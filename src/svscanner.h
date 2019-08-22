@@ -33,6 +33,13 @@ class SVScanner{
 
         /** scan bam for DP and SR supporting SVs */
         void scanDPandSR();
+
+        /** scan one conrig for DP and SR supporting SVs
+         * @param tid contig index to scanning DP and SR supporting SVs
+         * @param jctMap to store SRs
+         * @param dprSet to store DPs
+         */
+         void scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet* dprSet);
 };
 
 #endif

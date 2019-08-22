@@ -710,6 +710,20 @@ namespace util{
     inline bool isDNA(const std::string& seq){
         return seq.find_first_not_of("AaTtCcGg") == std::string::npos;
     }
+
+    /** count number of characters in a string
+     * @param str full string
+     * @param chrs characters to be found in str
+     */
+    inline int32_t countChrs(const std::string& str, const std::string& chrs){
+        int32_t count = 0;
+        std::string::size_type pos = 0;
+        while((pos = str.find_first_of(chrs, pos)) != std::string::npos){
+            ++pos;
+            ++count;
+        }
+        return count;
+    }
 }
 
 #endif
