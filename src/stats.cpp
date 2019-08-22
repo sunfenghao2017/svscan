@@ -95,7 +95,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         // Count aligned basepair (small InDels)
-        bool hasSoftClip = false;
         int32_t leadingSC = 0;
         int32_t rp = 0; // reference pos
         uint32_t* cigar = bam_get_cigar(b);
@@ -118,7 +117,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             }else if(opint == BAM_CREF_SKIP){
                 rp += oplen;
             }else if(opint == BAM_CSOFT_CLIP){
-                hasSoftClip = true;
                 if(i == 0) leadingSC = oplen;
             }
         }

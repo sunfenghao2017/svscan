@@ -427,50 +427,26 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     for(auto& e: asret) e.get();
     // assemble translocation srs
     util::loginfo("Beg assembling SRs across chromosomes", mOpt->logMtx);
+    AlignConfig* alnCfg = new AlignConfig(5, -4, -10, -1, true, true);
     for(auto liteRefIdx = mOpt->svRefID.begin(); liteRefIdx != mOpt->svRefID.end(); ++liteRefIdx){
-        char* liteChrSeq = NULL;
+        int32_t liteChrSeqLen = -1;
+        char* liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[*liteRefIdx], 0, hdr->target_len[*liteRefIdx], &liteChrSeqLen);
         auto largeRefIdx = liteRefIdx;
         ++largeRefIdx;
         for(; largeRefIdx !=mOpt->svRefID.end(); ++largeRefIdx){
-            char* largeChrSeq = NULL;
+            int32_t largeChrSeqLen = -1;
+            char* largeChrSeq =faidx_fetch_seq(fai, hdr->target_name[*largeRefIdx], 0, hdr->target_len[*largeRefIdx], &largeChrSeqLen);
             // Iterate SVs
+            std::vector<std::future<void>> casret;
             for(uint32_t svid = 0; svid < mTraSeqStore.size(); ++svid){
-                if(svs[svid].mChr1 != (*largeRefIdx) || svs[svid].mChr2 != (*liteRefIdx)) continue;
-                bool bpRefined = false;
-                if(mTraSeqStore[svid].size() > 1){
-                    if(!liteChrSeq){
-                        int32_t liteChrSeqLen = -1;
-                        liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[*liteRefIdx], 0, hdr->target_len[*liteRefIdx], &liteChrSeqLen);
-                    }
-                    if(!largeChrSeq){
-                        int32_t largeChrSeqLen = -1;
-                        largeChrSeq = faidx_fetch_seq(fai, hdr->target_name[*largeRefIdx], 0, hdr->target_len[*largeRefIdx], &largeChrSeqLen);
-                    }
-                    AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
-                    MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                    msa->msa(svs[svid].mConsensus);
-                    delete msa;
-                    if(mTriSeqStore[svid].size() > 0){
-                        MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                        imsa->msa(svs[svid].mBpInsSeq);
-                        delete imsa;
-                    }
-                    if(svs[svid].refineSRBp(mOpt, hdr, liteChrSeq, largeChrSeq)) bpRefined = true;
-                    if(!bpRefined){
-                        svs[svid].mConsensus = "";
-                        svs[svid].mSVRef = "";
-                        svs[svid].mSRSupport = 0;
-                        svs[svid].mSRAlignQuality = 0;
-                    }else{// SR support and qualities
-                        svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
-                        svs[svid].mSRSupport = mTraSeqStore[svid].size();
-                        svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
-                    }
+                if(svs[svid].mChr1 == (*largeRefIdx) && svs[svid].mChr2 == (*liteRefIdx) && mTraSeqStore[svid].size() > 1){
+                    casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), svid, alnCfg, hdr, largeChrSeq, liteChrSeq));
                 }
             }
-            if(largeChrSeq) free(largeChrSeq);
+            for(auto& e: casret) e.get();
+            free(largeChrSeq);
         }
-        if(liteChrSeq) free(liteChrSeq);
+        free(liteChrSeq);
     }
     // Add ChrName
     for(uint32_t i = 0; i < svs.size(); ++i){
@@ -484,4 +460,27 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     fai_destroy(fai);
     bam_destroy1(b);
     util::loginfo("End assembling SRs across chromosomes", mOpt->logMtx);
+}
+
+void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr, char* liteChrSeq, char* largeChrSeq){
+    bool bpRefined = false;
+    MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+    msa->msa(svs[svid].mConsensus);
+    delete msa;
+    if(mTriSeqStore[svid].size() > 0){
+        MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+        imsa->msa(svs[svid].mBpInsSeq);
+        delete imsa;
+    }
+    if(svs[svid].refineSRBp(mOpt, hdr, liteChrSeq, largeChrSeq)) bpRefined = true;
+    if(!bpRefined){
+        svs[svid].mConsensus = "";
+        svs[svid].mSVRef = "";
+        svs[svid].mSRSupport = 0;
+        svs[svid].mSRAlignQuality = 0;
+    }else{// SR support and qualities
+        svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
+        svs[svid].mSRSupport = mTraSeqStore[svid].size();
+        svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
+    }
 }
