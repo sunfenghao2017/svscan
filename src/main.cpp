@@ -43,6 +43,8 @@ int main(int argc, char** argv){
     // update some arguments
     opt->update(argc, argv);
     util::loginfo("Options updated");
+    // print command line arguments
+    util::loginfo("CMD: " + opt->softEnv->cmd);
     // output library basic information
     util::loginfo("Library basic information:\n" + opt->libInfo->toStr());
     // get Valid regions
