@@ -19,6 +19,30 @@ void BreakPoint::init(int32_t largeChrLen, int32_t smallChrLen){
     }
 }
 
+std::string BreakPoint::getLargerRef(const char* largeChrSeq){
+    if(mSVT == 6){// 3to3
+        std::string chr1Part = std::string(largeChrSeq + mSVStartBeg, largeChrSeq + mSVStartEnd);
+        util::reverseComplement(chr1Part);
+        return chr1Part;
+    }else{// 5to5 || 5to3 || 3to5
+        std::string chr1Part = std::string(largeChrSeq + mSVStartBeg, largeChrSeq + mSVStartEnd);
+        util::str2upper(chr1Part);
+        return chr1Part;
+    }
+}
+
+std::string BreakPoint::getLittleRef(const char* smallChrSeq){
+    if(mSVT == 5){// 5to5
+        std::string chr2Part = std::string(smallChrSeq + mSVEndBeg, smallChrSeq + mSVEndEnd);
+        util::reverseComplement(chr2Part);
+        return chr2Part;
+    }else{// 3to3 || 5to3 || 3to5
+        std::string chr2Part = std::string(smallChrSeq + mSVEndBeg, smallChrSeq + mSVEndEnd);
+        util::str2upper(chr2Part);
+        return chr2Part;
+    }
+}
+
 std::string BreakPoint::getSVRef(const char* smallChrSeq, const char* largeChrSeq){
     std::string chr2Part;
     // Get chr2 seq for tranclocation

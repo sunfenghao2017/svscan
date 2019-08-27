@@ -132,7 +132,9 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     if((int32_t)mConsensus.size() < 2 * opt->filterOpt->mMinFlankSize) return false;
     // Get reference slice
     BreakPoint bp = BreakPoint(*this, hdr);
-    mSVRef = bp.getSVRef(liteChrSeq, largeChrSeq);
+    if(mSVT >= 5) bp = BreakPoint(*this, hdr, 10 * opt->libInfo->mReadLen);
+    if(liteChrSeq || largeChrSeq) mSVRef = bp.getSVRef(liteChrSeq, largeChrSeq);
+    else mergeRef();
     // SR consensus to mSVRef alignment
     Matrix2D<char>* alnResult = new Matrix2D<char>();
     if(!consensusRefAlign(alnResult)){
@@ -169,10 +171,14 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mGapCoord[2] = ad.mRefStart;
     mGapCoord[3] = ad.mRefEnd;
     // Get probe sequences used for allele fraction computation
-    mProbeBegR = std::string(largeChrSeq + std::max(0, mSVStart - opt->filterOpt->mMinFlankSize), largeChrSeq + std::min(bp.mChr1Len, mSVStart + opt->filterOpt->mMinFlankSize));
-    util::str2upper(mProbeBegR);
-    mProbeEndR = std::string(liteChrSeq + std::max(0, mSVEnd - opt->filterOpt->mMinFlankSize), liteChrSeq + std::min(bp.mChr2Len, mSVEnd + opt->filterOpt->mMinFlankSize));
-    util::str2upper(mProbeEndR);
+    if(largeChrSeq || liteChrSeq){
+        mProbeBegR = std::string(largeChrSeq + std::max(0, mSVStart - opt->filterOpt->mMinFlankSize), largeChrSeq + std::min(bp.mChr1Len, mSVStart + opt->filterOpt->mMinFlankSize));
+        util::str2upper(mProbeBegR);
+        mProbeEndR = std::string(liteChrSeq + std::max(0, mSVEnd - opt->filterOpt->mMinFlankSize), liteChrSeq + std::min(bp.mChr2Len, mSVEnd + opt->filterOpt->mMinFlankSize));
+        util::str2upper(mProbeEndR);
+    }else{
+        addRefProbe(opt);
+    }
     if(mBpInsSeq.length() > 0){// Put inserted sequence after breakpoint back if possible
         mConsensus = mConsensus.substr(0, ad.mCSStart) + mBpInsSeq + mConsensus.substr(ad.mCSStart);
         ad.mCSEnd += mBpInsSeq.length();

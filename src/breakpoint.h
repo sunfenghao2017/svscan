@@ -51,6 +51,28 @@ class BreakPoint{
             if(hdr) init(mChr1Len, mChr2Len);
         }
 
+        /** Construct a BreakPoint from an existing SV 
+         * @param sv reference of SVRecord 
+         * @param hdr bam header
+         * @param cl predefined cc len
+         */
+        BreakPoint(const SVRecord& sv, const bam_hdr_t* hdr, int32_t cl){
+            mSVStartBeg = sv.mSVStart;
+            mSVStartEnd = sv.mSVStart;
+            mSVEndBeg = sv.mSVEnd;
+            mSVEndEnd = sv.mSVEnd;
+            mSVStart = sv.mSVStart;
+            mSVEnd = sv.mSVEnd;
+            mPESupport = sv.mPESupport;
+            mSRSupport = sv.mSRSupport;
+            mSVT = sv.mSVT;
+            mChr1 = sv.mChr1;
+            mChr2 = sv.mChr2;
+            mChr1Len = hdr->target_len[mChr1];
+            mChr2Len = hdr->target_len[mChr2];
+            mBoundary = cl;
+            if(hdr) init(mChr1Len, mChr2Len);
+        }
         /** BreakPoint default destructor */
         ~BreakPoint(){}
 
@@ -94,6 +116,17 @@ class BreakPoint{
          */
         std::string getSVRef(const char* smallChrSeq = NULL, const char* largeChrSeq = NULL);
 
+        /** get larger chr seq of translocation SV
+         * @param largeChrSeq mChr1 total sequence
+         * @return large chr contributed reference sequence spanning an SV breakpoint
+         */
+        std::string getLargerRef(const char* largeChrSeq);
+
+        /** get little chr seq of translocation SV
+         * @param littleChrSeq mChr1 total sequence
+         * @return little chr contributed reference sequence spanning an SV breakpoint
+         */
+        std::string getLittleRef(const char* littleChrSeq);
 };
 
 #endif

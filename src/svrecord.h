@@ -47,6 +47,8 @@ class SVRecord{
         std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
         std::string mProbeEndR = ""; ///< an reference sequence segment spanning the SV ending position
         std::string mInsSeq = "";    ///< insertion sequence of insertion event
+        std::string mTraChr1Seq = "";///< larger chr reference sequence of translocation 
+        std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
         bool mMerged = false;        ///< this SV has been merged if true
 
     public:
@@ -89,6 +91,8 @@ class SVRecord{
             os << "Consensus sequence segment spanning the SV ending position: " << sv.mProbeEndC << "\n";
             os << "Reference sequence segment spanning the SV starting position: " << sv.mProbeBegR << "\n";
             os << "Reference sequence segment spanning the SV ending position: " << sv.mProbeEndR << "\n";
+            os << "Translocation chr1Seq: " << sv.mTraChr1Seq << "\n";
+            os << "Translocation chr2Seq: " << sv.mTraChr2Seq << "\n";
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
             if(sv.mBpInsSeq.length() > 0) os << "Sequence inserted after break point: " << sv.mBpInsSeq << "\n";
             os << "======================================================================================================\n";
@@ -206,6 +210,40 @@ class SVRecord{
                 }
             }else mAlleles = mSVRef + ",<" + addID() + ">";
         }
+        
+        /** merge two part of ref of translocation */
+        inline void mergeRef(){
+            if(mSVT == 8){
+                mSVRef = mTraChr2Seq + mTraChr1Seq;
+            }else{
+                mSVRef = mTraChr1Seq + mTraChr2Seq;
+            }
+        }
+
+        /** add reference probes of translocation SV */
+        inline void addRefProbe(const Options* opt){
+            if(mSVT == 8){
+                int32_t beg = std::max(0, mGapCoord[3] - opt->filterOpt->mMinFlankSize);
+                int32_t len = std::min((int32_t)mSVRef.length() - beg, 2 * opt->filterOpt->mMinFlankSize);
+                mProbeBegR = mSVRef.substr(beg, len);
+                beg = std::max(0, mGapCoord[2] - opt->filterOpt->mMinFlankSize);
+                len = std::min((int32_t)mTraChr2Seq.length(), 2 * opt->filterOpt->mMinFlankSize);
+                mProbeEndR = mSVRef.substr(beg, len);
+            }else{
+                int32_t beg = std::max(0, mGapCoord[2] - opt->filterOpt->mMinFlankSize);
+                int32_t len = std::min((int32_t)mTraChr1Seq.length() - beg, 2 * opt->filterOpt->mMinFlankSize);
+                mProbeBegR = mSVRef.substr(beg, len);
+                beg = std::max(0, mGapCoord[3] - opt->filterOpt->mMinFlankSize);
+                len = std::min((int32_t)mSVRef.length(), 2 * opt->filterOpt->mMinFlankSize);
+                mProbeEndR = mSVRef.substr(beg, len);
+            }
+            if(mSVT == 6){
+                util::reverseComplement(mProbeBegR);
+            }
+            if(mSVT == 5){
+                util::reverseComplement(mProbeEndR);
+            }
+        }
 };
 
 /** type to store a list of structural variant record */
@@ -238,7 +276,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr);
  */
 void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt);
 
-/** get reference of  SV supported by PE
+/** get reference of SV supported by PE
  * @param pe SVSet supported by PE
  * @param opt pointer to Options object
  * @param boundary max length offset at each breakpoint to fetch reference
