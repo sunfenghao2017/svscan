@@ -179,19 +179,9 @@ class SRBamRecordSet{
          */
         void assembleSplitReads(SVSet& svs);
 
-        /** assemble SR for SVs on one contig
-         * @param svs reference of SVSet
-         * @param refIdx reference index
-         */
         void assembleOneContig(SVSet& svs, int32_t refIdx);
 
-        /** assemble SR for translocation type SVs
-         * @param svs reference of SVSet
-         * @param svid SV ID 
-         * @param alnCfg alignment config object
-         * @param hdr bam header
-         */
-        void assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr);
+        void assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr, char* liteChrSeq, char* largeChrSeq);
 };
 
 #endif

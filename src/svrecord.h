@@ -113,8 +113,6 @@ class SVRecord{
          * @return true if breakpoint refined
          */
         bool refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* chr1Seq, const char* chr2Seq = NULL);
-
-        bool refineSRBp(const Options* opt, const bam_hdr_t* hdr);
         
         /** align consensus SR seq to constructed SV ref seq by split alignment strategy
          * @param alnResult to storealignment result
