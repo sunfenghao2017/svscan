@@ -162,9 +162,6 @@ struct Software{
 /** type to store regions */
 typedef std::vector<std::set<std::pair<int32_t, int32_t>>> RegionList;
 
-/** type to store translocation chrosome pairs */
-typedef std::set<std::pair<int32_t, int32_t>> TransChrPairs;
-
 /** class to store various options */
 class Options{
     public:
@@ -186,7 +183,6 @@ class Options{
         std::mutex outMtx;            ///< mutex locked to output sv supporting bam
         int32_t contigNum;            ///< max contig numbers in library bam
         std::set<int32_t> svRefID;    ///< SV occuring reference id
-        TransChrPairs traRefPair;     ///< translocation chrosome pairs<large, little>
         LibraryInfo* libInfo;         ///< library information for the currently analyzed bam
         SVFilter* filterOpt;          ///< filter options
         PassOptions* passOpt;         ///< high quality SV threshold
