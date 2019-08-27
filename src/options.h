@@ -186,7 +186,6 @@ class Options{
         std::mutex outMtx;            ///< mutex locked to output sv supporting bam
         int32_t contigNum;            ///< max contig numbers in library bam
         std::set<int32_t> svRefID;    ///< SV occuring reference id
-        TransChrPairs traRefPair;     ///< translocation chrosome pairs<large, little>
         LibraryInfo* libInfo;         ///< library information for the currently analyzed bam
         SVFilter* filterOpt;          ///< filter options
         PassOptions* passOpt;         ///< high quality SV threshold
