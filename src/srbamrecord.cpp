@@ -401,11 +401,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
 void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // Construct bool filter of SR mapping positions
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, mOpt->genome.c_str());
-    hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     bam_hdr_t* hdr = sam_hdr_read(fp);
-    faidx_t* fai = fai_load(mOpt->genome.c_str());
-    bam1_t* b = bam_init1();
     for(uint32_t svt = 0; svt < mSRs.size(); ++svt){
         for(uint32_t i = 0; i < mSRs[svt].size(); ++i){
             if(mSRs[svt][i].mSVID == -1 || mSRs[svt][i].mRstart == -1) continue;
@@ -429,32 +425,13 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // assemble translocation srs
     util::loginfo("Beg assembling SRs across chromosomes", mOpt->logMtx);
     AlignConfig* alnCfg = new AlignConfig(5, -4, -10, -1, true, true);
-    std::set<int32_t> liteChrSet, largeChrSet;
-    for(auto& e: mOpt->traRefPair){
-        liteChrSet.insert(e.second);
-        largeChrSet.insert(e.first);
-    }
-    util::loginfo("Number of  cross-chr pairs: " + std::to_string(mOpt->traRefPair.size()) + ",Unique" + std::to_string(liteChrSet.size()) + "L|" + std::to_string(largeChrSet.size()) +  "R", mOpt->logMtx);
-    for(auto& liteRefIdx : liteChrSet){
-        int32_t liteChrSeqLen = -1;
-        char* liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[liteRefIdx], 0, hdr->target_len[liteRefIdx], &liteChrSeqLen);
-        for(auto& largeRefIdx : largeChrSet){
-            if(mOpt->traRefPair.find({largeRefIdx, liteRefIdx}) != mOpt->traRefPair.end()){
-                int32_t largeChrSeqLen = -1;
-                char* largeChrSeq =faidx_fetch_seq(fai, hdr->target_name[largeRefIdx], 0, hdr->target_len[largeRefIdx], &largeChrSeqLen);
-                // Iterate SVs
-                std::vector<std::future<void>> casret;
-                for(uint32_t svid = 0; svid < mTraSeqStore.size(); ++svid){
-                    if(svs[svid].mChr1 == largeRefIdx && svs[svid].mChr2 == liteRefIdx && mTraSeqStore[svid].size() > 1){
-                        casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), svid, alnCfg, hdr, liteChrSeq, largeChrSeq));
-                    }
-                }
-                for(auto& e: casret) e.get();
-                free(largeChrSeq);
-            }
+    std::vector<std::future<void>> casret;
+    for(auto& sve : svs){
+        if(sve.mChr1 != sve.mChr2){
+            casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), sve.mID, alnCfg, hdr));
         }
-        free(liteChrSeq);
     }
+    for(auto& e: casret) e.get();
     // Add ChrName
     for(uint32_t i = 0; i < svs.size(); ++i){
         svs[i].mNameChr1 = hdr->target_name[svs[i].mChr1];
@@ -462,14 +439,11 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     }
     // Clean-up
     sam_close(fp);
-    hts_idx_destroy(idx);
     bam_hdr_destroy(hdr);
-    fai_destroy(fai);
-    bam_destroy1(b);
     util::loginfo("End assembling SRs across chromosomes", mOpt->logMtx);
 }
 
-void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr, char* liteChrSeq, char* largeChrSeq){
+void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr){
     bool bpRefined = false;
     MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
     msa->msa(svs[svid].mConsensus);
@@ -479,7 +453,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* aln
         imsa->msa(svs[svid].mBpInsSeq);
         delete imsa;
     }
-    if(svs[svid].refineSRBp(mOpt, hdr, liteChrSeq, largeChrSeq)) bpRefined = true;
+    if(svs[svid].refineSRBp(mOpt, hdr)) bpRefined = true;
     if(!bpRefined){
         svs[svid].mConsensus = "";
         svs[svid].mSVRef = "";

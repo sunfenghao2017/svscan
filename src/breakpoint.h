@@ -93,7 +93,6 @@ class BreakPoint{
          * @return contructed sample reference sequence spanning an SV breakpoint
          */
         std::string getSVRef(const char* smallChrSeq = NULL, const char* largeChrSeq = NULL);
-
 };
 
 #endif

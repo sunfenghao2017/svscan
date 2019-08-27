@@ -128,6 +128,20 @@ bool SVRecord::consensusRefAlign(Matrix2D<char>* alnResult){
     }
 }
 
+bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr){
+    int32_t liteChrLen = -1;
+    int32_t largeChrLen = -1;
+    char* liteChrSeq = NULL;
+    char* largeChrSeq = NULL;
+    faidx_t* fai = fai_load(opt->genome.c_str());
+    liteChrSeq = faidx_fetch_seq(fai, hdr->target_name[mChr2], 0, hdr->target_len[mChr2], &liteChrLen);
+    largeChrSeq = faidx_fetch_seq(fai, hdr->target_name[mChr1], 0, hdr->target_len[mChr1], &largeChrLen);
+    bool ret = refineSRBp(opt, hdr, liteChrSeq, largeChrSeq);
+    fai_destroy(fai);
+    free(liteChrSeq);
+    free(largeChrSeq);
+    return ret;
+}
 bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* liteChrSeq, const char* largeChrSeq){
     if((int32_t)mConsensus.size() < 2 * opt->filterOpt->mMinFlankSize) return false;
     // Get reference slice
