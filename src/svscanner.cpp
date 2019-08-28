@@ -81,6 +81,13 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End scanning bam for SRs and DPs");
     SRBamRecordSet srs(mOpt, jctMap);
     util::loginfo("Beg clustering SRs");
+    // Update all valid Ref IDs of SR
+    for(auto& e: srs.mSRs){
+        for(auto& f: e){
+            mOpt->svRefID.insert(f.mChr1);
+            mOpt->svRefID.insert(f.mChr2);
+        }
+    }
     srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
     util::loginfo("Beg assembling SRs and refining breakpoints");
