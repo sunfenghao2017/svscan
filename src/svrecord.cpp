@@ -252,7 +252,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
                 if(dp[i].mPESupport < dp[j].mPESupport || (i < j && dp[i].mPESupport == dp[j].mPESupport)) dp[i].mMerged = true;
             }
         }
-        for(int32_t j = i + 1; j <= totSV; ++j){
+        for(int32_t j = i + 1; j < totSV; ++j){
             if(dp[j].mMerged) continue;
             if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr1 != dp[j].mChr1 || dp[i].mChr2 != dp[j].mChr2) continue;
             if(std::abs(dp[j].mSVStart - dp[i].mSVStart) > opt->libInfo->mMaxNormalISize) break;
