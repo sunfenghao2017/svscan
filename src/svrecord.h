@@ -99,6 +99,46 @@ class SVRecord{
             return os;
         }
 
+        /** convert an SVRecord object to string
+         * @return str representation of SVRecord
+         */
+        inline std::string toStr() const {
+            std::stringstream ss;
+            ss << "\n======================================================================================================\n";
+            ss << "SV type: " << mSVT << "\n";
+            ss << "SV ID: " << mID << "\n";
+            ss << "Reference ID on 5' end of SV: " << mChr1 << "(" << mNameChr1 << ")\n";
+            ss << "Beg pssition on reference of 5' end of SV: " << mSVStart << "\n";
+            ss << "Reference ID on 3' end of SV: " << mChr2 << "(" << mNameChr2 << ")\n";
+            ss << "Ending pssition on reference of 3' end of SV: " << mSVEnd << "\n";
+            ss << "Negative offset of starting pssition on reference of 5' end of SV: " << mCiPosLow << "\n";
+            ss << "Positive offset of starting pssition on reference of 3' end of SV: " << mCiPosHigh << "\n";
+            ss << "Negative offset of ending pssition on reference of 5' end of SV: " << mCiEndLow << "\n";
+            ss << "Pssitive offset of ending pssition on reference of 3' end of SV: " << mCiEndHigh << "\n";
+            ss << "Number of discordant paired-end reads supporting this SV: " << mPESupport << "\n";
+            ss << "Number of split reads supporting this SV: " << mSRSupport << "\n";
+            ss << "Insertion size of this SV contributed by split read: " << mAlnInsLen << "\n";
+            ss << "Total homology length between both end of consensus read vs the reference sequence: " << mHomLen << "\n";
+            ss << "Identity percentage of consensus split read against reference outside of inner longest gap: " << mSRAlignQuality << "\n";
+            ss << "Median mapping quality of all split read alignment record which support this SV: " << mSRMapQuality << "\n";
+            ss << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << mPEMapQuality << "\n";
+            ss << std::boolalpha << "Consensus split read split aligned against reference got a refined breakpoint: " << mPrecise << "\n";
+            ss << "Allele of this SV event: " << mAlleles << "\n";
+            ss << "Consensus sequence of split reads supporting this SV: " << mConsensus << "\n";
+            ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";
+            ss << "Consensus sequence segment spanning the SV starting pssition: " << mProbeBegC << "\n";
+            ss << "Consensus sequence segment spanning the SV ending pssition: " << mProbeEndC << "\n";
+            ss << "Reference sequence segment spanning the SV starting pssition: " << mProbeBegR << "\n";
+            ss << "Reference sequence segment spanning the SV ending pssition: " << mProbeEndR << "\n";
+            ss << "Translocation chr1Seq: " << mTraChr1Seq << "\n";
+            ss << "Translocation chr2Seq: " << mTraChr2Seq << "\n";
+            if(mSVT == 4) ss << "Inserted sequence: " << mInsSeq << "\n";
+            if(mBpInsSeq.length() > 0) ss << "Sequence inserted after break point: " << mBpInsSeq << "\n";
+            ss << "======================================================================================================\n";
+            return ss.str();
+        }
+
+
         /** operator to compare two SVRecords
          * @param other reference to another SVRecord
          * @return true if this < other
