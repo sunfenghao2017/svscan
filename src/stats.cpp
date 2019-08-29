@@ -141,6 +141,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
                         // Get sequence
                         std::string readSeq = bamutil::getSeq(b);
+                        if(readSeq.empty() || consProbe.empty() || refProbe.empty()) continue;
                         std::string readOri = readSeq;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
                         // Compute alignment to alternative haplotype
