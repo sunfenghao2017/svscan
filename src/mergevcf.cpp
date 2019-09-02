@@ -53,6 +53,7 @@ void VCFMerger::getContigMap(ContigMap& cmap){
         bcf_close(fp);
     }
 }
+
 void VCFMerger::getIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t insvt){
     for(uint32_t c = 0; c < infiles.size(); ++c){
         htsFile* ifp = bcf_open(infiles[c].c_str(), "r");
@@ -212,7 +213,7 @@ void VCFMerger::mergeIntervals(ContigIntervals& ici, ContigIntervals& oci, int32
                     }
                 }
             }
-            if(*ik) oci[tid].push_back(Interval(is->mScore, is->mEnd, is->mScore));
+            if(*ik) oci[tid].push_back(Interval(is->mStart, is->mEnd, is->mScore));
         }
     }
     // sort
@@ -367,6 +368,7 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
                         }
                     }
                     // check this interval is selected
+                    Interval ti(svStart, svEnd, svScore);
                     auto iter = std::lower_bound(ci[tid].begin(), ci[tid].end(), Interval(svStart, svEnd, svScore));
                     bool validInterval = false;
                     for(; iter != ci[tid].end() && iter->mStart == svStart; ++iter){
@@ -519,22 +521,31 @@ void VCFMerger::mergeBCFs(std::vector<std::string>& ifiles){
 }
 
 void VCFMerger::mergeOneType(int32_t svt){
+    util::loginfo("Beg Processing SVT: " + std::to_string(svt));
     // get contig ~ tid map
     ContigMap cmap;
     getContigMap(cmap);
     // get contig intervals
-    ContigIntervals ici;
+    ContigIntervals ici(cmap.size());
     getIntervals(ici, cmap, svt);
+    int32_t svc = 0;
+    for(auto& e: ici) svc += e.size();
+    util::loginfo("Got " + std::to_string(svc) + " raw Intervals for SVT: " + std::to_string(svt));
     // merge intervals
-    ContigIntervals oci;
+    ContigIntervals oci(cmap.size());
     mergeIntervals(ici, oci, svt);
+    svc = 0;
+    for(auto& e: oci) svc += e.size();
+    util::loginfo("Got " + std::to_string(svc) + " merged Intervals for SVT: " + std::to_string(svt));
     // write SVs in merged intervals
     writeIntervals(oci, cmap, svt);
+    util::loginfo("End processing SVT: " + std::to_string(svt));
 }
 
 
 void VCFMerger::mergeAllType(){
     // merge all files
+    util::loginfo("Beg merging each type of SVs");
     std::string origOutfile = outfile;
     std::vector<std::string> svtOutPath(9);
     for(int32_t svt = 0; svt < 9; ++svt){
@@ -547,10 +558,10 @@ void VCFMerger::mergeAllType(){
             int32_t chunks = (infiles.size() - 1) / chunksize + 1;
             std::vector<std::string> chunkOutPath(chunks);
             for(int32_t ic = 0; ic < chunks; ++ic){
-                chunkOutPath[ic] = util::joinpath(tmpdir, "tmp." + std::to_string(ic) + ".bcf");
+                chunkOutPath[ic] = util::joinpath(tmpdir, "chk.tmp." + std::to_string(ic) + ".bcf");
                 infiles.clear();
                 for(uint32_t k = ic * chunksize; k < (ic + 1) * chunksize && k < origInFiles.size(); ++k){
-                    infiles.push_back(chunkOutPath[ic]);
+                    infiles.push_back(origInFiles[k]);
                 }
                 outfile = chunkOutPath[ic];
                 mergeOneType(svt);
@@ -575,14 +586,19 @@ void VCFMerger::mergeAllType(){
             infiles = origInFiles;
         }
     }
+    util::loginfo("End merging each type of SVs");
     // Merge temporary files
     outfile = origOutfile;
+    util::loginfo("Beg merging all types of SVs");
     mergeBCFs(svtOutPath);
+    util::loginfo("End merging all types of SVs");
     for(int32_t svt = 0; svt < 9; ++svt){
         remove(svtOutPath[svt].c_str());
         std::string bcfidx = svtOutPath[svt] + ".csi";
         remove(bcfidx.c_str());
     }
+    // Remove tmpdir
+    rmdir(tmpdir.c_str());
 }
 
 int main(int argc, char** argv){

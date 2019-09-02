@@ -41,6 +41,20 @@ struct Interval{
         return mStart < other.mStart || (mStart == other.mStart && mEnd < other.mEnd);
     }
 
+    /** operator to output interval to ostream
+     * @param os reference of ostream
+     * @param i reference of Interval
+     * @return reference of os
+     */
+    inline friend std::ostream& operator<<(std::ostream& os, const Interval& i){
+        os << "==================Interval==================\n";
+        os << "Starting Pos: " << i.mStart << "\n";
+        os << "Ending Pos: " << i.mEnd << "\n";
+        os << "Score: " << i.mScore << "\n";
+        os << "============================================\n";
+        return os;
+    }
+
     /** get overlap ratio of two Interval object
      * @param other reference of another Interval object
      * @return overlap ratio of these two Interval objects
@@ -85,11 +99,11 @@ struct VCFMerger{
     int32_t svcounter = 0;             ///< output SV record counter
     int32_t bpoffset = 1000;           ///< max difference allowed for two duplicated SV pos
     int32_t minsize = 0;               ///< min SV size to output
-    int32_t maxsize = 0;               ///< max SV size to output
+    int32_t maxsize = (1 << 20);       ///< max SV size to output
     int32_t coverage = 0;              ///< min coverage for SV to output
     float recoverlap = 0.8;            ///< min overlap ratio for SV to output
     float vaf = 0.0;                   ///< min VAF for SV to output
-    std::string tmpdir = "./tmpdir";   ///< temp directory used during merging
+    std::string tmpdir = "./.tmpdir";   ///< temp directory used during merging
     std::string outfile = "merge.bcf"; ///< output bcf file path
     std::string infilelist;            ///< input bcf file list
     std::vector<std::string> infiles;  ///< input bcf file list parsed
