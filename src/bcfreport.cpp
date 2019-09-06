@@ -4,7 +4,7 @@
 #include "stats.h"
 #include "util.h"
 
-void Stats::reportBCF(const SVSet& svs){
+void Stats::reportSVBCF(const SVSet& svs){
     // Open file handler
     samFile* samfp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_set_fai_filename(samfp, mOpt->genome.c_str());

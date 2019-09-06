@@ -1,0 +1,100 @@
+#ifndef FUSION_OPT_H
+#define FUSION_OPT_H
+
+#include <map>
+#include <set>
+#include <vector>
+#include <cstdint>
+#include <string>
+#include <htslib/vcf.h>
+#include "svutil.h"
+#include "util.h"
+
+/** Class to represent an SV info */
+struct SVInfo{
+    std::string mChr1; ///< large chr of an SV
+    std::string mChr2; ///< lite chr of an SV
+    int32_t mStart;    ///< SV starting position
+    int32_t mEnd;      ///< SV ending position
+
+    /** SVInfo constructor
+     * @param chr1 large chr of an SV
+     * @param chr2 lite chr of an SV
+     * @param start SV starting position
+     * @param end SV ending position
+     */
+    SVInfo(const std::string& chr1, const std::string& chr2, int32_t start, int32_t end){
+        mChr1 = chr1;
+        mChr2 = chr2;
+        mStart = start;
+        mEnd = end;
+    }
+    
+    /** SVInfo destructor */
+    ~SVInfo(){};
+};
+
+/** type to store each kind of structural variants */
+typedef std::vector<std::vector<SVInfo>> SVList;
+
+/** type to stroe fusion gene partner information hgene ~ tgene list */
+typedef std::map<std::string, std::set<std::string>> FusePairs;
+
+/** class to store fusion report options */
+struct FusionOptions{
+    int32_t mMinSRSupport = 3;       ///< min SR support for an valid fusion
+    int32_t mMinDPSupport = 3;       ///< min DP support for an valid fusion
+    int32_t mMinSUSupport = 3;       ///< min SU support for an valid fusion
+    float mMinVAF = 0.05;            ///< min VAF for an valid fusion
+    int32_t mMaxBpOffset = 10;       ///< max breakpoint offset of an SV against background SV to be excluded
+    float mMinOverlap = 0.8;         ///< min overlap ratio of an SV against background SV to be excluded
+    std::string mBgBCF;              ///< background BCF file
+    std::string mWhiteList;          ///< fusion event which will keep always if found
+    std::string mBlackList;          ///< fusion event which will drop always if found
+    std::string mInfile;             ///< input file of sver sv tsv format result file
+    std::string mOutFile = "fs.tsv"; ///< output file of reported fusion
+    SVList mBgSVs;                   ///< to store background SVs
+    FusePairs mWhiteFusions;         ///< to store fusion events in fusion whitelist
+    FusePairs mBlackFusions;         ///< to store fusion events in fusion blacklist
+    bool mInitialized = false;       ///< FusionOptions is initialized if true
+
+    /** FusionOptions constructor */
+    FusionOptions(){};
+
+    /** FusionOptions destructor */
+    ~FusionOptions(){};
+
+    /** initialize filter options */
+    void init();
+
+    /** test whether an fusion event  is valid
+     * @param hgene head gene
+     * @param tgene tail gene
+     * @return true if fusion is in whitelist or fusion is not in blacklist
+     */
+    bool validFusion(const std::string& hgene, const std::string& tgene);
+
+    /** test whether an SV breakpoint is not in background
+     * @param svt SV type
+     * @param chr1 big chr of SV
+     * @param chr2 lite chr of SV
+     * @param start starting position
+     * @param end ending position
+     * @return true if this SV breakpoint it not in background
+     */
+    bool validSV(int32_t svt, const std::string& chr1, const std::string& chr2, int32_t start, int32_t end);
+
+    /** get background SV events */
+    void getBgSVs();
+
+    /** get fusion events in fusion whitelist */
+    void getWhiteFusions();
+
+    /** get fusion events in fusion blacklist */
+    void getBlackFusions();
+
+    /** parse fusion list into fusion pairs */
+    void parseFusionList(const std::string& fuseList, FusePairs& fusePairs);
+};
+
+#endif

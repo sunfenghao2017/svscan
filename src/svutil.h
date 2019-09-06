@@ -169,25 +169,35 @@
 
 /** fuse gene struct */
 struct FuseGene{
-    std::string hgene;    ///< gene name of 5' part of fusion gene
-    std::string hend;     ///< hgene 3' or 5' fused
+    std::string hgene;   ///< gene name of 5' part of fusion gene
+    std::string hend;    ///< hgene 3' or 5' fused
     std::string hstrand; ///< hgene + or - strand fused
-    std::string tgene;    ///< gene name of 3' part of fusion gene
-    std::string tend;     ///< tgene 3' or 5' fused
-    std::string tstrand;  ///< hgene + or - strand fused
+    std::string tgene;   ///< gene name of 3' part of fusion gene
+    std::string tend;    ///< tgene 3' or 5' fused
+    std::string tstrand; ///< hgene + or - strand fused
+    bool valid;          ///< if hgene is 5'+ and tgene is 3'+ then this fusion gene is valid
 
+    /** FuseGene constructor */
     FuseGene(){
         hgene = "-";
-        hend = "-";
+        hend = ".";
         hstrand = "-";
         tgene = "-";
         tend = "-";
-        tstrand = "-";
+        tstrand = ".";
+        valid = false;
     }
 
+    /** FuseGene destructor */
     ~FuseGene(){};
 
+    /** operator to output FuseGene to ostream
+     * @param os reference of ostream
+     * @param fg reference of FuseGene
+     * @return ostream
+     */
     inline friend std::ostream& operator<<(std::ostream& os, const FuseGene& fg){
+        os << fg.hgene << "->" << fg.tgene << "\t";
         os << fg.hgene << "\t" << fg.hend << "\t" << fg.hstrand << "\t";
         os << fg.tgene << "\t" << fg.tend << "\t" << fg.tstrand << "\t";
         return os;
@@ -489,6 +499,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
+                ret.valid = true;
             }else if(strand1 == '-' && strand2 == '+'){
                 ret.hgene = gene2;
                 ret.tgene = gene1;
@@ -496,6 +507,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
+                ret.valid = true;
             }else if(strand1 == '-' && strand2 == '-'){
                 ret.hgene = gene2;
                 ret.tgene = gene1;
@@ -519,6 +531,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
+                ret.valid = true;
             }else if(strand1 == '-' && strand2 == '+'){
                 ret.hgene = gene1;
                 ret.tgene = gene2;
@@ -526,6 +539,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
+                ret.valid = true;
             }else if(strand1 == '-' && strand2 == '-'){
                 ret.hgene = gene1;
                 ret.tgene = gene2;
@@ -542,6 +556,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
+                ret.valid = true;
             }else if(strand1 == '+' && strand2 == '-'){
                 ret.hgene = gene1;
                 ret.tgene = gene2;
@@ -563,6 +578,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
+                ret.valid = true;
             }
         }
         return ret;

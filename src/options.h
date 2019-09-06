@@ -9,7 +9,9 @@
 #include <cstdint>
 #include <sstream>
 #include <htslib/sam.h>
+#include "fusionopt.h"
 #include "ThreadPool.h"
+#include "software.h"
 #include "statutil.h"
 #include "util.h"
 
@@ -145,20 +147,6 @@ struct MSAOpt{
     ~MSAOpt(){}
 };
 
-/** class to store software environment */
-struct Software{
-    std::string version = "0.0.0"; ///< software version
-    std::string cmd;               ///< software execution command
-    std::string cwd;               ///< software execution directory
-    std::string cmp;               ///< software update time
-
-    /** Software constructor */
-    Software(){}
-
-    /** Software destructor */
-    ~Software(){}
-};
-
 /** type to store regions */
 typedef std::vector<std::set<std::pair<int32_t, int32_t>>> RegionList;
 
@@ -172,7 +160,7 @@ class Options{
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
-        samFile* fbamout;             ///< file pointer of sv bam output 
+        samFile* fbamout;             ///< file pointer of sv bam output
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
         RegionList validRegions;      ///< valid regions to discovery SV
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
@@ -186,6 +174,7 @@ class Options{
         LibraryInfo* libInfo;         ///< library information for the currently analyzed bam
         SVFilter* filterOpt;          ///< filter options
         PassOptions* passOpt;         ///< high quality SV threshold
+        FusionOptions* fuseOpt;       ///< fusion report options
         MSAOpt* msaOpt;               ///< MSA options
         Software* softEnv;            ///< softare environment option
 

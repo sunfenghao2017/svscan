@@ -34,6 +34,16 @@ int main(int argc, char** argv){
     app.add_option("--min_inv_rpt", opt->filterOpt->mMinInversionRpt, "min inversion size to report", true)->group("Threshold Options");
     app.add_option("--min_del_rpt", opt->filterOpt->mMinDeletionRpt, "min deletion size to report", true)->group("Threshold Options");
     app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
+    // Fusion report options
+    app.add_option("--minsr", opt->fuseOpt->mMinSRSupport, "min SR support for an valid fusion", true)->group("Fusion Options");
+    app.add_option("--mindp", opt->fuseOpt->mMinDPSupport, "min DP support for an valid fusion", true)->group("Fusion Options");
+    app.add_option("--minsu", opt->fuseOpt->mMinSUSupport, "min SU support for an valid fusion", true)->group("Fusion Options");
+    app.add_option("--minaf", opt->fuseOpt->mMinVAF, "min VAF for an valid fusion", true)->group("Fusion Options");
+    app.add_option("--maxbpoffset", opt->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true)->group("Fusion Options");
+    app.add_option("--bgbcf", opt->fuseOpt->mBgBCF, "background events BCF file")->group("Fusion Options");
+    app.add_option("--whitelist", opt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
+    app.add_option("--blacklist", opt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
+    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "fusion report file path", true)->group("Fusion Options");
     // parse arguments
     CLI_PARSE(app, argc, argv);
     // validate arguments

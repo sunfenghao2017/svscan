@@ -133,10 +133,13 @@ void SVScanner::scanDPandSR(){
     covAnn->geneAnnotate(mergedSVs, gl);
     util::loginfo("End annotating SV gene information");
     util::loginfo("Beg writing SVs to TSV file");
-    covStat->reportTSV(mergedSVs, gl);
+    covStat->reportSVTSV(mergedSVs, gl);
     util::loginfo("End writing SVs to TSV file");
+    util::loginfo("Beg writing Fusions to TSV file");
+    covStat->reportFusionTSV(mergedSVs, gl);
+    util::loginfo("End writing Fusions to TSV file");
     util::loginfo("Beg writing SVs to BCF file");
-    covStat->reportBCF(mergedSVs);
+    covStat->reportSVBCF(mergedSVs);
     util::loginfo("End writing SVs to BCF file");
     delete covAnn;
     delete covStat;

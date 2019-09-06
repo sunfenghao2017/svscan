@@ -87,7 +87,7 @@
 - [x] remove false positive insertion sequence coming from alignment without supplementary records.
 - [x] use consensus probe sequence to capture possible supporting reads of structural variants.
 - [x] annotate fusion gene if both breakpoint spanning a gene.
-- [ ] add filter module to filter out known structural variants or keep some import structural variants.
+- [x] add filter module to filter out known structural variants or keep some import structural variants.
 - [ ] process some complicated structural variant events such as complicated insertion.
 - [ ] use local assembly to assist discover of more complicated structural variants.
 - [ ] use single unmapped reads to capture more structural variants.

@@ -11,6 +11,7 @@ Options::Options(){
     softEnv = new Software();
     msaOpt = new MSAOpt();
     passOpt = new PassOptions();
+    fuseOpt = new FusionOptions();
     softEnv->cmp += "version: " + softEnv->version + "\n";
     softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
     libInfo = NULL;

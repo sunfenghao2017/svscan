@@ -250,6 +250,8 @@ class GeneInfo{
     public:
         std::string mGene1 = "-";         ///< gene name of breakpoint position on larger chrosome
         std::string mGene2 = "-";         ///< gene name of breakpoint position on small chrosome
+        std::string mStrand1 = ".";       ///< mGene1 strand on reference genome
+        std::string mStrand2 = ".";       ///< mGene2 strand on reference genome
         FuseGene mFuseGene;               ///< fusion gene information
         std::vector<std::string> mTrans1; ///< transcript names of breakpoint position on larger chrosome
         std::vector<std::string> mTrans2; ///< transcript names of breakpoint position on small chrosome
@@ -345,13 +347,19 @@ class Stats{
         /** report BCF format report of all SVs
          * @param svs reference of SVSet
          */
-        void reportBCF(const SVSet& svs);
+        void reportSVBCF(const SVSet& svs);
 
         /** report TSV format report of all SVs
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportTSV(const SVSet& svs, const GeneInfoList& gl);
+        void reportSVTSV(const SVSet& svs, const GeneInfoList& gl);
+
+        /** report TSV format report of valid Fusion events
+         * @param svs reference of SVSet
+         * @param gl reference of GeneInfoList
+         */
+        void reportFusionTSV(const SVSet& svs, const GeneInfoList& gl);
 
         /** get alignment quality of sequence against an read
          * @param alnResult align result(sequence vertical, read horizontal)

@@ -1,14 +1,17 @@
 #include "stats.h"
+#include "fusionopt.h"
 
-void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
+void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
-    fw << "svType\tsvSize\tbpMark\t";
-    fw << "fuseGene\thGene\thTrsEnd\thTrsStrand\ttGene\ttTrsEnd\ttTrsStrand\t";
-    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";
-    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";
-    fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";
-    fw << "bp1Trs\tbp2Trs\tsvSeq\tsvID\n";
+    fw << "svType\tsvSize\tbpMark\t";//[0, 2]
+    fw << "fuseGene\t"; //[3];
+    fw << "hGene\thTrsEnd\thTrsStrand\t";//[4,6]
+    fw << "tGene\ttTrsEnd\ttTrsStrand\t";//[7,9]
+    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";//[10,12]
+    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";//[13,15]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";//[16,19]
+    fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";//[20,24]
+    fw << "bp1Trs\tbp2Trs\tsvSeq\tsvID\tsvtInt\n";//[25,29]
     for(uint32_t i = 0; i < gl.size(); ++i){
         // skip false positive insertions
         if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].mAltQual.size() * mOpt->filterOpt->mMaxFPIns) continue;
@@ -42,8 +45,42 @@ void Stats::reportTSV(const SVSet& svs, const GeneInfoList& gl){
         if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t";
         else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t";
         else fw << "-" << "\t";
-        // svID
-        fw << svs[i].mID << "\n";
+        // svID svtInt
+        fw << svs[i].mID << "\t" << svs[i].mSVT << "\n";
+
+    }
+    fw.close();
+}
+
+void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
+    mOpt->fuseOpt->init();
+    std::ofstream fw(mOpt->fuseOpt->mOutFile);
+    fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t";
+    fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";
+    fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";
+    fw << "FusionSequence\tSVID\n";
+    for(uint32_t i = 0; i < gl.size(); ++i){
+        if(!gl[i].mFuseGene.valid) continue;
+        float af = 0.0;
+        if(svs[i].mPrecise) af = (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size());
+        else af = (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size());
+        if(!mOpt->fuseOpt->validFusion(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene) && (!svs[i].mPrecise || af < mOpt->fuseOpt->mMinVAF)) continue; 
+        fw << gl[i].mFuseGene.hgene << "->" << gl[i].mFuseGene.tgene << "\t"; // FusionGene
+        fw << gl[i].mStrand1 << gl[i].mStrand2 << "\t"; // FusionPattern
+        if(svs[i].mPrecise){// FusionReads TotalReads FusionRate
+            fw << mJctCnts[i].mAltQual.size() << "\t";
+            fw << mJctCnts[i].mRefQual.size() << "\t";
+            fw << (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size()) << "\t"; 
+        }else{
+            fw << mSpnCnts[i].mAltQual.size() << "\t";
+            fw << mSpnCnts[i].mRefQual.size() << "\t";
+            fw << (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size()) << "\t";
+        }
+        // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
+        fw << gl[i].mGene1 << "\t" << svs[i].mChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
+        // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
+        fw << gl[i].mGene2 << "\t" << svs[i].mChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
+        fw << svs[i].mConsensus << "\t" << svs[i].mID << "\n";
     }
     fw.close();
 }
