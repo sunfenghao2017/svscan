@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <iostream>
 #include <cstdint>
 #include <htslib/vcf.h>
 #include <htslib/sam.h>
@@ -165,6 +166,33 @@
  * 5'-------------------------aC----------------------------3'
  * 3'-------------------------tG----------------------------5'
  */
+
+/** fuse gene struct */
+struct FuseGene{
+    std::string hgene;    ///< gene name of 5' part of fusion gene
+    std::string hend;     ///< hgene 3' or 5' fused
+    std::string hstrand; ///< hgene + or - strand fused
+    std::string tgene;    ///< gene name of 3' part of fusion gene
+    std::string tend;     ///< tgene 3' or 5' fused
+    std::string tstrand;  ///< hgene + or - strand fused
+
+    FuseGene(){
+        hgene = "-";
+        hend = "-";
+        hstrand = "-";
+        tgene = "-";
+        tend = "-";
+        tstrand = "-";
+    }
+
+    ~FuseGene(){};
+
+    inline friend std::ostream& operator<<(std::ostream& os, const FuseGene& fg){
+        os << fg.hgene << "\t" << fg.hend << "\t" << fg.hstrand << "\t";
+        os << fg.tgene << "\t" << fg.tend << "\t" << fg.tstrand << "\t";
+        return os;
+    }
+};
 
 /** useful functions used in sv calling */
 namespace svutil{
@@ -436,45 +464,108 @@ namespace svutil{
      * @param strand1 strand of gene1
      * @param strand2 strand of gene2
      * @param svt SV type
+     * @return FuseGene information
      */
-    inline std::string getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
-        if(gene1 == "-" || gene2 == "-" || svt == 4) return "-";
+    inline FuseGene getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
+        FuseGene ret;
+        if(gene1 == "-" || gene2 == "-" || svt == 4) return ret;
         if(svt >= 5) svt -= 5;
-        if(svt == 0){// left spanning breakpoint of inversion
-            if(strand1 == '+' && strand2 == '+'){
-                return gene1 + "->" + gene2 + "(5+5-)";
-            }else if(strand1 == '+' && strand2 == '-'){
-                return gene1 + "->" + gene2 + "(5+3+)";
-            }else if(strand1 == '-' && strand2 == '+'){
-                return gene2 + "->" + gene1 + "(5+3+)";
-            }else if(strand1 == '-' && strand2 == '-'){
-                return gene2 + "->" + gene1 + "(3-3+)";
-            }
-        }else if(svt == 1){// right spanning breakpoint of inversion
-            if(strand1 == '+' && strand2 == '+'){
-                return gene1 + "->" + gene2 + "(3-3+)";
-            }else if(strand1 == '+' && strand2 == '-'){
-                return gene2 + "->" + gene1 + "(5+3+)";
-            }else if(strand1 == '-' && strand2 == '+'){
-                return gene1 + "->" + gene2 + "(5+3+)";
-            }else if(strand1 == '-' && strand2 == '-'){
-                return gene1 + "->" + gene2 + "(5+5-)";
-            }
-        }
-        if(svt == 3){// duplication(ps: in breakpoint it is gene2 on left and gene1 on right)
+        if(svt == 3){// convert 3to5 to 5to3
             std::swap(gene1, gene2);
             std::swap(strand1, strand2);
         }
-        if(strand1 == '+' && strand2 == '+'){
-            return gene1 + "->" + gene2 + "(5+3+)";
-        }else if(strand1 == '+' && strand2 == '-'){
-            return gene1 + "->" + gene2 + "(5+5-)";
-        }else if(strand1 == '-' && strand2 == '+'){
-            return gene1 + "->" + gene2 + "(3-3+)";
-        }else if(strand1 == '-' && strand2 == '-'){
-            return gene2 + "->" + gene1 + "(5+3+)";
+        if(svt == 0){// 5to5
+            if(strand1 == '+' && strand2 == '+'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "5";
+                ret.tend = "5";
+                ret.hstrand = "+";
+                ret.tstrand = "-";
+            }else if(strand1 == '+' && strand2 == '-'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "5";
+                ret.tend = "3";
+                ret.hstrand = "+";
+                ret.tstrand = "+";
+            }else if(strand1 == '-' && strand2 == '+'){
+                ret.hgene = gene2;
+                ret.tgene = gene1;
+                ret.hend = "5";
+                ret.tend = "3";
+                ret.hstrand = "+";
+                ret.tstrand = "+";
+            }else if(strand1 == '-' && strand2 == '-'){
+                ret.hgene = gene2;
+                ret.tgene = gene1;
+                ret.hend = "3";
+                ret.tend = "3";
+                ret.hstrand = "-";
+                ret.tstrand = "+";
+            }
+        }else if(svt == 1){// 3to3
+            if(strand1 == '+' && strand2 == '+'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "3";
+                ret.tend = "3";
+                ret.hstrand = "-";
+                ret.tstrand = "+";
+            }else if(strand1 == '+' && strand2 == '-'){
+                ret.hgene = gene2;
+                ret.tgene = gene1;
+                ret.hend = "5";
+                ret.tend = "3";
+                ret.hstrand = "+";
+                ret.tstrand = "+";
+            }else if(strand1 == '-' && strand2 == '+'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "5";
+                ret.tend = "3";
+                ret.hstrand = "+";
+                ret.tstrand = "+";
+            }else if(strand1 == '-' && strand2 == '-'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "5";
+                ret.tend = "5";
+                ret.hstrand = "+";
+                ret.tstrand = "-";
+            }
+        }else if(svt == 2 || svt == 3){// 5to3 and 3to5
+            if(strand1 == '+' && strand2 == '+'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "5";
+                ret.tend = "3";
+                ret.hstrand = "+";
+                ret.tstrand = "+";
+            }else if(strand1 == '+' && strand2 == '-'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "5";
+                ret.tend = "5";
+                ret.hstrand = "+";
+                ret.tstrand = "-";
+            }else if(strand1 == '-' && strand2 == '+'){
+                ret.hgene = gene1;
+                ret.tgene = gene2;
+                ret.hend = "3";
+                ret.tend = "3";
+                ret.hstrand = "-";
+                ret.tstrand = "+";
+            }else if(strand1 == '-' && strand2 == '-'){
+                ret.hgene = gene2;
+                ret.tgene = gene1;
+                ret.hend = "5";
+                ret.tend = "3";
+                ret.hstrand = "+";
+                ret.tstrand = "+";
+            }
         }
-        return "-";
+        return ret;
     }
 
     /** convert string representation of SV event back to integer representation

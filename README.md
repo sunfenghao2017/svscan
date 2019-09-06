@@ -79,8 +79,6 @@
 ![sver algorithm](./fig/sver.svg)
 
 #### To do list
-- [ ] process some complicated structural variant events such as complicated insertion.
-- [ ] use local assembly to assist discover of more complicated structural variants.
 - [x] calculate the allele counts more precisely, especially for duplication events.
 - [x] merge same structural events explained by different data.
 - [x] rescue split reads for each breakpoint without inertion sequence afterwards.
@@ -88,6 +86,9 @@
 - [x] rescue discordant paired ends read for each cross-chrosome breakpoint.
 - [x] remove false positive insertion sequence coming from alignment without supplementary records.
 - [x] use consensus probe sequence to capture possible supporting reads of structural variants.
-- [x] annotate fusion gene if both breakpoint spanning a gene
+- [x] annotate fusion gene if both breakpoint spanning a gene.
+- [ ] add filter module to filter out known structural variants or keep some import structural variants.
+- [ ] process some complicated structural variant events such as complicated insertion.
+- [ ] use local assembly to assist discover of more complicated structural variants.
 - [ ] use single unmapped reads to capture more structural variants.
-- [ ] add filter module.
+- [ ] develop a GUI tool for result recheck.

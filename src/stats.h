@@ -250,7 +250,7 @@ class GeneInfo{
     public:
         std::string mGene1 = "-";         ///< gene name of breakpoint position on larger chrosome
         std::string mGene2 = "-";         ///< gene name of breakpoint position on small chrosome
-        std::string mFuseGene = "-";      ///< fusion gene information(5'partner->3'partner)
+        FuseGene mFuseGene;               ///< fusion gene information
         std::vector<std::string> mTrans1; ///< transcript names of breakpoint position on larger chrosome
         std::vector<std::string> mTrans2; ///< transcript names of breakpoint position on small chrosome
 
