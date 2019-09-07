@@ -42,6 +42,7 @@ void FusionReporter::report(){
         std::string fusegene = vstr[3];
         std::string hgene = vstr[4];
         std::string tgene = vstr[7];
+        std::string gene1 = vstr[12];
         std::string hend = vstr[5];
         std::string tend = vstr[8];
         std::string hstrand = vstr[6];
@@ -68,7 +69,11 @@ void FusionReporter::report(){
         std::string strand2 = "-";
         if(vstr[25].find("+") != std::string::npos) strand1 = "+";
         if(vstr[26].find("+") != std::string::npos) strand2 = "+";
-        fw << strand1 << strand2 << "\t"; //FusionPattern
+        if(hgene == gene1){//FusionPattern
+            fw << strand1 << strand2 << "\t";
+        }else{
+            fw << strand2 << strand1 << "\t";
+        }
         if(sr){//FusionReads TotalReads
             fw << sr << "\t";
             fw << (sr + std::atoi(vstr[18].c_str())) << "\t";
@@ -77,16 +82,29 @@ void FusionReporter::report(){
             fw << (dp + std::atoi(vstr[19].c_str())) << "\t";
         }
         fw << af << "\t"; //FusionRate
-        fw << hgene << "\t"; //Gene1
-        fw << chr1 << "\t"; //Chr1
-        fw << start << "\t"; //JunctionPosition1
-        fw << strand1 << "\t"; //Strand1
-        fw << vstr[25] << "\t"; //Transcript1
-        fw << tgene << "\t"; //Gene2
-        fw << chr2 << "\t"; //Chr2
-        fw << end << "\t"; //JunctionPosition2
-        fw << strand2 << "\t"; //Strand2
-        fw << vstr[26] << "\t";//Transcript2
+        if(gene1 == hgene){
+            fw << hgene << "\t"; //Gene1
+            fw << chr1 << "\t"; //Chr1
+            fw << start << "\t"; //JunctionPosition1
+            fw << strand1 << "\t"; //Strand1
+            fw << vstr[25] << "\t"; //Transcript1
+            fw << tgene << "\t"; //Gene2
+            fw << chr2 << "\t"; //Chr2
+            fw << end << "\t"; //JunctionPosition2
+            fw << strand2 << "\t"; //Strand2
+            fw << vstr[26] << "\t";//Transcript2
+        }else{
+            fw << hgene << "\t"; //Gene2
+            fw << chr2 << "\t"; //Chr2
+            fw << end << "\t"; //JunctionPosition2
+            fw << strand2 << "\t"; //Strand2
+            fw << vstr[26] << "\t";//Transcript2
+            fw << tgene << "\t"; //Gene1
+            fw << chr1 << "\t"; //Chr1
+            fw << start << "\t"; //JunctionPosition1
+            fw << strand1 << "\t"; //Strand1
+            fw << vstr[25] << "\t"; //Transcript1
+        }
         fw << vstr[27] << "\t";//FusionSequence
         fw << vstr[29] << "\n";//SVID
     }
