@@ -51,7 +51,8 @@ void FusionReporter::report(){
         int32_t sr = std::atoi(vstr[18].c_str());
         int32_t dp = std::atoi(vstr[19].c_str());
         float af = std::atof(vstr[22].c_str());
-        bool inWhiteList = fuseOpt->validFusion(hgene, tgene);
+        if(fuseOpt->inBlackList(hgene, tgene)) continue; // skip fusion in blacklist
+        bool inWhiteList = fuseOpt->inWhiteList(hgene, tgene);
         bool toBeKept = false;
         if(inWhiteList && // fusion in whitelist
            (sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&

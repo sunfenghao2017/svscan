@@ -68,7 +68,7 @@ void FusionOptions::init(){
     mInitialized = true;
 }
 
-bool FusionOptions::validFusion(const std::string& hgene, const std::string& tgene){
+bool FusionOptions::inWhiteList(const std::string& hgene, const std::string& tgene){
     if(!mInitialized) init();
     auto wit = mWhiteFusions.find(hgene);
     if(wit != mWhiteFusions.end()){
@@ -76,13 +76,17 @@ bool FusionOptions::validFusion(const std::string& hgene, const std::string& tge
             return true;
         }
     }
+    return false;
+}
+
+bool FusionOptions::inBlackList(const std::string& hgene, const std::string& tgene){
     auto bit = mBlackFusions.find(hgene);
     if(bit != mBlackFusions.end()){
         if(bit->second.find(tgene) != bit->second.end()){
-            return false;
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
 bool FusionOptions::validSV(int32_t svt, const std::string& chr1, const std::string& chr2, int32_t start, int32_t end){

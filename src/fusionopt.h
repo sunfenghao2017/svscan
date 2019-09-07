@@ -79,13 +79,20 @@ struct FusionOptions{
     /** initialize filter options */
     void init();
 
-    /** test whether an fusion event  is valid
+    /** test whether an fusion event is in whitelist
      * @param hgene head gene
      * @param tgene tail gene
-     * @return true if fusion is in whitelist or fusion is not in blacklist
+     * @return true if fusion is in whitelist
      */
-    bool validFusion(const std::string& hgene, const std::string& tgene);
+    bool inWhiteList(const std::string& hgene, const std::string& tgene);
 
+    /** test whether an fusion event is in whitelist
+     * @param hgene head gene
+     * @param tgene tail gene
+     * @return true if fusion is in whitelist
+     */
+    bool inBlackList(const std::string& hgene, const std::string& tgene);
+    
     /** test whether an SV breakpoint is not in background
      * @param svt SV type
      * @param chr1 big chr of SV

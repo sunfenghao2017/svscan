@@ -64,7 +64,8 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         float af = 0.0;
         if(svs[i].mPrecise) af = (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size());
         else af = (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size());
-        bool inWhitelist = mOpt->fuseOpt->validFusion(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
+        if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
+        bool inWhitelist = mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
         bool tobeKept = false;
         if(inWhitelist &&
            (svs[i].mSRSupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport) &&
