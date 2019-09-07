@@ -46,11 +46,14 @@ void FusionReporter::report(){
         std::string tend = vstr[8];
         std::string hstrand = vstr[6];
         std::string tstrand = vstr[9];
+        // keep only(hgene+5'->tgene+3') fusion
         if(hstrand[0] != '+' || tstrand[0] != '+' || hend != "5" || tend != "3") continue;
         int32_t sr = std::atoi(vstr[18].c_str());
         int32_t dp = std::atoi(vstr[19].c_str());
         float af = std::atof(vstr[22].c_str());
+        // keep only fusion in whitelist or high AF ones
         if((!fuseOpt->validFusion(hgene, tgene)) && (sr == 0 || af < fuseOpt->mMinVAF)) continue;
+        // keep only fusion not in background
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
         fw << vstr[3] << "\t"; //FusionGene
         std::string strand1 = "-";

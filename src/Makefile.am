@@ -1,4 +1,4 @@
-bin_PROGRAMS = sver svmerge svfilter getAlnByZF prepAnnoDB
+bin_PROGRAMS = sver svmerge fusereport svfilter getAlnByZF prepAnnoDB
 
 sver_LDADD = $(LDFLAGS)
 
@@ -9,9 +9,13 @@ svmerge_LDADD = $(LDFLAGS)
 
 svmerge_SOURCES = mergevcf.cpp
 
+fusereport_LDADD = $(LDFLAGS)
+
+fusereport_SOURCES = fusionreporter.cpp fusionopt.cpp
+
 svfilter_LDADD = $(LDFLAGS)
 
-svfilter_SOURCES = fusionreporter.cpp fusionopt.cpp
+svfilter_SOURCES = svfilter.cpp
 
 getAlnByZF_LDADD = $(LDFLAGS)
 
