@@ -101,7 +101,9 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
             // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
             fw << gl[i].mGene1 << "\t" << svs[i].mChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
         }
-        fw << svs[i].mConsensus << "\t" << svs[i].mID << "\n";
+        if(svs[i].mConsensus.empty()) fw << "-\t";
+        else fw << svs[i].mConsensus << "\t";
+        fw << svs[i].mID << "\n";
     }
     fw.close();
 }
