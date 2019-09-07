@@ -9,7 +9,7 @@
        ./configure --prefix=/path/to/install/dir/ 
        make & make install 
     3). test command 
-       /path/to/install/dir/sver -b testdata/bam/test.bam -g /Users/wood/Database/hg19/hg19.fa -a testdata/annodb/refGene.Anno.sorted.gz -r testdata/bed/valid.bed -o testdata/sv.bcf -t testdata/sv.tsv
+       /path/to/install/dir/sver -b testdata/bam/test.bam -g /Users/wood/Database/hg19/hg19.fa -a testdata/gz/refGene.Anno.sorted.gz -r testdata/bed/valid.bed -o testdata/sv.bcf -t testdata/sv.tsv
   
 #### What kind of structural variants sver can discover?
     In principle, sver supports discovery of 5 classes of structural variants: inversion, deletion, duplication, insertion, translocation.  

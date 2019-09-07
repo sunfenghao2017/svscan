@@ -51,8 +51,15 @@ void FusionReporter::report(){
         int32_t sr = std::atoi(vstr[18].c_str());
         int32_t dp = std::atoi(vstr[19].c_str());
         float af = std::atof(vstr[22].c_str());
-        // keep only fusion in whitelist or high AF ones
-        if((!fuseOpt->validFusion(hgene, tgene)) && (sr == 0 || af < fuseOpt->mMinVAF)) continue;
+        bool inWhiteList = fuseOpt->validFusion(hgene, tgene);
+        bool toBeKept = false;
+        if(inWhiteList && // fusion in whitelist
+           (sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&
+           (af >= fuseOpt->mWhiteFilter.mMinVAF)) toBeKept = true;
+        else if((!inWhiteList) && // fusion not in whitelist
+                (sr >= fuseOpt->mUsualFilter.mMinSupport || dp >= fuseOpt->mUsualFilter.mMinSupport) && 
+                (af > fuseOpt->mUsualFilter.mMinVAF)) toBeKept = true;
+        if(!toBeKept) continue;
         // keep only fusion not in background
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
         fw << vstr[3] << "\t"; //FusionGene
@@ -97,10 +104,10 @@ int main(int argc, char** argv){
     CLI::App app("program: " + std::string(argv[0]) + "\n" + f->softEnv->cmp);
     app.add_option("-i,--in", f->fuseOpt->mInfile, "input tsv sv result of sver")->required(true)->check(CLI::ExistingFile);
     app.add_option("-o,--out", f->fuseOpt->mOutFile, "output tsv fusion result", true);
-    app.add_option("--minsr", f->fuseOpt->mMinSRSupport, "min SR support for an valid fusion", true);
-    app.add_option("--mindp", f->fuseOpt->mMinDPSupport, "min DP support for an valid fusion", true);
-    app.add_option("--minsu", f->fuseOpt->mMinSUSupport, "min SU support for an valid fusion", true);
-    app.add_option("--minaf", f->fuseOpt->mMinVAF, "min VAF for an valid fusion", true);
+    app.add_option("--whiteminr", f->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);
+    app.add_option("--usualminr", f->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true);
+    app.add_option("--whiteminaf", f->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true);
+    app.add_option("--usualminaf", f->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true); 
     app.add_option("--maxbpoffset", f->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true);
     app.add_option("--bgbcf", f->fuseOpt->mBgBCF, "background events BCF file");
     app.add_option("--whitelist", f->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);

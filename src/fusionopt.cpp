@@ -1,5 +1,12 @@
 #include "fusionopt.h"
 
+FusionOptions::FusionOptions(){
+    mWhiteFilter.mMinSupport = 3;
+    mWhiteFilter.mMinVAF = 0;
+    mUsualFilter.mMinSupport = 5;
+    mUsualFilter.mMinVAF = 0.005;
+};
+
 void FusionOptions::getBgSVs(){
     mBgSVs.resize(9);
     htsFile* fp = bcf_open(mBgBCF.c_str(), "r");

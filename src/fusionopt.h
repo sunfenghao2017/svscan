@@ -40,14 +40,26 @@ typedef std::vector<std::vector<SVInfo>> SVList;
 /** type to stroe fusion gene partner information hgene ~ tgene list */
 typedef std::map<std::string, std::set<std::string>> FusePairs;
 
+/** filter options for fusion event */
+struct FilterOptions{
+    int32_t mMinSRSupport = 3; ///< min SR support for a valid fusion
+    int32_t mMinDPSupport = 3; ///< min DP support for a valid fusion
+    int32_t mMinSUSupport = 3; ///< min SU support for a valid fusion
+    int32_t mMinSupport = 3;   ///< min supporting reads needed for a valid fusion
+    float mMinVAF = 0;         ///< min VAF needed for a valid fusion
+
+    /** FilterOptions constructor */
+    FilterOptions(){};
+
+    /** FilterOptions destructor */
+    ~FilterOptions(){};
+};
+
 /** class to store fusion report options */
 struct FusionOptions{
-    int32_t mMinSRSupport = 3;       ///< min SR support for an valid fusion
-    int32_t mMinDPSupport = 3;       ///< min DP support for an valid fusion
-    int32_t mMinSUSupport = 3;       ///< min SU support for an valid fusion
-    float mMinVAF = 0.05;            ///< min VAF for an valid fusion
+    FilterOptions mWhiteFilter;      ///< filter options for fusion events in whitelist
+    FilterOptions mUsualFilter;      ///< filter options for fusion event not in whitelist
     int32_t mMaxBpOffset = 10;       ///< max breakpoint offset of an SV against background SV to be excluded
-    float mMinOverlap = 0.8;         ///< min overlap ratio of an SV against background SV to be excluded
     std::string mBgBCF;              ///< background BCF file
     std::string mWhiteList;          ///< fusion event which will keep always if found
     std::string mBlackList;          ///< fusion event which will drop always if found
@@ -59,7 +71,7 @@ struct FusionOptions{
     bool mInitialized = false;       ///< FusionOptions is initialized if true
 
     /** FusionOptions constructor */
-    FusionOptions(){};
+    FusionOptions();
 
     /** FusionOptions destructor */
     ~FusionOptions(){};

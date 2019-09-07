@@ -35,10 +35,10 @@ int main(int argc, char** argv){
     app.add_option("--min_del_rpt", opt->filterOpt->mMinDeletionRpt, "min deletion size to report", true)->group("Threshold Options");
     app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
     // Fusion report options
-    app.add_option("--minsr", opt->fuseOpt->mMinSRSupport, "min SR support for an valid fusion", true)->group("Fusion Options");
-    app.add_option("--mindp", opt->fuseOpt->mMinDPSupport, "min DP support for an valid fusion", true)->group("Fusion Options");
-    app.add_option("--minsu", opt->fuseOpt->mMinSUSupport, "min SU support for an valid fusion", true)->group("Fusion Options");
-    app.add_option("--minaf", opt->fuseOpt->mMinVAF, "min VAF for an valid fusion", true)->group("Fusion Options");
+    app.add_option("--whiteminr", opt->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualminr", opt->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whiteminaf", opt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualminaf", opt->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--maxbpoffset", opt->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true)->group("Fusion Options");
     app.add_option("--bgbcf", opt->fuseOpt->mBgBCF, "background events BCF file")->group("Fusion Options");
     app.add_option("--whitelist", opt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");

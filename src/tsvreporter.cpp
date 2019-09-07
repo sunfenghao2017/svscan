@@ -64,7 +64,16 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         float af = 0.0;
         if(svs[i].mPrecise) af = (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size());
         else af = (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size());
-        if(!mOpt->fuseOpt->validFusion(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene) && (!svs[i].mPrecise || af < mOpt->fuseOpt->mMinVAF)) continue; 
+        bool inWhitelist = mOpt->fuseOpt->validFusion(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
+        bool tobeKept = false;
+        if(inWhitelist &&
+           (svs[i].mSRSupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport) &&
+           (af >= mOpt->fuseOpt->mWhiteFilter.mMinVAF)) tobeKept = true;
+        else if((!inWhitelist) &&
+                (svs[i].mSRSupport >= mOpt->fuseOpt->mUsualFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mUsualFilter.mMinSupport) &&
+                (af >= mOpt->fuseOpt->mUsualFilter.mMinVAF)) tobeKept = true;
+        if(!tobeKept) continue;
+        if(!mOpt->fuseOpt->validSV(svs[i].mSVT, svs[i].mNameChr1, svs[i].mNameChr2, svs[i].mSVStart, svs[i].mSVEnd)) continue;
         fw << gl[i].mFuseGene.hgene << "->" << gl[i].mFuseGene.tgene << "\t"; // FusionGene
         fw << gl[i].mStrand1 << gl[i].mStrand2 << "\t"; // FusionPattern
         if(svs[i].mPrecise){// FusionReads TotalReads FusionRate
