@@ -89,6 +89,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                     if(iter->second[j].mForward == iter->second[i].mForward && // same direction
                        iter->second[j].mSCleft != iter->second[i].mSCleft  &&  // opposing soft-clips
                        std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) < mOpt->filterOpt->mMaxReadSep){// breakpoint close
+                        if(iter->second[leftPart].mSCleft) std::swap(leftPart, rightPart);
                         svtIdx = 4; 
                     }else if(iter->second[j].mForward == iter->second[i].mForward && // same direction
                              iter->second[j].mSCleft != iter->second[i].mSCleft && // opposing soft-clips
@@ -98,7 +99,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                     }else if(iter->second[j].mForward != iter->second[i].mForward && // opposing direction
                              iter->second[j].mSCleft == iter->second[i].mSCleft && // same soft-clips
                              std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint farway
-                        if(iter->second[j].mSCleft) svtIdx = 1; // 3to3 right spanning inversion breakpoint
+                        if(iter->second[rightPart].mSCleft) svtIdx = 1; // 3to3 right spanning inversion breakpoint
                         else svtIdx = 0; // 5to5 left spanning inversion breakpoint
                     }
                     if(svtIdx != -1 && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
