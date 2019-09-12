@@ -92,14 +92,14 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         }
         if(gl[i].mGene1 == gl[i].mFuseGene.hgene){
             // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-            fw << gl[i].mGene1 << "\t" << svs[i].mChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
+            fw << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
             // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-            fw << gl[i].mGene2 << "\t" << svs[i].mChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
+            fw << gl[i].mGene2 << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
         }else{
             // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-            fw << gl[i].mGene2 << "\t" << svs[i].mChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
+            fw << gl[i].mGene2 << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
             // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-            fw << gl[i].mGene1 << "\t" << svs[i].mChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
+            fw << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
         }
         if(svs[i].mConsensus.empty()) fw << "-\t";
         else fw << svs[i].mConsensus << "\t";
