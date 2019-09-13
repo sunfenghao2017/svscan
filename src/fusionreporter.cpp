@@ -76,10 +76,10 @@ void FusionReporter::report(){
         }
         if(sr){//FusionReads TotalReads
             fw << sr << "\t";
-            fw << (sr + std::atoi(vstr[18].c_str())) << "\t";
+            fw << (sr + std::atoi(vstr[20].c_str())) << "\t";
         }else{
             fw << dp << "\t";
-            fw << (dp + std::atoi(vstr[19].c_str())) << "\t";
+            fw << (dp + std::atoi(vstr[21].c_str())) << "\t";
         }
         fw << af << "\t"; //FusionRate
         if(gene1 == hgene){
