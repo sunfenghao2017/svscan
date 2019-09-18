@@ -62,7 +62,7 @@ void FusionReporter::report(){
                 (sr >= fuseOpt->mUsualFilter.mMinSupport || dp >= fuseOpt->mUsualFilter.mMinSupport) && 
                 (af > fuseOpt->mUsualFilter.mMinVAF)) toBeKept = true;
         if(!toBeKept) continue;
-        // keep only fusion not in background
+        // skip fusion in background
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
         fw << vstr[3] << "\t"; //FusionGene
         std::string strand1 = "-";

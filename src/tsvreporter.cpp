@@ -60,20 +60,23 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";
     fw << "FusionSequence\tSVID\n";
     for(uint32_t i = 0; i < gl.size(); ++i){
+        // keep only (hgene+5'->tgene+3') fusion
         if(!gl[i].mFuseGene.valid) continue;
-        float af = 0.0;
-        if(svs[i].mPrecise) af = (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size());
-        else af = (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size());
+        // skip fusion in blacklist
         if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
         bool inWhitelist = mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
         bool tobeKept = false;
-        if(inWhitelist &&
+        float af = 0.0;
+        if(svs[i].mPrecise) af = (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size());
+        else af = (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size());
+        if(inWhitelist && // fusion in whitelist
            (svs[i].mSRSupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport) &&
            (af >= mOpt->fuseOpt->mWhiteFilter.mMinVAF)) tobeKept = true;
-        else if((!inWhitelist) &&
+        else if((!inWhitelist) && // fusion not in whitelist
                 (svs[i].mSRSupport >= mOpt->fuseOpt->mUsualFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mUsualFilter.mMinSupport) &&
                 (af >= mOpt->fuseOpt->mUsualFilter.mMinVAF)) tobeKept = true;
         if(!tobeKept) continue;
+        // skip fusion in background
         if(!mOpt->fuseOpt->validSV(svs[i].mSVT, svs[i].mNameChr1, svs[i].mNameChr2, svs[i].mSVStart, svs[i].mSVEnd)) continue;
         fw << gl[i].mFuseGene.hgene << "->" << gl[i].mFuseGene.tgene << "\t"; // FusionGene
         if(gl[i].mGene1 == gl[i].mFuseGene.hgene){// FusionPattern
