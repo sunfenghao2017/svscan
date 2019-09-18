@@ -58,7 +58,7 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t";
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";
-    fw << "FusionSequence\tSVID\n";
+    fw << "FusionSequence\tsvType\tsvSize\tinsBp\tinsSeq\tsvID\tsvtInt\n";
     for(uint32_t i = 0; i < gl.size(); ++i){
         // keep only (hgene+5'->tgene+3') fusion
         if(!gl[i].mFuseGene.valid) continue;
@@ -104,9 +104,15 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
             // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
             fw << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
         }
+        // FusinSequence
         if(svs[i].mConsensus.empty()) fw << "-\t";
         else fw << svs[i].mConsensus << "\t";
-        fw << svs[i].mID << "\n";
+        fw << svutil::addID(svs[i].mSVT) << "\t"; // svType
+        fw << svs[i].mSize << "\t";               // svSize
+        fw << svs[i].mBpInsSeq.length() << "\t";  // insBp
+        fw << svs[i].mBpInsSeq << "\t";           // insSeq
+        fw << svs[i].mID << "\t";                 // svID
+        fw << svs[i].mSVT << "\n";                // svtInt
     }
     fw.close();
 }

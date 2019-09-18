@@ -31,7 +31,7 @@ void FusionReporter::report(){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t";
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";
-    fw << "FusionSequence\tSVID\n";
+    fw << "FusionSequence\tsvType\tsvSize\tinsBp\tinsSeq\tsvID\tsvtInt\n";
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
         int32_t svt = std::atoi(vstr[29].c_str());
@@ -83,30 +83,35 @@ void FusionReporter::report(){
         }
         fw << af << "\t"; //FusionRate
         if(gene1 == hgene){
-            fw << hgene << "\t"; //Gene1
-            fw << chr1 << "\t"; //Chr1
-            fw << start << "\t"; //JunctionPosition1
-            fw << strand1 << "\t"; //Strand1
-            fw << vstr[25] << "\t"; //Transcript1
-            fw << tgene << "\t"; //Gene2
-            fw << chr2 << "\t"; //Chr2
-            fw << end << "\t"; //JunctionPosition2
-            fw << strand2 << "\t"; //Strand2
-            fw << vstr[26] << "\t";//Transcript2
+            fw << hgene << "\t";    // Gene1
+            fw << chr1 << "\t";     // Chr1
+            fw << start << "\t";    // JunctionPosition1
+            fw << strand1 << "\t";  // Strand1
+            fw << vstr[25] << "\t"; // Transcript1
+            fw << tgene << "\t";    // Gene2
+            fw << chr2 << "\t";     // Chr2
+            fw << end << "\t";      // JunctionPosition2
+            fw << strand2 << "\t";  // Strand2
+            fw << vstr[26] << "\t"; // Transcript2
         }else{
-            fw << hgene << "\t"; //Gene2
-            fw << chr2 << "\t"; //Chr2
-            fw << end << "\t"; //JunctionPosition2
-            fw << strand2 << "\t"; //Strand2
-            fw << vstr[26] << "\t";//Transcript2
-            fw << tgene << "\t"; //Gene1
-            fw << chr1 << "\t"; //Chr1
-            fw << start << "\t"; //JunctionPosition1
-            fw << strand1 << "\t"; //Strand1
-            fw << vstr[25] << "\t"; //Transcript1
+            fw << hgene << "\t";    // Gene2
+            fw << chr2 << "\t";     // Chr2
+            fw << end << "\t";      // JunctionPosition2
+            fw << strand2 << "\t";  // Strand2
+            fw << vstr[26] << "\t"; // Transcript2
+            fw << tgene << "\t";    // Gene1
+            fw << chr1 << "\t";     // Chr1
+            fw << start << "\t";    // JunctionPosition1
+            fw << strand1 << "\t";  // Strand1
+            fw << vstr[25] << "\t"; // Transcript1
         }
-        fw << vstr[27] << "\t";//FusionSequence
-        fw << vstr[29] << "\n";//SVID
+        fw << vstr[27] << "\t"; // FusionSequence
+        fw << vstr[0] << "\t";  // svType
+        fw << vstr[1] << "\t";  // svSize
+        fw << vstr[23] << "\t"; // insBp
+        fw << vstr[24] << "\t"; // insSeq
+        fw << vstr[28] << "\n"; // svID
+        fw << vstr[29] << "\n"; // svtInt
     }
     fr.close();
     fw.close();
