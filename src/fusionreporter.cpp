@@ -28,10 +28,12 @@ void FusionReporter::report(){
     std::vector<std::string> vstr;
     std::getline(fr, tmpstr);
     std::ofstream fw(fuseOpt->mOutFile);
-    fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t";
-    fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";
-    fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";
-    fw << "FusionSequence\tsvType\tsvSize\tinsBp\tinsSeq\tsvID\tsvtInt\n";
+    fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
+    fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"; //[5-9]
+    fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"; //[10-14]
+    fw << "FusionSequence\tsvType\tsvSize\t"; //[15-17]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[18-23]
+    fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[24-27]
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
         int32_t svt = std::atoi(vstr[29].c_str());
@@ -55,20 +57,30 @@ void FusionReporter::report(){
         if(fuseOpt->inBlackList(hgene, tgene)) continue; // skip fusion in blacklist
         bool inWhiteList = fuseOpt->inWhiteList(hgene, tgene);
         bool toBeKept = false;
-        if(inWhiteList && // fusion in whitelist
-           (sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&
-           (af >= fuseOpt->mWhiteFilter.mMinVAF)) toBeKept = true;
-        else if((!inWhiteList) && // fusion not in whitelist
-                (sr >= fuseOpt->mUsualFilter.mMinSupport || dp >= fuseOpt->mUsualFilter.mMinSupport) && 
-                (af > fuseOpt->mUsualFilter.mMinVAF)) toBeKept = true;
+        if(inWhiteList){// fusion in whitelist
+           if((sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&
+              (af >= fuseOpt->mWhiteFilter.mMinVAF)) toBeKept = true;
+        }else{// fusion not in whitelist
+            if((sr >= fuseOpt->mUsualFilter.mMinSupport || dp >= fuseOpt->mUsualFilter.mMinSupport) && 
+               (af > fuseOpt->mUsualFilter.mMinVAF)) toBeKept = true;
+        }
         if(!toBeKept) continue;
         // skip fusion in background
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
         fw << vstr[3] << "\t"; //FusionGene
-        std::string strand1 = "-";
-        std::string strand2 = "-";
-        if(vstr[25].find("+") != std::string::npos) strand1 = "+";
-        if(vstr[26].find("+") != std::string::npos) strand2 = "+";
+        int cnt[2] = {0, 0};
+        for(auto& e: vstr[25]){
+            if(e == '+') cnt[0] += 1;
+            if(e == '-') cnt[1] += 1;
+        }
+        std::string strand1 = (cnt[0] > cnt[1] ? "+" : "-");
+        cnt[0] = 0;
+        cnt[1] = 0;
+        for(auto& e: vstr[26]){
+            if(e == '+') cnt[0] += 1;
+            if(e == '-') cnt[1] += 1;
+        }
+        std::string strand2 = (cnt[0] > cnt[1] ? "+" : "-");
         if(hgene == gene1){//FusionPattern
             fw << strand1 << strand2 << "\t";
         }else{
@@ -105,13 +117,19 @@ void FusionReporter::report(){
             fw << strand1 << "\t";  // Strand1
             fw << vstr[25] << "\t"; // Transcript1
         }
-        fw << vstr[27] << "\t"; // FusionSequence
-        fw << vstr[0] << "\t";  // svType
-        fw << vstr[1] << "\t";  // svSize
-        fw << vstr[23] << "\t"; // insBp
-        fw << vstr[24] << "\t"; // insSeq
-        fw << vstr[28] << "\n"; // svID
-        fw << vstr[29] << "\n"; // svtInt
+        fw << vstr[27] << "\t";  // FusionSequence
+        fw << vstr[0] << "\t";   // svType
+        fw << vstr[1] << "\t";   // svSize
+        fw << vstr[16]  << "\t"; // srCount
+        fw << vstr[17] << "\t";  // dpCount
+        fw << vstr[18] << "\t";  // srRescued
+        fw << vstr[19] << "\t";  // dpRescued
+        fw << vstr[20] << "\t";  // srRefCount
+        fw << vstr[21] << "\t";  // dpRefCount
+        fw << vstr[23] << "\t";  // insBp
+        fw << vstr[24] << "\t";  // insSeq
+        fw << vstr[28] << "\t";  // svID
+        fw << vstr[29] << "\n";  // svtInt
     }
     fr.close();
     fw.close();

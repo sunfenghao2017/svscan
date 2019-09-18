@@ -55,10 +55,12 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
 void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
     mOpt->fuseOpt->init();
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
-    fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t";
-    fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";
-    fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";
-    fw << "FusionSequence\tsvType\tsvSize\tinsBp\tinsSeq\tsvID\tsvtInt\n";
+    fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
+    fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";//[5-9]
+    fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";//[10-14]
+    fw << "FusionSequence\tsvType\tsvSize\t"; //[15-17]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[18-23]
+    fw << "insBp\tinsSeq\tsvID\tsvtInt\n"; //[24-27]
     for(uint32_t i = 0; i < gl.size(); ++i){
         // keep only (hgene+5'->tgene+3') fusion
         if(!gl[i].mFuseGene.valid) continue;
@@ -67,14 +69,19 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         bool inWhitelist = mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
         bool tobeKept = false;
         float af = 0.0;
-        if(svs[i].mPrecise) af = (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size());
-        else af = (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size());
-        if(inWhitelist && // fusion in whitelist
-           (svs[i].mSRSupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mWhiteFilter.mMinSupport) &&
-           (af >= mOpt->fuseOpt->mWhiteFilter.mMinVAF)) tobeKept = true;
-        else if((!inWhitelist) && // fusion not in whitelist
-                (svs[i].mSRSupport >= mOpt->fuseOpt->mUsualFilter.mMinSupport || svs[i].mPESupport >= mOpt->fuseOpt->mUsualFilter.mMinSupport) &&
-                (af >= mOpt->fuseOpt->mUsualFilter.mMinVAF)) tobeKept = true;
+        int32_t srv = mJctCnts[i].mAltQual.size();
+        int32_t srr = mJctCnts[i].mRefQual.size();
+        int32_t dpv = mSpnCnts[i].mAltQual.size();
+        int32_t dpr = mSpnCnts[i].mRefQual.size();
+        if(svs[i].mPrecise) af = (double)(srv)/(double)(srv + srr);
+        else af = (double)(dpv)/(double)(dpv + dpr);
+        if(inWhitelist){// fusion in whitelist
+           if((srv >= mOpt->fuseOpt->mWhiteFilter.mMinSupport || dpv >= mOpt->fuseOpt->mWhiteFilter.mMinSupport) &&
+              (af >= mOpt->fuseOpt->mWhiteFilter.mMinVAF)) tobeKept = true;
+        }else{// fusion not in whitelist
+            if((srv >= mOpt->fuseOpt->mUsualFilter.mMinSupport || dpv >= mOpt->fuseOpt->mUsualFilter.mMinSupport) &&
+               (af >= mOpt->fuseOpt->mUsualFilter.mMinVAF)) tobeKept = true;
+        }
         if(!tobeKept) continue;
         // skip fusion in background
         if(!mOpt->fuseOpt->validSV(svs[i].mSVT, svs[i].mNameChr1, svs[i].mNameChr2, svs[i].mSVStart, svs[i].mSVEnd)) continue;
@@ -85,13 +92,13 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
             fw << gl[i].mStrand2 << gl[i].mStrand1 << "\t";
         }
         if(svs[i].mPrecise){// FusionReads TotalReads FusionRate
-            fw << mJctCnts[i].mAltQual.size() << "\t";
-            fw << mJctCnts[i].mRefQual.size() << "\t";
-            fw << (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size()) << "\t"; 
+            fw << srv << "\t";
+            fw << (srr + srv) << "\t"; 
+            fw << af << "\t";
         }else{
-            fw << mSpnCnts[i].mAltQual.size() << "\t";
-            fw << mSpnCnts[i].mRefQual.size() << "\t";
-            fw << (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size()) << "\t";
+            fw << dpv << "\t";
+            fw << (dpr + dpv) << "\t";
+            fw << af << "\t";
         }
         if(gl[i].mGene1 == gl[i].mFuseGene.hgene){
             // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
@@ -107,12 +114,20 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         // FusinSequence
         if(svs[i].mConsensus.empty()) fw << "-\t";
         else fw << svs[i].mConsensus << "\t";
-        fw << svutil::addID(svs[i].mSVT) << "\t"; // svType
-        fw << svs[i].mSize << "\t";               // svSize
-        fw << svs[i].mBpInsSeq.length() << "\t";  // insBp
-        fw << svs[i].mBpInsSeq << "\t";           // insSeq
-        fw << svs[i].mID << "\t";                 // svID
-        fw << svs[i].mSVT << "\n";                // svtInt
+        fw << svutil::addID(svs[i].mSVT) << "\t";  // svType
+        if(svs[i].mSVT >= 5) fw << "-\t";
+        else fw << svs[i].mSize << "\t";           // svSize
+        fw << svs[i].mSRSupport << "\t";           // srCount
+        fw << svs[i].mPESupport << "\t";           // dpCount
+        fw << mJctCnts[i].mAltQual.size() << "\t"; // srRescued
+        fw << mSpnCnts[i].mAltQual.size() << "\t"; // dpRescued
+        fw << mJctCnts[i].mRefQual.size() << "\t"; // srRefCount
+        fw <<mSpnCnts[i].mRefQual.size() << "\t";  // dpRefCount
+        fw << svs[i].mBpInsSeq.length() << "\t";   // insBp
+        if(svs[i].mBpInsSeq.empty()) fw << "-\t";
+        else fw << svs[i].mBpInsSeq << "\t";       // insSeq
+        fw << svs[i].mID << "\t";                  // svID
+        fw << svs[i].mSVT << "\n";                 // svtInt
     }
     fw.close();
 }

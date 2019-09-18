@@ -183,21 +183,28 @@ void Annotator::geneAnnotate(SVSet& svs, GeneInfoList& gl){
     char strand1 = '.';
     char strand2 = '.';
     for(uint32_t i = 0; i < svs.size(); ++i){
+        int cnt[2] = {0, 0};
         hts_itr_t* itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr1.c_str()), svs[i].mSVStart, svs[i].mSVStart + 1);
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             gl[i].mTrans1.push_back(vstr[6] + "(" + vstr[4] + "|" +vstr[5] + "|" + vstr[3] + ")");
             gl[i].mGene1 = vstr[7];
-            strand1 = vstr[3][0];
+            if(vstr[3][0] == '+') cnt[0] += 1;
+            else cnt[1] += 1;
         }
+        strand1 = (cnt[0] > cnt[1] ? '+' : '-');
+        cnt[0] = 0;
+        cnt[1] = 0;
         tbx_itr_destroy(itr);
         itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr2.c_str()), svs[i].mSVEnd, svs[i].mSVEnd + 1);
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             gl[i].mTrans2.push_back(vstr[6] + "(" + vstr[4] + ":" +vstr[5] + "|" + vstr[3] + ")"); 
             gl[i].mGene2 = vstr[7];
-            strand2 = vstr[3][0];
+            if(vstr[3][0] == '+') cnt[0] += 1;
+            else cnt[1] += 1;
         }
+        strand2 = (cnt[0] > cnt[1] ? '+' : '-');
         tbx_itr_destroy(itr);
         gl[i].mStrand1 = std::string(1, strand1);
         gl[i].mStrand2 = std::string(1, strand2);
