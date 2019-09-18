@@ -31,9 +31,9 @@ void FusionReporter::report(){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"; //[5-9]
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"; //[10-14]
-    fw << "FusionSequence\tsvType\tsvSize\t"; //[15-17]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[18-23]
-    fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[24-27]
+    fw << "FusionSequence\tHotFusion\tsvType\tsvSize\t"; //[15-18]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[19-24]
+    fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[25-28]
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
         int32_t svt = std::atoi(vstr[29].c_str());
@@ -53,18 +53,26 @@ void FusionReporter::report(){
         if(hstrand[0] != '+' || tstrand[0] != '+' || hend != "5" || tend != "3") continue;
         int32_t sr = std::atoi(vstr[18].c_str());
         int32_t dp = std::atoi(vstr[19].c_str());
+        int32_t srr = std::atoi(vstr[20].c_str());
+        int32_t dpr = std::atoi(vstr[21].c_str());
         float af = std::atof(vstr[22].c_str());
         if(fuseOpt->inBlackList(hgene, tgene)) continue; // skip fusion in blacklist
         bool inWhiteList = fuseOpt->inWhiteList(hgene, tgene);
-        bool toBeKept = false;
+        bool keep = false;
         if(inWhiteList){// fusion in whitelist
            if((sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&
-              (af >= fuseOpt->mWhiteFilter.mMinVAF)) toBeKept = true;
+              (af >= fuseOpt->mWhiteFilter.mMinVAF)) keep = true;
+           if((sr + srr) < fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dp) < fuseOpt->mWhiteFilter.mMinDepth)){
+               keep = false;
+           }
         }else{// fusion not in whitelist
             if((sr >= fuseOpt->mUsualFilter.mMinSupport || dp >= fuseOpt->mUsualFilter.mMinSupport) && 
-               (af > fuseOpt->mUsualFilter.mMinVAF)) toBeKept = true;
+               (af > fuseOpt->mUsualFilter.mMinVAF)) keep = true;
+            if((sr + srr) < fuseOpt->mUsualFilter.mMinDepth && ((dpr + dp) < fuseOpt->mUsualFilter.mMinDepth)){
+                keep = false;
+            }
         }
-        if(!toBeKept) continue;
+        if(!keep) continue;
         // skip fusion in background
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
         fw << vstr[3] << "\t"; //FusionGene
@@ -118,6 +126,8 @@ void FusionReporter::report(){
             fw << vstr[25] << "\t"; // Transcript1
         }
         fw << vstr[27] << "\t";  // FusionSequence
+        if(inWhiteList) fw << "Y\t"; // HotFusion
+        else fw << "N\t";
         fw << vstr[0] << "\t";   // svType
         fw << vstr[1] << "\t";   // svSize
         fw << vstr[16]  << "\t"; // srCount
@@ -146,6 +156,8 @@ int main(int argc, char** argv){
     CLI::App app("program: " + std::string(argv[0]) + "\n" + f->softEnv->cmp);
     app.add_option("-i,--in", f->fuseOpt->mInfile, "input tsv sv result of sver")->required(true)->check(CLI::ExistingFile);
     app.add_option("-o,--out", f->fuseOpt->mOutFile, "output tsv fusion result", true);
+    app.add_option("--whitemindep", f->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true);
+    app.add_option("--usualmindep", f->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true);
     app.add_option("--whiteminr", f->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);
     app.add_option("--usualminr", f->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true);
     app.add_option("--whiteminaf", f->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true);

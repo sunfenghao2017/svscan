@@ -42,6 +42,7 @@ typedef std::map<std::string, std::set<std::string>> FusePairs;
 
 /** filter options for fusion event */
 struct FilterOptions{
+    int32_t mMinDepth = 300;   ///< min depth covering breakpoint needed
     int32_t mMinSRSupport = 3; ///< min SR support for a valid fusion
     int32_t mMinDPSupport = 3; ///< min DP support for a valid fusion
     int32_t mMinSUSupport = 3; ///< min SU support for a valid fusion

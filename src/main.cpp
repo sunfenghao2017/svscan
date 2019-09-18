@@ -35,6 +35,8 @@ int main(int argc, char** argv){
     app.add_option("--min_del_rpt", opt->filterOpt->mMinDeletionRpt, "min deletion size to report", true)->group("Threshold Options");
     app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
     // Fusion report options
+    app.add_option("--whitemindep", opt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualmindep", opt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminr", opt->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true)->group("Fusion Options");
     app.add_option("--usualminr", opt->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminaf", opt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true)->group("Fusion Options");
