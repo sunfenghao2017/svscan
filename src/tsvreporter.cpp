@@ -57,10 +57,10 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
 void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
     // mask fusion pair which has not proper directions
-    std::map<std::string, std::string> fpairs;
+    std::map<std::string, std::set<std::string>> fpairs;
     for(uint32_t i = 0; i < gl.size(); ++i){
         if(gl[i].mFuseGene.valid && (gl[i].mFuseGene.hgene != gl[i].mFuseGene.tgene)){
-            fpairs[gl[i].mFuseGene.hgene] = gl[i].mFuseGene.tgene;
+            fpairs[gl[i].mFuseGene.hgene].insert(gl[i].mFuseGene.tgene);
         }
     }
     for(uint32_t i = 0; i < gl.size(); ++i){
@@ -68,7 +68,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
         std::string hg = gl[i].mFuseGene.hgene;
         std::string tg = gl[i].mFuseGene.tgene;
         auto titer = fpairs.find(tg);
-        if(titer == fpairs.end() || titer->second != hg) continue; // no mirror fusion
+        if(titer == fpairs.end() || titer->second.find(hg) == titer->second.end()) continue; // no mirror fusion
         if((mOpt->fuseOpt->m5Partners.find(hg) == mOpt->fuseOpt->m5Partners.end()) &&
            (mOpt->fuseOpt->m3Partners.find(tg) == mOpt->fuseOpt->m3Partners.end())){
             gl[i].mFuseGene.report = false;

@@ -24,10 +24,10 @@ void FusionReporter::update(int argc, char** argv){
 void FusionReporter::report(){
     sv2fs();
     // mask fusion pair which has not proper directions
-    std::map<std::string, std::string> fpairs;
+    std::map<std::string, std::set<std::string>> fpairs;
     for(uint32_t i = 0; i < fuseList.size(); ++i){
         if(fuseList[i].gene1 != fuseList[i].gene2){
-            fpairs[fuseList[i].gene1] = fuseList[i].gene2;
+            fpairs[fuseList[i].gene1].insert(fuseList[i].gene2);
         }
     }
     for(uint32_t i = 0; i < fuseList.size(); ++i){
@@ -35,7 +35,7 @@ void FusionReporter::report(){
         std::string hg = fuseList[i].gene1;
         std::string tg = fuseList[i].gene2;
         auto titer = fpairs.find(tg);
-        if(titer == fpairs.end() || titer->second != hg) continue; // no mirror fusion
+        if(titer == fpairs.end() || titer->second.find(hg) == titer->second.end()) continue; // no mirror fusion
         if((fuseOpt->m5Partners.find(hg) == fuseOpt->m5Partners.end()) &&
            (fuseOpt->m3Partners.find(tg) == fuseOpt->m3Partners.end())){
             fuseList[i].report = false;
