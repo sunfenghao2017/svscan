@@ -58,27 +58,40 @@ struct FilterOptions{
 
 /** class to store fusion report options */
 struct FusionOptions{
-    FilterOptions mWhiteFilter;      ///< filter options for fusion events in whitelist
-    FilterOptions mUsualFilter;      ///< filter options for fusion event not in whitelist
-    int32_t mMaxBpOffset = 10;       ///< max breakpoint offset of an SV against background SV to be excluded
-    std::string mBgBCF;              ///< background BCF file
-    std::string mWhiteList;          ///< fusion event which will keep always if found
-    std::string mBlackList;          ///< fusion event which will drop always if found
-    std::string mInfile;             ///< input file of sver sv tsv format result file
-    std::string mOutFile = "fs.tsv"; ///< output file of reported fusion
-    SVList mBgSVs;                   ///< to store background SVs
-    FusePairs mWhiteFusions;         ///< to store fusion events in fusion whitelist
-    FusePairs mBlackFusions;         ///< to store fusion events in fusion blacklist
-    bool mInitialized = false;       ///< FusionOptions is initialized if true
+    FilterOptions mWhiteFilter;        ///< filter options for fusion events in whitelist
+    FilterOptions mUsualFilter;        ///< filter options for fusion event not in whitelist
+    int32_t mMaxBpOffset = 10;         ///< max breakpoint offset of an SV against background SV to be excluded
+    std::string mBgBCF;                ///< background BCF file
+    std::string mWhiteList;            ///< fusion event which will keep always if found
+    std::string mBlackList;            ///< fusion event which will drop always if found
+    std::string mInfile;               ///< input file of sver sv tsv format result file
+    std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
+    SVList mBgSVs;                     ///< to store background SVs
+    FusePairs mWhiteFusions;           ///< to store fusion events in fusion whitelist
+    FusePairs mBlackFusions;           ///< to store fusion events in fusion blacklist
+    std::set<std::string> mWhiteGenes; ///< to store hot gene in whitelist
+    bool mInitialized = false;         ///< FusionOptions is initialized if true
 
     /** FusionOptions constructor */
-    FusionOptions();
-
+    FusionOptions(){
+        mWhiteFilter.mMinVAF = 0;
+        mWhiteFilter.mMinSupport = 3;
+        mUsualFilter.mMinVAF = 0.005;
+        mUsualFilter.mMinSupport = 5;
+    }
+        
     /** FusionOptions destructor */
     ~FusionOptions(){};
 
     /** initialize filter options */
     void init();
+
+    /** test whether an fusion event contains hot gene partner
+     * @param hgene head gene
+     * @param tgene tail gene
+     * @return true if fusion event contains hot gene partner
+     */
+    bool hasWhiteGene(const std::string& hgene, const std::string& tgene);
 
     /** test whether an fusion event is in whitelist
      * @param hgene head gene
@@ -115,6 +128,9 @@ struct FusionOptions{
 
     /** parse fusion list into fusion pairs */
     void parseFusionList(const std::string& fuseList, FusePairs& fusePairs);
+
+    /** parse white fusion list to get white gene list */
+    void getWhiteGenes();
 };
 
 #endif

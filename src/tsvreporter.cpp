@@ -58,12 +58,14 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";//[5-9]
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";//[10-14]
-    fw << "FusionSequence\tHotFusion\tsvType\tsvSize\t"; //[15-17]
+    fw << "FusionSequence\tinDB\tsvType\tsvSize\t"; //[15-17]
     fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[18-23]
     fw << "insBp\tinsSeq\tsvID\tsvtInt\n"; //[24-27]
     for(uint32_t i = 0; i < gl.size(); ++i){
         // keep only (hgene+5'->tgene+3') fusion
         if(!gl[i].mFuseGene.valid) continue;
+        // skip fusion which does not contain any gene in whitelist
+        if(!mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
         // skip fusion in blacklist
         if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
         bool inWhitelist = mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
@@ -120,7 +122,7 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         // FusinSequence
         if(svs[i].mConsensus.empty()) fw << "-\t";
         else fw << svs[i].mConsensus << "\t";
-        if(inWhitelist) fw << "Y\t";               // HotFusion
+        if(inWhitelist) fw << "Y\t";               // inDB
         else fw << "N\t";
         fw << svutil::addID(svs[i].mSVT) << "\t";  // svType
         if(svs[i].mSVT >= 5) fw << "-\t";

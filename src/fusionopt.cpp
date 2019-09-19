@@ -1,12 +1,5 @@
 #include "fusionopt.h"
 
-FusionOptions::FusionOptions(){
-    mWhiteFilter.mMinSupport = 3;
-    mWhiteFilter.mMinVAF = 0;
-    mUsualFilter.mMinSupport = 5;
-    mUsualFilter.mMinVAF = 0.005;
-};
-
 void FusionOptions::getBgSVs(){
     mBgSVs.resize(9);
     htsFile* fp = bcf_open(mBgBCF.c_str(), "r");
@@ -47,7 +40,19 @@ void FusionOptions::parseFusionList(const std::string& fuseList, FusePairs& fuse
     std::string tmpstr;
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
-        fusePairs[vstr[0]].insert(vstr[3]);
+        fusePairs[vstr[0]].insert(vstr[1]);
+    }
+    fr.close();
+}
+
+void FusionOptions::getWhiteGenes(){
+    std::ifstream fr(mWhiteList);
+    std::vector<std::string> vstr;
+    std::string tmpstr;
+    while(std::getline(fr, tmpstr)){
+        util::split(tmpstr, vstr, "\t");
+        if(vstr[2] == "Y") mWhiteGenes.insert(vstr[0]);
+        if(vstr[3] == "Y") mWhiteGenes.insert(vstr[1]);
     }
     fr.close();
 }
@@ -63,9 +68,20 @@ void FusionOptions::getBlackFusions(){
 void FusionOptions::init(){
     mBgSVs.resize(9);
     if(!mBgBCF.empty()) getBgSVs();
-    if(!mWhiteList.empty()) getWhiteFusions();
+    if(!mWhiteList.empty()){
+        getWhiteFusions();
+        getWhiteGenes();
+    }
     if(!mBlackList.empty()) getBlackFusions();
     mInitialized = true;
+}
+
+bool FusionOptions::hasWhiteGene(const std::string& hgene, const std::string& tgene){
+    if(!mInitialized) init();
+    auto hiter = mWhiteGenes.find(hgene);
+    auto titer = mWhiteGenes.find(tgene);
+    if(hiter != mWhiteGenes.end() || titer != mWhiteGenes.end()) return true;
+    return false;
 }
 
 bool FusionOptions::inWhiteList(const std::string& hgene, const std::string& tgene){

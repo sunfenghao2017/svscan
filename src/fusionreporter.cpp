@@ -31,7 +31,7 @@ void FusionReporter::report(){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"; //[5-9]
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"; //[10-14]
-    fw << "FusionSequence\tHotFusion\tsvType\tsvSize\t"; //[15-18]
+    fw << "FusionSequence\tinDB\tsvType\tsvSize\t"; //[15-18]
     fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[19-24]
     fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[25-28]
     while(std::getline(fr, tmpstr)){
@@ -51,6 +51,8 @@ void FusionReporter::report(){
         std::string tstrand = vstr[9];
         // keep only(hgene+5'->tgene+3') fusion
         if(hstrand[0] != '+' || tstrand[0] != '+' || hend != "5" || tend != "3") continue;
+        // skip fusion gene which has no partner in white gene list
+        if(!fuseOpt->hasWhiteGene(hgene, tgene)) continue;
         int32_t sr = std::atoi(vstr[18].c_str());
         int32_t dp = std::atoi(vstr[19].c_str());
         int32_t srr = std::atoi(vstr[20].c_str());
@@ -126,7 +128,7 @@ void FusionReporter::report(){
             fw << vstr[25] << "\t"; // Transcript1
         }
         fw << vstr[27] << "\t";  // FusionSequence
-        if(inWhiteList) fw << "Y\t"; // HotFusion
+        if(inWhiteList) fw << "Y\t"; // inDB
         else fw << "N\t";
         fw << vstr[0] << "\t";   // svType
         fw << vstr[1] << "\t";   // svSize
