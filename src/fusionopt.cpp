@@ -34,45 +34,38 @@ void FusionOptions::getBgSVs(){
     bcf_close(fp);
 }
 
-void FusionOptions::parseFusionList(const std::string& fuseList, FusePairs& fusePairs){
-    std::ifstream fr(fuseList);
-    std::vector<std::string> vstr;
-    std::string tmpstr;
-    while(std::getline(fr, tmpstr)){
-        util::split(tmpstr, vstr, "\t");
-        fusePairs[vstr[0]].insert(vstr[1]);
-    }
-    fr.close();
-}
-
-void FusionOptions::getWhiteGenes(){
+void FusionOptions::parseWhiteList(){
     std::ifstream fr(mWhiteList);
     std::vector<std::string> vstr;
     std::string tmpstr;
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
+        mWhiteFusions[vstr[0]].insert(vstr[1]);
         if(vstr[2] == "Y") mWhiteGenes.insert(vstr[0]);
         if(vstr[3] == "Y") mWhiteGenes.insert(vstr[1]);
     }
     fr.close();
 }
 
-void FusionOptions::getWhiteFusions(){
-    parseFusionList(mWhiteList, mWhiteFusions);
-}
-
-void FusionOptions::getBlackFusions(){
-    parseFusionList(mBlackList, mBlackFusions);
+void FusionOptions::parseBlackList(){
+    std::ifstream fr(mBlackList);
+    std::vector<std::string> vstr;
+    std::string tmpstr;
+    while(std::getline(fr, tmpstr)){
+        util::split(tmpstr, vstr, "\t");
+        if(vstr[1] != "*") mBlackFusions[vstr[0]].insert(vstr[1]);
+        else mBlackGenes.insert(vstr[0]);
+    }
+    fr.close();
 }
 
 void FusionOptions::init(){
     mBgSVs.resize(9);
     if(!mBgBCF.empty()) getBgSVs();
     if(!mWhiteList.empty()){
-        getWhiteFusions();
-        getWhiteGenes();
+        parseWhiteList();
     }
-    if(!mBlackList.empty()) getBlackFusions();
+    if(!mBlackList.empty()) parseBlackList();
     mInitialized = true;
 }
 
@@ -81,6 +74,14 @@ bool FusionOptions::hasWhiteGene(const std::string& hgene, const std::string& tg
     auto hiter = mWhiteGenes.find(hgene);
     auto titer = mWhiteGenes.find(tgene);
     if(hiter != mWhiteGenes.end() || titer != mWhiteGenes.end()) return true;
+    return false;
+}
+
+bool FusionOptions::hasBlackGene(const std::string& hgene, const std::string& tgene){
+    if(!mInitialized) init();
+    auto hiter = mBlackGenes.find(hgene);
+    auto titer = mBlackGenes.find(tgene);
+    if(hiter != mBlackGenes.end() || titer != mBlackGenes.end()) return true;
     return false;
 }
 

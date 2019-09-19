@@ -53,6 +53,8 @@ void FusionReporter::report(){
         if(hstrand[0] != '+' || tstrand[0] != '+' || hend != "5" || tend != "3") continue;
         // skip fusion gene which has no partner in white gene list
         if(!fuseOpt->hasWhiteGene(hgene, tgene)) continue;
+        // skip fusion gene which has any partner in black gene list
+        if(fuseOpt->hasBlackGene(hgene, tgene)) continue;
         int32_t sr = std::atoi(vstr[18].c_str());
         int32_t dp = std::atoi(vstr[19].c_str());
         int32_t srr = std::atoi(vstr[20].c_str());

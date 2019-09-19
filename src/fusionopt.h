@@ -70,6 +70,7 @@ struct FusionOptions{
     FusePairs mWhiteFusions;           ///< to store fusion events in fusion whitelist
     FusePairs mBlackFusions;           ///< to store fusion events in fusion blacklist
     std::set<std::string> mWhiteGenes; ///< to store hot gene in whitelist
+    std::set<std::string> mBlackGenes; ///< to store black gene which should excluded by all fusion events
     bool mInitialized = false;         ///< FusionOptions is initialized if true
 
     /** FusionOptions constructor */
@@ -92,6 +93,13 @@ struct FusionOptions{
      * @return true if fusion event contains hot gene partner
      */
     bool hasWhiteGene(const std::string& hgene, const std::string& tgene);
+
+    /** test whether an fusion event contains black gene partner
+     * @param hgene head gene
+     * @param tgene tail gene
+     * @return true if fusion event contains black gene partner
+     */
+    bool hasBlackGene(const std::string& hgene, const std::string& tgene);
 
     /** test whether an fusion event is in whitelist
      * @param hgene head gene
@@ -121,16 +129,10 @@ struct FusionOptions{
     void getBgSVs();
 
     /** get fusion events in fusion whitelist */
-    void getWhiteFusions();
+    void parseWhiteList();
 
     /** get fusion events in fusion blacklist */
-    void getBlackFusions();
-
-    /** parse fusion list into fusion pairs */
-    void parseFusionList(const std::string& fuseList, FusePairs& fusePairs);
-
-    /** parse white fusion list to get white gene list */
-    void getWhiteGenes();
+    void parseBlackList();
 };
 
 #endif

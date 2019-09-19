@@ -68,6 +68,8 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         if(!mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
         // skip fusion in blacklist
         if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
+        // skip fusion gene which has any partner in black gene list
+        if(mOpt->fuseOpt->hasBlackGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
         bool inWhitelist = mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene);
         bool keep = false;
         float af = 0.0;
