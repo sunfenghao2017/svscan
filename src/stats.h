@@ -359,7 +359,7 @@ class Stats{
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportFusionTSV(const SVSet& svs, const GeneInfoList& gl);
+        void reportFusionTSV(const SVSet& svs, GeneInfoList& gl);
 
         /** get alignment quality of sequence against an read
          * @param alnResult align result(sequence vertical, read horizontal)

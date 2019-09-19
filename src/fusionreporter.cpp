@@ -22,11 +22,25 @@ void FusionReporter::update(int argc, char** argv){
 }
 
 void FusionReporter::report(){
-    fuseOpt->init();
-    std::ifstream fr(fuseOpt->mInfile);
-    std::string tmpstr;
-    std::vector<std::string> vstr;
-    std::getline(fr, tmpstr);
+    sv2fs();
+    // mask fusion pair which has not proper directions
+    std::map<std::string, std::string> fpairs;
+    for(uint32_t i = 0; i < fuseList.size(); ++i){
+        if(fuseList[i].gene1 != fuseList[i].gene2){
+            fpairs[fuseList[i].gene1] = fuseList[i].gene2;
+        }
+    }
+    for(uint32_t i = 0; i < fuseList.size(); ++i){
+        if(fuseList[i].gene1 == fuseList[i].gene2) continue;
+        std::string hg = fuseList[i].gene1;
+        std::string tg = fuseList[i].gene2;
+        auto titer = fpairs.find(tg);
+        if(titer == fpairs.end() || titer->second != hg) continue; // no mirror fusion
+        if((fuseOpt->m5Partners.find(hg) == fuseOpt->m5Partners.end()) &&
+           (fuseOpt->m3Partners.find(tg) == fuseOpt->m3Partners.end())){
+            fuseList[i].report = false;
+        }
+    }
     std::ofstream fw(fuseOpt->mOutFile);
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"; //[5-9]
@@ -34,6 +48,20 @@ void FusionReporter::report(){
     fw << "FusionSequence\tinDB\tsvType\tsvSize\t"; //[15-18]
     fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[19-24]
     fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[25-28]
+    for(auto& e: fuseList){
+        if(e.report){
+            fw << e;
+        }
+    }
+    fw.close();
+}
+
+void FusionReporter::sv2fs(){
+    fuseOpt->init();
+    std::ifstream fr(fuseOpt->mInfile);
+    std::string tmpstr;
+    std::vector<std::string> vstr;
+    std::getline(fr, tmpstr);
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
         int32_t svt = std::atoi(vstr[29].c_str());
@@ -63,23 +91,22 @@ void FusionReporter::report(){
         if(fuseOpt->inBlackList(hgene, tgene)) continue; // skip fusion in blacklist
         bool inWhiteList = fuseOpt->inWhiteList(hgene, tgene);
         bool keep = false;
+        int32_t svsize = std::atoi(vstr[1].c_str());
         if(inWhiteList){// fusion in whitelist
            if((sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&
               (af >= fuseOpt->mWhiteFilter.mMinVAF)) keep = true;
-           if((sr + srr) < fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dp) < fuseOpt->mWhiteFilter.mMinDepth)){
-               keep = false;
-           }
+           if((sr + srr) < fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dp) < fuseOpt->mWhiteFilter.mMinDepth)) keep = false;
+           if(hgene == tgene && svsize < fuseOpt->mWhiteFilter.mMinIntraGeneSVSize) keep = false;
         }else{// fusion not in whitelist
-            if((sr >= fuseOpt->mUsualFilter.mMinSupport || dp >= fuseOpt->mUsualFilter.mMinSupport) && 
-               (af > fuseOpt->mUsualFilter.mMinVAF)) keep = true;
-            if((sr + srr) < fuseOpt->mUsualFilter.mMinDepth && ((dpr + dp) < fuseOpt->mUsualFilter.mMinDepth)){
-                keep = false;
-            }
+            if((sr >= fuseOpt->mUsualFilter.mMinSupport) && (af > fuseOpt->mUsualFilter.mMinVAF)) keep = true;
+            if((sr + srr) < fuseOpt->mUsualFilter.mMinDepth) keep = false;
+            if(hgene == tgene && svsize < fuseOpt->mUsualFilter.mMinIntraGeneSVSize) keep = false;
         }
         if(!keep) continue;
         // skip fusion in background
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
-        fw << vstr[3] << "\t"; //FusionGene
+        FusionRecord fsr;
+        fsr.fusegene = vstr[3]; // FusionGene
         int cnt[2] = {0, 0};
         for(auto& e: vstr[25]){
             if(e == '+') cnt[0] += 1;
@@ -94,59 +121,59 @@ void FusionReporter::report(){
         }
         std::string strand2 = (cnt[0] > cnt[1] ? "+" : "-");
         if(hgene == gene1){//FusionPattern
-            fw << strand1 << strand2 << "\t";
+            fsr.fusepattern.append(strand1);
+            fsr.fusepattern.append(strand2);
         }else{
-            fw << strand2 << strand1 << "\t";
+            fsr.fusepattern.append(strand2);
+            fsr.fusepattern.append(strand1);
         }
         if(sr){//FusionReads TotalReads
-            fw << sr << "\t";
-            fw << (sr + std::atoi(vstr[20].c_str())) << "\t";
+            fsr.fusionreads = sr;
+            fsr.totalreads = std::atoi(vstr[20].c_str()) + sr;
         }else{
-            fw << dp << "\t";
-            fw << (dp + std::atoi(vstr[21].c_str())) << "\t";
+            fsr.fusionreads = dp;
+            fsr.totalreads = std::atoi(vstr[21].c_str()) + dp;
         }
-        fw << af << "\t"; //FusionRate
+        fsr.fuserate = af;                    // FusionRate
+        fsr.gene1 = hgene;
+        fsr.gene2 = tgene;
         if(gene1 == hgene){
-            fw << hgene << "\t";    // Gene1
-            fw << chr1 << "\t";     // Chr1
-            fw << start << "\t";    // JunctionPosition1
-            fw << strand1 << "\t";  // Strand1
-            fw << vstr[25] << "\t"; // Transcript1
-            fw << tgene << "\t";    // Gene2
-            fw << chr2 << "\t";     // Chr2
-            fw << end << "\t";      // JunctionPosition2
-            fw << strand2 << "\t";  // Strand2
-            fw << vstr[26] << "\t"; // Transcript2
+            fsr.chr1 = chr1;                  // Chr1
+            fsr.junctionposition1 = start;    // JunctionPosition1
+            fsr.strand1 = strand1;            // Strand1;
+            fsr.transcript1 = vstr[25];       // Transcript1
+            fsr.chr2 = chr2;                  // Chr2
+            fsr.junctionposition2 = end;      // JunctionPosition2
+            fsr.strand2 = strand2;            // Strand2
+            fsr.transcript2 = vstr[26];       // Transcript2
         }else{
-            fw << hgene << "\t";    // Gene2
-            fw << chr2 << "\t";     // Chr2
-            fw << end << "\t";      // JunctionPosition2
-            fw << strand2 << "\t";  // Strand2
-            fw << vstr[26] << "\t"; // Transcript2
-            fw << tgene << "\t";    // Gene1
-            fw << chr1 << "\t";     // Chr1
-            fw << start << "\t";    // JunctionPosition1
-            fw << strand1 << "\t";  // Strand1
-            fw << vstr[25] << "\t"; // Transcript1
+            fsr.chr1 = chr2;                  // Chr1
+            fsr.junctionposition1 = end;      // JunctionPosition1
+            fsr.strand1 = strand2;            // Strand1;
+            fsr.transcript1 = vstr[26];       // Transcript1
+            fsr.chr2 = chr1;                  // Chr2
+            fsr.junctionposition2 = start;    // JunctionPosition2
+            fsr.strand2 = strand1;            // Strand2
+            fsr.transcript2 = vstr[25];       // Transcript2
         }
-        fw << vstr[27] << "\t";  // FusionSequence
-        if(inWhiteList) fw << "Y\t"; // inDB
-        else fw << "N\t";
-        fw << vstr[0] << "\t";   // svType
-        fw << vstr[1] << "\t";   // svSize
-        fw << vstr[16]  << "\t"; // srCount
-        fw << vstr[17] << "\t";  // dpCount
-        fw << vstr[18] << "\t";  // srRescued
-        fw << vstr[19] << "\t";  // dpRescued
-        fw << vstr[20] << "\t";  // srRefCount
-        fw << vstr[21] << "\t";  // dpRefCount
-        fw << vstr[23] << "\t";  // insBp
-        fw << vstr[24] << "\t";  // insSeq
-        fw << vstr[28] << "\t";  // svID
-        fw << vstr[29] << "\n";  // svtInt
+        fsr.fusionsequence = vstr[27];        // FusionSequence
+        fsr.indb = (inWhiteList ? "Y" : "N"); // inDB
+        fsr.svt = vstr[0];                    // svType
+        fsr.svsize = vstr[1];                 // svSize
+        fsr.srcount = vstr[16];               // srCount
+        fsr.dpcount = vstr[17];               // dpCount
+        fsr.srrescued = vstr[18];             // srRescued
+        fsr.dprescued = vstr[19];             // dpRescued
+        fsr.srrefcount  = vstr[20];           // srRefCount
+        fsr.dprefcount = vstr[21];            // dpRefCount
+        fsr.insbp = vstr[23];                 // insBp
+        fsr.insseq = vstr[24];                // insSeq
+        fsr.svid = vstr[28];                  // svID
+        fsr.svint = vstr[29];                 // svInt
+        fsr.report = true;
+        fuseList.push_back(fsr);
     }
     fr.close();
-    fw.close();
 }
 
 int main(int argc, char** argv){
@@ -166,6 +193,8 @@ int main(int argc, char** argv){
     app.add_option("--usualminr", f->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true);
     app.add_option("--whiteminaf", f->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true);
     app.add_option("--usualminaf", f->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true); 
+    app.add_option("--whiteminigs", f->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion in whitelist", true);
+    app.add_option("--usualminigs", f->fuseOpt->mUsualFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion not in whitelist", true);
     app.add_option("--maxbpoffset", f->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true);
     app.add_option("--bgbcf", f->fuseOpt->mBgBCF, "background events BCF file");
     app.add_option("--whitelist", f->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);

@@ -43,6 +43,8 @@ void FusionOptions::parseWhiteList(){
         mWhiteFusions[vstr[0]].insert(vstr[1]);
         if(vstr[2] == "Y") mWhiteGenes.insert(vstr[0]);
         if(vstr[3] == "Y") mWhiteGenes.insert(vstr[1]);
+        if(vstr[4] == "Y") m5Partners.insert(vstr[0]);
+        if(vstr[5] == "Y") m3Partners.insert(vstr[1]);
     }
     fr.close();
 }

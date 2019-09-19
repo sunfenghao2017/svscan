@@ -42,12 +42,13 @@ typedef std::map<std::string, std::set<std::string>> FusePairs;
 
 /** filter options for fusion event */
 struct FilterOptions{
-    int32_t mMinDepth = 300;   ///< min depth covering breakpoint needed
-    int32_t mMinSRSupport = 3; ///< min SR support for a valid fusion
-    int32_t mMinDPSupport = 3; ///< min DP support for a valid fusion
-    int32_t mMinSUSupport = 3; ///< min SU support for a valid fusion
-    int32_t mMinSupport = 3;   ///< min supporting reads needed for a valid fusion
-    float mMinVAF = 0;         ///< min VAF needed for a valid fusion
+    int32_t mMinIntraGeneSVSize = 5000; ///< min intra-gene SV size for a valid fusion
+    int32_t mMinDepth = 300;            ///< min depth covering breakpoint needed
+    int32_t mMinSRSupport = 3;          ///< min SR support for a valid fusion
+    int32_t mMinDPSupport = 3;          ///< min DP support for a valid fusion
+    int32_t mMinSUSupport = 3;          ///< min SU support for a valid fusion
+    int32_t mMinSupport = 3;            ///< min supporting reads needed for a valid fusion
+    float mMinVAF = 0;                  ///< min VAF needed for a valid fusion
 
     /** FilterOptions constructor */
     FilterOptions(){};
@@ -69,6 +70,8 @@ struct FusionOptions{
     SVList mBgSVs;                     ///< to store background SVs
     FusePairs mWhiteFusions;           ///< to store fusion events in fusion whitelist
     FusePairs mBlackFusions;           ///< to store fusion events in fusion blacklist
+    std::set<std::string> m5Partners;  ///< genes commonly acts as 5' partner
+    std::set<std::string> m3Partners;  ///< genes commonly acts as 3' partner
     std::set<std::string> mWhiteGenes; ///< to store hot gene in whitelist
     std::set<std::string> mBlackGenes; ///< to store black gene which should excluded by all fusion events
     bool mInitialized = false;         ///< FusionOptions is initialized if true
@@ -77,7 +80,7 @@ struct FusionOptions{
     FusionOptions(){
         mWhiteFilter.mMinVAF = 0;
         mWhiteFilter.mMinSupport = 3;
-        mUsualFilter.mMinVAF = 0.005;
+        mUsualFilter.mMinVAF = 0.01;
         mUsualFilter.mMinSupport = 5;
     }
         

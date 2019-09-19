@@ -176,6 +176,7 @@ struct FuseGene{
     std::string tend;    ///< tgene 3' or 5' fused
     std::string tstrand; ///< hgene + or - strand fused
     bool valid;          ///< if hgene is 5'+ and tgene is 3'+ then this fusion gene is valid
+    bool report;         ///< if there exists another fusion gene with reverse h/t gene and is more common, this value will be false
 
     /** FuseGene constructor */
     FuseGene(){
@@ -186,6 +187,7 @@ struct FuseGene{
         tend = "-";
         tstrand = ".";
         valid = false;
+        report = true;
     }
 
     /** FuseGene destructor */

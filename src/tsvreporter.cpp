@@ -39,8 +39,10 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
         // insBp insSeq
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
         // bp1Trs bp2Trs svID
-        fw << util::join(gl[i].mTrans1, ",") << "\t";
-        fw << util::join(gl[i].mTrans2, ",") << "\t";
+        if(gl[i].mTrans1.empty()) fw << ".\t";
+        else fw << util::join(gl[i].mTrans1, ",") << "\t";
+        if(gl[i].mTrans2.empty()) fw << ".\t";
+        else fw << util::join(gl[i].mTrans2, ",") << "\t";
         // svSeq
         if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t";
         else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t";
@@ -52,8 +54,26 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
     fw.close();
 }
 
-void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
+void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
+    // mask fusion pair which has not proper directions
+    std::map<std::string, std::string> fpairs;
+    for(uint32_t i = 0; i < gl.size(); ++i){
+        if(gl[i].mFuseGene.valid && (gl[i].mFuseGene.hgene != gl[i].mFuseGene.tgene)){
+            fpairs[gl[i].mFuseGene.hgene] = gl[i].mFuseGene.tgene;
+        }
+    }
+    for(uint32_t i = 0; i < gl.size(); ++i){
+        if((!gl[i].mFuseGene.valid) || (gl[i].mFuseGene.hgene == gl[i].mFuseGene.tgene)) continue;
+        std::string hg = gl[i].mFuseGene.hgene;
+        std::string tg = gl[i].mFuseGene.tgene;
+        auto titer = fpairs.find(tg);
+        if(titer == fpairs.end() || titer->second != hg) continue; // no mirror fusion
+        if((mOpt->fuseOpt->m5Partners.find(hg) == mOpt->fuseOpt->m5Partners.end()) &&
+           (mOpt->fuseOpt->m3Partners.find(tg) == mOpt->fuseOpt->m3Partners.end())){
+            gl[i].mFuseGene.report = false;
+        }
+    }
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";//[5-9]
@@ -66,6 +86,8 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
         if(!gl[i].mFuseGene.valid) continue;
         // skip fusion which does not contain any gene in whitelist
         if(!mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
+        // skip mirror fusion which does not has a prefered direction
+        if(!gl[i].mFuseGene.report) continue;
         // skip fusion in blacklist
         if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)) continue;
         // skip fusion gene which has any partner in black gene list
@@ -85,12 +107,17 @@ void Stats::reportFusionTSV(const SVSet& svs, const GeneInfoList& gl){
            if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dpv) < mOpt->fuseOpt->mWhiteFilter.mMinDepth)){
                keep = false;
            }
-        }else{// fusion not in whitelist
-            if((srv >= mOpt->fuseOpt->mUsualFilter.mMinSupport || dpv >= mOpt->fuseOpt->mUsualFilter.mMinSupport) &&
-               (af >= mOpt->fuseOpt->mUsualFilter.mMinVAF)) keep = true;
-            if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth && ((dpr + dpv) < mOpt->fuseOpt->mUsualFilter.mMinDepth)){
+           // skip small size intra gene fusion
+           if(gl[i].mFuseGene.hgene == gl[i].mFuseGene.tgene && svs[i].mSize < mOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize){
                keep = false;
            }
+        }else{// fusion not in whitelist
+            if((srv >= mOpt->fuseOpt->mUsualFilter.mMinSupport) && (af >= mOpt->fuseOpt->mUsualFilter.mMinVAF)) keep = true;
+            if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth) keep = false;
+            // skip small size intra gene fusion
+            if(gl[i].mFuseGene.hgene == gl[i].mFuseGene.tgene && svs[i].mSize < mOpt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize){
+                keep = false;
+            }
         }
         if(!keep) continue;
         // skip fusion in background
