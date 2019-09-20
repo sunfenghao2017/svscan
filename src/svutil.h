@@ -609,6 +609,39 @@ namespace svutil{
         }
         return -1;
     }
+
+    /** test a sequence is too simple
+     * @param seq sequence to be tested
+     * @return true if a sequence is too simple
+     */
+    inline bool simpleSeq(const std::string& seq){
+        int32_t cnt[4] = {0, 0, 0, 0};
+        for(auto& e: seq){
+            switch(e){
+                case 'A':
+                    cnt[0]++;
+                    break;
+                case 'T':
+                    cnt[1]++;
+                    break;
+                 case 'C':
+                    cnt[2]++;
+                    break;
+                 case 'G':
+                    cnt[3]++;
+                 default:
+                    break;
+            }
+        }
+        int32_t maxAllowed = 0.8 * seq.length();
+        for(int i = 0; i < 4; ++i){
+            for(int j = i + 1; j < 4; ++j){
+                if((cnt[i] + cnt[j]) > maxAllowed) return true;
+            }
+        }
+        return false;
+    }
+
 }
 
 #endif

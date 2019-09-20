@@ -6,6 +6,30 @@
 #include <htslib/tbx.h>
 #include <htslib/kstring.h>
 
+struct TrsRec{
+    std::string name;
+    std::string unit;
+    std::string strand;
+    std::string number;
+    std::string primary;
+
+    TrsRec(){}
+
+    ~TrsRec(){}
+
+    std::string toStr(){
+        std::string ret;
+        ret.append(name);
+        ret.append(",");
+        ret.append(unit);
+        ret.append(",");
+        ret.append(strand);
+        ret.append(",");
+        ret.append(number);
+        return ret;
+    }
+};
+
 /** SV breakpoint coverage annotator */
 class Annotator{
     public:

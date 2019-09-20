@@ -11,7 +11,7 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
     fw << "bp2Chr\tbp2Pos\tbp2Gene\t";//[13,15]
     fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";//[16,19]
     fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";//[20,24]
-    fw << "bp1Trs\tbp2Trs\tsvSeq\tsvID\tsvtInt\n";//[25,29]
+    fw << "bp1Trs\tbp2Trs\tsvSeq\tseqBp\tID\tsvtInt\n";//[25,30]
     for(uint32_t i = 0; i < gl.size(); ++i){
         // skip false positive insertions
         if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].mAltQual.size() * mOpt->filterOpt->mMaxFPIns) continue;
@@ -43,10 +43,10 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
         else fw << util::join(gl[i].mTrans1, ",") << "\t";
         if(gl[i].mTrans2.empty()) fw << ".\t";
         else fw << util::join(gl[i].mTrans2, ",") << "\t";
-        // svSeq
-        if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t";
-        else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t";
-        else fw << "-" << "\t";
+        // svSeq seqBp
+        if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t-\t";
+        else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t" << svs[i].mGapCoord[0] << "\t";
+        else fw << "-\t-\t";
         // svID svtInt
         fw << svs[i].mID << "\t" << svs[i].mSVT << "\n";
 
@@ -78,9 +78,9 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t";//[5-9]
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t";//[10-14]
-    fw << "FusionSequence\tinDB\tsvType\tsvSize\t"; //[15-17]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[18-23]
-    fw << "insBp\tinsSeq\tsvID\tsvtInt\n"; //[24-27]
+    fw << "FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"; //[15-19]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[20-25]
+    fw << "insBp\tinsSeq\tsvID\tsvtInt\n"; //[26-29]
     for(uint32_t i = 0; i < gl.size(); ++i){
         // keep only (hgene+5'->tgene+3') fusion
         if(!gl[i].mFuseGene.valid) continue;
@@ -119,6 +119,15 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 keep = false;
             }
         }
+        //skip low complexity concensus partner gene
+        if(!inWhitelist){
+            if(svs[i].mSVT != 4){
+                if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
+                   svutil::simpleSeq(svs[i].mConsensus.substr(svs[i].mGapCoord[0]))){
+                    keep = false;
+                }
+            }
+        }
         if(!keep) continue;
         // skip fusion in background
         if(!mOpt->fuseOpt->validSV(svs[i].mSVT, svs[i].mNameChr1, svs[i].mNameChr2, svs[i].mSVStart, svs[i].mSVEnd)) continue;
@@ -149,8 +158,9 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
             fw << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
         }
         // FusinSequence
-        if(svs[i].mConsensus.empty()) fw << "-\t";
-        else fw << svs[i].mConsensus << "\t";
+        if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t-\t";
+        else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t" << svs[i].mGapCoord[0] << "\t";
+        else fw << "-\t-\t";
         if(inWhitelist) fw << "Y\t";               // inDB
         else fw << "N\t";
         fw << svutil::addID(svs[i].mSVT) << "\t";  // svType

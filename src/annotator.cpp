@@ -182,27 +182,72 @@ void Annotator::geneAnnotate(SVSet& svs, GeneInfoList& gl){
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     char strand1 = '.';
     char strand2 = '.';
+    std::vector<TrsRec> trsList;
     for(uint32_t i = 0; i < svs.size(); ++i){
+        trsList.clear();
         int cnt[2] = {0, 0};
         hts_itr_t* itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr1.c_str()), svs[i].mSVStart, svs[i].mSVStart + 1);
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
-            gl[i].mTrans1.push_back(vstr[6] + "(" + vstr[4] + "|" +vstr[5] + "|" + vstr[3] + ")");
+            TrsRec tr;
+            tr.strand = vstr[3];
+            tr.unit = vstr[4];
+            tr.number = vstr[5];
+            tr.name = vstr[6];
+            tr.primary = vstr[9];
+            trsList.push_back(tr);
             gl[i].mGene1 = vstr[7];
             if(vstr[3][0] == '+') cnt[0] += 1;
             else cnt[1] += 1;
+        }
+        bool hasPrimaryTrs = false;
+        for(auto& e: trsList){
+            if(e.primary == "Y") hasPrimaryTrs = true;
+        }
+        if(hasPrimaryTrs){
+            for(auto& e: trsList){
+                if(e.primary == "Y"){
+                    gl[i].mTrans1.push_back(e.toStr());
+                }
+            }
+        }else{
+            for(auto& e: trsList){
+                gl[i].mTrans1.push_back(e.toStr());
+            }
         }
         strand1 = (cnt[0] > cnt[1] ? '+' : '-');
         cnt[0] = 0;
         cnt[1] = 0;
         tbx_itr_destroy(itr);
+        trsList.clear();
         itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr2.c_str()), svs[i].mSVEnd, svs[i].mSVEnd + 1);
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
-            gl[i].mTrans2.push_back(vstr[6] + "(" + vstr[4] + ":" +vstr[5] + "|" + vstr[3] + ")"); 
+            TrsRec tr;
+            tr.strand = vstr[3];
+            tr.unit = vstr[4];
+            tr.number = vstr[5];
+            tr.name = vstr[6];
+            tr.primary = vstr[9];
+            trsList.push_back(tr);
             gl[i].mGene2 = vstr[7];
             if(vstr[3][0] == '+') cnt[0] += 1;
             else cnt[1] += 1;
+        }
+        hasPrimaryTrs = false;
+        for(auto& e: trsList){
+            if(e.primary == "Y") hasPrimaryTrs = true;
+        }
+        if(hasPrimaryTrs){
+            for(auto& e: trsList){
+                if(e.primary == "Y"){
+                    gl[i].mTrans2.push_back(e.toStr());
+                }
+            }
+        }else{
+            for(auto& e: trsList){
+                gl[i].mTrans2.push_back(e.toStr());
+            }
         }
         strand2 = (cnt[0] > cnt[1] ? '+' : '-');
         tbx_itr_destroy(itr);

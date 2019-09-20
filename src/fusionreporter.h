@@ -22,6 +22,7 @@ struct FusionRecord{
     std::string strand2;
     std::string transcript2;
     std::string fusionsequence;
+    std::string fseqbp;
     std::string indb;
     std::string svt;
     std::string svsize;
@@ -46,7 +47,7 @@ struct FusionRecord{
         os << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
         os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.junctionposition1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
         os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.junctionposition2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
-        os << fsr.fusionsequence << "\t" << fsr.indb << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
+        os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.indb << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\n";

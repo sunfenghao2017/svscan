@@ -45,9 +45,9 @@ void FusionReporter::report(){
     fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"; //[5-9]
     fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"; //[10-14]
-    fw << "FusionSequence\tinDB\tsvType\tsvSize\t"; //[15-18]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[19-24]
-    fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[25-28]
+    fw << "FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"; //[15-19]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[20-25]
+    fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[26-29]
     for(auto& e: fuseList){
         if(e.report){
             fw << e;
@@ -64,7 +64,7 @@ void FusionReporter::sv2fs(){
     std::getline(fr, tmpstr);
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
-        int32_t svt = std::atoi(vstr[29].c_str());
+        int32_t svt = std::atoi(vstr[30].c_str());
         int32_t start = std::stoi(vstr[11].c_str());
         int32_t end = std::atoi(vstr[14].c_str());
         std::string chr1 = vstr[10];
@@ -101,6 +101,14 @@ void FusionReporter::sv2fs(){
             if((sr >= fuseOpt->mUsualFilter.mMinSupport) && (af > fuseOpt->mUsualFilter.mMinVAF)) keep = true;
             if((sr + srr) < fuseOpt->mUsualFilter.mMinDepth) keep = false;
             if(hgene == tgene && svsize < fuseOpt->mUsualFilter.mMinIntraGeneSVSize) keep = false;
+        }
+        if(!inWhiteList){// skip low complexity concensus partner gene
+            if(vstr[30] != "4"){
+                if(svutil::simpleSeq(vstr[27].substr(0, std::atoi(vstr[28].c_str()))) ||
+                   svutil::simpleSeq(vstr[27].substr(std::atoi(vstr[28].c_str())))){
+                    keep = false;
+                }
+            }
         }
         if(!keep) continue;
         // skip fusion in background
@@ -157,6 +165,7 @@ void FusionReporter::sv2fs(){
             fsr.transcript2 = vstr[25];       // Transcript2
         }
         fsr.fusionsequence = vstr[27];        // FusionSequence
+        fsr.fseqbp = vstr[28];                // fseqBp
         fsr.indb = (inWhiteList ? "Y" : "N"); // inDB
         fsr.svt = vstr[0];                    // svType
         fsr.svsize = vstr[1];                 // svSize
@@ -168,8 +177,8 @@ void FusionReporter::sv2fs(){
         fsr.dprefcount = vstr[21];            // dpRefCount
         fsr.insbp = vstr[23];                 // insBp
         fsr.insseq = vstr[24];                // insSeq
-        fsr.svid = vstr[28];                  // svID
-        fsr.svint = vstr[29];                 // svInt
+        fsr.svid = vstr[29];                  // svID
+        fsr.svint = vstr[30];                 // svInt
         fsr.report = true;
         fuseList.push_back(fsr);
     }
