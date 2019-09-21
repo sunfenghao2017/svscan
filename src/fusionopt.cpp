@@ -71,6 +71,14 @@ void FusionOptions::init(){
     mInitialized = true;
 }
 
+bool FusionOptions::matchHotDirec(const std::string& hgene, const std::string& tgene){
+    if(!mInitialized) init();
+    auto hiter = m5Partners.find(hgene);
+    auto titer = m3Partners.find(tgene);
+    if(hiter != m5Partners.end() || titer != m3Partners.end()) return true;
+    return false;
+}
+
 bool FusionOptions::hasWhiteGene(const std::string& hgene, const std::string& tgene){
     if(!mInitialized) init();
     auto hiter = mWhiteGenes.find(hgene);

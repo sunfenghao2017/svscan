@@ -23,47 +23,41 @@ void FusionReporter::update(int argc, char** argv){
 
 void FusionReporter::report(){
     sv2fs();
-    // mask fusion pair which has not proper directions
-    std::map<std::string, std::set<std::string>> fpairs;
-    for(uint32_t i = 0; i < fuseList.size(); ++i){
-        if(fuseList[i].gene1 != fuseList[i].gene2){
-            fpairs[fuseList[i].gene1].insert(fuseList[i].gene2);
-        }
-    }
-    for(uint32_t i = 0; i < fuseList.size(); ++i){
-        if(fuseList[i].gene1 == fuseList[i].gene2) continue;
-        std::string hg = fuseList[i].gene1;
-        std::string tg = fuseList[i].gene2;
-        auto titer = fpairs.find(tg);
-        if(titer == fpairs.end() || titer->second.find(hg) == titer->second.end()) continue; // no mirror fusion
-        if((fuseOpt->m5Partners.find(hg) == fuseOpt->m5Partners.end()) &&
-           (fuseOpt->m3Partners.find(tg) == fuseOpt->m3Partners.end())){
-            fuseList[i].report = false;
-        }
-    }
+    // output valid fusions
+    std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
+    header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
+    header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
+    header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
+    header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
+    header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\n"); //[26-30]
     std::ofstream fw(fuseOpt->mOutFile);
-    fw << "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
-    fw << "Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"; //[5-9]
-    fw << "Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"; //[10-14]
-    fw << "FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"; //[15-19]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"; //[20-25]
-    fw << "insBp\tinsSeq\tsvID\tsvtInt\n";//[26-29]
+    std::ofstream fs(fuseOpt->mSupFile);
+    fw << header;
+    fs << header;
     for(auto& e: fuseList){
-        if(e.report){
+        if(e.fsmask & FUSION_FPRIMARYR){
             fw << e;
+        }
+        if(e.fsmask & FUSION_FSUPPLEMENTARY){
+            fs << e;
         }
     }
     fw.close();
+    fs.close();
 }
 
 void FusionReporter::sv2fs(){
     fuseOpt->init();
+    uint32_t REPORT_REQUEST = (FUSION_FINDB | FUSION_FHOTGENE);
+    uint32_t ALL_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR | FUSION_FFBG);
+    uint32_t PRIMARY_DROP_MASK = (FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FLOWCOMPLEX | FUSION_FTOOSMALLSIZE);
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;
     std::vector<std::string> vstr;
     std::getline(fr, tmpstr);
     while(std::getline(fr, tmpstr)){
         util::split(tmpstr, vstr, "\t");
+        uint32_t fsmask = std::atoi(vstr[31].c_str());
         int32_t svt = std::atoi(vstr[30].c_str());
         int32_t start = std::stoi(vstr[11].c_str());
         int32_t end = std::atoi(vstr[14].c_str());
@@ -77,42 +71,39 @@ void FusionReporter::sv2fs(){
         std::string tend = vstr[8];
         std::string hstrand = vstr[6];
         std::string tstrand = vstr[9];
-        // keep only(hgene+5'->tgene+3') fusion
-        if(hstrand[0] != '+' || tstrand[0] != '+' || hend != "5" || tend != "3") continue;
-        // skip fusion gene which has no partner in white gene list
-        if(!fuseOpt->hasWhiteGene(hgene, tgene)) continue;
-        // skip fusion gene which has any partner in black gene list
-        if(fuseOpt->hasBlackGene(hgene, tgene)) continue;
-        int32_t sr = std::atoi(vstr[18].c_str());
-        int32_t dp = std::atoi(vstr[19].c_str());
+        if(!(fsmask & FUSION_FALLGENE)) continue;
+        if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) fsmask |= FUSION_FFBG;
+        if(fuseOpt->hasWhiteGene(hgene, tgene)) fsmask |= FUSION_FHOTGENE;
+        if(fuseOpt->inWhiteList(hgene, tgene)) fsmask |= FUSION_FINDB;
+        if(fuseOpt->hasBlackGene(hgene, tgene)) fsmask |= FUSION_FBLACKGENE;
+        if(fuseOpt->inBlackList(hgene, tgene)) fsmask |= FUSION_FBLACKPAIR;
+        if(fuseOpt->matchHotDirec(hgene, tgene)) fsmask |= FUSION_FCOMMONHOTDIRECT;
+        int32_t srv = std::atoi(vstr[18].c_str());
+        int32_t dpv = std::atoi(vstr[19].c_str());
         int32_t srr = std::atoi(vstr[20].c_str());
         int32_t dpr = std::atoi(vstr[21].c_str());
         float af = std::atof(vstr[22].c_str());
-        if(fuseOpt->inBlackList(hgene, tgene)) continue; // skip fusion in blacklist
-        bool inWhiteList = fuseOpt->inWhiteList(hgene, tgene);
-        bool keep = false;
-        int32_t svsize = std::atoi(vstr[1].c_str());
-        if(inWhiteList){// fusion in whitelist
-           if((sr >= fuseOpt->mWhiteFilter.mMinSupport || dp >= fuseOpt->mWhiteFilter.mMinSupport) &&
-              (af >= fuseOpt->mWhiteFilter.mMinVAF)) keep = true;
-           if((sr + srr) < fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dp) < fuseOpt->mWhiteFilter.mMinDepth)) keep = false;
-           if(hgene == tgene && svsize < fuseOpt->mWhiteFilter.mMinIntraGeneSVSize) keep = false;
-        }else{// fusion not in whitelist
-            if((sr >= fuseOpt->mUsualFilter.mMinSupport) && (af > fuseOpt->mUsualFilter.mMinVAF)) keep = true;
-            if((sr + srr) < fuseOpt->mUsualFilter.mMinDepth) keep = false;
-            if(hgene == tgene && svsize < fuseOpt->mUsualFilter.mMinIntraGeneSVSize) keep = false;
-        }
-        if(!inWhiteList){// skip low complexity concensus partner gene
-            if(vstr[30] != "4"){
-                if(svutil::simpleSeq(vstr[27].substr(0, std::atoi(vstr[28].c_str()))) ||
-                   svutil::simpleSeq(vstr[27].substr(std::atoi(vstr[28].c_str())))){
-                    keep = false;
-                }
+        if(fsmask & FUSION_FINDB){// fusion in whitelist
+           if((srv < fuseOpt->mWhiteFilter.mMinSupport) && (dpv < fuseOpt->mWhiteFilter.mMinSupport)){
+               fsmask |= FUSION_FLOWSUPPORT;
+           }
+           if(af < fuseOpt->mWhiteFilter.mMinVAF){
+               fsmask |= FUSION_FLOWAF;
+           }
+           if(((srv + srr) < fuseOpt->mWhiteFilter.mMinDepth) && ((dpr + dpv) < fuseOpt->mWhiteFilter.mMinDepth)){
+               fsmask |= FUSION_FLOWDEPTH;
+           }
+        }else if(fsmask & FUSION_FHOTGENE){// fusion not in whitelist
+            if((srv < fuseOpt->mUsualFilter.mMinSupport) && (dpv < fuseOpt->mUsualFilter.mMinSupport)){
+                fsmask |= FUSION_FLOWSUPPORT;
+            }
+            if(af < fuseOpt->mUsualFilter.mMinVAF){
+                fsmask |= FUSION_FLOWAF;
+            }
+            if(((srv + srr) < fuseOpt->mUsualFilter.mMinDepth) && ((dpr + dpv) < fuseOpt->mUsualFilter.mMinDepth)){
+                fsmask |= FUSION_FLOWDEPTH;
             }
         }
-        if(!keep) continue;
-        // skip fusion in background
-        if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) continue;
         FusionRecord fsr;
         fsr.fusegene = vstr[3]; // FusionGene
         int cnt[2] = {0, 0};
@@ -135,12 +126,12 @@ void FusionReporter::sv2fs(){
             fsr.fusepattern.append(strand2);
             fsr.fusepattern.append(strand1);
         }
-        if(sr){//FusionReads TotalReads
-            fsr.fusionreads = sr;
-            fsr.totalreads = std::atoi(vstr[20].c_str()) + sr;
+        if(srv){//FusionReads TotalReads
+            fsr.fusionreads = srv;
+            fsr.totalreads = std::atoi(vstr[20].c_str()) + srv;
         }else{
-            fsr.fusionreads = dp;
-            fsr.totalreads = std::atoi(vstr[21].c_str()) + dp;
+            fsr.fusionreads = dpv;
+            fsr.totalreads = std::atoi(vstr[21].c_str()) + dpv;
         }
         fsr.fuserate = af;                    // FusionRate
         fsr.gene1 = hgene;
@@ -166,7 +157,7 @@ void FusionReporter::sv2fs(){
         }
         fsr.fusionsequence = vstr[27];        // FusionSequence
         fsr.fseqbp = vstr[28];                // fseqBp
-        fsr.indb = (inWhiteList ? "Y" : "N"); // inDB
+        fsr.indb = ((fsmask & FUSION_FINDB) ? "Y" : "N"); // inDB
         fsr.svt = vstr[0];                    // svType
         fsr.svsize = vstr[1];                 // svSize
         fsr.srcount = vstr[16];               // srCount
@@ -179,7 +170,30 @@ void FusionReporter::sv2fs(){
         fsr.insseq = vstr[24];                // insSeq
         fsr.svid = vstr[29];                  // svID
         fsr.svint = vstr[30];                 // svInt
-        fsr.report = true;
+        if(fsmask & ALL_DROP_MASK){
+            fsmask &= (!FUSION_FPRIMARYR);
+            fsmask &= (!FUSION_FSUPPLEMENTARY);
+        }
+        if(fsmask & REPORT_REQUEST){
+            if((fsmask & FUSION_FNORMALCATDIRECT) &&
+               (fsmask & FUSION_FCOMMONHOTDIRECT)){
+                if(!(fsmask & PRIMARY_DROP_MASK)){
+                    fsmask |= FUSION_FPRIMARYR;
+                }else{
+                    fsmask &= (!FUSION_FPRIMARYR);
+                }
+            }else{
+                if(!(fsmask & PRIMARY_DROP_MASK)){
+                    fsmask |= FUSION_FSUPPLEMENTARY;
+                }else{
+                    fsmask &= (!FUSION_FSUPPLEMENTARY);
+                }
+            }
+        }else{
+            fsmask &= (!FUSION_FPRIMARYR);
+            fsmask &= (!FUSION_FSUPPLEMENTARY);
+        }
+        fsr.fsmask = fsmask;                  // fsMask
         fuseList.push_back(fsr);
     }
     fr.close();
@@ -195,7 +209,8 @@ int main(int argc, char** argv){
     FusionReporter* f = new FusionReporter();
     CLI::App app("program: " + std::string(argv[0]) + "\n" + f->softEnv->cmp);
     app.add_option("-i,--in", f->fuseOpt->mInfile, "input tsv sv result of sver")->required(true)->check(CLI::ExistingFile);
-    app.add_option("-o,--out", f->fuseOpt->mOutFile, "output tsv fusion result", true);
+    app.add_option("-o,--out", f->fuseOpt->mOutFile, "primary fusion result", true);
+    app.add_option("-s,--sup", f->fuseOpt->mSupFile, "supplementary fusion result", true);
     app.add_option("--whitemindep", f->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true);
     app.add_option("--usualmindep", f->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true);
     app.add_option("--whiteminr", f->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);

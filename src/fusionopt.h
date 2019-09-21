@@ -67,6 +67,7 @@ struct FusionOptions{
     std::string mBlackList;            ///< fusion event which will drop always if found
     std::string mInfile;               ///< input file of sver sv tsv format result file
     std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
+    std::string mSupFile = "ss.tsv";   ///< output file of supplementary fusions
     SVList mBgSVs;                     ///< to store background SVs
     FusePairs mWhiteFusions;           ///< to store fusion events in fusion whitelist
     FusePairs mBlackFusions;           ///< to store fusion events in fusion blacklist
@@ -80,8 +81,10 @@ struct FusionOptions{
     FusionOptions(){
         mWhiteFilter.mMinVAF = 0;
         mWhiteFilter.mMinSupport = 3;
+        mWhiteFilter.mMinDepth = 100;
         mUsualFilter.mMinVAF = 0.01;
         mUsualFilter.mMinSupport = 5;
+        mUsualFilter.mMinDepth = 300;
     }
         
     /** FusionOptions destructor */
@@ -89,6 +92,13 @@ struct FusionOptions{
 
     /** initialize filter options */
     void init();
+
+    /** test whether an fusion event match hot gene common fusion direction
+     * @param hgene head gene
+     * @param tgene tail gene
+     * @return true if fusion event match hot gene common fusion direction
+     */
+    bool matchHotDirec(const std::string& hgene, const std::string& tgene);
 
     /** test whether an fusion event contains hot gene partner
      * @param hgene head gene

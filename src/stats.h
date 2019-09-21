@@ -361,6 +361,20 @@ class Stats{
          */
         void reportFusionTSV(const SVSet& svs, GeneInfoList& gl);
 
+        /** convert an sv event to fusion record
+         * @param svs reference of SVSet
+         * @param gl reference of GeneInfoList
+         * @param i index at which SV event will be converted
+         * @return fusion record
+         */
+        std::string toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i);
+
+        /** mask fusion event status 
+         * @param svs reference of SVSet
+         * @param gl reference of GeneInfoList
+         */
+        void maskFuseRec(const SVSet& svs, GeneInfoList& gl);
+
         /** get alignment quality of sequence against an read
          * @param alnResult align result(sequence vertical, read horizontal)
          * @param qual read quality

@@ -3,6 +3,7 @@
 
 #include "fusionopt.h"
 #include "software.h"
+#include "svutil.h"
 #include "CLI.hpp"
 
 struct FusionRecord{
@@ -36,9 +37,11 @@ struct FusionRecord{
     std::string insseq;
     std::string svid;
     std::string svint;
-    bool report;
+    uint32_t fsmask;
 
-    FusionRecord(){}
+    FusionRecord(){
+        fsmask = 0;
+    }
 
     ~FusionRecord(){}
 
@@ -50,7 +53,7 @@ struct FusionRecord{
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.indb << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\n";
+        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\n";
        return os;
     } 
 };

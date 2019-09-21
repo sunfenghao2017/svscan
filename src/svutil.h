@@ -167,6 +167,26 @@
  * 3'-------------------------tG----------------------------5'
  */
 
+#define FUSION_FALLGENE         (1)       ///< All partners are genes
+#define FUSION_FNORMALCATDIRECT (1 << 1)  ///< hgene 5' -> tgene 3' positive strand catenation
+#define FUSION_FHOTGENE         (1 << 2)  ///< one of the partner is in hot fusion gene list
+#define FUSION_FCOMMONHOTDIRECT (1 << 3)  ///< hot gene partner is in the predefined direction in fusion gene list
+#define FUSION_FINDB            (1 << 4)  ///< fusion gene is in database
+#define FUSION_FMIRROR          (1 << 5)  ///< fusion gene has mirror fusion
+#define FUSION_FBLACKPAIR       (1 << 6)  ///< fusion gene is in black list
+#define FUSION_FFBG             (1 << 7)  ///< fusion gene is in background samples
+#define FUSION_FBLACKGENE       (1 << 8)  ///< one partner is in black gene list
+#define FUSION_FLOWCOMPLEX      (1 << 9)  ///< one partner has low complex concensus sequence
+#define FUSION_FPRIMARYR        (1 << 10) ///< this fusion event should be reported primarily
+#define FUSION_FSUPPLEMENTARY   (1 << 11) ///< this fusion event should be reported as supplementary
+#define FUSION_FTOOSMALLSIZE    (1 << 12) ///< this fusion event has too small size
+#define FUSION_FINSAMEGENE      (1 << 13) ///< this fusion event occurs in the same gene
+#define FUSION_FLOWAF           (1 << 14) ///< this fusion event has too low AF
+#define FUSION_FLOWSUPPORT      (1 << 15) ///< this fusion event has too low support
+#define FUSION_FLOWDEPTH        (1 << 16) ///< this fusion event has too low depth around breakpoint
+#define FUSION_FPRECISE         (1 << 17) ///< this fusion event has precise breakpoint and concensus sequence
+
+
 /** fuse gene struct */
 struct FuseGene{
     std::string hgene;   ///< gene name of 5' part of fusion gene
@@ -175,8 +195,7 @@ struct FuseGene{
     std::string tgene;   ///< gene name of 3' part of fusion gene
     std::string tend;    ///< tgene 3' or 5' fused
     std::string tstrand; ///< hgene + or - strand fused
-    bool valid;          ///< if hgene is 5'+ and tgene is 3'+ then this fusion gene is valid
-    bool report;         ///< if there exists another fusion gene with reverse h/t gene and is more common, this value will be false
+    uint16_t status;      ///< mask to show fusion status 1:gene,2:normal,4:hot,8:common,16:indb,32:mirror
 
     /** FuseGene constructor */
     FuseGene(){
@@ -186,8 +205,7 @@ struct FuseGene{
         tgene = "-";
         tend = "-";
         tstrand = ".";
-        valid = false;
-        report = true;
+        status = 0;
     }
 
     /** FuseGene destructor */
@@ -480,6 +498,7 @@ namespace svutil{
      */
     inline FuseGene getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
         FuseGene ret;
+        if(gene1 != "-" && gene2 != "-") ret.status |= FUSION_FALLGENE;
         if(gene1 == "-" || gene2 == "-" || svt == 4) return ret;
         if(svt >= 5) svt -= 5;
         if(svt == 3){// convert 3to5 to 5to3
@@ -501,7 +520,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
-                ret.valid = true;
+                ret.status |= FUSION_FNORMALCATDIRECT;
             }else if(strand1 == '-' && strand2 == '+'){
                 ret.hgene = gene2;
                 ret.tgene = gene1;
@@ -509,7 +528,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
-                ret.valid = true;
+                ret.status |= FUSION_FNORMALCATDIRECT;
             }else if(strand1 == '-' && strand2 == '-'){
                 ret.hgene = gene2;
                 ret.tgene = gene1;
@@ -533,7 +552,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
-                ret.valid = true;
+                ret.status |= FUSION_FNORMALCATDIRECT;
             }else if(strand1 == '-' && strand2 == '+'){
                 ret.hgene = gene1;
                 ret.tgene = gene2;
@@ -541,7 +560,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
-                ret.valid = true;
+                ret.status |= FUSION_FNORMALCATDIRECT;
             }else if(strand1 == '-' && strand2 == '-'){
                 ret.hgene = gene1;
                 ret.tgene = gene2;
@@ -558,7 +577,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
-                ret.valid = true;
+                ret.status |= FUSION_FNORMALCATDIRECT;
             }else if(strand1 == '+' && strand2 == '-'){
                 ret.hgene = gene1;
                 ret.tgene = gene2;
@@ -580,7 +599,7 @@ namespace svutil{
                 ret.tend = "3";
                 ret.hstrand = "+";
                 ret.tstrand = "+";
-                ret.valid = true;
+                ret.status |= FUSION_FNORMALCATDIRECT;
             }
         }
         return ret;
