@@ -40,9 +40,9 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
         // bp1Trs bp2Trs svID
         if(gl[i].mTrans1.empty()) fw << ".\t";
-        else fw << util::join(gl[i].mTrans1, ",") << "\t";
+        else fw << util::join(gl[i].mTrans1, ";") << "\t";
         if(gl[i].mTrans2.empty()) fw << ".\t";
-        else fw << util::join(gl[i].mTrans2, ",") << "\t";
+        else fw << util::join(gl[i].mTrans2, ";") << "\t";
         // svSeq seqBp
         if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t-\t";
         else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t" << svs[i].mGapCoord[0] << "\t";
@@ -101,12 +101,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             gl[i].mFuseGene.status |= FUSION_FHOTGENE;
         }
         if(gl[i].mFuseGene.status & FUSION_FINSAMEGENE){
-            std::vector<std::string> vstr;
-            util::split(gl[i].mTrans1[0], vstr, ",");
-            int32_t tr1no = std::atoi(vstr[3].c_str());
-            util::split(gl[i].mTrans2[0], vstr, ",");
-            int32_t tr2no = std::atoi(vstr[3].c_str());
-            if(std::abs(tr1no - tr2no) <= 1){
+            if(svutil::trsUnitIsNear(gl[i].mTrans1, gl[i].mTrans2, 1)){
                 gl[i].mFuseGene.status |= FUSION_FTOOSMALLSIZE;
             }
         }
@@ -228,14 +223,14 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
     }
     if(gl[i].mGene1 == gl[i].mFuseGene.hgene){
         // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-        oss << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
+        oss << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ";") << "\t";
         // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-        oss << gl[i].mGene2 << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
+        oss << gl[i].mGene2 << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ";") << "\t";
     }else{
         // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-        oss << gl[i].mGene2 << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ",") << "\t";
+        oss << gl[i].mGene2 << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ";") << "\t";
         // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-        oss << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ",") << "\t";
+        oss << gl[i].mGene1 << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ";") << "\t";
     }
     // FusinSequence
     if(svs[i].mSVT == 4) oss << svs[i].mInsSeq << "\t-\t";

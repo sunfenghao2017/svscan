@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <cstdint>
+#include "util.h"
 #include <htslib/vcf.h>
 #include <htslib/sam.h>
 
@@ -661,6 +662,63 @@ namespace svutil{
         return false;
     }
 
+    /** test whether two transcript units are near each other
+     * @param trs1 transcript unit representation str vector, str format: name,unit,strand,no
+     * @param trs2 transcript uint representation str vector, str format: name,unit,strand,no
+     * @param maxoffset max intron(exon) offset to be near
+     * @return true if trs1 and trs2 is near
+     */
+    inline bool trsUnitIsNear(const std::vector<std::string>& trs1, const std::vector<std::string>& trs2, int32_t maxoffset = 1){
+        std::map<std::string, std::map<std::string, int32_t>> m1;
+        std::map<std::string, std::map<std::string, int32_t>> m2;
+        // parse trs1
+        std::vector<std::string> vstr;
+        for(auto& e: trs1){
+            util::split(e, vstr, ",");
+            if(util::startsWith(vstr[1], "utr")){
+                m1[vstr[0]]["utr"] = 0;
+            }else{
+                m1[vstr[0]]["ie"] = std::atoi(vstr[3].c_str());
+            }
+        }
+        // parse trs2
+        for(auto& e: trs2){
+            util::split(e, vstr, ",");
+            if(util::startsWith(vstr[1], "utr")){
+                m2[vstr[0]]["utr"] = 0;
+            }else{
+                m2[vstr[0]]["ie"] = std::atoi(vstr[3].c_str());
+            }
+        }
+        // calculate distance
+        for(auto& e: m1){
+            auto iter1 = m2.find(e.first);
+            if(iter1 != m2.end()){
+                for(auto& f: e.second){
+                    auto iter2 = iter1->second.find(f.first);
+                    if(iter2 != iter1->second.end()){
+                        return std::abs(iter2->second - f.second) <= maxoffset;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** test whether two transcript units are near each other
+     * @param trs1 transcript unit representation str, format: name,unit,strand,no[;name,unit,strand,no]..
+     * @param trs2 transcript uint representation str, format: name,unit,strand,no[;name,unit,strand,no]..
+     * @param maxoffset max intron(exon) offset to be near
+     * @return true if trs1 and trs2 is near
+     */
+    inline bool trsUnitIsNear(const std::string& trs1, const std::string& trs2, int32_t maxoffset = 1){
+        std::vector<std::string> vstr1;
+        std::vector<std::string> vstr2;
+        // parse trs1 and trs2
+        util::split(trs1, vstr1, ";");
+        util::split(trs2, vstr2, ";");
+        return trsUnitIsNear(vstr1, vstr2, maxoffset);
+    }
 }
 
 #endif
