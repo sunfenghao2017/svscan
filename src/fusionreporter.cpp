@@ -171,8 +171,7 @@ void FusionReporter::sv2fs(){
         fsr.svid = vstr[29];                  // svID
         fsr.svint = vstr[30];                 // svInt
         if(fsmask & ALL_DROP_MASK){
-            fsmask &= (!FUSION_FPRIMARYR);
-            fsmask &= (!FUSION_FSUPPLEMENTARY);
+            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
         }
         if(fsmask & REPORT_REQUEST){
             if((fsmask & FUSION_FNORMALCATDIRECT) &&
@@ -190,45 +189,16 @@ void FusionReporter::sv2fs(){
                 }
             }
         }else{
-            fsmask &= (!FUSION_FPRIMARYR);
-            fsmask &= (!FUSION_FSUPPLEMENTARY);
+            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
+        }
+        if((fsmask & fuseOpt->mFsMaskInclude) != fuseOpt->mFsMaskInclude){
+            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
+        }
+        if(fsmask & fuseOpt->mFsMaskExclude){
+            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
         }
         fsr.fsmask = fsmask;                  // fsMask
         fuseList.push_back(fsr);
     }
     fr.close();
-}
-
-int main(int argc, char** argv){
-    if(argc == 1){
-        std::string helpCMD = std::string(argv[0]) + " -h";
-        std::system(helpCMD.c_str());
-        return 0;
-    }
-    // parse commandline arguments
-    FusionReporter* f = new FusionReporter();
-    CLI::App app("program: " + std::string(argv[0]) + "\n" + f->softEnv->cmp);
-    app.add_option("-i,--in", f->fuseOpt->mInfile, "input tsv sv result of sver")->required(true)->check(CLI::ExistingFile);
-    app.add_option("-o,--out", f->fuseOpt->mOutFile, "primary fusion result", true);
-    app.add_option("-s,--sup", f->fuseOpt->mSupFile, "supplementary fusion result", true);
-    app.add_option("--whitemindep", f->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true);
-    app.add_option("--usualmindep", f->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true);
-    app.add_option("--whiteminr", f->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);
-    app.add_option("--usualminr", f->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true);
-    app.add_option("--whiteminaf", f->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true);
-    app.add_option("--usualminaf", f->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true); 
-    app.add_option("--whiteminigs", f->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion in whitelist", true);
-    app.add_option("--usualminigs", f->fuseOpt->mUsualFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion not in whitelist", true);
-    app.add_option("--maxbpoffset", f->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true);
-    app.add_option("--bgbcf", f->fuseOpt->mBgBCF, "background events BCF file");
-    app.add_option("--whitelist", f->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);
-    app.add_option("--blacklist", f->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile);
-    // parse arguments
-    CLI_PARSE(app, argc, argv);
-    f->update(argc, argv);
-    util::loginfo("CMD: " + f->softEnv->cmd);
-    util::loginfo("Beg report fusions.");
-    f->report();
-    util::loginfo("End report fusions.");
-    delete f;
 }

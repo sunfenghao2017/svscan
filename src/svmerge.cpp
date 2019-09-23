@@ -1,4 +1,4 @@
-#include "mergevcf.h"
+#include "svmerge.h"
 
 VCFMerger::VCFMerger(){
     softEnv = new Software();
@@ -599,32 +599,4 @@ void VCFMerger::mergeAllType(){
     }
     // Remove tmpdir
     rmdir(tmpdir.c_str());
-}
-
-int main(int argc, char** argv){
-    if(argc == 1){
-        std::string helpCMD = std::string(argv[0]) + " -h";
-        std::system(helpCMD.c_str());
-        return 0;
-    }
-    // parse commandline arguments
-    VCFMerger* m = new VCFMerger();
-    CLI::App app("program: " + std::string(argv[0]) + "\n" + m->softEnv->cmp);
-    app.get_formatter()->column_width(36);
-    app.add_option("-i,--in", m->infilelist, "input bcf file list to be merged")->required(true)->check(CLI::ExistingFile);
-    app.add_option("-o,--out", m->outfile, "merged bcf file output path", true);
-    app.add_option("-t,--tmp", m->tmpdir, "temp directory to store intermediate files", true);
-    app.add_option("-v,--vaf", m->vaf, "min VAF for SV to be merged", true);
-    app.add_option("-c,--cov", m->coverage, "min depth for SV to be merged", true);
-    app.add_option("--covratio", m->recoverlap, "min overlap ratio needed for two dup SVs", true);
-    app.add_option("--bpoffset", m->bpoffset, "max position offset allowed for two dup SV", true);
-    app.add_option("--minsize", m->minsize, "min size of SV to be merged", true);
-    app.add_option("--maxsize", m->maxsize, "max size of SV to be merged", true);
-    app.add_option("--chunksize", m->chunksize, "max input files to be merged at one batch", true);
-    app.add_flag("--passfilter", m->filterForPass, "keep PASS records only if set");
-    app.add_flag("--preciseFilter", m->filterForPrecise, "keep PRECISE records only if set");
-    CLI_PARSE(app, argc, argv);
-    m->update(argc, argv);
-    m->mergeAllType();
-    delete m;
 }

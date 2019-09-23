@@ -1,21 +1,10 @@
-#include <fstream>
-#include <iostream>
-#include <util.h>
-#include <set>
-#include <map>
+#include "fusewlist.h"
 
-int main(int argc, char** argv){
-    if(argc < 4){
-        std::cout << argv[0] << " <gene.tsv> <fusedb.tsv> <white.tsv>" << std::endl;
-        return 0;
-    }
-    std::string gsetf = argv[1];
-    std::string gfsdb = argv[2];
-    std::string outf = argv[3];
+void FuseWOpt::prepWlist(){
     // get genes from predefined fusion gene partner list
-    util::loginfo("Beg parsing " + gsetf + " to get gene list.");
+    util::loginfo("Beg parsing " + genelist + " to get gene list.");
     std::map<std::string, uint8_t> gset;
-    std::ifstream fr(gsetf);
+    std::ifstream fr(genelist);
     std::string tmpStr;
     std::vector<std::string> vstr;
     while(std::getline(fr, tmpStr)){
@@ -26,10 +15,10 @@ int main(int argc, char** argv){
         gset.insert({vstr[0], mask});
     }
     fr.close();
-    util::loginfo("End parsing " + gsetf + ", got " + std::to_string(gset.size()) + " genes ");
+    util::loginfo("End parsing " + genelist + ", got " + std::to_string(gset.size()) + " genes ");
     // parse fusedb to get whitelist as subset
-    std::ofstream fw(outf);
-    fr.open(gfsdb.c_str());
+    std::ofstream fw(whitelist);
+    fr.open(fusedb.c_str());
     std::string hgene, tgene;
     while(std::getline(fr, tmpStr)){
         util::split(tmpStr, vstr, "\t");

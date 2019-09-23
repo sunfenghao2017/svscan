@@ -1,25 +1,13 @@
-#include <map>
-#include <set>
-#include <util.h>
-#include <stdio.h>
-#include <cassert>
-#include <fstream>
-#include <sstream>
-#include <htslib/bgzf.h>
-#include <htslib/kstring.h>
+#include "svannodb.h"
 
-int main(int argc, char** argv){
-    if(argc < 3){
-        printf("%s <refGene.Acc.tsv.gz> <mainTrs.list> <refGene.Anno.gz>\n", argv[0]);
-        return 0;
-    }
+void SVAnnoDBOpt::prepDB(){
     // parse main transcripts
     std::set<std::string> mainTrs;
-    std::ifstream fr(argv[2]);
+    std::ifstream fr(primaryTrsList);
     std::string tmpStr;
     while(std::getline(fr, tmpStr)) mainTrs.insert(tmpStr);
-    BGZF* ifp = bgzf_open(argv[1], "rb");
-    BGZF* ofp = bgzf_open(argv[3], "wb");
+    BGZF* ifp = bgzf_open(refGeneDB.c_str(), "rb");
+    BGZF* ofp = bgzf_open(svAnnoDB.c_str(), "wb");
     kstring_t str = {0, 0, 0};
     bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> vstr;

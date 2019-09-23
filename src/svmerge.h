@@ -9,24 +9,11 @@
 #include <cstdint>
 #include <fstream>
 #include <htslib/vcf.h>
+#include "software.h"
 #include "interval.h"
 #include "svutil.h"
 #include "CLI.hpp"
 #include "util.h"
-
-/** class to store software environment */
-struct Software{
-    std::string version = "0.0.0"; ///< software version
-    std::string cmd;               ///< software execution command
-    std::string cwd;               ///< software execution directory
-    std::string cmp;               ///< software update time
-
-    /** Software constructor */
-    Software(){}
-
-    /** Software destructor */
-    ~Software(){}
-};
 
 /** type to store Interval of each contigs */
 typedef std::vector<std::vector<Interval>> ContigIntervals;

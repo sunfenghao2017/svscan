@@ -99,30 +99,3 @@ void SVFilter::filter(){
     fr.close();
     fw.close();
 }
-
-int main(int argc, char** argv){
-    if(argc == 1){
-        std::string helpCMD = std::string(argv[0]) + " -h";
-        std::system(helpCMD.c_str());
-        return 0;
-    }
-    // parse commandline arguments
-    SVFilter* f = new SVFilter();
-    CLI::App app("program: " + std::string(argv[0]) + "\n" + f->softEnv->cmp);
-    app.add_option("-i,--in", f->infile, "input tsv sv result of sver")->required(true)->check(CLI::ExistingFile);
-    app.add_option("-o,--out", f->outfile, "output tsv fusion result", true);
-    app.add_option("--minsr", f->minsr, "min SR support for an valid fusion", true);
-    app.add_option("--mindp", f->mindp, "min DP support for an valid fusion", true);
-    app.add_option("--minsu", f->minsu, "min SU support for an valid fusion", true);
-    app.add_option("--minaf", f->minaf, "min VAF for an valid fusion", true);
-    app.add_option("--maxbpoffset", f->maxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true);
-    app.add_option("--bgbcf", f->mBgBCF, "background events BCF file");
-    // parse arguments
-    CLI_PARSE(app, argc, argv);
-    f->update(argc, argv);
-    util::loginfo("CMD: " + f->softEnv->cmd);
-    util::loginfo("Beg filter SVs.");
-    f->filter();
-    util::loginfo("End filter SVs.");
-    delete f;
-}

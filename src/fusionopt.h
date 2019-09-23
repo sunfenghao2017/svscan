@@ -7,32 +7,9 @@
 #include <cstdint>
 #include <string>
 #include <htslib/vcf.h>
+#include "svinfo.h"
 #include "svutil.h"
 #include "util.h"
-
-/** Class to represent an SV info */
-struct SVInfo{
-    std::string mChr1; ///< large chr of an SV
-    std::string mChr2; ///< lite chr of an SV
-    int32_t mStart;    ///< SV starting position
-    int32_t mEnd;      ///< SV ending position
-
-    /** SVInfo constructor
-     * @param chr1 large chr of an SV
-     * @param chr2 lite chr of an SV
-     * @param start SV starting position
-     * @param end SV ending position
-     */
-    SVInfo(const std::string& chr1, const std::string& chr2, int32_t start, int32_t end){
-        mChr1 = chr1;
-        mChr2 = chr2;
-        mStart = start;
-        mEnd = end;
-    }
-    
-    /** SVInfo destructor */
-    ~SVInfo(){};
-};
 
 /** type to store each kind of structural variants */
 typedef std::vector<std::vector<SVInfo>> SVList;
@@ -61,6 +38,8 @@ struct FilterOptions{
 struct FusionOptions{
     FilterOptions mWhiteFilter;        ///< filter options for fusion events in whitelist
     FilterOptions mUsualFilter;        ///< filter options for fusion event not in whitelist
+    uint32_t mFsMaskInclude;           ///< result must match this fusion mask;
+    uint32_t mFsMaskExclude;           ///< result must not match this fusion mask;
     int32_t mMaxBpOffset = 10;         ///< max breakpoint offset of an SV against background SV to be excluded
     std::string mBgBCF;                ///< background BCF file
     std::string mWhiteList;            ///< fusion event which will keep always if found

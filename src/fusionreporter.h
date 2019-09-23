@@ -37,7 +37,7 @@ struct FusionRecord{
     std::string insseq;
     std::string svid;
     std::string svint;
-    uint32_t fsmask;
+    TFUSION_FLAG fsmask;
 
     FusionRecord(){
         fsmask = 0;

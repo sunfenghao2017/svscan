@@ -69,11 +69,7 @@
     Both hg19 and hg38 will work as long as the annotation database file is the same version.  
 
 #### How to prepare annotation database file?  
-|steps|operation          |recommand tools
-|-----|-------------------|---------------------------------------------------
-|1    |get regene tsv file| [UCSC website](https://genome.ucsc.edu/index.html)
-|2    |extract information| [getFeatureTsv](https://github.com/vanNul/util/blob/master/getFeatureTsv.cpp)
-|3    |sort and index     | [tabix](https://github.com/samtools/htslib)
+    check `svtools annodb` for help
 
 #### How does sver work?  
 ![sver algorithm](./fig/sver.svg)
