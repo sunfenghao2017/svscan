@@ -116,14 +116,14 @@ struct SVFilter{
 
 /** class to store threshold of high quality SV */
 struct PassOptions{
-    int32_t mIntraChrSVMinDPCnt = 3;   ///< intra-chromosome SV minimum DP supports
-    int32_t mIntraChrSVMinDPQual = 20; ///< intra-chromosome SV minimum DP quality
-    int32_t mIntraChrSVMinSRCnt = 3;   ///< intra-chromosome SV minimum SR supports
-    int32_t mIntraChrSVMinSRQual = 20; ///< intra-chromosome SV minimum DP quality
-    int32_t mInterChrSVMinDPCnt = 5;   ///< inter-chromosome SV minimum DP supports
-    int32_t mInterChrSVMinDPQual = 20; ///< inter-chromosome SV minimum DP quality
-    int32_t mInterChrSVMinSRCnt = 5;   ///< inter-chromosome SV minimum SR supports
-    int32_t mInterChrSVMinSRQual = 20; ///< inter-chromosome SV minimum DP quality
+    int32_t mIntraChrSVMinDPCnt = 2;   ///< intra-chromosome SV minimum DP supports
+    int32_t mIntraChrSVMinDPQual = 15; ///< intra-chromosome SV minimum DP quality
+    int32_t mIntraChrSVMinSRCnt = 2;   ///< intra-chromosome SV minimum SR supports
+    int32_t mIntraChrSVMinSRQual = 15; ///< intra-chromosome SV minimum DP quality
+    int32_t mInterChrSVMinDPCnt = 2;   ///< inter-chromosome SV minimum DP supports
+    int32_t mInterChrSVMinDPQual = 15; ///< inter-chromosome SV minimum DP quality
+    int32_t mInterChrSVMinSRCnt = 2;   ///< inter-chromosome SV minimum SR supports
+    int32_t mInterChrSVMinSRQual = 15; ///< inter-chromosome SV minimum DP quality
     int32_t mMinGenoQual = 15;         ///< minimum genotype quality
 
     /** PassOptions constructor */
