@@ -161,19 +161,18 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         double scoreRef = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
                         if(scoreRef > 1 || scoreAlt > 1){
-                            if(scoreRef > scoreAlt){// Account for reference bias
-                                if(++mRefAlignedReadCount[itbp->mID] % 2){
-                                    uint8_t* qual = bam_get_qual(b);
-                                    uint32_t rq = getAlignmentQual(refResult, qual);
-                                    if(rq >= mOpt->filterOpt->mMinGenoQual){
-                                        uint8_t* hpptr = bam_aux_get(b, "HP");
-                                        mJctCnts[itbp->mID].mRefQual.push_back(std::min(rq, (uint32_t)b->core.qual));
-                                        if(hpptr){
-                                            mOpt->libInfo->mIsHaploTagged = true;
-                                            int hapv = bam_aux2i(hpptr);
-                                            if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
-                                            else ++mJctCnts[itbp->mID].mRefh2; 
-                                        }
+                            if(scoreRef > scoreAlt){
+                                ++mRefAlignedReadCount[itbp->mID];
+                                uint8_t* qual = bam_get_qual(b);
+                                uint32_t rq = getAlignmentQual(refResult, qual);
+                                if(rq >= mOpt->filterOpt->mMinGenoQual){
+                                    uint8_t* hpptr = bam_aux_get(b, "HP");
+                                    mJctCnts[itbp->mID].mRefQual.push_back(std::min(rq, (uint32_t)b->core.qual));
+                                    if(hpptr){
+                                        mOpt->libInfo->mIsHaploTagged = true;
+                                        int hapv = bam_aux2i(hpptr);
+                                        if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
+                                        else ++mJctCnts[itbp->mID].mRefh2; 
                                     }
                                 }
                             }else{
@@ -250,16 +249,14 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     // Fetch all relevant SVs
                     auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
                     for(; itspan != spPts[mRefIdx].end() && (st + spanlen) >= itspan->mBpPos; ++itspan){
-                        // Account for reference bias
-                        if(++mRefAlignedSpanCount[itspan->mID]){
-                            uint8_t* hpptr = bam_aux_get(b, "HP");
-                            mSpnCnts[itspan->mID].mRefQual.push_back(b->core.qual);
-                            if(hpptr){
-                                mOpt->libInfo->mIsHaploTagged = true;
-                                int hap = bam_aux2i(hpptr);
-                                if(hap == 1) ++mSpnCnts[itspan->mID].mRefh1;
-                                else ++mSpnCnts[itspan->mID].mRefh2;
-                            }
+                        ++mRefAlignedSpanCount[itspan->mID];
+                        uint8_t* hpptr = bam_aux_get(b, "HP");
+                        mSpnCnts[itspan->mID].mRefQual.push_back(b->core.qual);
+                        if(hpptr){
+                            mOpt->libInfo->mIsHaploTagged = true;
+                            int hap = bam_aux2i(hpptr);
+                            if(hap == 1) ++mSpnCnts[itspan->mID].mRefh1;
+                            else ++mSpnCnts[itspan->mID].mRefh2;
                         }
                     }
                 }
