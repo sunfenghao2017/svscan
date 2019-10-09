@@ -191,8 +191,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                     }
                                     if(mOpt->fbamout){
                                         mOpt->outMtx.lock();
-                                        std::string idval = std::to_string(itbp->mID);
-                                        bam_aux_append(b, "ZF", 'i', idval.length() + 1, (uint8_t*)idval.c_str());
+                                        bam_aux_update_int(b, "ZF", itbp->mID);
                                         assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                                         mOpt->outMtx.unlock();
                                     }
@@ -296,8 +295,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                             }
                             if(mOpt->fbamout){
                                 mOpt->outMtx.lock();
-                                std::string idval = std::to_string(itspan->mID);
-                                bam_aux_append(b, "ZF", 'i', idval.length() + 1, (uint8_t*)idval.c_str());
+                                bam_aux_update_int(b, "ZF", itspan->mID);
                                 assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                                 mOpt->outMtx.unlock();
                             }
