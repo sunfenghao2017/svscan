@@ -16,6 +16,7 @@ Options::Options(){
     softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
     libInfo = NULL;
     contigNum = 0;
+    rnamode = false;
 }
 
 Options::~Options(){

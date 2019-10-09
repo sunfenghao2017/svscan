@@ -49,6 +49,8 @@ int main(int argc, char** argv){
     app.add_option("--blacklist", opt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
     app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
+    // RNA SV options
+    app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data")->group("RNA SV");
     // parse arguments
     CLI_PARSE(app, argc, argv);
     // validate arguments

@@ -177,6 +177,7 @@ class Options{
         FusionOptions* fuseOpt;       ///< fusion report options
         MSAOpt* msaOpt;               ///< MSA options
         Software* softEnv;            ///< softare environment option
+        bool rnamode;                 ///< find rna structural variants
 
     public:
         /** Options constructor */
