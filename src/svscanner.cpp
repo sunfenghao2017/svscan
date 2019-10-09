@@ -11,11 +11,23 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     bam1_t* b = bam_init1();
     const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
     // Iterate bam contig by contig
-    if(mValidRegs[tid].empty()) return; // Skip invalid contig
+    if(mValidRegs[tid].empty()){
+        sam_close(fp);
+        hts_idx_destroy(idx);
+        bam_hdr_destroy(h);
+        bam_destroy1(b);
+        return; // Skip invalid contig
+    }
     uint64_t mapped = 0;
     uint64_t unmapped = 0;
     hts_idx_get_stat(idx, tid, &mapped, &unmapped);
-    if(!mapped) return; // Skip contig without any mapped reads
+    if(!mapped){
+        sam_close(fp);
+        hts_idx_destroy(idx);
+        bam_hdr_destroy(h);
+        bam_destroy1(b);
+        return; // Skip contig without any mapped reads
+    }
     // Iterate all read alignments on this contig and valid regions
     util::loginfo("Contig: " + std::string(h->target_name[tid]) + " starts SR and DP scanning", mOpt->logMtx);
     for(auto regit = mValidRegs[tid].begin(); regit != mValidRegs[tid].end(); ++regit){
