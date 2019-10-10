@@ -272,15 +272,15 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             TrsRec tr;
-            tr.strand = vstr[8];
-            strand1 = vstr[8];
+            tr.strand = vstr[9];
+            strand1 = vstr[9];
             tr.unit = vstr[3];
             tr.number = vstr[4];
             tr.name = vstr[0];
             tr.chr = vstr[6];
             trsList.push_back(tr);
             gl[i].mGene1 = vstr[5];
-            gl[i].mChr1 =vstr[6];
+            gl[i].mChr1 = vstr[6];
             if(tr.unit == "exon"){
                 gl[i].mPos1 = svutil::trpos2gnpos(svs[i].mSVStart, std::atoi(vstr[1].c_str()), 
                                                   std::atoi(vstr[7].c_str()), std::atoi(vstr[8].c_str()), vstr[8][0]);
@@ -293,8 +293,8 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             TrsRec tr;
-            tr.strand = vstr[8];
-            strand2 = vstr[8];
+            tr.strand = vstr[9];
+            strand2 = vstr[9];
             tr.unit = vstr[3];
             tr.number = vstr[4];
             tr.name = vstr[0];
