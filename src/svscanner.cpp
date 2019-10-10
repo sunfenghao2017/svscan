@@ -140,21 +140,21 @@ void SVScanner::scanDPandSR(){
     Stats* covStat = covAnn->covAnnotate(mergedSVs);
     util::loginfo("End annotating SV coverage");
     if(!mOpt->bamout.empty()) sam_close(mOpt->fbamout);
+    GeneInfoList gl;
+    util::loginfo("Beg annotating SV gene information");
     if(mOpt->rnamode){
-        // todo ...
+        covAnn->geneAnnoRNA(mergedSVs, gl);
     }else{
-        GeneInfoList gl;
-        util::loginfo("Beg annotating SV gene information");
-        covAnn->geneAnnotate(mergedSVs, gl);
-        covStat->maskFuseRec(mergedSVs, gl);
-        util::loginfo("End annotating SV gene information");
-        util::loginfo("Beg writing SVs to TSV file");
-        covStat->reportSVTSV(mergedSVs, gl);
-        util::loginfo("End writing SVs to TSV file");
-        util::loginfo("Beg writing Fusions to TSV file");
-        covStat->reportFusionTSV(mergedSVs, gl);
-        util::loginfo("End writing Fusions to TSV file");
+        covAnn->geneAnnoDNA(mergedSVs, gl);
     }
+    covStat->maskFuseRec(mergedSVs, gl);
+    util::loginfo("End annotating SV gene information");
+    util::loginfo("Beg writing SVs to TSV file");
+    covStat->reportSVTSV(mergedSVs, gl);
+    util::loginfo("End writing SVs to TSV file");
+    util::loginfo("Beg writing Fusions to TSV file");
+    covStat->reportFusionTSV(mergedSVs, gl);
+    util::loginfo("End writing Fusions to TSV file");
     util::loginfo("Beg writing SVs to BCF file");
     covStat->reportSVBCF(mergedSVs);
     util::loginfo("End writing SVs to BCF file");

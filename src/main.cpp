@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     app.get_formatter()->column_width(36);
     // General Options options
     app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General Options");
-    app.add_option("-g,--genome", opt->genome, "reference genome")->required(true)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-g,--genome", opt->genome, "reference genome/transcriptome")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
@@ -23,6 +23,7 @@ int main(int argc, char** argv){
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");
+    app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data")->group("General Options");
     // Control options
     app.add_option("--min_ref_sep", opt->filterOpt->mMinRefSep, "min sv length to compute", true)->group("Threshold Options");
     app.add_option("--max_read_sep", opt->filterOpt->mMaxReadSep, "max read split mapping pos allowed to compute sv", true)->group("Threshold Options");
@@ -49,8 +50,6 @@ int main(int argc, char** argv){
     app.add_option("--blacklist", opt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
     app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
-    // RNA SV options
-    app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data")->group("RNA SV");
     // parse arguments
     CLI_PARSE(app, argc, argv);
     // validate arguments
