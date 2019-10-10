@@ -12,6 +12,7 @@ struct TrsRec{
     std::string strand;
     std::string number;
     std::string primary;
+    std::string chr; // used only in RNA sv
 
     TrsRec(){}
 
@@ -49,11 +50,17 @@ class Annotator{
          */
         Stats* covAnnotate(SVSet& svs);
 
-        /** annotate SV gene information
+        /** annotate DNA SV gene information
          * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
          */
-        void geneAnnotate(SVSet& svs, GeneInfoList& gl);
+        void geneAnnoDNA(SVSet& svs, GeneInfoList& gl);
+        
+        /** annotate RNA SV gene information
+         * @param svs reference of SVRecords
+         * @param gl reference of GeneInfoList
+         */
+        void geneAnnoRNA(SVSet& svs, GeneInfoList& gl);
 
         /** get first overlap of an region against an region set
          * @param s region sets

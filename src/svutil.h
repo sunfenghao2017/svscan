@@ -721,6 +721,21 @@ namespace svutil{
         util::split(trs2, vstr2, ";");
         return trsUnitIsNear(vstr1, vstr2, maxoffset);
     }
+
+    /** convert transcript coordinate into genome coordinate
+     * @param tpos transcript position
+     * @param tipos transcriptome starting position containing this pos
+     * @param gipos genome starting posision containing this pos
+     * @param gepos genome ending position containing this pos
+     * @param strand genome strand this transcript comes from
+     */
+    inline int32_t trpos2gnpos(int32_t tpos, int32_t tipos, int32_t gipos, int32_t gepos, char strand){
+        if(strand == '+'){
+            return gipos + (tipos - tpos);
+        }else{
+            return gepos - (tipos - tpos);
+        }
+    }
 }
 
 #endif

@@ -255,6 +255,10 @@ class GeneInfo{
         FuseGene mFuseGene;               ///< fusion gene information
         std::vector<std::string> mTrans1; ///< transcript names of breakpoint position on larger chrosome
         std::vector<std::string> mTrans2; ///< transcript names of breakpoint position on small chrosome
+        int32_t mPos1 = 0;                ///< position on genome (RNA sv only)
+        int32_t mPos2 = 0;                ///< position on genome (RNA sv only)
+        std::string mChr1 = ".";          ///< chr of gene1
+        std::string mChr2 = ".";          ///< chr of gene2
 
     public:
         /** default constructor */
@@ -360,7 +364,7 @@ class Stats{
          * @param gl reference of GeneInfoList
          */
         void reportFusionTSV(const SVSet& svs, GeneInfoList& gl);
-
+        
         /** convert an sv event to fusion record
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList

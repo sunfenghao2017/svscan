@@ -174,7 +174,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     return finalStat;
 }
 
-void Annotator::geneAnnotate(SVSet& svs, GeneInfoList& gl){
+void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
     gl.resize(svs.size());
     std::vector<std::string> vstr;
     kstring_t rec = {0, 0, 0};
@@ -254,6 +254,63 @@ void Annotator::geneAnnotate(SVSet& svs, GeneInfoList& gl){
         gl[i].mStrand1 = std::string(1, strand1);
         gl[i].mStrand2 = std::string(1, strand2);
         gl[i].mFuseGene = svutil::getFusionGene(gl[i].mGene1, gl[i].mGene2, strand1, strand2, svs[i].mSVT);
+    }
+    tbx_destroy(tbx);
+    hts_close(fp);
+}
+void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
+    gl.resize(svs.size());
+    std::vector<std::string> vstr;
+    kstring_t rec = {0, 0, 0};
+    htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
+    tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
+    std::vector<TrsRec> trsList;
+    std::string strand1, strand2;
+    for(uint32_t i = 0; i < svs.size(); ++i){
+        trsList.clear();
+        hts_itr_t* itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr1.c_str()), svs[i].mSVStart, svs[i].mSVStart + 1);
+        while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
+            util::split(rec.s, vstr, "\t");
+            TrsRec tr;
+            tr.strand = vstr[8];
+            strand1 = vstr[8];
+            tr.unit = vstr[3];
+            tr.number = vstr[4];
+            tr.name = vstr[0];
+            tr.chr = vstr[6];
+            trsList.push_back(tr);
+            gl[i].mGene1 = vstr[5];
+            gl[i].mChr1 =vstr[6];
+            if(tr.unit == "exon"){
+                gl[i].mPos1 = svutil::trpos2gnpos(svs[i].mSVStart, std::atoi(vstr[1].c_str()), 
+                                                  std::atoi(vstr[7].c_str()), std::atoi(vstr[8].c_str()), vstr[8][0]);
+            }
+        }
+        for(auto& e: trsList) gl[i].mTrans1.push_back(e.toStr());
+        tbx_itr_destroy(itr);
+        trsList.clear();
+        itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr2.c_str()), svs[i].mSVEnd, svs[i].mSVEnd + 1);
+        while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
+            util::split(rec.s, vstr, "\t");
+            TrsRec tr;
+            tr.strand = vstr[8];
+            strand2 = vstr[8];
+            tr.unit = vstr[3];
+            tr.number = vstr[4];
+            tr.name = vstr[0];
+            trsList.push_back(tr);
+            gl[i].mGene2 = vstr[5];
+            gl[i].mChr2 = vstr[6];
+            if(tr.unit == "exon"){
+                gl[i].mPos2 = svutil::trpos2gnpos(svs[i].mSVEnd, std::atoi(vstr[1].c_str()), 
+                                                  std::atoi(vstr[7].c_str()), std::atoi(vstr[8].c_str()), vstr[8][0]);
+            }
+        }
+        for(auto& e: trsList) gl[i].mTrans2.push_back(e.toStr());
+        tbx_itr_destroy(itr);
+        gl[i].mStrand1 = strand1;
+        gl[i].mStrand2 = strand2;
+        gl[i].mFuseGene = svutil::getFusionGene(gl[i].mGene1, gl[i].mGene2, '+',  '+', svs[i].mSVT);
     }
     tbx_destroy(tbx);
     hts_close(fp);

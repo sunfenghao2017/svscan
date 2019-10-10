@@ -57,12 +57,20 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--bgbcf", fuserptOpt->fuseOpt->mBgBCF, "background events BCF file");
     pfsrpt->add_option("--whitelist", fuserptOpt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--blacklist", fuserptOpt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile);
-    // annodb
+    // dna annodb
     SVAnnoDBOpt* annDBOpt = new SVAnnoDBOpt();
-    CLI::App* panndb = app.add_subcommand("anndb", "prepare sv annotation database for svscan");
+    CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");
     panndb->add_option("-i,--in", annDBOpt->refGeneDB, "refgene database with transcript version added")->required(true)->check(CLI::ExistingFile);
     panndb->add_option("-m,--mtrs", annDBOpt->primaryTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
     panndb->add_option("-o,--out", annDBOpt->svAnnoDB, "output file path of sv annotation db", true);
+    // rna annodb
+    SVRNADBOpt* rnaDBOpt = new SVRNADBOpt();
+    CLI::App* prnadb = app.add_subcommand("rnadb", "prepare RNA sv annotation database for svscan");
+    prnadb->add_option("-i,--in", rnaDBOpt->refGeneDB, "refgene database with transcript version added")->required(true)->check(CLI::ExistingFile);
+    prnadb->add_option("-m,--mtrs", rnaDBOpt->primaryTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
+    prnadb->add_option("-g,--genome", rnaDBOpt->genome, "genome reference fasta file path")->required(true)->check(CLI::ExistingFile);
+    prnadb->add_option("-a,--anno", rnaDBOpt->svAnnoDB, "output file path of sv annotation db", true);
+    prnadb->add_option("-r,--refmrna", rnaDBOpt->refMrna, "output file path of refmrna fasta", true);
     //wlist
     FuseWOpt* fwOpt = new FuseWOpt();
     CLI::App* pfsw = app.add_subcommand("wlist", "prepare whitelist for svscan");
@@ -103,11 +111,17 @@ int main(int argc, char** argv){
         fuserptOpt->report();
         delete fuserptOpt;
     }
-    // annodb
+    // dna annodb
     if(panndb->parsed()){
         annDBOpt->update(argc, argv);
         annDBOpt->prepDB();
         delete annDBOpt;
+    }
+    // rna annodb
+    if(prnadb->parsed()){
+        rnaDBOpt->update(argc, argv);
+        rnaDBOpt->prepDB();
+        delete rnaDBOpt;
     }
     // wlist
     if(pfsw->parsed()){

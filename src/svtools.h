@@ -6,6 +6,7 @@
 #include "fuseflags.h"
 #include "svbam.h"
 #include "svmerge.h"
+#include "svrnadb.h"
 #include "svfilter.h"
 #include "svannodb.h"
 #include "fusewlist.h"

@@ -1,22 +1,22 @@
-#### What is sver?
-    sver is a software aimed at discovering structural variants from DNA alignment result.
-#### How to install sver?
+#### What is svscan?
+    svscan is a software aimed at discovering structural variants from DNA/RNA alignment result. DNA should be aligned to genome, RNA should be aligned to transcriptome, the aligner is bwa.
+#### How to install svscan?
     1). clone repo
-       git clone https://github.com/vanNul/sver  
+       git clone https://github.com/vanNul/svscan  
     2). compile 
-       cd sver    
+       cd svscan    
        ./autogen.sh   
        ./configure --prefix=/path/to/install/dir/ 
        make & make install 
     3). test command 
        /path/to/install/dir/svscan -b testdata/bam/test.bam -g /Users/wood/Database/hg19/hg19.fa -a testdata/gz/refGene.Anno.sorted.gz -r testdata/bed/valid.bed -o testdata/sv.bcf -t testdata/sv.tsv
   
-#### What kind of structural variants sver can discover?
-    In principle, sver supports discovery of 5 classes of structural variants: inversion, deletion, duplication, insertion, translocation.  
-    In practice, as long as a structural variant event has at least 2 split reads supporting or 2 discordant paired-end reads supports, sver will discover it. However, due to sequencing error and mapping ambiguity in some region of genome, some structural variant might not be discovered cofidently or even missed. 
+#### What kind of structural variants svscan can discover?
+    In principle, svscan supports discovery of 5 classes of structural variants: inversion, deletion, duplication, insertion, translocation.  
+    In practice, as long as a structural variant event has at least 3 split reads supporting or 3 discordant paired-end reads supports, svscan will discover it. However, due to sequencing error and mapping ambiguity in some region of genome, some structural variant might not be discovered cofidently or even missed. 
     
-#### What is the size limitations of structural variants sver can discover? 
-|structural variant type| size limitations sver can discover
+#### What is the size limitations of structural variants svscan can discover? 
+|structural variant type| size limitations svscan can discover
 |-----------------------|--------------------------------------
 |inversion              | > 100(default)
 |deletion               | > 300(default)
@@ -24,55 +24,50 @@
 |insertion              | < insert size(depends on alignment)
 |translocation          | no limit
 
-#### How is sver implemented?  
-    sver is implemented totally in C++, it does not need any third part scripts or software to assist its discovery of structural events. 
+#### How is svscan implemented?  
+    svscan is implemented totally in C++, it does not need any third part scripts or software to assist its discovery of structural events. 
     After compilation, it is a standalone binary executable program and can work on its own. During compilation, it only depends on the excellent gorgeous htslib. 
-    sver supports macos and linux palatform at the moment.  
+    svscan supports macos and linux palatform at the moment.  
 
-#### What kind of sample can be fed to sver?  
-     From whole genome to little panel, whether it is paired end library or single ended library, sver can handle all of them as long as they have FASTQ of massive parallel sequencing reads. At the moment it does not support RNA samples. 
+#### What kind of sample can be fed to svscan?  
+     From whole genome to little panel, from DNA to RNA, whether it is paired end library or single ended library, svscan can handle all of them as long as they have FASTQ of massive parallel sequencing reads.
       
-#### What result formats does sver support?  
-    sver can output bcf and tsv format results at the moment, all the records in bcf or tsv are sorted by chromosome and breakpoint coordinates naturally.  
+#### What result formats does svscan support?  
+    svscan can output bcf and tsv format results at the moment, all the records in bcf or tsv are sorted by chromosome and breakpoint coordinates naturally.  
     In the long run, I hope it will support vivid HTML format output with sequence and positions embedded.
     
-#### Is sver fast? How much resources will it exhaust in one run?  
-|benchmark| measure
-|---------|-----------
-|bam info | [0.5G, 5G]
-|memory   | 2.5G(peak)
-|cpu      | 8 threads
-|time     | [6min, 30min]
+#### Is svscan fast? How much resources will it exhaust in one run?  
+    in the extremely case, it can finish sv scanning of a bam about 1G in less than 1 minutes(memory 1G, thead 8); it can finish sv scanning of a 30x whole genome bam(about 70G) in less than 1hour(memory 10G, thread 20);
     
-#### How does sver work in real samples?  
+#### How does svscan work in real samples?  
 |test samples       | recalling status
 |-------------------|---------------------
 |20 standard samples| 100% recalled
 |6 real sample      | all except one
 ###### ps. fusionmap missed all the structural variants in the 6 real samples, the missing event has not any supporting alignment records somehow
 
-#### Are there are too many negative positive events discovered by sver?  
+#### Are there are too many negative positive events discovered by svscan?  
     I haven't got many pure test samples which have all the structural events predefined exactly. But I think some negative positive events can be filtered under some principles  
 
-#### How to run sver?
+#### How to run svscan?
 |steps|operation  |recommand tools
 |-----|-----------|----------------------------------------------
 |1    | QC        |[fqtool](https://github.com/vanNul/fqtool)
 |2    | align     |[bwa](https://github.com/lh3/bwa)
 |3    | sort      |[samtools](https://github.com/samtools/samtools)
-|4    | markdup   |[duplexer](https://github.com/vanNul/duplexer)
+|4    | markdup   |[umicc](https://github.com/vanNul/umicc)
 |5    | sort/index|[samtools](https://github.com/samtools/samtools)
-|6    | compute SV|[sver](https://github.com/vanNul/sver)
+|6    | compute SV|[svscan](https://github.com/vanNul/svscan)
 ###### ps. all the software depends on API of htslib1.9, you'd better use htslib1.9 based softwares 
 
-#### What reference genome version does sver use?  
+#### What reference genome version does svscan use?  
     Both hg19 and hg38 will work as long as the annotation database file is the same version.  
 
 #### How to prepare annotation database file?  
     check `svtools annodb` for help
 
-#### How does sver work?  
-![sver algorithm](./fig/sver.svg)
+#### How does svscan work?  
+![svscan algorithm](./fig/svscan.svg)
 
 #### To do list
 - [x] calculate the allele counts more precisely, especially for duplication events.
@@ -86,7 +81,6 @@
 - [x] add fusion filter and report program.
 - [x] add filter module to filter out known structural variants or keep some import structural variants.
 - [ ] process some complicated structural variant events such as complicated insertion.
-- [ ] support discovery of ITX(intra chromosome translocation).
 - [ ] differenctiate ITX(intra chromosome translocation) and DUP(duplication) events.
 - [ ] use local assembly to assist discover of more complicated structural variants.
 - [ ] use single unmapped reads to capture more structural variants.

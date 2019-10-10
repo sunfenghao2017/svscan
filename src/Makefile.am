@@ -7,7 +7,7 @@ svscan_SOURCES = aligner.cpp breakpoint.cpp annotator.cpp dpbamrecord.cpp juncti
 
 svtools_LDADD = $(LDFLAGS)
 
-svtools_SOURCES = svtools.cpp svbam.cpp svannodb.cpp fusewlist.cpp fusionreporter.cpp svmerge.cpp svfilter.cpp fusionopt.cpp
+svtools_SOURCES = svtools.cpp svbam.cpp svannodb.cpp fusewlist.cpp fusionreporter.cpp svmerge.cpp svfilter.cpp fusionopt.cpp svrnadb.cpp
 
 clean:
 	rm -rf .deps Makefile.in Makefile *.o ${bin_PROGRAMS}

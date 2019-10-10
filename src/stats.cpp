@@ -160,7 +160,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         matchThreshold = mOpt->filterOpt->mFlankQuality * refProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * refProbe.size() * alnCfg.mMisMatch;
                         double scoreRef = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
-                        if(scoreRef > 1 || scoreAlt > 1){
+                        if(scoreRef > mOpt->filterOpt->mMinSRResScore || scoreAlt > mOpt->filterOpt->mMinSRResScore){
                             if(scoreRef > scoreAlt){
                                 ++mRefAlignedReadCount[itbp->mID];
                                 uint8_t* qual = bam_get_qual(b);

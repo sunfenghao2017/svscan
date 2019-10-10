@@ -16,6 +16,7 @@ Options::Options(){
     softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
     libInfo = NULL;
     contigNum = 0;
+    rnamode = false;
 }
 
 Options::~Options(){
@@ -64,6 +65,8 @@ void Options::update(int argc, char** argv){
             }
         }
     }
+    // adjust sr score
+    if(rnamode) filterOpt->mMinSRResScore = 0.8;
     // update contigNum
     contigNum = libInfo->mContigNum;
     // construct threadpool

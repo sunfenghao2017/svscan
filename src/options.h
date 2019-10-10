@@ -106,6 +106,7 @@ struct SVFilter{
     int32_t mMinDupRpt = 100;          ///< minimum duplication size to report
     int32_t mMinInsRpt = 15;           ///< minimum insertion size to report
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
+    float mMinSRResScore = 1;          ///< minimal alignment score for SR rescued
 
     /** SVFilter constructor */
     SVFilter(){}
@@ -177,6 +178,7 @@ class Options{
         FusionOptions* fuseOpt;       ///< fusion report options
         MSAOpt* msaOpt;               ///< MSA options
         Software* softEnv;            ///< softare environment option
+        bool rnamode;                 ///< find rna structural variants
 
     public:
         /** Options constructor */
