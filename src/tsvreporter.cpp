@@ -63,7 +63,7 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
         fw << svs[i].mID << "\t" << svs[i].mSVT << "\t" << gl[i].mFuseGene.status;
         if(mOpt->rnamode){
             // ts1Name ts1Pos ts2Name ts2Pos
-            fw << "\t" << svs[i].mChr1 << "\t" << svs[i].mSVStart << "\t" << svs[i].mChr2 << "\t" << svs[i].mSVEnd << "\n";
+            fw << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\n";
         }else{
             fw << "\n";
         }
@@ -299,9 +299,9 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
     oss << gl[i].mFuseGene.status;              // fsMask
     if(mOpt->rnamode){
         oss << "\t";
-        oss << svs[i].mChr1 << "\t";            // ts1Name
+        oss << svs[i].mNameChr1 << "\t";            // ts1Name
         oss << svs[i].mSVStart << "\t";         // ts2Pos
-        oss << svs[i].mChr2 << "\t";            // ts2Name
+        oss << svs[i].mNameChr2 << "\t";            // ts2Name
         oss << svs[i].mSVEnd << "\n";           // ts2Pos
     }else{
         oss << "\n";

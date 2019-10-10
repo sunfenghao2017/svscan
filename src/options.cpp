@@ -65,6 +65,8 @@ void Options::update(int argc, char** argv){
             }
         }
     }
+    // adjust sr score
+    if(rnamode) filterOpt->mMinSRResScore = 0.8;
     // update contigNum
     contigNum = libInfo->mContigNum;
     // construct threadpool
