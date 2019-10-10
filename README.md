@@ -80,6 +80,7 @@
 - [x] annotate fusion gene if both breakpoint spanning a gene.
 - [x] add fusion filter and report program.
 - [x] add filter module to filter out known structural variants or keep some import structural variants.
+- [ ] rna false positive DEL from alternative splice should be filtered.
 - [ ] process some complicated structural variant events such as complicated insertion.
 - [ ] differenctiate ITX(intra chromosome translocation) and DUP(duplication) events.
 - [ ] use local assembly to assist discover of more complicated structural variants.
