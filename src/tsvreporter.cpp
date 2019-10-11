@@ -123,6 +123,9 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene.status |= FUSION_FTOOSMALLSIZE;
             }
         }
+        if(svs[i].mSVT == 2 && mOpt->rnamode){
+            gl[i].mFuseGene.status |= FUSION_FTOOSMALLSIZE;
+        }
         if(svs[i].mPrecise){
             gl[i].mFuseGene.status |= FUSION_FPRECISE;
             if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
