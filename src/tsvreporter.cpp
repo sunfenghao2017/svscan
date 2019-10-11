@@ -257,6 +257,7 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         }
         oss <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ";") << "\t";
         // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
+        oss << gl[i].mGene2 << "\t";
         if(mOpt->rnamode){
             oss << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t";
         }else{
