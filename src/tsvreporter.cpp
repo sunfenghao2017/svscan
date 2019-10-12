@@ -173,29 +173,19 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
         }
     }
     // mask primary and supplementary
-    uint32_t REPORT_REQUEST = (FUSION_FINDB | FUSION_FHOTGENE);
     uint32_t ALL_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR | FUSION_FFBG);
     uint32_t PRIMARY_DROP_MASK = (FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FLOWCOMPLEX | FUSION_FTOOSMALLSIZE);
     for(uint32_t i = 0; i < gl.size(); ++i){
-        if(!(gl[i].mFuseGene.status & FUSION_FALLGENE)) continue;
-        if(gl[i].mFuseGene.status & ALL_DROP_MASK) continue;
-        if(gl[i].mFuseGene.status & REPORT_REQUEST){
-            if((gl[i].mFuseGene.status & FUSION_FNORMALCATDIRECT) && 
-               (gl[i].mFuseGene.status & FUSION_FCOMMONHOTDIRECT)){
-                if(gl[i].mFuseGene.status & FUSION_FINDB){
-                    gl[i].mFuseGene.status |= FUSION_FPRIMARYR;
-                }
-                if(!(gl[i].mFuseGene.status & PRIMARY_DROP_MASK)){
-                    gl[i].mFuseGene.status |= FUSION_FPRIMARYR;
-                }
-            }else{
-                if(gl[i].mFuseGene.status & FUSION_FINDB){
-                    gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY;
-                }
-                if(!(gl[i].mFuseGene.status & PRIMARY_DROP_MASK)){
-                    gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY;
-                }
-            }
+        if(!(gl[i].mFuseGene.status & FUSION_FALLGENE)) continue; // drop non gene fusions
+        if(gl[i].mFuseGene.status & ALL_DROP_MASK) continue; // drop black gene/pair, background fusions
+        if(!(gl[i].mFuseGene.status & FUSION_FHOTGENE)) continue; // only keep fusion with one partner in white list
+        if((gl[i].mFuseGene.status & FUSION_FNORMALCATDIRECT) && // normal connection of transcript
+           (gl[i].mFuseGene.status & FUSION_FCOMMONHOTDIRECT) && // normal fusion partner connection direction
+           (gl[i].mFuseGene.status & FUSION_FINDB) && // know in database
+           (!(gl[i].mFuseGene.status & PRIMARY_DROP_MASK))){ // pass PRIMARY_DROP_MASK
+            gl[i].mFuseGene.status |= FUSION_FPRIMARYR; // reported as primary
+        }else{
+            gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY; // reported as secondary
         }
     }
 }
