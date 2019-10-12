@@ -110,6 +110,7 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
 void Options::getValidRegion(){
     samFile* fp = sam_open(bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
+    hts_idx_t* idx = sam_index_load(fp, bamfile.c_str());
     validRegions.resize(h->n_targets);
     // Parse valid region if exists
     if(!reg.empty()){
@@ -123,7 +124,12 @@ void Options::getValidRegion(){
         }
     }else{// Set valid region to whole genome if valid region list does not exists
         for(int32_t i = 0; i < h->n_targets; ++i){
-            validRegions[i].insert({0, (int32_t)h->target_len[i] - 1});
+            uint64_t mapped = 0, unmapped = 0;
+            if(hts_idx_get_stat(idx, i, &mapped, &unmapped) >= 0){
+                if(mapped > 0){
+                    validRegions[i].insert({0, (int32_t)h->target_len[i] - 1});
+                }
+            }
         }
     }
     // Clean-up
