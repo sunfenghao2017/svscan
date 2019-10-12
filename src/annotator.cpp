@@ -183,10 +183,14 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
     char strand1 = '.';
     char strand2 = '.';
     std::vector<TrsRec> trsList;
+    std::stringstream regs;
     for(uint32_t i = 0; i < svs.size(); ++i){
         trsList.clear();
         int cnt[2] = {0, 0};
-        hts_itr_t* itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr1.c_str()), svs[i].mSVStart, svs[i].mSVStart + 1);
+        regs.clear();
+        regs.str("");
+        regs << svs[i].mNameChr1 << ":" << svs[i].mSVStart << "-" << svs[i].mSVStart + 1;
+        hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             TrsRec tr;
@@ -220,7 +224,10 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
         cnt[1] = 0;
         tbx_itr_destroy(itr);
         trsList.clear();
-        itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr2.c_str()), svs[i].mSVEnd, svs[i].mSVEnd + 1);
+        regs.clear();
+        regs.str("");
+        regs << svs[i].mNameChr2 << ":" << svs[i].mSVEnd << "-" << svs[i].mSVEnd + 1;
+        itr = tbx_itr_querys(tbx, regs.str().c_str());
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             TrsRec tr;
@@ -266,9 +273,13 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     std::vector<TrsRec> trsList;
     std::string strand1, strand2;
+    std::stringstream regs;
     for(uint32_t i = 0; i < svs.size(); ++i){
         trsList.clear();
-        hts_itr_t* itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr1.c_str()), svs[i].mSVStart, svs[i].mSVStart + 1);
+        regs.clear();
+        regs.str("");
+        regs << svs[i].mNameChr1 << ":" << svs[i].mSVStart << "-" << svs[i].mSVStart + 1;
+        hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             TrsRec tr;
@@ -289,7 +300,10 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
         for(auto& e: trsList) gl[i].mTrans1.push_back(e.toStr());
         tbx_itr_destroy(itr);
         trsList.clear();
-        itr = tbx_itr_queryi(tbx, tbx_name2id(tbx, svs[i].mNameChr2.c_str()), svs[i].mSVEnd, svs[i].mSVEnd + 1);
+        regs.clear();
+        regs.str("");
+        regs << svs[i].mNameChr2 << ":" << svs[i].mSVEnd << "-" << svs[i].mSVEnd + 1;
+        itr = tbx_itr_querys(tbx, regs.str().c_str());
         while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
             util::split(rec.s, vstr, "\t");
             TrsRec tr;
@@ -298,6 +312,7 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
             tr.unit = vstr[3];
             tr.number = vstr[4];
             tr.name = vstr[0];
+            tr.chr = vstr[6];
             trsList.push_back(tr);
             gl[i].mGene2 = vstr[5];
             gl[i].mChr2 = vstr[6];
