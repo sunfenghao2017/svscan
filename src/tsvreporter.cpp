@@ -182,10 +182,16 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
         if(gl[i].mFuseGene.status & REPORT_REQUEST){
             if((gl[i].mFuseGene.status & FUSION_FNORMALCATDIRECT) && 
                (gl[i].mFuseGene.status & FUSION_FCOMMONHOTDIRECT)){
+                if(gl[i].mFuseGene.status & FUSION_FINDB){
+                    gl[i].mFuseGene.status |= FUSION_FPRIMARYR;
+                }
                 if(!(gl[i].mFuseGene.status & PRIMARY_DROP_MASK)){
                     gl[i].mFuseGene.status |= FUSION_FPRIMARYR;
                 }
             }else{
+                if(gl[i].mFuseGene.status & FUSION_FINDB){
+                    gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY;
+                }
                 if(!(gl[i].mFuseGene.status & PRIMARY_DROP_MASK)){
                     gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY;
                 }

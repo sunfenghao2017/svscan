@@ -91,6 +91,13 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
             if(++nread > libInfo->mMaxSample) break;
         }
     }
+    if(!nread){
+        sam_close(fp);
+        bam_destroy1(b);
+        bam_hdr_destroy(h);
+        delete libInfo;
+        util::errorExit("Bam is empty, quit now!!!:");
+    }
     libInfo->mReadLen = statutil::median(readLen);
     libInfo->mMedian = statutil::median(vecISize);
     libInfo->mMad = statutil::mad(vecISize, libInfo->mMedian);
