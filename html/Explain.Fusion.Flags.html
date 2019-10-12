@@ -477,7 +477,8 @@
         ["fusion af too low", 0x4000],
         ["fusion support too small", 0x8000],
         ["fusion breakpoint depth too low", 0x10000],
-        ["fusion breakpoint is precise with concensus sequnce", 0x20000]];
+        ["fusion breakpoint is precise with concensus sequnce", 0x20000],
+        ["fusion event is computed from rna seq data", 0x40000]];
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary  = ""; 
@@ -568,6 +569,7 @@
                     <br><input type="checkbox" name="cb15" id="cb15" onclick="checkboxClicked();"> &nbsp; fusion support too small
                     <br><input type="checkbox" name="cb16" id="cb16" onclick="checkboxClicked();"> &nbsp; fusion breakpoint depth too low
                     <br><input type="checkbox" name="cb17" id="cb17" onclick="checkboxClicked();"> &nbsp; fusion breakpoint is precise with concensus sequnce
+                    <br><input type="checkbox" name="cb18" id="cb18" onclick="checkboxClicked();"> &nbsp; fusion event is computed from rna seq data
                 </td>
                 <td style="text-align: left; vertical-align: top; width: 50%">
                     <strong>Summary:</strong><br>

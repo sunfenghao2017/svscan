@@ -73,9 +73,11 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
 
 void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
+    // mask rna/dna calling 
     // mask hot gene status
     std::map<std::string, std::set<std::string>> fpairs;
     for(uint32_t i = 0; i < gl.size(); ++i){
+        if(mOpt->rnamode) gl[i].mFuseGene.status |= FUSION_FCALLFROMRNASEQ;
         if((gl[i].mFuseGene.status & FUSION_FALLGENE)){
             if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)){
                 gl[i].mFuseGene.status |= FUSION_FHOTGENE;
@@ -122,9 +124,6 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             if(svutil::trsUnitIsNear(gl[i].mTrans1, gl[i].mTrans2, 1)){
                 gl[i].mFuseGene.status |= FUSION_FTOOSMALLSIZE;
             }
-        }
-        if(svs[i].mSVT == 2 && mOpt->rnamode){
-            gl[i].mFuseGene.status |= FUSION_FTOOSMALLSIZE;
         }
         if(svs[i].mPrecise){
             gl[i].mFuseGene.status |= FUSION_FPRECISE;
@@ -175,6 +174,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     // mask primary and supplementary
     uint32_t ALL_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR | FUSION_FFBG);
     uint32_t PRIMARY_DROP_MASK = (FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FLOWCOMPLEX | FUSION_FTOOSMALLSIZE);
+    if(mOpt->rnamode) PRIMARY_DROP_MASK |= FUSION_FINSAMEGENE; // rna sv event in same transcript should not appear in primary report
     for(uint32_t i = 0; i < gl.size(); ++i){
         if(!(gl[i].mFuseGene.status & FUSION_FALLGENE)) continue; // drop non gene fusions
         if(gl[i].mFuseGene.status & ALL_DROP_MASK) continue; // drop black gene/pair, background fusions

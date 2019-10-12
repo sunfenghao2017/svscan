@@ -186,6 +186,7 @@
 #define FUSION_FLOWSUPPORT      0x8000  ///< this fusion event has too low support
 #define FUSION_FLOWDEPTH        0x10000 ///< this fusion event has too low depth around breakpoint
 #define FUSION_FPRECISE         0x20000 ///< this fusion event has precise breakpoint and concensus sequence
+#define FUSION_FCALLFROMRNASEQ  0x40000 ///< this fusion event is called from rna seq
 
 /** fusion flag type */
 typedef uint32_t TFUSION_FLAG;
