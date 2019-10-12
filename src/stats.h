@@ -266,6 +266,26 @@ class GeneInfo{
 
         /** default destructor */
         ~GeneInfo(){}
+
+        /** operator output GeneInfo to stream
+         * @param os reference of ostream
+         * @param gi reference of GeneInfo
+         * @return reference of ostream
+         */
+        inline friend std::ostream& operator<<(std::ostream& os, const GeneInfo& gi){
+            os << "Gene1: " << gi.mGene1 << "\n";
+            os << "Gene2: " << gi.mGene2 << "\n";
+            os << "Starnd1: " << gi.mStrand1 << "\n";
+            os << "Strand2: " << gi.mStrand2 << "\n";
+            os << "FuseGene: " << gi.mFuseGene << "\n";
+            os << "Trans1: " << util::join(gi.mTrans1, ";") << "\n";
+            os << "Trans2: " << util::join(gi.mTrans2, ";") << "\n";
+            os << "Pos1: " << gi.mPos1 << "\n";
+            os << "Pos2: " << gi.mPos2 << "\n";
+            os << "Chr1: " << gi.mChr1 << "\n";
+            os << "Chr2: " << gi.mChr2 << "\n";
+            return os;
+        }
 };
 
 typedef std::vector<GeneInfo> GeneInfoList;
