@@ -17,7 +17,7 @@ struct FuseFlags{
         flagmap[FUSION_FFBG] = "fusion pair in background";
         flagmap[FUSION_FBLACKGENE] = "partner in blackgene list";
         flagmap[FUSION_FLOWCOMPLEX] = "partner has low complexity sequence";
-        flagmap[FUSION_FPRIMARYR] = "fusion should be reported as primary";
+        flagmap[FUSION_FPRIMARY] = "fusion should be reported as primary";
         flagmap[FUSION_FSUPPLEMENTARY] = "fusion should be reported as supplementary";
         flagmap[FUSION_FTOOSMALLSIZE] = "fusion size too small";
         flagmap[FUSION_FINSAMEGENE] = "fusion in same gene";

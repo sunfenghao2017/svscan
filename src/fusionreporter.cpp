@@ -35,7 +35,7 @@ void FusionReporter::report(){
     fw << header;
     fs << header;
     for(auto& e: fuseList){
-        if(e.fsmask & FUSION_FPRIMARYR){
+        if(e.fsmask & FUSION_FPRIMARY){
             fw << e;
         }
         if(e.fsmask & FUSION_FSUPPLEMENTARY){
@@ -171,15 +171,15 @@ void FusionReporter::sv2fs(){
         fsr.svid = vstr[29];                  // svID
         fsr.svint = vstr[30];                 // svInt
         if(fsmask & ALL_DROP_MASK){
-            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
+            fsmask &= (!(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
         }
         if(fsmask & REPORT_REQUEST){
             if((fsmask & FUSION_FNORMALCATDIRECT) &&
                (fsmask & FUSION_FCOMMONHOTDIRECT)){
                 if(!(fsmask & PRIMARY_DROP_MASK)){
-                    fsmask |= FUSION_FPRIMARYR;
+                    fsmask |= FUSION_FPRIMARY;
                 }else{
-                    fsmask &= (!FUSION_FPRIMARYR);
+                    fsmask &= (!FUSION_FPRIMARY);
                 }
             }else{
                 if(!(fsmask & PRIMARY_DROP_MASK)){
@@ -189,13 +189,13 @@ void FusionReporter::sv2fs(){
                 }
             }
         }else{
-            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
+            fsmask &= (!(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
         }
         if((fsmask & fuseOpt->mFsMaskInclude) != fuseOpt->mFsMaskInclude){
-            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
+            fsmask &= (!(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
         }
         if(fsmask & fuseOpt->mFsMaskExclude){
-            fsmask &= (!(FUSION_FPRIMARYR | FUSION_FSUPPLEMENTARY));
+            fsmask &= (!(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
         }
         fsr.fsmask = fsmask;                  // fsMask
         fuseList.push_back(fsr);

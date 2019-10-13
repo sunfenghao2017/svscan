@@ -114,10 +114,13 @@ void SVScanner::scanDPandSR(){
     getDPSVRef(mergedSVs, mOpt);
     std::sort(mergedSVs.begin(), mergedSVs.end());
     util::loginfo("End fetching reference of SV supported by DP only");
-    // Get Allele info of SVs
+    // Get Allele info of SVs and updatev SVsupporting contigs
+    mOpt->svRefID.clear();
     for(uint32_t i = 0; i < mergedSVs.size(); ++i){
         mergedSVs[i].addAlleles();
         mergedSVs[i].mID = i;
+        mOpt->svRefID.insert(mergedSVs[i].mChr1);
+        mOpt->svRefID.insert(mergedSVs[i].mChr2);
     }
     // open bamout for write
     if(!mOpt->bamout.empty()){

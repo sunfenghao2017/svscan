@@ -171,21 +171,21 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }
     }
-    // mask primary and supplementary
-    uint32_t ALL_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR | FUSION_FFBG);
-    uint32_t PRIMARY_DROP_MASK = (FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FLOWCOMPLEX | FUSION_FTOOSMALLSIZE);
-    if(mOpt->rnamode) PRIMARY_DROP_MASK |= FUSION_FINSAMEGENE; // rna sv event in same transcript should not appear in primary report
+    // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
+    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
+                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWDEPTH);
+    if(mOpt->rnamode) FUSION_DROP_MASK |= FUSION_FINSAMEGENE;
+    // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
+    TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
+    // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
+    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FALLGENE | FUSION_FHOTGENE);
     for(uint32_t i = 0; i < gl.size(); ++i){
-        if(!(gl[i].mFuseGene.status & FUSION_FALLGENE)) continue; // drop non gene fusions
-        if(gl[i].mFuseGene.status & ALL_DROP_MASK) continue; // drop black gene/pair, background fusions
-        if(!(gl[i].mFuseGene.status & FUSION_FHOTGENE)) continue; // only keep fusion with one partner in white list
-        if((gl[i].mFuseGene.status & FUSION_FNORMALCATDIRECT) && // normal connection of transcript
-           (gl[i].mFuseGene.status & FUSION_FCOMMONHOTDIRECT) && // normal fusion partner connection direction
-           (gl[i].mFuseGene.status & FUSION_FINDB) && // know in database
-           (!(gl[i].mFuseGene.status & PRIMARY_DROP_MASK))){ // pass PRIMARY_DROP_MASK
-            gl[i].mFuseGene.status |= FUSION_FPRIMARYR; // reported as primary
+        if(gl[i].mFuseGene.status & FUSION_DROP_MASK) continue;
+        if((gl[i].mFuseGene.status & FUSION_KEEP_MASK) != FUSION_KEEP_MASK) continue;
+        if((gl[i].mFuseGene.status & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
+            gl[i].mFuseGene.status |= FUSION_FPRIMARY;
         }else{
-            gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY; // reported as secondary
+            gl[i].mFuseGene.status |= FUSION_FSUPPLEMENTARY;
         }
     }
 }
@@ -208,7 +208,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     fw << header;
     fs << header;
     for(uint32_t i = 0; i < gl.size(); ++i){
-        if(gl[i].mFuseGene.status & FUSION_FPRIMARYR){
+        if(gl[i].mFuseGene.status & FUSION_FPRIMARY){
             fw << toFuseRec(svs, gl, i);
         }
         if(gl[i].mFuseGene.status & FUSION_FSUPPLEMENTARY){
