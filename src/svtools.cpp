@@ -58,15 +58,15 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--whitelist", fuserptOpt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--blacklist", fuserptOpt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile);
     // dna annodb
-    SVAnnoDBOpt* annDBOpt = new SVAnnoDBOpt();
+    SVDNADBOpt* annDBOpt = new SVDNADBOpt();
     CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");
-    panndb->add_option("-i,--in", annDBOpt->refGeneDB, "refgene database with transcript version added")->required(true)->check(CLI::ExistingFile);
+    panndb->add_option("-i,--in", annDBOpt->refSeqDB, "refseq database with transcript version added")->required(true)->check(CLI::ExistingFile);
     panndb->add_option("-m,--mtrs", annDBOpt->primaryTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
     panndb->add_option("-o,--out", annDBOpt->svAnnoDB, "output file path of sv annotation db", true);
     // rna annodb
     SVRNADBOpt* rnaDBOpt = new SVRNADBOpt();
     CLI::App* prnadb = app.add_subcommand("rnadb", "prepare RNA sv annotation database for svscan");
-    prnadb->add_option("-i,--in", rnaDBOpt->refGeneDB, "refgene database with transcript version added")->required(true)->check(CLI::ExistingFile);
+    prnadb->add_option("-i,--in", rnaDBOpt->refSeqDB, "refseq database with transcript version added")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-m,--mtrs", rnaDBOpt->primaryTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-g,--genome", rnaDBOpt->genome, "genome reference fasta file path")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-a,--anno", rnaDBOpt->svAnnoDB, "output file path of sv annotation db", true);

@@ -6,17 +6,40 @@ void SVRNADBOpt::prepDB(){
     std::ifstream fr(primaryTrsList);
     std::string tmpStr;
     while(std::getline(fr, tmpStr)) mainTrs.insert(tmpStr);
-    BGZF* ifp = bgzf_open(refGeneDB.c_str(), "rb");
-    BGZF* ofa = bgzf_open(svAnnoDB.c_str(), "wb");
-    BGZF* off = bgzf_open(refMrna.c_str(), "wb");
-    faidx_t* fai = fai_load(genome.c_str());
+    // get gene trsncript map set
+    std::map<std::string, std::set<std::string>> gene2TrsSet;
+    BGZF* ifp = bgzf_open(refSeqDB.c_str(), "rb");
     kstring_t str = {0, 0, 0};
     bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> vstr;
+    std::map<std::string, std::string> outGeneCncMap;
+    while(bgzf_getline(ifp, '\n', &str) > 0){
+        util::split(str.s, vstr, "\t");
+        std::string trs = vstr[1];
+        std::string gene = vstr[12];
+        gene2TrsSet[gene].insert(trs);
+        if(mainTrs.find(trs) != mainTrs.end()){
+            outGeneCncMap[gene] = trs;
+        }
+    }
+    for(auto& e: gene2TrsSet){
+        if(outGeneCncMap.find(e.first) == outGeneCncMap.end()){
+            for(auto& f: e.second){
+                outGeneCncMap[e.first] = f;
+                break;
+            }
+        }
+    }
+    // output selected gene with its main transcript database
+    bgzf_close(ifp);
+    ifp = bgzf_open(refSeqDB.c_str(), "rb");
+    BGZF* ofa = bgzf_open(svAnnoDB.c_str(), "wb");
+    BGZF* off = bgzf_open(refMrna.c_str(), "wb");
+    faidx_t* fai = fai_load(genome.c_str());
+    bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> istr, estr;
     std::vector<int32_t> iint, eint;
     std::stringstream oss;
-    std::set<std::string> gotgene;
     // chr start end strand feature count trsname tgenename trsversion
     while(bgzf_getline(ifp, '\n', &str) > 0){
         oss.str(""); 
@@ -31,10 +54,8 @@ void SVRNADBOpt::prepDB(){
         int32_t trsEnd = std::atoi(vstr[5].c_str()) - 1;
         int32_t cdsStart = std::atoi(vstr[6].c_str());
         int32_t cdsEnd = std::atoi(vstr[7].c_str()) - 1;
-        if(mainTrs.find(trs) == mainTrs.end()) continue; // only fetch canonical transcripts
         if(!faidx_has_seq(fai, chr.c_str())) continue; // only fetch chr in genome
-        if(gotgene.find(gene) != gotgene.end()) continue; // only process one
-        else gotgene.insert(gene);
+        if(outGeneCncMap[gene] != trs) continue; // only process computed canonical transcripts
         // exon range (dna)
         util::split(vstr[9], istr, ",");
         util::split(vstr[10], estr, ",");

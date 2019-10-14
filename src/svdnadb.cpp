@@ -1,12 +1,12 @@
-#include "svannodb.h"
+#include "svdnadb.h"
 
-void SVAnnoDBOpt::prepDB(){
+void SVDNADBOpt::prepDB(){
     // parse main transcripts
     std::set<std::string> mainTrs;
     std::ifstream fr(primaryTrsList);
     std::string tmpStr;
     while(std::getline(fr, tmpStr)) mainTrs.insert(tmpStr);
-    BGZF* ifp = bgzf_open(refGeneDB.c_str(), "rb");
+    BGZF* ifp = bgzf_open(refSeqDB.c_str(), "rb");
     BGZF* ofp = bgzf_open(svAnnoDB.c_str(), "wb");
     kstring_t str = {0, 0, 0};
     bgzf_getline(ifp, '\n', &str);

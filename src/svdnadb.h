@@ -12,20 +12,20 @@
 #include <htslib/kstring.h>
 #include "software.h"
 
-struct SVAnnoDBOpt{
-    std::string refGeneDB;      ///< refgene database with transcript version added
+struct SVDNADBOpt{
+    std::string refSeqDB;      ///< refseq database with transcript version added
     std::string primaryTrsList; ///< canonical transcripts list
     std::string svAnnoDB;       ///< sv annotation database output file
     Software* softEnv;          ///< software env
     
-    SVAnnoDBOpt(){
+    SVDNADBOpt(){
         softEnv = new Software();
         softEnv->cmp += "version: " + softEnv->version + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
-        svAnnoDB = "./svandb.gz";
+        svAnnoDB = "./dnaAnno.gz";
     }
 
-    ~SVAnnoDBOpt(){
+    ~SVDNADBOpt(){
     }
 
     void update(int argc, char** argv){
