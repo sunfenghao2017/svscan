@@ -40,6 +40,7 @@ void SVRNADBOpt::prepDB(){
     std::vector<std::string> istr, estr;
     std::vector<int32_t> iint, eint;
     std::stringstream oss;
+    std::set<std::string> processedTrs;
     // chr start end strand feature count trsname tgenename trsversion
     while(bgzf_getline(ifp, '\n', &str) > 0){
         oss.str(""); 
@@ -56,6 +57,8 @@ void SVRNADBOpt::prepDB(){
         int32_t cdsEnd = std::atoi(vstr[7].c_str()) - 1;
         if(!faidx_has_seq(fai, chr.c_str())) continue; // only fetch chr in genome
         if(outGeneCncMap[gene] != trs) continue; // only process computed canonical transcripts
+        if(processedTrs.find(trs) != processedTrs.end()) continue;
+        else processedTrs.insert(trs); // only process each trascript once
         // exon range (dna)
         util::split(vstr[9], istr, ",");
         util::split(vstr[10], estr, ",");
