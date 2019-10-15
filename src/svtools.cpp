@@ -61,16 +61,20 @@ int main(int argc, char** argv){
     SVDNADBOpt* annDBOpt = new SVDNADBOpt();
     CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");
     panndb->add_option("-i,--in", annDBOpt->refSeqDB, "refseq database with transcript version added")->required(true)->check(CLI::ExistingFile);
-    panndb->add_option("-m,--mtrs", annDBOpt->primaryTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
+    panndb->add_option("-m,--mtrs", annDBOpt->cncTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
     panndb->add_option("-o,--out", annDBOpt->svAnnoDB, "output file path of sv annotation db", true);
     // rna annodb
     SVRNADBOpt* rnaDBOpt = new SVRNADBOpt();
     CLI::App* prnadb = app.add_subcommand("rnadb", "prepare RNA sv annotation database for svscan");
     prnadb->add_option("-i,--in", rnaDBOpt->refSeqDB, "refseq database with transcript version added")->required(true)->check(CLI::ExistingFile);
-    prnadb->add_option("-m,--mtrs", rnaDBOpt->primaryTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
+    prnadb->add_option("-m,--mtrs", rnaDBOpt->cncTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-g,--genome", rnaDBOpt->genome, "genome reference fasta file path")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-a,--anno", rnaDBOpt->svAnnoDB, "output file path of sv annotation db", true);
     prnadb->add_option("-r,--refmrna", rnaDBOpt->refMrna, "output file path of refmrna fasta", true);
+    prnadb->add_option("-c,--cdsbed", rnaDBOpt->bedCDS, "output file path of cds bed refion", true);
+    prnadb->add_option("-u,--unitbed", rnaDBOpt->bedUnits, "output file path of exon/utr units", true);
+    prnadb->add_option("-l,--utr3len", rnaDBOpt->utr3len, "outut file path of 3'utr length", true);
+    prnadb->add_flag("-n,--keepncrna", rnaDBOpt->keepNCRna, "keep ncrna gene in final results");
     //wlist
     FuseWOpt* fwOpt = new FuseWOpt();
     CLI::App* pfsw = app.add_subcommand("wlist", "prepare whitelist for svscan");

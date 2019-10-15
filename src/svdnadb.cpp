@@ -3,7 +3,7 @@
 void SVDNADBOpt::prepDB(){
     // parse main transcripts
     std::set<std::string> mainTrs;
-    std::ifstream fr(primaryTrsList);
+    std::ifstream fr(cncTrsList);
     std::string tmpStr;
     while(std::getline(fr, tmpStr)) mainTrs.insert(tmpStr);
     BGZF* ifp = bgzf_open(refSeqDB.c_str(), "rb");

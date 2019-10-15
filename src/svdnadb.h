@@ -14,7 +14,7 @@
 
 struct SVDNADBOpt{
     std::string refSeqDB;      ///< refseq database with transcript version added
-    std::string primaryTrsList; ///< canonical transcripts list
+    std::string cncTrsList; ///< canonical transcripts list
     std::string svAnnoDB;       ///< sv annotation database output file
     Software* softEnv;          ///< software env
     

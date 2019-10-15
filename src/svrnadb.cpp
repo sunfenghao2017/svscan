@@ -3,7 +3,7 @@
 void SVRNADBOpt::prepDB(){
     // parse main transcripts
     std::set<std::string> mainTrs;
-    std::ifstream fr(primaryTrsList);
+    std::ifstream fr(cncTrsList);
     std::string tmpStr;
     while(std::getline(fr, tmpStr)) mainTrs.insert(tmpStr);
     // get gene trsncript map set
@@ -33,20 +33,27 @@ void SVRNADBOpt::prepDB(){
     // output selected gene with its main transcript database
     bgzf_close(ifp);
     ifp = bgzf_open(refSeqDB.c_str(), "rb");
-    BGZF* ofa = bgzf_open(svAnnoDB.c_str(), "wb");
-    BGZF* off = bgzf_open(refMrna.c_str(), "wb");
+    BGZF* ofa = bgzf_open(svAnnoDB.c_str(), "wb"); // annotation db
+    BGZF* off = bgzf_open(refMrna.c_str(), "wb");  // refmrna sequence
+    std::ofstream ofc(bedCDS); // cds bed region
+    std::ofstream ofu(bedUnits); // unit bed region
+    std::ofstream ofl(utr3len); // 3'utr length
     faidx_t* fai = fai_load(genome.c_str());
     bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> istr, estr;
     std::vector<int32_t> iint, eint;
-    std::stringstream oss;
+    std::stringstream aoss; // annotation db record buffer
+    std::stringstream coss; // cds bed region record buffer
+    std::stringstream uoss; // uint bed region buffer
+    std::stringstream loss; // 3'utr length buffer
     std::set<std::string> processedTrs;
     // chr start end strand feature count trsname tgenename trsversion
     while(bgzf_getline(ifp, '\n', &str) > 0){
-        oss.str(""); 
-        oss.clear();
+        aoss.str(""); coss.str(""); uoss.str(""); loss.str("");  
+        aoss.clear(); coss.clear(); uoss.clear(); loss.clear();
         util::split(str.s, vstr, "\t");
         std::string trs = vstr[1];
+        if(!keepNCRna && util::startsWith(trs, "NR")) continue; // drop ncrna if needed
         std::string chr = vstr[2];
         std::string gene = vstr[12];
         std::string version = vstr[16];
@@ -110,34 +117,55 @@ void SVRNADBOpt::prepDB(){
         // generate annotation record for each unit
         if(utr5end > utr5start){ // 5'utr
             // transcriptname rna-start rna-end uint count genename 
-            oss << trs << "\t" << rutr5start << "\t" << rutr5end << "\tutr5\t0\t" << gene << "\t";
+            aoss << trs << "\t" << rutr5start << "\t" << rutr5end << "\tutr5\t0\t" << gene << "\t";
             // chr dna-start dna-end dna-strand trsversion
-            oss << chr << "\t" << utr5start << "\t" << utr5end << "\t" << strand << "\t" << version << "\n";
+            aoss << chr << "\t" << utr5start << "\t" << utr5end << "\t" << strand << "\t" << version << "\n";
+            // unit bed region
+            uoss << trs << "\t" << rutr5start << "\t" << rutr5end << "\tutr5\n";
         }
         if(utr3start < utr3end){ // 3'utr
             // transcriptname rna-start rna-end uint count genename 
-            oss << trs << "\t" << rutr3start << "\t" << rutr3end << "\tutr3\t0\t" << gene << "\t";
+            aoss << trs << "\t" << rutr3start << "\t" << rutr3end << "\tutr3\t0\t" << gene << "\t";
             // chr dna-start dna-end dna-strand trsversion
-            oss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\t" << version << "\n";
+            aoss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\t" << version << "\n";
+            // unit bed region
+            uoss << trs << "\t" << rutr3start << "\t" << rutr3end << "\tutr3\n";
+            // 3'utr length
+            loss << trs << "\t" << (rutr3end - rutr3start) << "\n"; 
         }
         if(strand == "+"){ // forward gene
             int32_t acculen = 0;
             for(uint32_t i = 0; i < exonlens.size(); ++i){
-                oss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (i + 1) << "\t" << gene << "\t";
-                oss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\t" << version << "\n";
+                aoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (i + 1) << "\t" << gene << "\t";
+                aoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\t" << version << "\n";
+                // unit bed region
+                uoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon" << (i + 1) << "\n";
                 acculen += exonlens[i];
             }
         }else{// reverse gene
             int32_t acculen = 0;
             for(int32_t i = exonlens.size() - 1; i >= 0; --i){
-                oss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (exonlens.size() - i) << "\t" << gene << "\t";
-                oss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\t" << version << "\n";
+                aoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (exonlens.size() - i) << "\t" << gene << "\t";
+                aoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\t" << version << "\n";
+                // unit bed region
+                uoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon" << (exonlens.size() - i) << "\n";
                 acculen += exonlens[i];
             }
         }
-        // output str
-        std::string recs = oss.str();
-        assert(bgzf_write(ofa, recs.c_str(), recs.size()) >= 0);
+        // cds bed region
+        coss << trs << "\t" << lutrlen << "\t" << exonttl - (lutrlen + rutrlen) << "\n";
+        // output annotation record
+        std::string arec = aoss.str();
+        assert(bgzf_write(ofa, arec.c_str(), arec.size()) >= 0);
+        // output cds region bed
+        std::string crec = coss.str();
+        ofc << crec;
+        // output uint region bed
+        std::string urec = uoss.str();
+        ofu << urec;
+        // output 3utr length
+        std::string lrec = loss.str();
+        ofl << lrec;
         // fetch trascript sequence
         std::string seqName = ">" + trs + "\n";
         std::string rnaSeq = "";
@@ -156,6 +184,10 @@ void SVRNADBOpt::prepDB(){
         assert(bgzf_write(off, rnaSeq.c_str(), rnaSeq.length()) >= 0);
     }
     bgzf_close(ofa);
+    bgzf_close(off);
+    ofc.close();
+    ofu.close();
+    ofl.close();
     bgzf_close(ifp);
     fai_destroy(fai);
 }
