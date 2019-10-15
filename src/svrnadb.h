@@ -18,6 +18,7 @@ struct SVRNADBOpt{
     std::string refSeqDB;   ///< refseq database with transcript version added
     std::string cncTrsList; ///< canonical transcripts list
     std::string svAnnoDB;   ///< sv annotation database output file
+    std::string gene2trs;   ///< genename to used transcript output file
     std::string refMrna;    ///< refmrna fasta file
     std::string bedCDS;     ///< cds bed region file of each gene
     std::string bedUnits;   ///< exon/utr region file of each gene
@@ -30,6 +31,7 @@ struct SVRNADBOpt{
         softEnv->cmp += "version: " + softEnv->version + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
         svAnnoDB = "./rnaAnno.gz";
+        gene2trs = "./gene2trs.tsv";
         refMrna = "./cncMrna.fa.gz";
         bedCDS = "./cncMrna.cds.bed";
         bedUnits = "./cncMrna.uint.bed";

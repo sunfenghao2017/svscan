@@ -70,6 +70,7 @@ int main(int argc, char** argv){
     prnadb->add_option("-m,--mtrs", rnaDBOpt->cncTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-g,--genome", rnaDBOpt->genome, "genome reference fasta file path")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-a,--anno", rnaDBOpt->svAnnoDB, "output file path of sv annotation db", true);
+    prnadb->add_option("-t,--gene2trs", rnaDBOpt->gene2trs, "output file path of transcript used by each gene", true);
     prnadb->add_option("-r,--refmrna", rnaDBOpt->refMrna, "output file path of refmrna fasta", true);
     prnadb->add_option("-c,--cdsbed", rnaDBOpt->bedCDS, "output file path of cds bed refion", true);
     prnadb->add_option("-u,--unitbed", rnaDBOpt->bedUnits, "output file path of exon/utr units", true);

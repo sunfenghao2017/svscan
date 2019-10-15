@@ -30,6 +30,13 @@ void SVRNADBOpt::prepDB(){
             }
         }
     }
+    // write transcript used by gene to file
+    std::ofstream oft(gene2trs);
+    for(auto& e: outGeneCncMap){
+        if(!keepNCRna && util::startsWith(e.second, "NR")) continue;
+        oft << e.first << "\t" << e.second << "\n";
+    }
+    oft.close();
     // output selected gene with its main transcript database
     bgzf_close(ifp);
     ifp = bgzf_open(refSeqDB.c_str(), "rb");
