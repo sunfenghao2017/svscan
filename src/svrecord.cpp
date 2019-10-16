@@ -14,20 +14,20 @@ bool SVRecord::coordTransform(TBreakPoint& bp, AlignDescriptor& ad, int32_t& fin
         int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
         finalGapStart = bp.mSVStartBeg + (annealed - ad.mRefStart) - 1;
-        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed) - 2;
+        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed) - 1;
         return true;
     }
     if(mSVT == 2 || mSVT == 7){// 5to3
         int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
         finalGapStart = bp.mSVStartBeg + ad.mRefStart;
-        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed) - 2;
+        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed) - 1;
         return true;
     }
     if(mSVT == 3 || mSVT == 8){// 3to5
         int32_t annealed = bp.mSVEndEnd - bp.mSVEndBeg;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
-        finalGapStart = bp.mSVStartBeg + (ad.mRefEnd - annealed) - 2;
+        finalGapStart = bp.mSVStartBeg + (ad.mRefEnd - annealed) - 1;
         finalGapEnd = bp.mSVEndBeg + ad.mRefStart;
         return true;
     }

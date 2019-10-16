@@ -273,8 +273,8 @@ void DPBamRecordSet::searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& c
             SVRecord svr;
             svr.mChr1 = chr1;
             svr.mChr2 = chr2;
-            svr.mSVStart = svStart + 1;
-            svr.mSVEnd = svEnd + 1;
+            svr.mSVStart = svStart;
+            svr.mSVEnd = svEnd;
             svr.mPESupport = clique.size();
             int32_t ciwiggle = std::max(std::abs(wiggle), 50);
             svr.mCiPosLow = -ciwiggle;

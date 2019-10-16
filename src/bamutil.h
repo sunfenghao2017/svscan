@@ -13,6 +13,7 @@
 #include "htslib/sam.h"
 #include "htslib/hts.h"
 #include "htslib/faidx.h"
+#include "htslib/kstring.h"
 
 /** some usefule functions to operate bam file */
 namespace bamutil{
@@ -24,17 +25,27 @@ namespace bamutil{
         return bam_get_qname(b);
     }
     
-    /** get barcode sequence of an alignment record\n
+    /** get string tag sequence of an alignment record\n
      * @param b pointer to bam1_t struct
-     * @return OX tag of b if parsed properly else empty string
+     * @param tag tag name used in bam record
      */
-    inline std::string getBarcode(const bam1_t* b){
-        const char tagBC[2] = {'O', 'X'};
-        uint8_t* dataBC = bam_aux_get(b, tagBC);
-        if(!dataBC){
-            return "";
-        }
+    inline std::string getStrTag(const bam1_t* b, const std::string& tag){
+        uint8_t* dataBC = bam_aux_get(b, tag.c_str());
+        if(!dataBC) return "";
         return bam_aux2Z(dataBC);
+    }
+
+    /** copy an string tag from one alignment record to another
+     * @param from pointer to bam1_t struct
+     * @param to pointer to bam1_t struct
+     * @param tag tag name
+     */
+    inline void setStrTag(const bam1_t* from, bam1_t* to, const std::string& tag){
+        uint8_t* data = bam_aux_get(from, tag.c_str());
+        if(data){
+            std::string val = bam_aux2Z(data);
+            bam_aux_update_str(to, tag.c_str(), val.length() + 1, val.c_str());
+        }
     }
 
     /** get read sequence of an alignment record
@@ -82,10 +93,28 @@ namespace bamutil{
         std::cerr << "R:     " << b->core.tid << ":" << b->core.pos << "\n";
         std::cerr << "M:     " << b->core.mtid << ":" <<  b->core.mpos << "\n";
         std::cerr << "TLEN:  " << b->core.isize << "\n";
+        std::cerr << "FLAG:  " << b->core.flag << "\n";
         std::cerr << "QName: " << getQName(b) << "\n";
         std::cerr << "Cigar: " << getCigar(b) << "\n";
         std::cerr << "Seq:   " << getSeq(b) << "\n";
         std::cerr << "Qual:  " << getQual(b) << std::endl;
+    }
+    
+    /** convert an alignment record to string
+     * @param b pointer to bam1_t struct
+     * @return str representation of b
+     */
+    inline std::string toStr(const bam1_t* b){
+        std::stringstream ss;
+        ss << "R:     " << b->core.tid << ":" << b->core.pos << "\n";
+        ss << "M:     " << b->core.mtid << ":" <<  b->core.mpos << "\n";
+        ss << "TLEN:  " << b->core.isize << "\n";
+        ss << "FLAG:  " << b->core.flag << "\n";
+        ss << "QName: " << getQName(b) << "\n";
+        ss << "Cigar: " << getCigar(b) << "\n";
+        ss << "Seq:   " << getSeq(b) << "\n";
+        ss << "Qual:  " << getQual(b) << "\n";
+        return ss.str();
     }
 
     /** test wheather an alignment record is part of another alignment record
@@ -117,9 +146,8 @@ namespace bamutil{
                     return true;
                 }else if(i == part->core.n_cigar - 2){
                     int opPartNext = isLeft ? bam_cigar_op(cigarDataPart[i + 1]) : bam_cigar_op(cigarDataPart[part->core.n_cigar - 2 - i]);
-                    if(opPartNext != BAM_CHARD_CLIP){
-                        return false;
-                    }
+                    if(opPartNext == BAM_CHARD_CLIP) return true;
+                    else return false;
                 }else{
                     return false;
                 }
@@ -164,6 +192,15 @@ namespace bamutil{
             }
         }
         return -1;
+    }
+
+    /** get rightmost reference position of an alignment record
+     * @param b pointer to bam1_t struct
+     * @return the first position after ending of an alignment
+     */
+    inline int getRightRefPos(const bam1_t* b){
+        if(b->core.pos < 0) return -1;
+        return b->core.pos + bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b));
     }
 
     /** return length of reference consumed in alignment record
@@ -633,6 +670,108 @@ namespace bamutil{
         while((cpos = cigar.find_first_of(BAM_CIGAR_STR, lpos)) != std::string::npos){
             ret.push_back({std::atoi(cigar.substr(lpos, cpos - lpos).c_str()), cigar[cpos]});
             lpos = cpos + 1;
+        }
+    }
+
+    /** update NM and MD tag of an bam record
+     * @param b pointer to bam1_t
+     * @param ref reference seq
+     * @param ref_len reference length
+     */
+    inline void updateMDandNM(bam1_t* b, char* ref, int ref_len){
+        uint8_t *seq = bam_get_seq(b);
+        uint32_t *cigar = bam_get_cigar(b);
+        bam1_core_t *c = &b->core;
+        int i, x, y, u = 0;
+        kstring_t *str;
+        int32_t old_nm_i = -1, nm = 0;
+        str = (kstring_t*)calloc(1, sizeof(kstring_t));
+        for(i = y = 0, x = c->pos; i < (int)c->n_cigar; ++i){
+            int j, l = cigar[i]>>4, op = cigar[i]&0xf;
+            if(op == BAM_CMATCH || op == BAM_CEQUAL || op == BAM_CDIFF){
+                for(j = 0; j < l; ++j){
+                    int c1, c2, z = y + j;
+                    if(x+j >= ref_len || ref[x+j] == '\0') break; // out of bounds
+                    c1 = bam_seqi(seq, z), c2 = seq_nt16_table[(int)ref[x+j]];
+                    if((c1 == c2 && c1 != 15 && c2 != 15) || c1 == 0) { // a match
+                        seq[z/2] &= (z&1)? 0xf0 : 0x0f;
+                        ++u;
+                    }else{
+                        kputw(u, str); kputc(toupper(ref[x+j]), str);
+                        u = 0; ++nm;
+                    }
+                }
+                if(j < l) break;
+                x += l; y += l;
+            }else if(op == BAM_CDEL){
+                kputw(u, str); kputc('^', str);
+                for(j = 0; j < l; ++j){
+                    if(x+j >= ref_len || ref[x+j] == '\0') break;
+                    kputc(toupper(ref[x+j]), str);
+                }
+                u = 0;
+                x += j; nm += j;
+                if(j < l) break;
+            }else if(op == BAM_CINS || op == BAM_CSOFT_CLIP){
+                y += l;
+                if(op == BAM_CINS) nm += l;
+            }else if(op == BAM_CREF_SKIP){
+                x += l;
+            }
+        }
+        kputw(u, str);
+        // update NM
+        if(!(c->flag & BAM_FUNMAP)){
+            uint8_t *old_nm = bam_aux_get(b, "NM");
+            if(old_nm) old_nm_i = bam_aux2i(old_nm);
+            if(!old_nm) bam_aux_append(b, "NM", 'i', 4, (uint8_t*)&nm);
+            else if(nm != old_nm_i){
+                bam_aux_del(b, old_nm);
+                bam_aux_append(b, "NM", 'i', 4, (uint8_t*)&nm);
+            }
+        }
+        // update MD
+        if(!(c->flag & BAM_FUNMAP)){
+            uint8_t *old_md = bam_aux_get(b, "MD");
+            if(!old_md) bam_aux_append(b, "MD", 'Z', str->l + 1, (uint8_t*)str->s);
+            else{
+                int is_diff = 0;
+                if(strlen((char*)old_md+1) == str->l){
+                    for(i = 0; i < (int32_t)str->l; ++i){
+                      if(toupper(old_md[i+1]) != toupper(str->s[i])) break;
+                    }
+                    if(i < (int32_t)str->l) is_diff = 1;
+                }else is_diff = 1;
+                if(is_diff){
+                    bam_aux_del(b, old_md);
+                    bam_aux_append(b, "MD", 'Z', str->l + 1, (uint8_t*)str->s);
+                }
+            }
+        }
+        // release resources
+        free(str->s); free(str);
+    }
+
+    /** update AS tag of an bam record, only changed by match/mismatch
+     * @param b pointer to bam1_t
+     * @param oldNM old nm value
+     * @param ms match score
+     * @param mp mismatch penalty
+     */
+    inline void updateAS(bam1_t* b, int oldNM, int ms, int mp){
+        uint8_t* nmData = bam_aux_get(b, "NM");
+        if(nmData){
+            int newNM = bam_aux2i(nmData);
+            if(oldNM == newNM) return;
+            uint8_t* asData = bam_aux_get(b, "AS");
+            int oldAS = bam_aux2i(asData);
+            int newAS = oldAS;
+            if(oldNM < newNM){
+                newAS -= ((newNM - oldNM) * (mp + ms));
+            }else{
+                newAS += ((oldNM - newNM) * (mp + ms));
+            }
+            if(oldAS != newAS) bam_aux_update_int(b, "AS", oldAS);
         }
     }
 }

@@ -51,9 +51,9 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
         // insBp insSeq
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
         // bp1Trs bp2Trs svID
-        if(gl[i].mTrans1.empty()) fw << ".\t";
+        if(gl[i].mTrans1.empty()) fw << "-\t";
         else fw << util::join(gl[i].mTrans1, ";") << "\t";
-        if(gl[i].mTrans2.empty()) fw << ".\t";
+        if(gl[i].mTrans2.empty()) fw << "-\t";
         else fw << util::join(gl[i].mTrans2, ";") << "\t";
         // svSeq seqBp
         if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t-\t";
@@ -251,7 +251,9 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         }else{
             oss << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t";
         }
-        oss <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ";") << "\t";
+        oss <<  gl[i].mStrand1 << "\t";
+        if(gl[i].mTrans1.empty()) oss << "-\t";
+        else oss << util::join(gl[i].mTrans1, ";") << "\t";
         // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
         oss << gl[i].mGene2 << "\t";
         if(mOpt->rnamode){
@@ -259,7 +261,9 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         }else{
             oss << svs[i].mNameChr2 << "\t" << svs[i].mSVStart << "\t";
         }
-        oss <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ";") << "\t";
+        oss <<  gl[i].mStrand2 << "\t";
+        if(gl[i].mTrans2.empty()) oss << "-\t";
+        else oss << util::join(gl[i].mTrans2, ";") << "\t";
     }else{
         // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
         oss << gl[i].mGene2 << "\t";
@@ -268,7 +272,9 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         }else{
             oss << svs[i].mNameChr2 << "\t" << svs[i].mSVStart << "\t";
         }
-        oss <<  gl[i].mStrand2 << "\t"  << util::join(gl[i].mTrans2, ";") << "\t";
+        oss <<  gl[i].mStrand2 << "\t";
+        if(gl[i].mTrans2.empty()) oss << "-\t";
+        else oss << util::join(gl[i].mTrans2, ";") << "\t";
         // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
         oss << gl[i].mGene1 << "\t";
         if(mOpt->rnamode){
@@ -276,7 +282,9 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         }else{
             oss << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t";
         }
-        oss <<  gl[i].mStrand1 << "\t"  << util::join(gl[i].mTrans1, ";") << "\t";
+        oss <<  gl[i].mStrand1 << "\t";
+        if(gl[i].mTrans1.empty()) oss << "-\t";
+        else oss << util::join(gl[i].mTrans1, ";") << "\t";
     }
     // FusinSequence
     if(svs[i].mSVT == 4) oss << svs[i].mInsSeq << "\t-\t";
@@ -284,27 +292,35 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
     else oss << "-\t-\t";
     if(gl[i].mFuseGene.status & FUSION_FINDB) oss << "Y\t"; // inDB
     else oss << "N\t";
-    oss << svutil::addID(svs[i].mSVT) << "\t";  // svType
+    oss << svutil::addID(svs[i].mSVT) << "\t";     // svType
     if(svs[i].mSVT >= 5) oss << "-\t";
-    else oss << svs[i].mSize << "\t";           // svSize
-    oss << svs[i].mSRSupport << "\t";           // srCount
-    oss << svs[i].mPESupport << "\t";           // dpCount
-    oss << mJctCnts[i].mAltQual.size() << "\t"; // srRescued
-    oss << mSpnCnts[i].mAltQual.size() << "\t"; // dpRescued
-    oss << mJctCnts[i].mRefQual.size() << "\t"; // srRefCount
-    oss <<mSpnCnts[i].mRefQual.size() << "\t";  // dpRefCount
-    oss << svs[i].mBpInsSeq.length() << "\t";   // insBp
+    else oss << svs[i].mSize << "\t";              // svSize
+    oss << svs[i].mSRSupport << "\t";              // srCount
+    oss << svs[i].mPESupport << "\t";              // dpCount
+    oss << mJctCnts[i].mAltQual.size() << "\t";    // srRescued
+    oss << mSpnCnts[i].mAltQual.size() << "\t";    // dpRescued
+    oss << mJctCnts[i].mRefQual.size() << "\t";    // srRefCount
+    oss <<mSpnCnts[i].mRefQual.size() << "\t";     // dpRefCount
+    oss << svs[i].mBpInsSeq.length() << "\t";      // insBp
     if(svs[i].mBpInsSeq.empty()) oss << "-\t";
-    else oss << svs[i].mBpInsSeq << "\t";       // insSeq
-    oss << svs[i].mID << "\t";                  // svID
-    oss << svs[i].mSVT << "\t";                 // svtInt
-    oss << gl[i].mFuseGene.status;              // fsMask
+    else oss << svs[i].mBpInsSeq << "\t";          // insSeq
+    oss << svs[i].mID << "\t";                     // svID
+    oss << svs[i].mSVT << "\t";                    // svtInt
+    oss << gl[i].mFuseGene.status;                 // fsMask
     if(mOpt->rnamode){
-        oss << "\t";
-        oss << svs[i].mNameChr1 << "\t";            // ts1Name
-        oss << svs[i].mSVStart << "\t";         // ts2Pos
-        oss << svs[i].mNameChr2 << "\t";            // ts2Name
-        oss << svs[i].mSVEnd << "\n";           // ts2Pos
+        if(gl[i].mGene1 == gl[i].mFuseGene.hgene){
+            oss << "\t";
+            oss << svs[i].mNameChr1 << "\t";       // ts1Name
+            oss << svs[i].mSVStart << "\t";        // ts1Pos
+            oss << svs[i].mNameChr2 << "\t";       // ts2Name
+            oss << svs[i].mSVEnd << "\n";          // ts2Pos
+        }else{
+            oss << "\t";
+            oss << svs[i].mNameChr2 << "\t";       // ts1Name
+            oss << svs[i].mSVEnd << "\t";          // ts1Pos
+            oss << svs[i].mNameChr1 << "\t";       // ts2Name
+            oss << svs[i].mSVStart << "\n";        // ts2Pos
+        }
     }else{
         oss << "\n";
     }
