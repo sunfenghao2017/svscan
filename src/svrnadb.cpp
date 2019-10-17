@@ -69,7 +69,10 @@ void SVRNADBOpt::prepDB(){
         int32_t trsEnd = std::atoi(vstr[5].c_str()) - 1;
         int32_t cdsStart = std::atoi(vstr[6].c_str());
         int32_t cdsEnd = std::atoi(vstr[7].c_str()) - 1;
-        if(!faidx_has_seq(fai, chr.c_str())) continue; // only fetch chr in genome
+        if(!faidx_has_seq(fai, chr.c_str())){
+            util::loginfo(chr + " does not exist in your reference !!!");
+            continue; // only fetch chr in genome
+        }
         if(outGeneCncMap[gene] != trs) continue; // only process computed canonical transcripts
         if(processedTrs.find(trs) != processedTrs.end()) continue;
         else processedTrs.insert(trs); // only process each trascript once
