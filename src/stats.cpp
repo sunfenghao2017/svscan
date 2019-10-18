@@ -37,8 +37,12 @@ uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual)
     return baseQualSum/alignedBases;
 }
 
-Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n){
+Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     Stats* ret = new Stats(n);
+    if(sts.size() == 0){
+        ret->mOpt = opt;
+        return ret;
+    }
     ret->mOpt = sts[0]->mOpt;
     for(int32_t j = 0; j < n; ++j){
         for(uint32_t i = 0; i < sts.size(); ++i){

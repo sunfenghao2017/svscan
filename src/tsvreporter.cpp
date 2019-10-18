@@ -73,11 +73,10 @@ void Stats::reportSVTSV(const SVSet& svs, const GeneInfoList& gl){
 
 void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
-    // mask rna/dna calling 
     // mask hot gene status
     std::map<std::string, std::set<std::string>> fpairs;
     for(uint32_t i = 0; i < gl.size(); ++i){
-        if(mOpt->rnamode) gl[i].mFuseGene.status |= FUSION_FCALLFROMRNASEQ;
+        if(mOpt->rnamode) gl[i].mFuseGene.status |= FUSION_FCALLFROMRNASEQ; // mask rna/dna calling
         if((gl[i].mFuseGene.status & FUSION_FALLGENE)){
             if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)){
                 gl[i].mFuseGene.status |= FUSION_FHOTGENE;

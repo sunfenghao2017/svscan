@@ -80,12 +80,13 @@ void Stats::reportSVBCF(const SVSet& svs){
     bcf_hdr_add_sample(hdr, "SAMPLE");
     bcf_hdr_write(fp, hdr);
     // Add Records
-    if(svs.empty()){
+    if(svs.empty()){// if empty set, just return
         sam_close(samfp);
         bam_hdr_destroy(bamhdr);
         bcf_hdr_destroy(hdr);
         bcf_close(fp);
         bcf_index_build(mOpt->bcfOut.c_str(), 14);
+        return;
     }
     // Genotype arrays
     int* gts = (int32_t*)std::calloc(bcf_hdr_nsamples(hdr) * 2,  sizeof(int));

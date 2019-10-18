@@ -364,9 +364,10 @@ class Stats{
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats
          * @param n number of svs in total
+         * @param opt pointer to Options
          * @return merged stat info
          */
-        static Stats* merge(const std::vector<Stats*>& sts, int32_t n);
+        static Stats* merge(const std::vector<Stats*>& sts, int32_t n, Options* opt);
 
         /** report BCF format report of all SVs
          * @param svs reference of SVSet

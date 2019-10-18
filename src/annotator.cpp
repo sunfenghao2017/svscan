@@ -169,7 +169,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         ++i;
     }
     for(auto& e: statRets) e.get();
-    Stats* finalStat = Stats::merge(covStats, svs.size());
+    Stats* finalStat = Stats::merge(covStats, svs.size(), mOpt);
     for(auto& e: covStats) delete e;
     return finalStat;
 }
