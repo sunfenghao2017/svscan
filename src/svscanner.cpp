@@ -29,10 +29,10 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
         while(sam_itr_next(fp, itr, b) >= 0){
             if(b->core.flag & BAM_SRSKIP_MASK) continue;// skip invalid reads
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
-            // SR parsing
-            jctMap->insertJunction(b, h);
-            // DP parsing
-            if(mOpt->libInfo->mMedian == 0) continue; // skip SE library
+            std::pair<int, int> sclens = bamutil::getSoftClipLength(b);
+            if(sclens.first && sclens.second) continue; // skip reads with heading and leading clips
+            if(sclens.first + sclens.second) jctMap->insertJunction(b, h); // only one softclip read can be SR candidates
+            if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
             if(mValidRegs[b->core.mtid].empty()) continue;// skip invalid regions
             if(b->core.tid != b->core.mtid && b->core.qual < mOpt->filterOpt->mMinTraQual) continue;// skip quality poor read

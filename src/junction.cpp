@@ -2,9 +2,6 @@
 #include "bamutil.h"
 
 bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
-    std::pair<int, int> sclens = bamutil::getSoftClipLength(b);
-    if(sclens.first && sclens.second) return false;
-    if(sclens.first + sclens.second == 0) return false;
     // parse non-supplementary alignment record first
     bool inserted = false;
     bool fw = !(b->core.flag & BAM_FREVERSE);

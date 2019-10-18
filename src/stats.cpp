@@ -98,6 +98,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         // Count aligned basepair (small InDels)
         int32_t leadingSC = 0;
+        int32_t tailingSC = 0;
         int32_t rp = 0; // reference pos
         uint32_t* cigar = bam_get_cigar(b);
         for(uint32_t i = 0; i < b->core.n_cigar; ++i){
@@ -120,8 +121,10 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 rp += oplen;
             }else if(opint == BAM_CSOFT_CLIP){
                 if(i == 0) leadingSC = oplen;
+                else tailingSC = opint;
             }
         }
+        if(leadingSC && tailingSC) continue; // skip reads with both leading and tailing softclips
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
