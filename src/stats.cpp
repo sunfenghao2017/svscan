@@ -241,6 +241,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     default:
                         break;
                 }
+                ++c;
             }
             if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
         }

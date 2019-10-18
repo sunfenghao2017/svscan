@@ -43,7 +43,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
             if(data){
                 char* c = bam_aux2Z(data);
                 int32_t leadingSC = 0, tailingSC = 0;
-                while(*c){
+                while(*c && *c != '*'){
                     int32_t num = 0;
                     if(std::isdigit((int)*c)){
                         num = std::strtol(c, &c, 10);
@@ -58,6 +58,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
                         default:
                             break;
                     }
+                    ++c;
                 }
                 if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
             }
