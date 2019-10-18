@@ -39,6 +39,28 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
             int32_t svt = DPBamRecord::getSVType(b, mOpt);// get sv type
             if(svt == -1) continue; // Skip PE which does not support any SV
             if(mOpt->SVTSet.find(svt) == mOpt->SVTSet.end()) continue;// Skip SV type which does not needed to called
+            uint8_t* data = bam_aux_get(b, "MC");
+            if(data){
+                char* c = bam_aux2Z(data);
+                int32_t leadingSC = 0, tailingSC = 0;
+                while(*c){
+                    int32_t num = 0;
+                    if(std::isdigit((int)*c)){
+                        num = std::strtol(c, &c, 10);
+                    }else{
+                        num = 1;
+                    }
+                    switch(*c){
+                        case 'S':
+                            if(!leadingSC) leadingSC = num;
+                            else tailingSC = num;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
+            }
             if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// second read in pair
                 dprSet->insertDP(b, svt);
             }
