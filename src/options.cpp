@@ -96,7 +96,9 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
         bam_destroy1(b);
         bam_hdr_destroy(h);
         delete libInfo;
-        util::errorExit("Bam is empty, quit now!!!:");
+        writeEmptFile();
+        util::loginfo("Bam is empty, empty result file written, program will quit now!!!");
+        exit(EXIT_SUCCESS);
     }
     libInfo->mReadLen = statutil::median(readLen);
     libInfo->mMedian = statutil::median(vecISize);
@@ -142,4 +144,110 @@ void Options::getValidRegion(){
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);
+}
+
+void Options::writeEmptFile(){
+    // tsv sv
+    std::ofstream fw(tsvOut);
+    fw << "svType\tsvSize\tbpMark\t";//[0, 2]
+    fw << "fuseGene\t"; //[3];
+    fw << "hGene\thTrsEnd\thTrsStrand\t";//[4,6]
+    fw << "tGene\ttTrsEnd\ttTrsStrand\t";//[7,9]
+    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";//[10,12]
+    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";//[13,15]
+    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";//[16,19]
+    fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";//[20,24]
+    fw << "bp1Trs\tbp2Trs\tsvSeq\tseqBp\tID\tsvtInt\tfsMask";//[25,31]
+    if(rnamode){
+        fw << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[32,35]
+    }else{
+        fw << "\n";
+    }
+    fw.close();
+    // fusion
+    std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
+    header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
+    header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
+    header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
+    header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
+    header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-29]
+    if(rnamode){
+        header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\n"); //[30-33]
+    }else{
+        header.append("\n");
+    }
+    fw.open(fuseOpt->mOutFile.c_str());
+    fw << header;
+    fw.close();
+    fw.open(fuseOpt->mSupFile.c_str());
+    fw << header;
+    fw.close();
+    // sv bcf
+    samFile* samfp = sam_open(bamfile.c_str(), "r");
+    hts_set_fai_filename(samfp, genome.c_str());
+    bam_hdr_t* bamhdr = sam_hdr_read(samfp);
+    htsFile* fp = bcf_open(bcfOut.c_str(), "wb");
+    bcf_hdr_t* hdr = bcf_hdr_init("w");
+    // Output bcf header
+    bcf_hdr_append(hdr, "##ALT=<ID=DEL,Description=\"Deletion\">");
+    bcf_hdr_append(hdr, "##ALT=<ID=DUP,Description=\"Duplication\">");
+    bcf_hdr_append(hdr, "##ALT=<ID=INV,Description=\"Inversion\">");
+    bcf_hdr_append(hdr, "##ALT=<ID=BND,Description=\"Translocation\">");
+    bcf_hdr_append(hdr, "##ALT=<ID=INS,Description=\"Insertion\">");
+    bcf_hdr_append(hdr, "##FILTER=<ID=LowQual,Description=\"Poor quality and insufficient number of PEs and SRs.\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"PE confidence interval around END\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"PE confidence interval around POS\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome for END coordinate in case of a translocation\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=PE,Number=1,Type=Integer,Description=\"Paired-end support of the structural variant\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=PEMAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of paired-ends\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=SR,Number=1,Type=Integer,Description=\"Split-read support\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=SRMAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of split-reads\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=SRALNQ,Number=1,Type=Float,Description=\"Split-read consensus alignment quality\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CONSENSUS,Number=1,Type=String,Description=\"Split-read consensus sequence\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CT,Number=1,Type=String,Description=\"Paired-end signature induced connection type\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=PRECISE,Number=0,Type=Flag,Description=\"Precise structural variation\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=INSLEN,Number=1,Type=Integer,Description=\"Predicted length of the insertion\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=HOMLEN,Number=1,Type=Integer,Description=\"Predicted microhomology length using a max. edit distance of 2\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Log10-scaled genotype likelihoods for RR,RA,AA genotypes\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype Quality\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Per-sample genotype filter\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=RC,Number=1,Type=Integer,Description=\"Raw high-quality read counts for the SV\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=RCL,Number=1,Type=Integer,Description=\"Raw high-quality read counts for the left control region\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=RCR,Number=1,Type=Integer,Description=\"Raw high-quality read counts for the right control region\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Read-depth based copy-number estimate for autosomal sites\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# high-quality reference pairs\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# high-quality variant pairs\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=RR,Number=1,Type=Integer,Description=\"# high-quality reference junction reads\">");
+    bcf_hdr_append(hdr, "##FORMAT=<ID=RV,Number=1,Type=Integer,Description=\"# high-quality variant junction reads\">");
+    // Add reference
+    std::string refloc = "##reference=" + genome;
+    bcf_hdr_append(hdr, refloc.c_str());
+    for(int i = 0; i < bamhdr->n_targets; ++i){
+        std::string ctginfo("##contig=<ID=");
+        ctginfo.append(std::string(bamhdr->target_name[i]) + ",length=" + std::to_string(bamhdr->target_len[i]) + ">");
+        bcf_hdr_append(hdr, ctginfo.c_str());
+    }
+    // Add runtime
+    std::string dateStr = "##fileDate=" + util::currentTime();
+    bcf_hdr_append(hdr, dateStr.c_str());
+    // Add software information
+    std::string sinf = "##softwoare=sver v" + softEnv->version;
+    std::string scmd = "##command=" + softEnv->cmd;
+    std::string scwd = "##cwd=" + softEnv->cwd;
+     bcf_hdr_append(hdr, sinf.c_str());
+    bcf_hdr_append(hdr, scmd.c_str());
+    bcf_hdr_append(hdr, scwd.c_str());
+    // Add Samples
+    bcf_hdr_add_sample(hdr, "SAMPLE");
+    bcf_hdr_write(fp, hdr);
+    // Add Records
+    sam_close(samfp);
+    bam_hdr_destroy(bamhdr);
+    bcf_hdr_destroy(hdr);
+    bcf_close(fp);
+    bcf_index_build(bcfOut.c_str(), 14);
 }

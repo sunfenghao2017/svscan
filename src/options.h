@@ -203,6 +203,9 @@ class Options{
 
         /** create valid regions by exclude invalid regions */
         void getValidRegion();
+
+        /** write empty result file in case input bam is empty */
+        void writeEmptFile();
 };
 
 #endif
