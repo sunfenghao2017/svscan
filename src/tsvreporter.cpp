@@ -258,7 +258,7 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         if(mOpt->rnamode){
             oss << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t";
         }else{
-            oss << svs[i].mNameChr2 << "\t" << svs[i].mSVStart << "\t";
+            oss << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t";
         }
         oss <<  gl[i].mStrand2 << "\t";
         if(gl[i].mTrans2.empty()) oss << "-\t";
@@ -269,7 +269,7 @@ std::string Stats::toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i
         if(mOpt->rnamode){
             oss << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t";
         }else{
-            oss << svs[i].mNameChr2 << "\t" << svs[i].mSVStart << "\t";
+            oss << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t";
         }
         oss <<  gl[i].mStrand2 << "\t";
         if(gl[i].mTrans2.empty()) oss << "-\t";
