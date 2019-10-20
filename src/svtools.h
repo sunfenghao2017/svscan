@@ -8,6 +8,7 @@
 #include "svmerge.h"
 #include "svrnadb.h"
 #include "svdnadb.h"
+#include "svdebug.h"
 #include "svfilter.h"
 #include "fusewlist.h"
 #include "fusionreporter.h"

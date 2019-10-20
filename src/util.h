@@ -7,6 +7,7 @@
 #include <unistd.h>
 #endif
 
+#include <set>
 #include <string>
 #include <cerrno>
 #include <cstdio>
@@ -21,6 +22,7 @@
 #include <functional>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <filereader.h>
 
 /** utility to operate on strings and directories */
 namespace util{
@@ -97,20 +99,35 @@ namespace util{
      * @param sep seperators, can contain a series of seperators
      */
     inline void split(const std::string& str, std::vector<std::string>& vec, std::string sep = " "){
-        vec.clear();
+        vec.clear(); // clear output vector
+        if(str.empty()) return; // empty string, return directly
         std::string::size_type las, cur;
-        las = cur = str.find_first_not_of(sep);
-        while((las = str.find_first_not_of(sep, las)) != std::string::npos){
-            cur = str.find_first_of(sep, las);
-            if(cur != std::string::npos){
-                vec.push_back(str.substr(las, cur - las));
+        las = cur = str.find_first_of(sep);
+        if(las == std::string::npos){ // only one field without any sep
+            vec.push_back(str);
+            return;
+        }
+        if(las == 0) vec.push_back(""); // begin with sep, so there is a blank str before
+        if(las != 0) vec.push_back(str.substr(0, las)); // begin with a non-sep field
+        while(las != std::string::npos){
+            if(las + 1 == std::string::npos){
+                vec.push_back(""); // ends with sep, so there is a blank str after
+                return;
+            }
+            cur = str.find_first_of(sep, las + 1);
+            if(cur == std::string::npos){
+                vec.push_back(str.substr(las + 1)); // last field
             }else{
-                vec.push_back(str.substr(las));
-                break;
+                if(cur - las == 1){
+                    vec.push_back(""); // consecutive sep
+                }else{
+                    vec.push_back(str.substr(las + 1, cur - las - 1));
+                }
             }
             las = cur;
         }
     }
+
     /** join a list of strings by an seperator
      * @param vec vector to store the split results
      * @param ret joined string
@@ -565,19 +582,96 @@ namespace util{
         return date;
     }
 
-
     /** make a list from file by line 
      * @param filename input file
      * @param ret vector to store stripped line
      */ 
     inline void makeListFromFileByLine(const std::string& filename, std::vector<std::string>& ret){
-        std::ifstream fr(filename);
+        FileReader fr(filename);
         std::string line;
-        while(std::getline(fr, line)){
+        while(fr.getline(line)){
             util::strip(line);
             ret.push_back(line);
         }
     }
+
+    /** mak a set fro file by line
+     * @param filename input file
+     * @param ret set to store stripped line
+     */
+    inline void makeSetFromFileByLine(const std::string& filename, std::set<std::string>& ret){
+        FileReader fr(filename);
+        std::string line;
+        while(fr.getline(line)){
+            util::strip(line);
+            ret.insert(line);
+        }
+    }
+
+    /** make a list from file by fields
+     * @param filename input file
+     * @param ret vector to store fields
+     * @param field field number, 0 based
+     * @param sep seperator
+     */
+    inline void makeListFromFileByField(const std::string& filename, std::vector<std::string>& ret, int field, std::string sep = "\t"){
+        FileReader fr(filename);
+        std::string line;
+        std::vector<std::string> vstr;
+        while(fr.getline(line)){
+            split(line, vstr, sep);
+            ret.push_back(vstr[field]);
+        }
+    }
+    
+    /** make a set from file by fields
+     * @param filename input file
+     * @param ret set to store fields
+     * @param field field number, 0 based
+     * @param sep seperator
+     */
+    inline void makeSetFromFileByField(const std::string& filename, std::set<std::string>& ret, int field, std::string sep = "\t"){
+        FileReader fr(filename);
+        std::string line;
+        std::vector<std::string> vstr;
+        while(fr.getline(line)){
+            split(line, vstr, sep);
+            ret.insert(vstr[field]);
+        }
+    }
+
+    /** make map from file by line, row1 is key, row2 is value, row1 shold be unique
+     * @param filename input file
+     * @param ret map to store key value pairs
+     * @param sep seperator of fields in line
+     */
+    template<typename M>
+    inline void makeMapPairFromFileByLine(const std::string& filename, M& ret, const std::string& sep = "\t"){
+        FileReader fr(filename);
+        std::string line;
+        std::vector<std::string> vstr;
+        while(fr.getline(line)){
+            util::split(line, vstr, sep);
+            ret[vstr[0]] = vstr[1];
+        }
+    }
+
+    /** make map from file by line, row1 is key, row2 is value, row1 might have dup
+     * @param filename input file
+     * @param ret map to store key value pairs
+     * @param sep seperator of fields in line
+     */
+    template<typename M>
+    inline void makeMapSetFromFileByLine(const std::string& filename, M& ret, const std::string& sep = "\t"){
+        FileReader fr(filename);
+        std::string line;
+        std::vector<std::string> vstr;
+        while(fr.getline(line)){
+            util::split(line, vstr, sep);
+            ret[vstr[0]].insert(vstr[1]);
+        }
+    }
+
     /** test whether an element is in a vector
      * @param v vector
      * @param e element
@@ -723,6 +817,21 @@ namespace util{
             ++count;
         }
         return count;
+    }
+
+    /** format an integer to include commas
+     * @param n data number to format
+     * @return string with formatted number containing commas
+     */
+    template<typename T>
+    inline std::string formatIntWithCommas(const T& n){
+        std::string s = std::to_string(n);
+        if(s.length() > 3){
+            for(int i = s.length() - 3; i > 0; i -=3){
+                s.insert(i, ",");
+            }
+        }
+        return s;
     }
 }
 
