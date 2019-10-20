@@ -105,16 +105,19 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     for(uint32_t i = 0; i < gl.size(); ++i){
         if(!(gl[i].mFuseGene.status & FUSION_FALLGENE)) continue;
         if(mOpt->fuseOpt->hasBlackGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)){
-            gl[i].mFuseGene.status |= FUSION_FBLACKPAIR;
+            gl[i].mFuseGene.status |= FUSION_FBLACKGENE;
         }
         if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)){
-            gl[i].mFuseGene.status |= FUSION_FBLACKGENE;
+            gl[i].mFuseGene.status |= FUSION_FBLACKPAIR;
         }
         if(!mOpt->fuseOpt->validSV(svs[i].mSVT, svs[i].mNameChr1, svs[i].mNameChr2, svs[i].mSVStart, svs[i].mSVEnd)){
             gl[i].mFuseGene.status |= FUSION_FFBG;
         }
         if(mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)){
             gl[i].mFuseGene.status |= FUSION_FINDB;
+        }
+        if(mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene.tgene, gl[i].mFuseGene.hgene)){
+            gl[i].mFuseGene.status |= FUSION_FMIRRORINDB;
         }
         if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene.hgene, gl[i].mFuseGene.tgene)){
             gl[i].mFuseGene.status |= FUSION_FHOTGENE;
@@ -138,7 +141,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
         int32_t dpr = mSpnCnts[i].mRefQual.size();
         if(svs[i].mPrecise) af = (double)(srv)/(double)(srv + srr);
         else af = (double)(dpv)/(double)(dpv + dpr);
-        if(gl[i].mFuseGene.status & FUSION_FINDB){// fusion in whitelist
+        if(gl[i].mFuseGene.status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
             if((srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport) && (dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport)){
                 gl[i].mFuseGene.status |= FUSION_FLOWSUPPORT;
             }
@@ -153,7 +156,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gl[i].mFuseGene.status |= FUSION_FTOOSMALLSIZE;
                 }
             }
-        }else if(gl[i].mFuseGene.status & FUSION_FHOTGENE){// fusion not in whitelist
+        }else if(gl[i].mFuseGene.status & FUSION_FHOTGENE){// fusion in whitelist
             if((srv < mOpt->fuseOpt->mUsualFilter.mMinSupport) && (dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport)){
                 gl[i].mFuseGene.status |= FUSION_FLOWSUPPORT;
             }

@@ -178,7 +178,7 @@
 #define FUSION_FFBG             0x80    ///< fusion gene is in background samples
 #define FUSION_FBLACKGENE       0x100   ///< one partner is in black gene list
 #define FUSION_FLOWCOMPLEX      0x200   ///< one partner has low complex concensus sequence
-#define FUSION_FPRIMARY        0x400   ///< this fusion event should be reported primarily
+#define FUSION_FPRIMARY         0x400   ///< this fusion event should be reported primarily
 #define FUSION_FSUPPLEMENTARY   0x800   ///< this fusion event should be reported as supplementary
 #define FUSION_FTOOSMALLSIZE    0x1000  ///< this fusion event has too small size
 #define FUSION_FINSAMEGENE      0x2000  ///< this fusion event occurs in the same gene
@@ -187,6 +187,7 @@
 #define FUSION_FLOWDEPTH        0x10000 ///< this fusion event has too low depth around breakpoint
 #define FUSION_FPRECISE         0x20000 ///< this fusion event has precise breakpoint and concensus sequence
 #define FUSION_FCALLFROMRNASEQ  0x40000 ///< this fusion event is called from rna seq
+#define FUSION_FMIRRORINDB      0x80000 ///< this fusion event's mirror event is in public db
 
 /** fusion flag type */
 typedef uint32_t TFUSION_FLAG;

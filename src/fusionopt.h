@@ -47,6 +47,7 @@ struct FusionOptions{
     std::string mInfile;               ///< input file of sver sv tsv format result file
     std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
     std::string mSupFile = "ss.tsv";   ///< output file of supplementary fusions
+    std::string mSVModFile;            ///< output sv tsv file with fsmask updated
     SVList mBgSVs;                     ///< to store background SVs
     FusePairs mWhiteFusions;           ///< to store fusion events in fusion whitelist
     FusePairs mBlackFusions;           ///< to store fusion events in fusion blacklist

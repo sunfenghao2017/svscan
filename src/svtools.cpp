@@ -43,6 +43,7 @@ int main(int argc, char** argv){
     pfsrpt->add_option("-i,--in", fuserptOpt->fuseOpt->mInfile, "input tsv sv result of sver")->required(true)->check(CLI::ExistingFile);
     pfsrpt->add_option("-o,--out", fuserptOpt->fuseOpt->mOutFile, "primary fusion result", true);
     pfsrpt->add_option("-s,--sup", fuserptOpt->fuseOpt->mSupFile, "supplementary fusion result", true);
+    pfsrpt->add_option("-v,--svf", fuserptOpt->fuseOpt->mSVModFile, "updated sv tsv file, if empty, no update will done", true);
     pfsrpt->add_option("-f,--iflag", fuserptOpt->fuseOpt->mFsMaskInclude, "fusion flags which must be set", true);
     pfsrpt->add_option("-F,--eflag", fuserptOpt->fuseOpt->mFsMaskExclude, "fusion flags which must be unset", true);
     pfsrpt->add_option("--whitemindep", fuserptOpt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true);

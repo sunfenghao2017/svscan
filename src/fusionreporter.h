@@ -38,6 +38,10 @@ struct FusionRecord{
     std::string svid;
     std::string svint;
     TFUSION_FLAG fsmask;
+    std::string ts1name;
+    std::string ts1pos;
+    std::string ts2name;
+    std::string ts2pos;
 
     FusionRecord(){
         fsmask = 0;
@@ -53,7 +57,11 @@ struct FusionRecord{
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.indb << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\n";
+        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask;
+        if(fsr.fsmask | FUSION_FCALLFROMRNASEQ){
+            os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos;
+        }
+        os << "\n";
        return os;
     } 
 };
@@ -64,6 +72,7 @@ struct FusionReporter{
     FusionOptions* fuseOpt; ///< fusion report options
     Software* softEnv;      ///< software environments
     FusionList fuseList;    ///< fusion list
+    bool rnamode;           ///< fusion event is from rnaseq
 
     /** FusionReporter constructor */
     FusionReporter();
