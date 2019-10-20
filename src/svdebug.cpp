@@ -74,7 +74,9 @@ void SVDebug::debug(){
                 char* val = bam_aux2Z(data);
                 std::vector<std::string> vstr;
                 util::split(val, vstr, ",");
-                if(vstr[0] == ttrs){
+                std::string sachr = vstr[0];
+                int32_t sapos = std::atoi(vstr[1].c_str());
+                if(sachr == treg.chr && sapos > tpos && sapos < tend){
                     ++srcnt;
                     assert(sam_write1(srfp, hdr, b) >= 0);
                 }
@@ -99,7 +101,9 @@ void SVDebug::debug(){
                 char* val = bam_aux2Z(data);
                 std::vector<std::string> vstr;
                 util::split(val, vstr, ",");
-                if(vstr[0] == htrs){
+                std::string sachr = vstr[0];
+                int32_t sapos = std::atoi(vstr[1].c_str());
+                if(sachr == treg.chr && sapos > hpos && sapos < hend){
                     ++srcnt;
                     assert(sam_write1(srfp, hdr, b) >= 0);
                 }
