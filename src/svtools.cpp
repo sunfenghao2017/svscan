@@ -100,6 +100,7 @@ int main(int argc, char** argv){
     pdebug->add_option("-f,--hgene", debugOpt->hgene, "hgene in fusion")->required(true);
     pdebug->add_option("-l,--tgene", debugOpt->tgene, "tgene in fusion")->required(true);
     pdebug->add_option("-s,--srbam", debugOpt->srbam, "split read bam", true);
+    pdebug->add_option("-o,--osbam", debugOpt->osbam, "other split read bam", true);
     pdebug->add_option("-d,--dpbam", debugOpt->dpbam, "discordant read pair bam", true);
     pdebug->add_option("-v,--tsv", debugOpt->table, "stat table", true);
     // parse arguments

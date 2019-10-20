@@ -47,6 +47,7 @@ struct SVDebug{
     std::string srbam;      ///< split read bam supporting hgene->tgene
     std::string dpbam;      ///< discordant pair bam supporting hgene->tgene
     std::string subam;      ///< single unmapped bam supporting hgene->tgene possibly
+    std::string osbam;      ///< other split read bam
     std::string table;      ///< output tatistical information of all evidences
 
     /** SVDebug constructor */

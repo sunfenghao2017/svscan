@@ -58,8 +58,13 @@ void SVDebug::debug(){
     int32_t hend = std::atoi(hreg.end.c_str());
     int32_t tpos = std::atoi(treg.beg.c_str());
     int32_t tend = std::atoi(treg.end.c_str());
-    int32_t srcnt = 0, dpcnt = 0;
+    int32_t srcnt = 0, oscnt = 0, dpcnt = 0;
     samFile* srfp = sam_open(srbam.c_str(), "wb");
+    samFile* osfp = NULL;
+    if(!osbam.empty()){
+        sam_open(osbam.c_str(), "wb");
+        assert(sam_hdr_write(osfp, hdr) >= 0);
+    }
     samFile* dpfp = sam_open(dpbam.c_str(), "wb");
     assert(sam_hdr_write(srfp, hdr) >= 0 && sam_hdr_write(dpfp, hdr) >= 0);
     hts_idx_t* idx = sam_index_load(sfp, inbam.c_str());
@@ -81,6 +86,11 @@ void SVDebug::debug(){
                 if(sachr == treg.chr && sapos > tpos && sapos < tend){
                     ++srcnt;
                     assert(sam_write1(srfp, hdr, b) >= 0);
+                }
+            }else{
+                if(osfp){
+                    ++oscnt;
+                    assert(sam_write1(osfp, hdr, b) >= 0);
                 }
             }
         }
@@ -109,6 +119,11 @@ void SVDebug::debug(){
                     ++srcnt;
                     assert(sam_write1(srfp, hdr, b) >= 0);
                 }
+            }else{
+                if(osfp){
+                    ++oscnt;
+                    assert(sam_write1(osfp, hdr, b) >= 0);
+                }
             }
         }
         if(b->core.mtid == hgid){
@@ -122,6 +137,7 @@ void SVDebug::debug(){
     hts_idx_destroy(idx);
     sam_close(sfp);
     sam_close(srfp);
+    if(osfp) sam_close(osfp);
     sam_close(dpfp);
     bam_hdr_destroy(hdr);
     bam_destroy1(b);
@@ -129,6 +145,7 @@ void SVDebug::debug(){
     std::ofstream fw(table);
     fw << "fusion" << "\t" << hgene << "->" << tgene << "\n";
     fw << "srcount" << "\t" << srcnt << "\n";
+    if(oscnt) fw << "oscount" << "\t" << oscnt << "\n";
     fw << "dpcount" << "\t" << dpcnt << "\n";
     fw.close();
 }
