@@ -188,14 +188,15 @@ void FusionReporter::sv2fs(){
         fsr.svint = vstr[30];                 // svInt
         if(fsmask & FUSION_DROP_MASK){
             fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
-        }
-        if((fsmask & FUSION_KEEP_MASK) != FUSION_KEEP_MASK){
-            fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
         }else{
-            if((fsmask & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
-                fsmask |= FUSION_FPRIMARY;
+            if((fsmask & FUSION_KEEP_MASK) != FUSION_KEEP_MASK){
+                fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{
-                fsmask |= FUSION_FSUPPLEMENTARY;
+                if((fsmask & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
+                    fsmask |= FUSION_FPRIMARY;
+                }else{
+                    fsmask |= FUSION_FSUPPLEMENTARY;
+                }
             }
         }
         if((fsmask & fuseOpt->mFsMaskInclude) != fuseOpt->mFsMaskInclude){
