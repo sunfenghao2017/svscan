@@ -88,12 +88,19 @@ void FusionReporter::sv2fs(){
         std::string hstrand = vstr[6];
         std::string tstrand = vstr[9];
         if(!fuseOpt->validSV(svt, chr1, chr2, start, end)) fsmask |= FUSION_FFBG;
+        else fsmask &= (~FUSION_FFBG);
         if(fuseOpt->hasWhiteGene(hgene, tgene)) fsmask |= FUSION_FHOTGENE;
+        else fsmask &= (~FUSION_FHOTGENE);
         if(fuseOpt->inWhiteList(hgene, tgene)) fsmask |= FUSION_FINDB;
+        else fsmask &= (~FUSION_FINDB);
         if(fuseOpt->inWhiteList(tgene, hgene)) fsmask |= FUSION_FMIRRORINDB;
+        else fsmask &= (~FUSION_FMIRRORINDB);
         if(fuseOpt->hasBlackGene(hgene, tgene)) fsmask |= FUSION_FBLACKGENE;
+        else fsmask &= (~FUSION_FBLACKGENE);
         if(fuseOpt->inBlackList(hgene, tgene)) fsmask |= FUSION_FBLACKPAIR;
+        else fsmask &= (~FUSION_FBLACKPAIR);
         if(fuseOpt->matchHotDirec(hgene, tgene)) fsmask |= FUSION_FCOMMONHOTDIRECT;
+        else fsmask &= (~FUSION_FCOMMONHOTDIRECT);
         int32_t srv = std::atoi(vstr[18].c_str());
         int32_t dpv = std::atoi(vstr[19].c_str());
         int32_t srr = std::atoi(vstr[20].c_str());
@@ -102,22 +109,34 @@ void FusionReporter::sv2fs(){
         if(fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
            if((srv < fuseOpt->mWhiteFilter.mMinSupport) && (dpv < fuseOpt->mWhiteFilter.mMinSupport)){
                fsmask |= FUSION_FLOWSUPPORT;
+           }else{
+               fsmask &= (~FUSION_FLOWSUPPORT);
            }
            if(af < fuseOpt->mWhiteFilter.mMinVAF){
                fsmask |= FUSION_FLOWAF;
+           }else{
+               fsmask &= (~FUSION_FLOWAF);
            }
            if(((srv + srr) < fuseOpt->mWhiteFilter.mMinDepth) && ((dpr + dpv) < fuseOpt->mWhiteFilter.mMinDepth)){
                fsmask |= FUSION_FLOWDEPTH;
+           }else{
+               fsmask &= (~FUSION_FLOWDEPTH);
            }
         }else if(fsmask & FUSION_FHOTGENE){// fusion not in public database
             if((srv < fuseOpt->mUsualFilter.mMinSupport) && (dpv < fuseOpt->mUsualFilter.mMinSupport)){
                 fsmask |= FUSION_FLOWSUPPORT;
+            }else{
+                fsmask &= (~FUSION_FLOWSUPPORT);
             }
             if(af < fuseOpt->mUsualFilter.mMinVAF){
                 fsmask |= FUSION_FLOWAF;
+            }else{
+                fsmask &= (~FUSION_FLOWAF);
             }
             if(((srv + srr) < fuseOpt->mUsualFilter.mMinDepth) && ((dpr + dpv) < fuseOpt->mUsualFilter.mMinDepth)){
                 fsmask |= FUSION_FLOWDEPTH;
+            }else{
+                fsmask &= (~FUSION_FLOWDEPTH);
             }
         }
         FusionRecord fsr;
