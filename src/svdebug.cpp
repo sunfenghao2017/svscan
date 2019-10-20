@@ -19,6 +19,7 @@ void SVDebug::getReg(const std::string& trs, tbx_t* tbx, htsFile* tfp, GeneRegio
     hts_itr_destroy(itr);
     if(regs.size() > 0){
         reg.strand = regs[0].strand;
+        reg.chr = regs[0].chr;
         if(reg.strand[0] == '-'){
             reg.end = regs[0].end;
             reg.beg = regs[regs.size() - 1].beg;
