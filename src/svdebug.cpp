@@ -43,8 +43,10 @@ void SVDebug::debug(){
     GeneRegion hreg, treg;
     getReg(htrs, tbx, tfp, hreg);
     getReg(ttrs, tbx, tfp, treg);
-    util::loginfo(hgene + ": " + hreg.toString()); 
-    util::loginfo(tgene + ": " + treg.toString());
+    std::string hqreg = hreg.toString();
+    std::string tqreg = treg.toString();
+    util::loginfo(hgene + ": " + hqreg);
+    util::loginfo(tgene + ": " + tqreg);
     hts_close(tfp);
     tbx_destroy(tbx);
     // open bam and idx
@@ -63,7 +65,7 @@ void SVDebug::debug(){
     hts_idx_t* idx = sam_index_load(sfp, inbam.c_str());
     // check hgene range for possible evidence
      const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
-    hts_itr_t* itr = sam_itr_querys(idx, hdr, hreg.toString().c_str());
+    hts_itr_t* itr = sam_itr_querys(idx, hdr, hqreg.c_str());
     bam1_t* b = bam_init1();
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
@@ -91,7 +93,7 @@ void SVDebug::debug(){
     }
     // check tgene range for possible evidence
     hts_itr_destroy(itr);
-    itr = sam_itr_querys(idx, hdr, treg.toString().c_str());
+    itr = sam_itr_querys(idx, hdr, tqreg.c_str());
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
@@ -103,7 +105,7 @@ void SVDebug::debug(){
                 util::split(val, vstr, ",");
                 std::string sachr = vstr[0];
                 int32_t sapos = std::atoi(vstr[1].c_str());
-                if(sachr == treg.chr && sapos > hpos && sapos < hend){
+                if(sachr == hreg.chr && sapos > hpos && sapos < hend){
                     ++srcnt;
                     assert(sam_write1(srfp, hdr, b) >= 0);
                 }
