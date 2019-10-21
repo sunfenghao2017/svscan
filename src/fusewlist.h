@@ -17,7 +17,7 @@ struct FuseWOpt{
 
     FuseWOpt(){
         softEnv = new Software();
-        softEnv->cmp += "version: " + softEnv->version + "\n";
+        softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
         whitelist = "./gwhite.tsv";
     }

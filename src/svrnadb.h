@@ -28,7 +28,7 @@ struct SVRNADBOpt{
     
     SVRNADBOpt(){
         softEnv = new Software();
-        softEnv->cmp += "version: " + softEnv->version + "\n";
+        softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
         svAnnoDB = "./rnaAnno.gz";
         gene2trs = "./gene2trs.tsv";

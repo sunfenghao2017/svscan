@@ -18,8 +18,8 @@ struct SVToolOpts{
 
     SVToolOpts(){
         softEnv = new Software();
-        softEnv->version = "0.0.0";
-        softEnv->cmp += "version: " + softEnv->version + "\n";
+        softEnv->ver = "0.0.0";
+        softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
     }
 

@@ -12,8 +12,6 @@ Options::Options(){
     msaOpt = new MSAOpt();
     passOpt = new PassOptions();
     fuseOpt = new FusionOptions();
-    softEnv->cmp += "version: " + softEnv->version + "\n";
-    softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
     libInfo = NULL;
     contigNum = 0;
     rnamode = false;
@@ -35,11 +33,7 @@ void Options::validate(){
 
 void Options::update(int argc, char** argv){
     // update software environment records
-    softEnv->cwd = util::cwd();
-    for(int i = 0; i < argc; ++i){
-        softEnv->cmd.append(argv[i]);
-        softEnv->cmd.append(" ");
-    }
+    softEnv->update(argc, argv);
     // get library information
     libInfo = getLibInfo(bamfile);
     // update SV types to discover
@@ -235,7 +229,7 @@ void Options::writeEmptFile(){
     std::string dateStr = "##fileDate=" + util::currentTime();
     bcf_hdr_append(hdr, dateStr.c_str());
     // Add software information
-    std::string sinf = "##softwoare=sver v" + softEnv->version;
+    std::string sinf = "##softwoare=sver v" + softEnv->ver;
     std::string scmd = "##command=" + softEnv->cmd;
     std::string scwd = "##cwd=" + softEnv->cwd;
      bcf_hdr_append(hdr, sinf.c_str());

@@ -71,4 +71,6 @@ int main(int argc, char** argv){
     util::loginfo("Beg scanning SV");
     svScanner->scanDPandSR();
     util::loginfo("End scanning SV");
+    // write execution time
+    util::loginfo("Time consumed: " + opt->softEnv->getExecutionTime());
 }
