@@ -49,6 +49,7 @@ struct SVDebug{
     std::string subam;      ///< single unmapped bam supporting hgene->tgene possibly
     std::string osbam;      ///< other split read bam
     std::string table;      ///< output tatistical information of all evidences
+    bool rnamode;           ///< input bam is from rnaseq if true
 
     /** SVDebug constructor */
     SVDebug(){
@@ -56,14 +57,18 @@ struct SVDebug{
         dpbam = "dp.bam";
         subam = "su.bam";
         table = "stat.tsv";
+        rnamode = false;
     }
 
     /** SVDebug destructor */
     ~SVDebug(){}
 
-    /** debug */
-    void debug();
+    /** debug dna sv */
+    void debugDNA();
     
+    /** debug rna sv */
+    void debugRNA();
+
     /** get gene region on genome 
      * @param trs gene transcript name
      * @param tbx tabix of annotabion db
