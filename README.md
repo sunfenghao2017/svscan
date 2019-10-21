@@ -8,8 +8,6 @@
        ./autogen.sh   
        ./configure --prefix=/path/to/install/dir/ 
        make & make install 
-    3). test command 
-       /path/to/install/dir/svscan -b testdata/bam/test.bam -g /Users/wood/Database/hg19/hg19.fa -a testdata/gz/refGene.Anno.sorted.gz -r testdata/bed/valid.bed -o testdata/sv.bcf -t testdata/sv.tsv
   
 #### What kind of structural variants svscan can discover?
     In principle, svscan supports discovery of 5 classes of structural variants: inversion, deletion, duplication, insertion, translocation.  
@@ -49,22 +47,17 @@
 #### Are there are too many negative positive events discovered by svscan?  
     I haven't got many pure test samples which have all the structural events predefined exactly. But I think some negative positive events can be filtered under some principles  
 
-#### How to run svscan?
-|steps|operation  |recommand tools
-|-----|-----------|----------------------------------------------
-|1    | QC        |[fqtool](https://github.com/vanNul/fqtool)
-|2    | align     |[bwa](https://github.com/lh3/bwa)
-|3    | sort      |[samtools](https://github.com/samtools/samtools)
-|4    | markdup   |[umicc](https://github.com/vanNul/umicc)
-|5    | sort/index|[samtools](https://github.com/samtools/samtools)
-|6    | compute SV|[svscan](https://github.com/vanNul/svscan)
-###### ps. all the software depends on API of htslib1.9, you'd better use htslib1.9 based softwares 
+#### How to run svscan?  
+![svpipe](./fig/svpipe.svg)
 
 #### What reference genome version does svscan use?  
     Both hg19 and hg38 will work as long as the annotation database file is the same version.  
 
 #### How to prepare annotation database file?  
-    check `svtools annodb` for help
+    check `svtools` for help
+
+#### What evidence svscan makes use of?   
+![evidence](./fig/reads.svg)
 
 #### How does svscan work?  
 ![svscan algorithm](./fig/svscan.svg)
