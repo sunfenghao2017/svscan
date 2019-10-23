@@ -727,15 +727,15 @@ namespace svutil{
     /** convert transcript coordinate into genome coordinate
      * @param tpos transcript position
      * @param tipos transcriptome starting position containing this pos
+     * @param tepos transcriptome ending position containing this pos
      * @param gipos genome starting posision containing this pos
-     * @param gepos genome ending position containing this pos
      * @param strand genome strand this transcript comes from
      */
-    inline int32_t trpos2gnpos(int32_t tpos, int32_t tipos, int32_t gipos, int32_t gepos, char strand){
+    inline int32_t trpos2gnpos(int32_t tpos, int32_t tipos, int32_t tepos, int32_t gipos, char strand){
         if(strand == '+'){
-            return gipos + (tipos - tpos);
+            return gipos + (tpos - tipos);
         }else{
-            return gepos - (tipos - tpos);
+            return gipos + (tepos - tpos);
         }
     }
 }

@@ -293,8 +293,8 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
             gl[i].mGene1 = vstr[5];
             gl[i].mChr1 = vstr[6];
             if(tr.unit == "exon"){
-                gl[i].mPos1 = svutil::trpos2gnpos(svs[i].mSVStart, std::atoi(vstr[1].c_str()), 
-                                                  std::atoi(vstr[7].c_str()), std::atoi(vstr[8].c_str()), vstr[8][0]);
+                gl[i].mPos1 = svutil::trpos2gnpos(svs[i].mSVStart, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()),
+                                                  std::atoi(vstr[7].c_str()),  vstr[9][0]);
             }
         }
         for(auto& e: trsList) gl[i].mTrans1.push_back(e.toStr());
@@ -317,8 +317,8 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
             gl[i].mGene2 = vstr[5];
             gl[i].mChr2 = vstr[6];
             if(tr.unit == "exon"){
-                gl[i].mPos2 = svutil::trpos2gnpos(svs[i].mSVEnd, std::atoi(vstr[1].c_str()), 
-                                                  std::atoi(vstr[7].c_str()), std::atoi(vstr[8].c_str()), vstr[8][0]);
+                gl[i].mPos2 = svutil::trpos2gnpos(svs[i].mSVEnd, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()), 
+                                                  std::atoi(vstr[7].c_str()), vstr[9][0]);
             }
         }
         for(auto& e: trsList) gl[i].mTrans2.push_back(e.toStr());
