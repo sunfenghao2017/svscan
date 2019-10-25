@@ -222,29 +222,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         }
         // Read-count and spanning annotation
         if((!(b->core.flag & BAM_FPAIRED)) || covRecs[b->core.mtid].empty()) continue;
-        uint8_t* data = bam_aux_get(b, "MC");
-        if(data){
-            char* c = bam_aux2Z(data);
-            int32_t leadingSC = 0, tailingSC = 0;
-            while(*c){
-                int32_t num = 0;
-                if(std::isdigit((int)*c)){
-                    num = std::strtol(c, &c, 10);
-                }else{
-                    num = 1;
-                }
-                switch(*c){
-                    case 'S':
-                        if(!leadingSC) leadingSC = num;
-                        else tailingSC = num;
-                        break;
-                    default:
-                        break;
-                }
-                ++c;
-            }
-            if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
-        }
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
             if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
             // Read-depth fragment counting
