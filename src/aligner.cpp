@@ -92,10 +92,10 @@ int Aligner::gotoh(Matrix2D<char>* alnResult){
     int32_t col = n;
     std::vector<char> btr;
     while((row > 0) || (col > 0)){
-        if(bitHor[row * mf + col]){
+        if(col > 0 && bitHor[row * mf + col]){
             --col;
             btr.push_back('h');
-        }else if(bitVer[row * mf + col]){
+        }else if(row > 0 && bitVer[row * mf + col]){
             --row;
             btr.push_back('v');
         }else{
@@ -163,10 +163,10 @@ int Aligner::needle(Matrix2D<char>* alnResult){
     int32_t col = n;
     std::vector<char> btr;
     while((row > 0) || (col > 0)){
-        if(bitHor[row * mf + col]){
+        if(col > 0 && bitHor[row * mf + col]){
             --col;
             btr.push_back('h');
-        }else if(bitVer[row * mf + col]){
+        }else if(row > 0 && bitVer[row * mf + col]){
             --row;
             btr.push_back('v');
         }else{
