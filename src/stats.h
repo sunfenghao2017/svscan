@@ -245,20 +245,56 @@ struct JunctionCount{
     }
 };
 
+/** class to store an transcript record */
+struct TrsRec{
+    std::string name;    ///< transcript name
+    std::string gene;    ///< gene name
+    std::string unit;    ///< uint name
+    std::string strand;  ///< strand
+    std::string number;  ///< count
+    std::string primary; ///< Y if it's a canonical transcript
+    bool drop;           ///< drop from report if true
+    int32_t pos;         ///< position on genome
+    std::string chr;     ///< used only in RNA sv
+
+    /** TrsRec constructor */
+    TrsRec(){}
+
+    /** TrsRec destructor */
+    ~TrsRec(){}
+
+    /** convert TrsRec to string
+     * @return string representation of TrsRec
+     */
+    std::string toStr(){
+        std::string ret;
+        ret.append(name);
+        ret.append(",");
+        ret.append(unit);
+        ret.append(",");
+        ret.append(strand);
+        ret.append(",");
+        ret.append(number);
+        return ret;
+    }
+};
+
+/** class to store a list of TrsRec */
+typedef std::vector<TrsRec> TrsRecList;
+
+/** class to store a list of FuseGene */
+typedef std::vector<FuseGene> FuseGeneList;
+
 /** class to store gene information of an SV */
 class GeneInfo{
     public:
-        std::string mGene1 = "-";         ///< gene name of breakpoint position on larger chrosome
-        std::string mGene2 = "-";         ///< gene name of breakpoint position on small chrosome
-        std::string mStrand1 = ".";       ///< mGene1 strand on reference genome
-        std::string mStrand2 = ".";       ///< mGene2 strand on reference genome
-        FuseGene mFuseGene;               ///< fusion gene information
-        std::vector<std::string> mTrans1; ///< transcript names of breakpoint position on larger chrosome
-        std::vector<std::string> mTrans2; ///< transcript names of breakpoint position on small chrosome
-        int32_t mPos1 = 0;                ///< position on genome (RNA sv only)
-        int32_t mPos2 = 0;                ///< position on genome (RNA sv only)
-        std::string mChr1 = ".";          ///< chr of gene1
-        std::string mChr2 = ".";          ///< chr of gene2
+        TrsRecList mGene1;       ///< gene transcript records of breakpoint on larger chrosome
+        TrsRecList mGene2;       ///< gene transcript records of breakpoint on little chrosome
+        FuseGeneList mFuseGene;  ///< fusion gene information
+        int32_t mPos1 = 0;       ///< position on genome (RNA sv only)
+        int32_t mPos2 = 0;       ///< position on genome (RNA sv only)
+        std::string mChr1 = "."; ///< chr of gene1
+        std::string mChr2 = "."; ///< chr of gene2
 
     public:
         /** default constructor */
@@ -272,19 +308,95 @@ class GeneInfo{
          * @param gi reference of GeneInfo
          * @return reference of ostream
          */
-        inline friend std::ostream& operator<<(std::ostream& os, const GeneInfo& gi){
-            os << "Gene1: " << gi.mGene1 << "\n";
-            os << "Gene2: " << gi.mGene2 << "\n";
-            os << "Starnd1: " << gi.mStrand1 << "\n";
-            os << "Strand2: " << gi.mStrand2 << "\n";
-            os << "FuseGene: " << gi.mFuseGene << "\n";
-            os << "Trans1: " << util::join(gi.mTrans1, ";") << "\n";
-            os << "Trans2: " << util::join(gi.mTrans2, ";") << "\n";
+        inline friend std::ostream& operator<<(std::ostream& os, GeneInfo& gi){
+            os << "Gene1: ";
+            for(uint32_t i = 0; i < gi.mGene1.size(); ++i){
+                os << gi.mGene1[i].toStr();
+                if(i != gi.mGene1.size() - 1) os << ";";
+            }
+            os << "\n";
+            os << "Gene2: ";
+            for(uint32_t i = 0; i < gi.mGene2.size(); ++i){
+                os << gi.mGene2[i].toStr();
+                if(i != gi.mGene2.size() - 1) os << ";";
+            }
+            os << "\n";
+            os << "FuseGene: ";
+            for(uint32_t i = 0; i < gi.mFuseGene.size(); ++i){
+                os << gi.mFuseGene[i];
+                if(i != gi.mFuseGene.size() - 1) os << ",";
+            }
+            os << "\n";
             os << "Pos1: " << gi.mPos1 << "\n";
             os << "Pos2: " << gi.mPos2 << "\n";
             os << "Chr1: " << gi.mChr1 << "\n";
             os << "Chr2: " << gi.mChr2 << "\n";
             return os;
+        }
+
+        /** get str rep of FuseGene
+         * @return string rep of FuseGene
+         */
+        inline std::string getFuseGene(){
+            std::vector<std::string> fstr;
+            for(uint32_t i = 0; i < mFuseGene.size(); ++i){
+                fstr.push_back(mFuseGene[i].toStr());
+            }
+            return util::join(fstr, ";");
+        }
+
+        /** get fsmask of FuseGene
+         * @return fsmask of FuseGene
+         */
+        inline std::string getFsMask(){
+            std::vector<std::string> fmsk;
+            for(uint32_t i = 0; i < mFuseGene.size(); ++i){
+                fmsk.push_back(std::to_string(mFuseGene[i].status));
+            }
+            return util::join(fmsk, ";");
+        }
+
+        /** get str rep of gene in mGene1
+         * @return string rep of gene in mGene1
+         */
+        inline std::string getGene1(){
+            std::vector<std::string> trs;
+            for(uint32_t i = 0; i < mGene1.size(); ++i){
+                trs.push_back(mGene1[i].gene);
+            }
+            return util::join(trs, ";");
+        }
+        
+        /** get str rep of gene in Gene2
+         * @return string rep of gene in mGene2
+         */
+        inline std::string getGene2(){
+            std::vector<std::string> trs;
+            for(uint32_t i = 0; i < mGene2.size(); ++i){
+                trs.push_back(mGene2[i].gene);
+            }
+            return util::join(trs, ";");
+        }
+        /** get str rep of transcripts of mGene1
+         * @return string rep of transcript of mGene1
+         */
+        inline std::string getTrs1(){
+            std::vector<std::string> trs;
+            for(uint32_t i = 0; i < mGene1.size(); ++i){
+                trs.push_back(mGene1[i].toStr());
+            }
+            return util::join(trs, ";");
+        }
+        
+        /** get str rep of transcript of mGene2
+         * @return string rep of transcript of mGene2
+         */
+        inline std::string getTrs2(){
+            std::vector<std::string> trs;
+            for(uint32_t i = 0; i < mGene2.size(); ++i){
+                trs.push_back(mGene2[i].toStr());
+            }
+            return util::join(trs, ";");
         }
 };
 
@@ -378,21 +490,21 @@ class Stats{
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportSVTSV(const SVSet& svs, const GeneInfoList& gl);
+        void reportSVTSV(SVSet& svs, GeneInfoList& gl);
 
         /** report TSV format report of valid Fusion events
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportFusionTSV(const SVSet& svs, GeneInfoList& gl);
+        void reportFusionTSV(SVSet& svs, GeneInfoList& gl);
         
         /** convert an sv event to fusion record
-         * @param svs reference of SVSet
-         * @param gl reference of GeneInfoList
-         * @param i index at which SV event will be converted
+         * @param svr reference of SVRecord
+         * @param gi reference of GeneInfo
+         * @param i which fusion will  be converted(-1 to all)
          * @return fusion record
          */
-        std::string toFuseRec(const SVSet& svs, const GeneInfoList& gl, int32_t i);
+        std::string toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i);
 
         /** mask fusion event status 
          * @param svs reference of SVSet

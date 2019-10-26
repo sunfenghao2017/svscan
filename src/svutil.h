@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <cstdint>
 #include "util.h"
@@ -215,6 +216,17 @@ struct FuseGene{
 
     /** FuseGene destructor */
     ~FuseGene(){};
+
+    /** get string representation of FuseGene
+     * @return string representation of FuseGene
+     */
+    inline std::string toStr(){
+        std::stringstream ss;
+        ss << hgene << "->" << tgene << "(";
+        ss << hgene << "," << hend << "," << hstrand << ",";
+        ss << tgene << "," << tend << "," << tstrand << ")";
+        return ss.str();
+    }
 
     /** operator to output FuseGene to ostream
      * @param os reference of ostream

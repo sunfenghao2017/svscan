@@ -174,158 +174,141 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     return finalStat;
 }
 
-void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
-    gl.resize(svs.size());
-    std::vector<std::string> vstr;
-    kstring_t rec = {0, 0, 0};
-    htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
-    tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
-    char strand1 = '.';
-    char strand2 = '.';
+void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx){
     std::vector<TrsRec> trsList;
     std::stringstream regs;
+    regs << chr << ":" << pos << "-" << pos + 1;
+    hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
+    kstring_t rec = {0, 0, 0};
+    std::vector<std::string> vstr;
+    std::set<std::string> trsGotIE; // gene got intron/exon spanning this bp
+    std::map<std::string, std::string> gene2cnc; // gene with canonical transcript spanning this bp
+    std::map<std::string, std::string> gene2rdt; // gene with no canonical transcript spanning this bp, keep random one
+    while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
+        util::split(rec.s, vstr, "\t");
+        TrsRec tr;
+        tr.strand = vstr[3];
+        tr.unit = vstr[4];
+        tr.number = vstr[5];
+        tr.name = vstr[6];
+        tr.gene = vstr[7];
+        tr.primary = vstr[9];
+        tr.drop = false;
+        trsList.push_back(tr);
+        if(!util::startsWith(tr.unit, "utr")) trsGotIE.insert(tr.name);
+        if(tr.primary == "Y") gene2cnc[tr.gene] = tr.name;
+    }
+    // get clean transcript list spanning this breakpoint
+    for(auto& tr: trsList){
+        // if utr and exon/intron of one trnascript spanning this breakpoint simultaneously, keep exon and intron only
+        if(trsGotIE.find(tr.name) != trsGotIE.end()){
+            if(util::startsWith(tr.unit, "utr")){
+                tr.drop = true;
+            }
+        }
+        // if one gene has canonical transcript spanning this breakpoint, keep the canonical transcript only
+        // if one gene has none canonical transcript spanning this breakpoint, random choose one trascript of this gene
+        auto g2citr = gene2cnc.find(tr.gene);
+        if(g2citr != gene2cnc.end()){
+            if(tr.name != g2citr->second) tr.drop = true;
+        }else{
+            if(!tr.drop) gene2rdt[tr.gene] = tr.name;
+        }
+    }
+    for(auto& tr: trsList){
+        if(tr.drop) continue;
+        auto g2rtr = gene2rdt.find(tr.gene);
+        if(g2rtr != gene2rdt.end()){
+            if(tr.name != g2rtr->second){
+                tr.drop = true;
+            }
+        }
+    }
+    // output valid transcript
+    for(auto& tr: trsList){
+        if(!tr.drop) trl.push_back(tr);
+    }
+    // cleanup
+    hts_itr_destroy(itr);
+    free(rec.s);
+}
+
+void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
+    gl.resize(svs.size());
+    htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
+    tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     for(uint32_t i = 0; i < svs.size(); ++i){
-        trsList.clear();
-        int cnt[2] = {0, 0};
-        regs.clear();
-        regs.str("");
-        regs << svs[i].mNameChr1 << ":" << svs[i].mSVStart << "-" << svs[i].mSVStart + 1;
-        hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
-        while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
-            util::split(rec.s, vstr, "\t");
-            TrsRec tr;
-            tr.strand = vstr[3];
-            tr.unit = vstr[4];
-            tr.number = vstr[5];
-            tr.name = vstr[6];
-            tr.primary = vstr[9];
-            trsList.push_back(tr);
-            gl[i].mGene1 = vstr[7];
-            if(vstr[3][0] == '+') cnt[0] += 1;
-            else cnt[1] += 1;
-        }
-        bool hasPrimaryTrs = false;
-        for(auto& e: trsList){
-            if(e.primary == "Y") hasPrimaryTrs = true;
-        }
-        if(hasPrimaryTrs){
-            for(auto& e: trsList){
-                if(e.primary == "Y"){
-                    gl[i].mTrans1.push_back(e.toStr());
-                }
-            }
-        }else{
-            for(auto& e: trsList){
-                gl[i].mTrans1.push_back(e.toStr());
+        // get trascripts at breakpoint 1
+        getDNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
+        // get transcripts at breakpoint 2
+        getDNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx);
+        // annotate fusion gene
+        for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
+            for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
+                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
+                gl[i].mFuseGene.push_back(fsg);
             }
         }
-        strand1 = (cnt[0] > cnt[1] ? '+' : '-');
-        cnt[0] = 0;
-        cnt[1] = 0;
-        tbx_itr_destroy(itr);
-        trsList.clear();
-        regs.clear();
-        regs.str("");
-        regs << svs[i].mNameChr2 << ":" << svs[i].mSVEnd << "-" << svs[i].mSVEnd + 1;
-        itr = tbx_itr_querys(tbx, regs.str().c_str());
-        while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
-            util::split(rec.s, vstr, "\t");
-            TrsRec tr;
-            tr.strand = vstr[3];
-            tr.unit = vstr[4];
-            tr.number = vstr[5];
-            tr.name = vstr[6];
-            tr.primary = vstr[9];
-            trsList.push_back(tr);
-            gl[i].mGene2 = vstr[7];
-            if(vstr[3][0] == '+') cnt[0] += 1;
-            else cnt[1] += 1;
-        }
-        hasPrimaryTrs = false;
-        for(auto& e: trsList){
-            if(e.primary == "Y") hasPrimaryTrs = true;
-        }
-        if(hasPrimaryTrs){
-            for(auto& e: trsList){
-                if(e.primary == "Y"){
-                    gl[i].mTrans2.push_back(e.toStr());
-                }
-            }
-        }else{
-            for(auto& e: trsList){
-                gl[i].mTrans2.push_back(e.toStr());
-            }
-        }
-        strand2 = (cnt[0] > cnt[1] ? '+' : '-');
-        tbx_itr_destroy(itr);
-        gl[i].mStrand1 = std::string(1, strand1);
-        gl[i].mStrand2 = std::string(1, strand2);
-        gl[i].mFuseGene = svutil::getFusionGene(gl[i].mGene1, gl[i].mGene2, strand1, strand2, svs[i].mSVT);
     }
     tbx_destroy(tbx);
     hts_close(fp);
 }
+
+void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx){
+    std::stringstream regs;
+    regs << chr << ":" << pos << "-" << pos + 1;
+    hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
+    kstring_t rec = {0, 0, 0};
+    std::vector<std::string> vstr;
+    std::set<std::string> trsGotIE; // gene got intron/exon spanning this bp
+    TrsRecList trsList;
+    while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
+        util::split(rec.s, vstr, "\t");
+        TrsRec tr;
+        tr.strand = vstr[9];
+        tr.unit = vstr[3];
+        tr.number = vstr[4];
+        tr.name = vstr[0];
+        tr.gene = vstr[5];
+        tr.chr = vstr[6];
+        tr.drop = false;
+        tr.pos = svutil::trpos2gnpos(pos, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()), std::atoi(vstr[7].c_str()),  vstr[9][0]);
+        trsList.push_back(tr);
+        if(!util::startsWith(tr.unit, "utr")) trsGotIE.insert(tr.name);
+    }
+    // get clean transcript list spanning this breakpoint
+    for(auto& tr: trsList){
+        // if utr and exon/intron of one trnascript spanning this breakpoint simultaneously, keep exon and intron only
+        if(trsGotIE.find(tr.name) != trsGotIE.end()){
+            if(util::startsWith(tr.unit, "utr")){
+                tr.drop = true;
+            }
+        }
+    }
+    // output valid transcript
+    for(auto& tr: trsList){
+        if(!tr.drop) trl.push_back(tr);
+    }
+    // cleanup
+    hts_itr_destroy(itr);
+    free(rec.s);
+}
+
 void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
     gl.resize(svs.size());
-    std::vector<std::string> vstr;
-    kstring_t rec = {0, 0, 0};
     htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
-    std::vector<TrsRec> trsList;
-    std::string strand1, strand2;
-    std::stringstream regs;
     for(uint32_t i = 0; i < svs.size(); ++i){
-        trsList.clear();
-        regs.clear();
-        regs.str("");
-        regs << svs[i].mNameChr1 << ":" << svs[i].mSVStart << "-" << svs[i].mSVStart + 1;
-        hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
-        while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
-            util::split(rec.s, vstr, "\t");
-            TrsRec tr;
-            tr.strand = vstr[9];
-            strand1 = vstr[9];
-            tr.unit = vstr[3];
-            tr.number = vstr[4];
-            tr.name = vstr[0];
-            tr.chr = vstr[6];
-            trsList.push_back(tr);
-            gl[i].mGene1 = vstr[5];
-            gl[i].mChr1 = vstr[6];
-            if(tr.unit == "exon"){
-                gl[i].mPos1 = svutil::trpos2gnpos(svs[i].mSVStart, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()),
-                                                  std::atoi(vstr[7].c_str()),  vstr[9][0]);
+        // get trascript at breakpoint 1
+        getRNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
+        // get trascript at breakpoint 2
+        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVStart, fp, tbx);
+        // annotate fusion gene
+        for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
+            for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
+                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
             }
         }
-        for(auto& e: trsList) gl[i].mTrans1.push_back(e.toStr());
-        tbx_itr_destroy(itr);
-        trsList.clear();
-        regs.clear();
-        regs.str("");
-        regs << svs[i].mNameChr2 << ":" << svs[i].mSVEnd << "-" << svs[i].mSVEnd + 1;
-        itr = tbx_itr_querys(tbx, regs.str().c_str());
-        while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
-            util::split(rec.s, vstr, "\t");
-            TrsRec tr;
-            tr.strand = vstr[9];
-            strand2 = vstr[9];
-            tr.unit = vstr[3];
-            tr.number = vstr[4];
-            tr.name = vstr[0];
-            tr.chr = vstr[6];
-            trsList.push_back(tr);
-            gl[i].mGene2 = vstr[5];
-            gl[i].mChr2 = vstr[6];
-            if(tr.unit == "exon"){
-                gl[i].mPos2 = svutil::trpos2gnpos(svs[i].mSVEnd, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()), 
-                                                  std::atoi(vstr[7].c_str()), vstr[9][0]);
-            }
-        }
-        for(auto& e: trsList) gl[i].mTrans2.push_back(e.toStr());
-        tbx_itr_destroy(itr);
-        gl[i].mStrand1 = strand1;
-        gl[i].mStrand2 = strand2;
-        gl[i].mFuseGene = svutil::getFusionGene(gl[i].mGene1, gl[i].mGene2, '+',  '+', svs[i].mSVT);
     }
     tbx_destroy(tbx);
     hts_close(fp);
