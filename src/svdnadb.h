@@ -13,10 +13,10 @@
 #include "software.h"
 
 struct SVDNADBOpt{
-    std::string refSeqDB;      ///< refseq database with transcript version added
-    std::string cncTrsList; ///< canonical transcripts list
-    std::string svAnnoDB;       ///< sv annotation database output file
-    Software* softEnv;          ///< software env
+    std::string refSeqDB;   ///< refseq database with transcript version added
+    std::string gene2cnc; ///< gene to canonical transcripts list
+    std::string svAnnoDB;   ///< sv annotation database output file
+    Software* softEnv;      ///< software env
     
     SVDNADBOpt(){
         softEnv = new Software();

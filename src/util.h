@@ -54,14 +54,15 @@ namespace util{
 
     /** get rid of the leading and ending white space characters of a string
      * @param str string to be stripped in both ends
+     * @param str string to be stripped from back
      * @return a string with white spaces stripped in both ends
      */
-    inline std::string strip(const std::string& str){
-        std::string::size_type ipos = str.find_first_not_of(" \t\n\v\f\r");
+    inline std::string strip(const std::string& str, const std::string& pat = " \t\n\v\f\r"){
+        std::string::size_type ipos = str.find_first_not_of(pat);
         if(ipos == std::string::npos){
             return "";
         }
-        std::string::size_type epos = str.find_last_not_of(" \t\n\v\f\r");
+        std::string::size_type epos = str.find_last_not_of(pat);
         if(epos == ipos){
             return str.substr(ipos);
         }else{
@@ -71,10 +72,11 @@ namespace util{
 
     /** get rid of the left leading white space characters of a string
      * @param str string to be stripped from front
+     * @param pat chrs to be stripped from str
      * @return a string with left leading white spaces stripped
      */
-    inline std::string lstrip(const std::string& str){
-        std::string::size_type pos = str.find_first_not_of(" \t\n\v\f\r");
+    inline std::string lstrip(const std::string& str, const std::string& pat = " \t\n\v\f\r"){
+        std::string::size_type pos = str.find_first_not_of(pat);
         if(pos == std::string::npos){
             return "";
         }
@@ -83,10 +85,11 @@ namespace util{
 
     /** get rid of the trailling white space characters of a string
      * @param str string to be stripped from back
+     * @param pat chrs to be stripped from str
      * @return a string with right ending white spaces stripped
      */
-    inline std::string rstrip(const std::string& str){
-        std::string::size_type pos = str.find_last_not_of(" \t\n\v\f\r");
+    inline std::string rstrip(const std::string& str, const std::string& pat = " \t\n\v\f\r"){
+        std::string::size_type pos = str.find_last_not_of(pat);
         if(pos == std::string::npos){
            return "";
         }

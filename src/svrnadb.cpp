@@ -77,8 +77,8 @@ void SVRNADBOpt::prepDB(){
         if(processedTrs.find(trs) != processedTrs.end()) continue;
         else processedTrs.insert(trs); // only process each trascript once
         // exon range (dna)
-        util::split(vstr[9], istr, ",");
-        util::split(vstr[10], estr, ",");
+        util::split(util::rstrip(vstr[9], ","), istr, ",");
+        util::split(util::rstrip(vstr[10], ","), estr, ",");
         util::strvec2intvec(istr, iint);
         util::strvec2intvec(estr, eint);
         std::vector<int32_t> exonlens(iint.size(), 0);
@@ -99,7 +99,7 @@ void SVRNADBOpt::prepDB(){
             }
             if(cdsEnd < eint[i]){
                 if(cdsEnd < iint[i]) rutrlen += exonlens[i];
-                else rutrlen += eint[i] - cdsEnd;
+                else rutrlen += eint[i] - cdsEnd - 1;
             }
         }
         // utr range (dna)
@@ -147,7 +147,7 @@ void SVRNADBOpt::prepDB(){
             int32_t acculen = 0;
             for(uint32_t i = 0; i < exonlens.size(); ++i){
                 aoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (i + 1) << "\t" << gene << "\t";
-                aoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\t" << version << "\n";
+                aoss << chr << "\t" << iint[i] << "\t" << (eint[i] - 1) << "\t" << strand << "\t" << version << "\n";
                 // unit bed region
                 uoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon" << (i + 1) << "\n";
                 acculen += exonlens[i];
@@ -156,7 +156,7 @@ void SVRNADBOpt::prepDB(){
             int32_t acculen = 0;
             for(int32_t i = exonlens.size() - 1; i >= 0; --i){
                 aoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (exonlens.size() - i) << "\t" << gene << "\t";
-                aoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\t" << version << "\n";
+                aoss << chr << "\t" << iint[i] << "\t" << (eint[i] - 1) << "\t" << strand << "\t" << version << "\n";
                 // unit bed region
                 uoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon" << (exonlens.size() - i) << "\n";
                 acculen += exonlens[i];

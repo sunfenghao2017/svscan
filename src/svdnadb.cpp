@@ -1,11 +1,9 @@
 #include "svdnadb.h"
 
 void SVDNADBOpt::prepDB(){
-    // parse main transcripts
-    std::set<std::string> mainTrs;
-    std::ifstream fr(cncTrsList);
-    std::string tmpStr;
-    while(std::getline(fr, tmpStr)) mainTrs.insert(tmpStr);
+    // parse gene2main transcript map
+    std::map<std::string, std::string> g2cmap;
+    util::makeMapPairFromFileByLine(gene2cnc, g2cmap);
     BGZF* ifp = bgzf_open(refSeqDB.c_str(), "rb");
     BGZF* ofp = bgzf_open(svAnnoDB.c_str(), "wb");
     kstring_t str = {0, 0, 0};
@@ -14,7 +12,6 @@ void SVDNADBOpt::prepDB(){
     std::vector<std::string> istr, estr;
     std::vector<int32_t> iint, eint;
     std::stringstream oss;
-    std::map<std::string, bool> ghasm;
     // chr start end strand feature count trsname tgenename trsversion
     while(bgzf_getline(ifp, '\n', &str) > 0){
         oss.str(""); 
@@ -29,10 +26,11 @@ void SVDNADBOpt::prepDB(){
         int32_t trsEnd = std::atoi(vstr[5].c_str()) - 1;
         int32_t cdsStart = std::atoi(vstr[6].c_str());
         int32_t cdsEnd = std::atoi(vstr[7].c_str()) - 1;
-        if(ghasm.find(gene) == ghasm.end()) ghasm[gene] = false;
-        bool isMaintrs = (mainTrs.find(trs) != mainTrs.end()); 
-        std::string msMK = (isMaintrs ? "Y" : "N");
-        if(isMaintrs) ghasm[gene] = true;
+        std::string msMK = "Y"; // canonical transcript marker
+        auto iter = g2cmap.find(gene);
+        if(iter != g2cmap.end()){ // has a canonical transcript predefiend
+            if(trs != iter->second) msMK = "N";
+        }
         // utr range
         int32_t utr5start = trsStart;
         int32_t utr5end = cdsStart - 1;
@@ -52,8 +50,8 @@ void SVDNADBOpt::prepDB(){
             oss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\tutr3\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
         }
         // exon range
-        util::split(vstr[9], istr, ",");
-        util::split(vstr[10], estr, ",");
+        util::split(util::rstrip(vstr[9], ","), istr, ",");
+        util::split(util::rstrip(vstr[10], ","), estr, ",");
         util::strvec2intvec(istr, iint);
         util::strvec2intvec(estr, eint);
         for(uint32_t i = 0; i < iint.size(); ++i){
@@ -80,11 +78,6 @@ void SVDNADBOpt::prepDB(){
         // output str
         std::string recs = oss.str();
         assert(bgzf_write(ofp, recs.c_str(), recs.size()) >= 0);
-    }
-    for(auto& e: ghasm){
-        if(!e.second){
-            std::cout << e.first << " has no main trs!" << std::endl;
-        }
     }
     bgzf_close(ofp);
     bgzf_close(ifp);

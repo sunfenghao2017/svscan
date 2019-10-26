@@ -62,7 +62,7 @@ int main(int argc, char** argv){
     SVDNADBOpt* annDBOpt = new SVDNADBOpt();
     CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");
     panndb->add_option("-i,--in", annDBOpt->refSeqDB, "refseq database with transcript version added")->required(true)->check(CLI::ExistingFile);
-    panndb->add_option("-m,--mtrs", annDBOpt->cncTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
+    panndb->add_option("-m,--mtrs", annDBOpt->gene2cnc, "gene to canonical transcript list")->required(true)->check(CLI::ExistingFile);
     panndb->add_option("-o,--out", annDBOpt->svAnnoDB, "output file path of sv annotation db", true);
     // rna annodb
     SVRNADBOpt* rnaDBOpt = new SVRNADBOpt();
