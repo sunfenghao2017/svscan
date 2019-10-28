@@ -201,6 +201,8 @@ struct FuseGene{
     std::string tgene;   ///< gene name of 3' part of fusion gene
     std::string tend;    ///< tgene 3' or 5' fused
     std::string tstrand; ///< hgene + or - strand fused
+    int32_t hidx;        ///< hgene index
+    int32_t tidx;        ///< tgene index
     TFUSION_FLAG status; ///< mask to show fusion status 1:gene,2:normal,4:hot,8:common,16:indb,32:mirror
 
     /** FuseGene constructor */

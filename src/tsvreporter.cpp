@@ -3,15 +3,16 @@
 
 void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
-    fw << "svType\tsvSize\tbpMark\t";//[0, 2]
-    fw << "fuseGene\t"; //[3];
-    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";//[4,6]
-    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";//[7,9]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";//[10,13]
-    fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";//[14,18]
-    fw << "bp1Trs\tbp2Trs\tsvSeq\tseqBp\tID\tsvtInt\tfsMask";//[19,25]
+    fw << "svType\tsvSize\tbpMark\t";//[0,2]
+    fw << "bp1Chr\tbp1Pos\tbp2Chr\tbp2Pos\t"; // [3,6]
+    fw << "srCount\tdpCount\t";// [7,8]
+    fw << "srRescued\tdpRescued\t"; // [9,10]
+    fw << "srRefCount\tdpRefCount\tAF\t"; // [11,13]
+    fw << "insBp\tinsSeq\tsvSeq\tseqBp\t";// [14,17]
+    fw << "ID\tsvtInt\t"; // [18,19]
+    fw << "bp1Gene\tbp2Gene\tfuseGene\tfsMask"; // [20,23]
     if(mOpt->rnamode){
-        fw << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[26,29]
+        fw << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[24,27]
     }else{
         fw << "\n";
     }
@@ -26,19 +27,8 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         else fw << svs[i].mSize << "\t";
         // bpMark
         fw << svutil::getBpMark(svs[i].mSVT) << "\t";
-        // fuseGene
-        fw << gl[i].getFuseGene() << "\t";
-        if(mOpt->rnamode){
-            // bp1Chr bp1Pos bp1Gene
-            fw << gl[i].mChr1 << "\t" << gl[i].mPos1 << "\t" << gl[i].getGene1() << "\t";
-            // bp2Chr bp2Pos bp2Gene
-            fw << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t" << gl[i].getGene2() << "\t";
-        }else{
-            // bp1Chr bp1Pos bp1Gene
-            fw << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" << gl[i].getGene1() << "\t";
-            // bp2Chr bp2Pos bp2Gene
-            fw << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\t" << gl[i].getGene2() << "\t";
-        }
+        // bp1Chr bp1Pos bp2Chr bp2Pos
+        fw << gl[i].mChr1 << "\t" << gl[i].mPos1 << "\t" << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t";
         // srCount dpCount srRescued dpRescued
         fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t" << mJctCnts[i].mAltQual.size() << "\t" << mSpnCnts[i].mAltQual.size() << "\t";
         // srRefCount dpRefCount
@@ -48,17 +38,19 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         else fw << (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size()) << "\t";
         // insBp insSeq
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
-        // bp1Trs bp2Trs svID
-        if(gl[i].mGene1.empty()) fw << "-\t";
-        else fw << gl[i].getTrs1() << "\t";
-        if(gl[i].mGene2.empty()) fw << "-\t";
-        else fw << gl[i].getTrs2() << "\t";
         // svSeq seqBp
         if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t-\t";
         else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t" << svs[i].mGapCoord[0] << "\t";
         else fw << "-\t-\t";
-        // svID svtInt fsMask
-        fw << svs[i].mID << "\t" << svs[i].mSVT << "\t" << gl[i].getFsMask();
+        // svID svtInt
+        fw << svs[i].mID << "\t" << svs[i].mSVT << "\t";
+        // bp1Gene bp2Gene svID
+        if(gl[i].mGene1.empty()) fw << "-\t";
+        else fw << gl[i].getTrs1() << "\t";
+        if(gl[i].mGene2.empty()) fw << "-\t";
+        else fw << gl[i].getTrs2() << "\t";
+        // fuseGene fsMask
+        fw << gl[i].getFuseGene() << "\t" << gl[i].getFsMask();
         if(mOpt->rnamode){
             // ts1Name ts1Pos ts2Name ts2Pos
             fw << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\n";
@@ -246,9 +238,9 @@ std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
     else af = (double)(dpv)/(double)(dpv + dpr);
     oss << gi.mFuseGene[i].hgene << "->" << gi.mFuseGene[i].tgene << "\t"; // FusionGene
     if(gi.mGene1[i].gene == gi.mFuseGene[i].hgene){// FusionPattern
-        oss << gi.mGene1[i].strand << gi.mGene2[i].strand << "\t";
+        oss << gi.mGene1[gi.mFuseGene[i].hidx].strand << gi.mGene2[gi.mFuseGene[i].tidx].strand << "\t";
     }else{
-        oss << gi.mGene2[i].strand << gi.mGene1[i].strand << "\t";
+        oss << gi.mGene2[gi.mFuseGene[i].hidx].strand << gi.mGene1[gi.mFuseGene[i].hidx].strand << "\t";
     }
     if(svr.mPrecise){// FusionReads TotalReads FusionRate
         oss << srv << "\t";
@@ -261,46 +253,42 @@ std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
     }
     if(gi.mGene1[i].gene == gi.mFuseGene[i].hgene){
         // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-        oss << gi.mGene1[i].gene << "\t";
+        oss << gi.mGene1[gi.mFuseGene[i].hidx].gene << "\t";
         if(mOpt->rnamode){
             oss << gi.mChr1 << "\t" << gi.mPos1 << "\t";
         }else{
             oss << svr.mNameChr1 << "\t" << svr.mSVStart << "\t";
         }
-        oss <<  gi.mGene1[i].strand << "\t";
-        if(gi.mGene1.empty()) oss << "-\t";
-        else oss << gi.getTrs1() << "\t";
+        oss <<  gi.mGene1[gi.mFuseGene[i].hidx].strand << "\t";
+        oss << gi.mGene1[gi.mFuseGene[i].hidx].name << "\t";
         // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-        oss << gi.mGene2[i].gene << "\t";
+        oss << gi.mGene2[gi.mFuseGene[i].tidx].gene << "\t";
         if(mOpt->rnamode){
             oss << gi.mChr2 << "\t" << gi.mPos2 << "\t";
         }else{
             oss << svr.mNameChr2 << "\t" << svr.mSVEnd << "\t";
         }
-        oss <<  gi.mGene2[i].strand << "\t";
-        if(gi.mGene2.empty()) oss << "-\t";
-        else oss << gi.getTrs2() << "\t";
+        oss <<  gi.mGene2[gi.mFuseGene[i].tidx].strand << "\t";
+        oss << gi.mGene2[gi.mFuseGene[i].tidx].name << "\t";
     }else{
-        // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-        oss << gi.mGene2[i].gene << "\t";
+        // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
+        oss << gi.mGene2[gi.mFuseGene[i].hidx].gene << "\t";
         if(mOpt->rnamode){
             oss << gi.mChr2 << "\t" << gi.mPos2 << "\t";
         }else{
-            oss << svr.mNameChr2 << "\t" << svr.mSVEnd << "\t";
+            oss << svr.mNameChr2 << "\t" << svr.mSVStart << "\t";
         }
-        oss <<  gi.mGene2[i].strand << "\t";
-        if(gi.mGene2.empty()) oss << "-\t";
-        else oss << gi.getTrs2() << "\t";
-        // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-        oss << gi.mGene1[i].gene << "\t";
+        oss <<  gi.mGene2[gi.mFuseGene[i].hidx].strand << "\t";
+        oss << gi.mGene2[gi.mFuseGene[i].hidx].name << "\t";
+        // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
+        oss << gi.mGene1[gi.mFuseGene[i].tidx].gene << "\t";
         if(mOpt->rnamode){
             oss << gi.mChr1 << "\t" << gi.mPos1 << "\t";
         }else{
-            oss << svr.mNameChr1 << "\t" << svr.mSVStart << "\t";
+            oss << svr.mNameChr1 << "\t" << svr.mSVEnd << "\t";
         }
-        oss <<  gi.mGene1[i].strand << "\t";
-        if(gi.mGene1.empty()) oss << "-\t";
-        else oss << gi.getTrs1() << "\t";
+        oss <<  gi.mGene1[gi.mFuseGene[i].tidx].strand << "\t";
+        oss << gi.mGene1[gi.mFuseGene[i].tidx].name << "\t";
     }
     // FusinSequence
     if(svr.mSVT == 4) oss << svr.mInsSeq << "\t-\t";
@@ -308,34 +296,34 @@ std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
     else oss << "-\t-\t";
     if(gi.mFuseGene[i].status & FUSION_FINDB) oss << "Y\t"; // inDB
     else oss << "N\t";
-    oss << svutil::addID(svr.mSVT) << "\t";     // svType
+    oss << svutil::addID(svr.mSVT) << "\t";                 // svType
     if(svr.mSVT >= 5) oss << "-\t";
-    else oss << svr.mSize << "\t";              // svSize
-    oss << svr.mSRSupport << "\t";              // srCount
-    oss << svr.mPESupport << "\t";              // dpCount
-    oss << mJctCnts[i].mAltQual.size() << "\t";    // srRescued
-    oss << mSpnCnts[i].mAltQual.size() << "\t";    // dpRescued
-    oss << mJctCnts[i].mRefQual.size() << "\t";    // srRefCount
-    oss <<mSpnCnts[i].mRefQual.size() << "\t";     // dpRefCount
-    oss << svr.mBpInsSeq.length() << "\t";      // insBp
+    else oss << svr.mSize << "\t";                          // svSize
+    oss << svr.mSRSupport << "\t";                          // srCount
+    oss << svr.mPESupport << "\t";                          // dpCount
+    oss << mJctCnts[svr.mID].mAltQual.size() << "\t";       // srRescued
+    oss << mSpnCnts[svr.mID].mAltQual.size() << "\t";       // dpRescued
+    oss << mJctCnts[svr.mID].mRefQual.size() << "\t";       // srRefCount
+    oss <<mSpnCnts[svr.mID].mRefQual.size() << "\t";        // dpRefCount
+    oss << svr.mBpInsSeq.length() << "\t";                  // insBp
     if(svr.mBpInsSeq.empty()) oss << "-\t";
-    else oss << svr.mBpInsSeq << "\t";          // insSeq
-    oss << svr.mID << "\t";                     // svID
-    oss << svr.mSVT << "\t";                    // svtInt
-    oss << gi.mFuseGene[i].status;                 // fsMask
+    else oss << svr.mBpInsSeq << "\t";                      // insSeq
+    oss << svr.mID << "\t";                                 // svID
+    oss << svr.mSVT << "\t";                                // svtInt
+    oss << gi.mFuseGene[i].status;                          // fsMask
     if(mOpt->rnamode){
         if(gi.mGene1[i].gene == gi.mFuseGene[i].hgene){
             oss << "\t";
-            oss << svr.mNameChr1 << "\t";       // ts1Name
-            oss << svr.mSVStart << "\t";        // ts1Pos
-            oss << svr.mNameChr2 << "\t";       // ts2Name
-            oss << svr.mSVEnd << "\n";          // ts2Pos
+            oss << svr.mNameChr1 << "\t";                   // ts1Name
+            oss << svr.mSVStart << "\t";                    // ts1Pos
+            oss << svr.mNameChr2 << "\t";                   // ts2Name
+            oss << svr.mSVEnd << "\n";                      // ts2Pos
         }else{
             oss << "\t";
-            oss << svr.mNameChr2 << "\t";       // ts1Name
-            oss << svr.mSVEnd << "\t";          // ts1Pos
-            oss << svr.mNameChr1 << "\t";       // ts2Name
-            oss << svr.mSVStart << "\n";        // ts2Pos
+            oss << svr.mNameChr2 << "\t";                   // ts1Name
+            oss << svr.mSVEnd << "\t";                      // ts1Pos
+            oss << svr.mNameChr1 << "\t";                   // ts2Name
+            oss << svr.mSVStart << "\n";                    // ts2Pos
         }
     }else{
         oss << "\n";

@@ -268,6 +268,8 @@ struct TrsRec{
      */
     std::string toStr(){
         std::string ret;
+        ret.append(gene);
+        ret.append(",");
         ret.append(name);
         ret.append(",");
         ret.append(unit);
