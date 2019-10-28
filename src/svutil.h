@@ -527,7 +527,6 @@ namespace svutil{
     inline FuseGene getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
         FuseGene ret;
         if(gene1 != "-" && gene2 != "-") ret.status |= FUSION_FALLGENE;
-        if(gene1 == "-" || gene2 == "-" || svt == 4) return ret;
         if(svt >= 5) svt -= 5;
         if(svt == 3){// convert 3to5 to 5to3
             std::swap(gene1, gene2);
@@ -629,6 +628,14 @@ namespace svutil{
                 ret.tstrand = "+";
                 ret.status |= FUSION_FNORMALCATDIRECT;
             }
+        }else if(svt == 4){
+            ret.hgene = gene1;
+            ret.tgene = gene2;
+            ret.hend = "5";
+            ret.tend = "3";
+            ret.hstrand = "+";
+            ret.tstrand = "+";
+            ret.status |= FUSION_FNORMALCATDIRECT;
         }
         return ret;
     }
