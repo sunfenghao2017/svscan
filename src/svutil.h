@@ -202,6 +202,8 @@ struct FuseGene{
     std::string tend;    ///< tgene 3' or 5' fused
     std::string tstrand; ///< hgene + or - strand fused
     int32_t hidx;        ///< hgene index
+    bool hfrom1;         ///< hgene is from breakpoint1
+    bool tfrom1;         ///< tgene is from breakpoint1
     int32_t tidx;        ///< tgene index
     TFUSION_FLAG status; ///< mask to show fusion status 1:gene,2:normal,4:hot,8:common,16:indb,32:mirror
 
@@ -214,6 +216,10 @@ struct FuseGene{
         tend = "-";
         tstrand = ".";
         status = 0;
+        hidx = -1;
+        tidx = -1;
+        hfrom1 = false;
+        tfrom1 = false;
     }
 
     /** FuseGene destructor */
@@ -225,7 +231,7 @@ struct FuseGene{
     inline std::string toStr(){
         std::stringstream ss;
         ss << hgene << "->" << tgene << "(";
-        ss << hgene << "," << hend << "," << hstrand << ",";
+        ss << hgene << "," << hend << "," << hstrand << ";";
         ss << tgene << "," << tend << "," << tstrand << ")";
         return ss.str();
     }

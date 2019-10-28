@@ -251,12 +251,28 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
                 if(fsg.hgene != "-"){
-                    if(fsg.hgene == gl[i].mGene1[g1].gene) fsg.hidx = g1;
-                    else fsg.hidx = g2;
+                    if(fsg.hgene == gl[i].mGene1[g1].gene){
+                        fsg.hidx = g1;
+                        fsg.hfrom1 = true;
+                    }else{
+                        fsg.hidx = g2;
+                        fsg.hfrom1 = false;
+                    }
+                }else{
+                    fsg.hidx = g1;
+                    fsg.hfrom1 = true;
                 }
                 if(fsg.tgene != "-"){
-                    if(fsg.tgene == gl[i].mGene1[g1].gene) fsg.tidx = g1;
-                    else fsg.tidx = g2;
+                    if(fsg.tgene == gl[i].mGene1[g1].gene){
+                        fsg.tidx = g1;
+                        fsg.tfrom1 = true;
+                    }else{
+                        fsg.tidx = g2;
+                        fsg.tfrom1 = false;
+                    }
+                }else{
+                    fsg.tidx = g2;
+                    fsg.tfrom1 = false;
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }
@@ -316,13 +332,18 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
         gl[i].mChr1 = gl[i].mGene1[0].chr;
         gl[i].mPos1 = gl[i].mGene1[0].pos;
         // get trascript at breakpoint 2
-        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVStart, fp, tbx);
+        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx);
         gl[i].mChr2 = gl[i].mGene2[0].chr;
         gl[i].mPos2 = gl[i].mGene2[0].pos;
         // annotate fusion gene
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
+                if(fsg.hgene == gl[i].mGene1[g1].gene) fsg.hidx = g1;
+                else fsg.hidx = g2;
+                if(fsg.tgene == gl[i].mGene1[g1].gene) fsg.tidx = g1;
+                else fsg.tidx = g2;
+                gl[i].mFuseGene.push_back(fsg);
             }
         }
     }

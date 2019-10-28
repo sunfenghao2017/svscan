@@ -230,18 +230,18 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
     float af = 0.0;
-    int32_t srv = mJctCnts[i].mAltQual.size();
-    int32_t srr = mJctCnts[i].mRefQual.size();
-    int32_t dpv = mSpnCnts[i].mAltQual.size();
-    int32_t dpr = mSpnCnts[i].mRefQual.size();
+    int32_t srv = mJctCnts[svr.mID].mAltQual.size();
+    int32_t srr = mJctCnts[svr.mID].mRefQual.size();
+    int32_t dpv = mSpnCnts[svr.mID].mAltQual.size();
+    int32_t dpr = mSpnCnts[svr.mID].mRefQual.size();
     if(svr.mPrecise) af = (double)(srv)/(double)(srv + srr);
     else af = (double)(dpv)/(double)(dpv + dpr);
     oss << gi.mFuseGene[i].hgene << "->" << gi.mFuseGene[i].tgene << "\t"; // FusionGene
-    if(gi.mGene1[i].gene == gi.mFuseGene[i].hgene){// FusionPattern
-        oss << gi.mGene1[gi.mFuseGene[i].hidx].strand << gi.mGene2[gi.mFuseGene[i].tidx].strand << "\t";
-    }else{
-        oss << gi.mGene2[gi.mFuseGene[i].hidx].strand << gi.mGene1[gi.mFuseGene[i].hidx].strand << "\t";
-    }
+    // FusionPattern
+    if(gi.mFuseGene[i].hfrom1) oss << gi.mGene1[gi.mFuseGene[i].hidx].strand;
+    else oss << gi.mGene2[gi.mFuseGene[i].hidx].strand;
+    if(gi.mFuseGene[i].tfrom1) oss << gi.mGene1[gi.mFuseGene[i].tidx].strand << "\t";
+    else oss << gi.mGene2[gi.mFuseGene[i].tidx].strand << "\t";
     if(svr.mPrecise){// FusionReads TotalReads FusionRate
         oss << srv << "\t";
         oss << (srr + srv) << "\t"; 
