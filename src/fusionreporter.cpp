@@ -236,12 +236,12 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             if(fgl[i].tfrom1){
                 fgr.chr2 = trsl1[fgl[i].tidx].chr;                                 // Chr2
-                fgr.junctionposition2 = end;                                       // JunctionPosition2
+                fgr.junctionposition2 = start;                                       // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;                           // Strand2
                 fgr.transcript2 = trsl1[fgl[i].tidx].name;                         // Transcript2
             }else{
                 fgr.chr2 = trsl2[fgl[i].tidx].chr;                                 // Chr2
-                fgr.junctionposition2 = start;                                     // JunctionPosition2
+                fgr.junctionposition2 = end;                                     // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;                           // Strand2
                 fgr.transcript2 = trsl2[fgl[i].tidx].name;                         // Transcript2
             }
