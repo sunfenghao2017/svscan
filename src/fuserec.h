@@ -24,25 +24,25 @@ struct FusionRecord{
     std::string strand2;        ///< strand tgene situated on chr2
     std::string transcript2;    ///< transcript of tgene
     std::string fusionsequence; ///< fusion concensus sequence
-    std::string fseqbp;         ///< fusion sequence length of one partner in fusiongene
+    int32_t fseqbp;             ///< fusion sequence length of one partner in fusiongene
     std::string indb;           ///< this fusion event is in public database if true
     std::string svt;            ///< svtype, raw str representation
-    std::string svsize;         ///< sv size of this fusion event
-    std::string srcount;        ///< seed split reads supporting this fusion event
-    std::string dpcount;        ///< seed discordant pair of reads supporting this fusion event
-    std::string srrescued;      ///< all split reads supporting this fusion event
-    std::string dprescued;      ///< all siscordant pair of reads supporting this fusion event
-    std::string srrefcount;     ///< all reads supporting ref type
-    std::string dprefcount;     ///< all paired reads supporting ref type
-    std::string insbp;          ///< inserted sequence length around breakpoint
+    int32_t svsize;             ///< sv size of this fusion event
+    int32_t srcount;            ///< seed split reads supporting this fusion event
+    int32_t dpcount;            ///< seed discordant pair of reads supporting this fusion event
+    int32_t srrescued;          ///< all split reads supporting this fusion event
+    int32_t dprescued;          ///< all siscordant pair of reads supporting this fusion event
+    int32_t srrefcount;         ///< all reads supporting ref type
+    int32_t dprefcount;         ///< all paired reads supporting ref type
+    int32_t insbp;              ///< inserted sequence length around breakpoint
     std::string insseq;         ///< inserted sequence
-    std::string svid;           ///< sv id
-    std::string svint;          ///< svtype, precise integer representation
+    int32_t svid;               ///< sv id
+    int32_t svint;              ///< svtype, precise integer representation
     TFUSION_FLAG fsmask;        ///< fusion mask
     std::string ts1name;        ///< transcript1 name(RNA only)
-    std::string ts1pos;         ///< transcript1 breakpoint(RNA only)
+    int32_t ts1pos;             ///< transcript1 breakpoint(RNA only)
     std::string ts2name;        ///< transcript2 name(RNA only)
-    std::string ts2pos;         ///< transcript2 breakpoint(RNA only)
+    int32_t ts2pos;             ///< transcript2 breakpoint(RNA only)
 
     /** construct an FusionRecord */
     FusionRecord(){

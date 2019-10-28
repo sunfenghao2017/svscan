@@ -282,7 +282,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     // FusinSequence fseqBp
     if(svr.mSVT == 4 || (!svr.mPrecise)){
         fsr.fusionsequence = "-";
-        fsr.fseqbp = "-";
+        fsr.fseqbp = 0;
     }else{
         fsr.fusionsequence = svr.mConsensus;
         fsr.fseqbp = svr.mGapCoord[0];
@@ -290,7 +290,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y"; // inDB
     else fsr.indb = "N";
     fsr.svt = svutil::addID(svr.mSVT);                        // svType
-    if(svr.mSVT >= 5) fsr.svsize = "-";                       // svSize
+    if(svr.mSVT >= 5) fsr.svsize = -1;                        // svSize
     else fsr.svsize = svr.mSize;
     fsr.srcount = svr.mSRSupport;                             // srCount
     fsr.dpcount = svr.mPESupport;                             // dpCount

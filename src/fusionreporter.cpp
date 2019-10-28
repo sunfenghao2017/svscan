@@ -200,57 +200,57 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     fgr.fsmask &= (~FUSION_FLOWDEPTH);
                 }
             }
-            fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene; // FusionGene
-            // FusionPattern
+            fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                     // FusionGene
+                                                                                   // FusionPattern
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
             else fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
-            if(srv){//FusionReads TotalReads
+            if(srv){                                                               // FusionReads TotalReads
                 fgr.fusionreads = srv;
                 fgr.totalreads = srr + srv;
             }else{
                 fgr.fusionreads = dpv;
                 fgr.totalreads = dpr + dpv;
             }
-            fgr.fuserate = af;                                    // FusionRate
+            fgr.fuserate = af;                                                     // FusionRate
             if(fgl[i].hfrom1){
-                fgr.chr1 = trsl1[fgl[i].hidx].chr;                // Chr1
-                fgr.junctionposition1 = start;                    // JunctionPosition1
-                fgr.strand1 = trsl1[fgl[i].hidx].strand;          // Strand1;
-                fgr.transcript1 = trsl1[fgl[i].hidx].name;        // Transcript1
+                fgr.chr1 = trsl1[fgl[i].hidx].chr;                                 // Chr1
+                fgr.junctionposition1 = start;                                     // JunctionPosition1
+                fgr.strand1 = trsl1[fgl[i].hidx].strand;                           // Strand1;
+                fgr.transcript1 = trsl1[fgl[i].hidx].name;                         // Transcript1
             }else{
-                fgr.chr1 = trsl2[fgl[i].hidx].chr;                // Chr1
-                fgr.junctionposition1 = end;                      // JunctionPosition1
-                fgr.strand1 = trsl2[fgl[i].hidx].strand;          // Strand1;
-                fgr.transcript1 = trsl2[fgl[i].hidx].name;        // Transcript1
+                fgr.chr1 = trsl2[fgl[i].hidx].chr;                                 // Chr1
+                fgr.junctionposition1 = end;                                       // JunctionPosition1
+                fgr.strand1 = trsl2[fgl[i].hidx].strand;                           // Strand1;
+                fgr.transcript1 = trsl2[fgl[i].hidx].name;                         // Transcript1
             }
             if(fgl[i].tfrom1){
-                fgr.chr2 = trsl1[fgl[i].tidx].chr;                // Chr2
-                fgr.junctionposition2 = end;                      // JunctionPosition2
-                fgr.strand2 = trsl1[fgl[i].tidx].strand;          // Strand2
-                fgr.transcript2 = trsl1[fgl[i].tidx].name;        // Transcript2
+                fgr.chr2 = trsl1[fgl[i].tidx].chr;                                 // Chr2
+                fgr.junctionposition2 = end;                                       // JunctionPosition2
+                fgr.strand2 = trsl1[fgl[i].tidx].strand;                           // Strand2
+                fgr.transcript2 = trsl1[fgl[i].tidx].name;                         // Transcript2
             }else{
-                fgr.chr2 = trsl2[fgl[i].tidx].chr;                // Chr2
-                fgr.junctionposition2 = start;                    // JunctionPosition2
-                fgr.strand2 = trsl2[fgl[i].tidx].strand;          // Strand2
-                fgr.transcript2 = trsl2[fgl[i].tidx].name;        // Transcript2
+                fgr.chr2 = trsl2[fgl[i].tidx].chr;                                 // Chr2
+                fgr.junctionposition2 = start;                                     // JunctionPosition2
+                fgr.strand2 = trsl2[fgl[i].tidx].strand;                           // Strand2
+                fgr.transcript2 = trsl2[fgl[i].tidx].name;                         // Transcript2
             }
-            fgr.fusionsequence = vstr[16];                        // FusionSequence
-            fgr.fseqbp = vstr[17];                                // fseqBp
-            fgr.indb = ((fgr.fsmask & FUSION_FINDB) ? "Y" : "N"); // inDB
-            fgr.svt = vstr[0];                                    // svType
-            fgr.svsize = vstr[1];                                 // svSize
-            fgr.srcount = vstr[7];                                // srCount
-            fgr.dpcount = vstr[8];                                // dpCount
-            fgr.srrescued = vstr[9];                              // srRescued
-            fgr.dprescued = vstr[10];                             // dpRescued
-            fgr.srrefcount  = vstr[11];                           // srRefCount
-            fgr.dprefcount = vstr[12];                            // dpRefCount
-            fgr.insbp = vstr[14];                                 // insBp
-            fgr.insseq = vstr[15];                                // insSeq
-            fgr.svid = vstr[18];                                  // svID
-            fgr.svint = vstr[19];                                 // svInt
+            fgr.fusionsequence = vstr[16];                                         // FusionSequence
+            fgr.fseqbp = std::atoi(vstr[17].c_str());                              // fseqBp
+            fgr.indb = ((fgr.fsmask & FUSION_FINDB) ? "Y" : "N");                  // inDB
+            fgr.svt = vstr[0];                                                     // svType
+            fgr.svsize = std::atoi(vstr[1].c_str());                               // svSize
+            fgr.srcount = std::atoi(vstr[7].c_str());                              // srCount
+            fgr.dpcount = std::atoi(vstr[8].c_str());                              // dpCount
+            fgr.srrescued = std::atoi(vstr[9].c_str());                            // srRescued
+            fgr.dprescued = std::atoi(vstr[10].c_str());                           // dpRescued
+            fgr.srrefcount  = std::atoi(vstr[11].c_str());                         // srRefCount
+            fgr.dprefcount = std::atoi(vstr[12].c_str());                          // dpRefCount
+            fgr.insbp = std::atoi(vstr[14].c_str());                               // insBp
+            fgr.insseq = vstr[15];                                                 // insSeq
+            fgr.svid = std::atoi(vstr[18].c_str());                                // svID
+            fgr.svint = std::atoi(vstr[19].c_str());                               // svInt
             if(fgr.fsmask & FUSION_DROP_MASK){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{
@@ -271,10 +271,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }
             if(fgr.fsmask & FUSION_FCALLFROMRNASEQ){
-                fgr.ts1name = vstr[24];          // ts1Name
-                fgr.ts1pos = vstr[25];           // ts1Pos
-                fgr.ts2name = vstr[26];          // ts2Name
-                fgr.ts2pos = vstr[27];           // ts2Pos
+                fgr.ts1name = vstr[24];                                            // ts1Name
+                fgr.ts1pos = std::atoi(vstr[25].c_str());                          // ts1Pos
+                fgr.ts2name = vstr[26];                                            // ts2Name
+                fgr.ts2pos = std::atoi(vstr[27].c_str());                          // ts2Pos
             }
             frl.push_back(fgr);
         }
