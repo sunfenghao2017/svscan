@@ -66,7 +66,7 @@ struct FusionRecord{
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask;
-        if(fsr.fsmask | FUSION_FCALLFROMRNASEQ){
+        if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos;
         }
         os << "\n";
