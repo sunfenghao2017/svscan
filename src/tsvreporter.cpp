@@ -222,7 +222,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
                 if(gl[i].mFuseGene[j].status & FUSION_FSUPPLEMENTARY){
                     FusionRecord fsr;
                     toFuseRec(fsr, svs[i], gl[i], j);
-                    fw << fsr;
+                    fs << fsr;
                 }
             }
         }
@@ -247,11 +247,11 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     if(gi.mFuseGene[i].tfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].tidx].strand;
     else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].tidx].strand;
     if(svr.mPrecise){// FusionReads TotalReads FusionRate
-        fsr.srcount = srv;
+        fsr.fusionreads = srv;
         fsr.totalreads = srv + srr;
         fsr.fuserate = af;
     }else{
-        fsr.dpcount = dpv;
+        fsr.fusionreads = dpv;
         fsr.totalreads = dpr + dpv;
         fsr.fuserate = af;
     }
