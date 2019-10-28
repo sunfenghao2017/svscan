@@ -63,18 +63,24 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
                 fg.hfrom1 = true;
             }
             if(bp1trs[b1].gene == fg.tgene){
-                fg.tidx = b1;
-                fg.tfrom1 = true;
+                if(!fg.hfrom1){
+                    fg.tidx = b1;
+                    fg.tfrom1 = true;
+                }
             }
         }
         for(uint32_t b2 = 0; b2 < bp2trs.size(); ++b2){
             if(bp2trs[b2].gene == fg.hgene){
-                fg.hidx = b2;
-                fg.hfrom1 = false;
+                if(!fg.hfrom1){
+                    fg.hidx = b2;
+                    fg.hfrom1 = false;
+                }
             }
             if(bp2trs[b2].gene == fg.tgene){
-                fg.tidx = b2;
-                fg.tfrom1 = false;
+                if(!fg.tfrom1){
+                    fg.tidx = b2;
+                    fg.tfrom1 = false;
+                }
             }
         }
         fsgl.push_back(fg);
@@ -127,6 +133,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     std::getline(fr, tmpstr);
     if(!fuseOpt->mSVModFile.empty()) fsv << tmpstr << "\n";
     while(std::getline(fr, tmpstr)){
+        util::split(tmpstr, vstr, "\t");
         TrsRecList trsl1, trsl2;
         str2trsl(trsl1, vstr[20]);
         str2trsl(trsl2, vstr[21]);
