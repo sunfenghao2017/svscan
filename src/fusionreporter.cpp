@@ -228,23 +228,19 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             fgr.fuserate = af;                                                     // FusionRate
             if(fgl[i].hfrom1){
-                fgr.chr1 = trsl1[fgl[i].hidx].chr;                                 // Chr1
                 fgr.junctionposition1 = start;                                     // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;                           // Strand1;
                 fgr.transcript1 = trsl1[fgl[i].hidx].name;                         // Transcript1
             }else{
-                fgr.chr1 = trsl2[fgl[i].hidx].chr;                                 // Chr1
                 fgr.junctionposition1 = end;                                       // JunctionPosition1
                 fgr.strand1 = trsl2[fgl[i].hidx].strand;                           // Strand1;
                 fgr.transcript1 = trsl2[fgl[i].hidx].name;                         // Transcript1
             }
             if(fgl[i].tfrom1){
-                fgr.chr2 = trsl1[fgl[i].tidx].chr;                                 // Chr2
                 fgr.junctionposition2 = start;                                       // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;                           // Strand2
                 fgr.transcript2 = trsl1[fgl[i].tidx].name;                         // Transcript2
             }else{
-                fgr.chr2 = trsl2[fgl[i].tidx].chr;                                 // Chr2
                 fgr.junctionposition2 = end;                                     // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;                           // Strand2
                 fgr.transcript2 = trsl2[fgl[i].tidx].name;                         // Transcript2
