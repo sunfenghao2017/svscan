@@ -193,7 +193,9 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         tr.name = vstr[6];
         tr.gene = vstr[7];
         tr.primary = vstr[9];
+        tr.chr = vstr[0];
         tr.drop = false;
+        tr.pos = pos;
         trsList.push_back(tr);
         if(!util::startsWith(tr.unit, "utr")) trsGotIE.insert(tr.name);
         if(tr.primary == "Y") gene2cnc[tr.gene] = tr.name;
