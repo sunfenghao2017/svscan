@@ -256,32 +256,28 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
         fsr.fuserate = af;
     }
     // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-    fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;
-    if(mOpt->rnamode){
-        fsr.chr1 = gi.mChr1;
-        fsr.junctionposition1 = gi.mPos1;
+    if(gi.mFuseGene[i].hfrom1){
+        fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;
+        fsr.chr1 = gi.mGene1[gi.mFuseGene[i].hidx].chr;
+        fsr.strand1 = gi.mGene1[gi.mFuseGene[i].hidx].strand;
+        fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].name;
     }else{
-        fsr.chr1 = svr.mNameChr1;
-        fsr.junctionposition1 = svr.mSVStart;
+        fsr.gene1 = gi.mGene2[gi.mFuseGene[i].hidx].gene;
+        fsr.chr1 = gi.mGene2[gi.mFuseGene[i].hidx].chr;
+        fsr.strand1 = gi.mGene2[gi.mFuseGene[i].hidx].strand;
+        fsr.transcript1 = gi.mGene2[gi.mFuseGene[i].hidx].name;
     }
-    fsr.strand1 = gi.mGene1[gi.mFuseGene[i].hidx].strand;
-    fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].name;
     // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-    fsr.gene2 = gi.mGene2[gi.mFuseGene[i].tidx].gene;
-    if(mOpt->rnamode){
-        fsr.chr2 = gi.mChr2;
-        fsr.junctionposition2 = gi.mPos2;
+    if(gi.mFuseGene[i].tfrom1){
+        fsr.gene2 = gi.mGene1[gi.mFuseGene[i].tidx].gene;
+        fsr.chr2 = gi.mGene1[gi.mFuseGene[i].tidx].chr;
+        fsr.strand2 = gi.mGene1[gi.mFuseGene[i].tidx].strand;
+        fsr.transcript2 = gi.mGene1[gi.mFuseGene[i].tidx].name;
     }else{
-        fsr.chr2 = svr.mNameChr2;
-        fsr.junctionposition2 = svr.mSVEnd;
-    }
-    fsr.strand2 = gi.mGene2[gi.mFuseGene[i].tidx].strand;
-    fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].name;
-    if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){ // just swap
-        std::swap(fsr.chr1, fsr.chr2);
-        std::swap(fsr.junctionposition1, fsr.junctionposition2);
-        std::swap(fsr.strand1, fsr.strand2);
-        std::swap(fsr.transcript1, fsr.transcript2);
+        fsr.gene2 = gi.mGene2[gi.mFuseGene[i].tidx].gene;
+        fsr.chr2 = gi.mGene2[gi.mFuseGene[i].tidx].chr;
+        fsr.strand2 = gi.mGene2[gi.mFuseGene[i].tidx].strand;
+        fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].name;
     }
     // FusinSequence fseqBp
     if(svr.mSVT == 4 || (!svr.mPrecise)){
