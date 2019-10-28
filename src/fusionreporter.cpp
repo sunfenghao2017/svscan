@@ -98,6 +98,7 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
 }
 
 void FusionReporter::report(){
+    sv2fsl(fuseList);
     // output valid fusions
     std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
     header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
@@ -111,7 +112,6 @@ void FusionReporter::report(){
     std::ofstream fs(fuseOpt->mSupFile);
     fw << header;
     fs << header;
-    sv2fsl(fuseList);
     for(auto& e: fuseList){
         if(e.fsmask & FUSION_FPRIMARY){
             fw << e;
