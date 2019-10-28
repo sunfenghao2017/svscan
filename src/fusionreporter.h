@@ -3,75 +3,14 @@
 
 #include "fusionopt.h"
 #include "software.h"
+#include "fuserec.h"
 #include "svutil.h"
-#include "CLI.hpp"
-
-struct FusionRecord{
-    std::string fusegene;
-    std::string fusepattern;
-    int32_t fusionreads;
-    int32_t totalreads;
-    float fuserate;
-    std::string gene1;
-    std::string chr1;
-    int32_t junctionposition1;
-    std::string strand1;
-    std::string transcript1;
-    std::string gene2;
-    std::string chr2;
-    int32_t junctionposition2;
-    std::string strand2;
-    std::string transcript2;
-    std::string fusionsequence;
-    std::string fseqbp;
-    std::string indb;
-    std::string svt;
-    std::string svsize;
-    std::string srcount;
-    std::string dpcount;
-    std::string srrescued;
-    std::string dprescued;
-    std::string srrefcount;
-    std::string dprefcount;
-    std::string insbp;
-    std::string insseq;
-    std::string svid;
-    std::string svint;
-    TFUSION_FLAG fsmask;
-    std::string ts1name;
-    std::string ts1pos;
-    std::string ts2name;
-    std::string ts2pos;
-
-    FusionRecord(){
-        fsmask = 0;
-    }
-
-    ~FusionRecord(){}
-
-    inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
-        os << fsr.fusegene << "\t" << fsr.fusepattern << "\t";
-        os << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
-        os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.junctionposition1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
-        os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.junctionposition2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
-        os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.indb << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
-        os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
-        os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask;
-        if(fsr.fsmask | FUSION_FCALLFROMRNASEQ){
-            os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos;
-        }
-        os << "\n";
-       return os;
-    } 
-};
-
-typedef std::vector<FusionRecord> FusionList;
+#include "trsrec.h"
 
 struct FusionReporter{
     FusionOptions* fuseOpt; ///< fusion report options
     Software* softEnv;      ///< software environments
-    FusionList fuseList;    ///< fusion list
+    FusionRecordList fuseList;    ///< fusion list
     bool rnamode;           ///< fusion event is from rnaseq
 
     /** FusionReporter constructor */
@@ -85,9 +24,26 @@ struct FusionReporter{
     * @param argv array of arguments feed to main
     */
     void update(int argc, char** argv);
+
+    /** parse string to TrsRecList
+     * @param trsl TrsRecList to store transcripts
+     * @param trStr bp1Gene or bp2Gene field in sv.tsv
+     */
+    void str2trsl(TrsRecList& trsl, const std::string& trStr);
+
+    /** parse string to FuseGeneList
+     * @param fsgs FusionGene store
+     * @param fsstr fuseGene field in sv.tsv
+     * @param fmsks fsMask field in sv.tsv
+     * @param bp1trs TrsRecList of bp1Gene in sv.tsv
+     * @param bp2trs TrsRecList of bp2Gene in sv.tsv
+     */
+    void str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, const std::string& fmsks, const TrsRecList& bp1trs, const TrsRecList& bp2trs);
    
-    /** parse sv.tsv into FusionList */
-    void sv2fs(); 
+    /** parse sv.tsv into FusionRecordList
+     * @param frl FusionRecordList to store result
+     */
+    void sv2fsl(FusionRecordList& frl); 
 
     /** do fusion report job */
     void report();

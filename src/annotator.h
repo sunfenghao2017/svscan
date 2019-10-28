@@ -6,31 +6,6 @@
 #include <htslib/tbx.h>
 #include <htslib/kstring.h>
 
-struct TrsRec{
-    std::string name;
-    std::string unit;
-    std::string strand;
-    std::string number;
-    std::string primary;
-    std::string chr; // used only in RNA sv
-
-    TrsRec(){}
-
-    ~TrsRec(){}
-
-    std::string toStr(){
-        std::string ret;
-        ret.append(name);
-        ret.append(",");
-        ret.append(unit);
-        ret.append(",");
-        ret.append(strand);
-        ret.append(",");
-        ret.append(number);
-        return ret;
-    }
-};
-
 /** SV breakpoint coverage annotator */
 class Annotator{
     public:
@@ -68,6 +43,24 @@ class Annotator{
          * @return iterator to an region overlap with p or end
          */
         static std::set<std::pair<int32_t, int32_t>>::iterator getFirstOverlap(const std::set<std::pair<int32_t, int32_t>>& s, const std::pair<int32_t, int32_t>& p);
+
+        /** get transcripts spanning a genome breakpoint
+         * @param trl transcript list spanning this bp
+         * @param chr chr of bp
+         * @param pos pos of bp
+         * @param fp file pointer of dna annotation db file
+         * @param tbx index pointer of dna annotation db file
+         */
+        static void getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx);
+        
+        /** get transcripts spanning a transcriptnome breakpoint
+         * @param trl transcript list spanning this bp
+         * @param chr chr of bp
+         * @param pos pos of bp
+         * @param fp file pointer of dna annotation db file
+         * @param tbx index pointer of dna annotation db file
+         */
+        static void getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx);
 };
 
 #endif

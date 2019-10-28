@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <cstdint>
 #include "util.h"
@@ -200,6 +201,10 @@ struct FuseGene{
     std::string tgene;   ///< gene name of 3' part of fusion gene
     std::string tend;    ///< tgene 3' or 5' fused
     std::string tstrand; ///< hgene + or - strand fused
+    int32_t hidx;        ///< hgene index
+    bool hfrom1;         ///< hgene is from breakpoint1
+    bool tfrom1;         ///< tgene is from breakpoint1
+    int32_t tidx;        ///< tgene index
     TFUSION_FLAG status; ///< mask to show fusion status 1:gene,2:normal,4:hot,8:common,16:indb,32:mirror
 
     /** FuseGene constructor */
@@ -211,10 +216,25 @@ struct FuseGene{
         tend = "-";
         tstrand = ".";
         status = 0;
+        hidx = -1;
+        tidx = -1;
+        hfrom1 = false;
+        tfrom1 = false;
     }
 
     /** FuseGene destructor */
     ~FuseGene(){};
+
+    /** get string representation of FuseGene
+     * @return string representation of FuseGene
+     */
+    inline std::string toStr(){
+        std::stringstream ss;
+        ss << hgene << "->" << tgene << "|";
+        ss << hgene << "," << hend << "," << hstrand << "|";
+        ss << tgene << "," << tend << "," << tstrand;
+        return ss.str();
+    }
 
     /** operator to output FuseGene to ostream
      * @param os reference of ostream
@@ -228,6 +248,9 @@ struct FuseGene{
         return os;
     }
 };
+
+/** class to store a list of FuseGene */
+typedef std::vector<FuseGene> FuseGeneList;
 
 /** useful functions used in sv calling */
 namespace svutil{
@@ -504,7 +527,6 @@ namespace svutil{
     inline FuseGene getFusionGene(std::string gene1, std::string gene2, char strand1, char strand2, int32_t svt){
         FuseGene ret;
         if(gene1 != "-" && gene2 != "-") ret.status |= FUSION_FALLGENE;
-        if(gene1 == "-" || gene2 == "-" || svt == 4) return ret;
         if(svt >= 5) svt -= 5;
         if(svt == 3){// convert 3to5 to 5to3
             std::swap(gene1, gene2);
@@ -606,6 +628,14 @@ namespace svutil{
                 ret.tstrand = "+";
                 ret.status |= FUSION_FNORMALCATDIRECT;
             }
+        }else if(svt == 4){
+            ret.hgene = gene1;
+            ret.tgene = gene2;
+            ret.hend = "5";
+            ret.tend = "3";
+            ret.hstrand = "+";
+            ret.tstrand = "+";
+            ret.status |= FUSION_FNORMALCATDIRECT;
         }
         return ret;
     }
