@@ -214,7 +214,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
-            else fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
+            else fgr.fusepattern.append(trsl2[fgl[i].tidx].strand);
             if(srv){                                                               // FusionReads TotalReads
                 fgr.fusionreads = srv;
                 fgr.totalreads = srr + srv;
