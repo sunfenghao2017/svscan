@@ -162,6 +162,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             fgr.gene1 = fgl[i].hgene;
             fgr.gene2 = fgl[i].tgene;
+            if(fgl[i].hfrom1) fgr.chr1 = chr1;
+            else fgr.chr1 = chr2;
+            if(fgl[i].tfrom1) fgr.chr2 = chr1;
+            else fgr.chr2 = chr2;
             if(notinbg) fgr.fsmask &= (~FUSION_FFBG);
             else fgr.fsmask |= FUSION_FFBG;
             if(fuseOpt->hasWhiteGene(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FHOTGENE;
