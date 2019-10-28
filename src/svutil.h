@@ -249,6 +249,9 @@ struct FuseGene{
     }
 };
 
+/** class to store a list of FuseGene */
+typedef std::vector<FuseGene> FuseGeneList;
+
 /** useful functions used in sv calling */
 namespace svutil{
     /** convert an C string into its unsigned int hash value

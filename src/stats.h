@@ -2,6 +2,7 @@
 #define STATS_H
 
 #include "util.h"
+#include "trsrec.h"
 #include "svutil.h"
 #include "options.h"
 #include "svrecord.h"
@@ -244,45 +245,6 @@ struct JunctionCount{
         return os;
     }
 };
-
-/** class to store an transcript record */
-struct TrsRec{
-    std::string name;    ///< transcript name
-    std::string gene;    ///< gene name
-    std::string unit;    ///< uint name
-    std::string strand;  ///< strand
-    std::string number;  ///< count
-    std::string primary; ///< Y if it's a canonical transcript
-    bool drop;           ///< drop from report if true
-    int32_t pos;         ///< position on genome
-    std::string chr;     ///< used only in RNA sv
-
-    /** TrsRec constructor */
-    TrsRec(){}
-
-    /** TrsRec destructor */
-    ~TrsRec(){}
-
-    /** convert TrsRec to string
-     * @return string representation of TrsRec
-     */
-    std::string toStr(){
-        std::string ret;
-        ret.append(gene);
-        ret.append(",");
-        ret.append(name);
-        ret.append(",");
-        ret.append(unit);
-        ret.append(",");
-        ret.append(strand);
-        ret.append(",");
-        ret.append(number);
-        return ret;
-    }
-};
-
-/** class to store a list of TrsRec */
-typedef std::vector<TrsRec> TrsRecList;
 
 /** class to store a list of FuseGene */
 typedef std::vector<FuseGene> FuseGeneList;

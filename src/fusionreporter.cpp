@@ -22,6 +22,9 @@ void FusionReporter::update(int argc, char** argv){
     }
 }
 
+void str2fsgs(FusionGenes& fsgs, const std::string& fsstr, const std::string& bp1gs, const std::string& bp2gs){
+
+}
 void FusionReporter::report(){
     sv2fs();
     // output valid fusions
@@ -68,22 +71,37 @@ void FusionReporter::sv2fs(){
     std::getline(fr, tmpstr);
     if(!fuseOpt->mSVModFile.empty()) fsv << tmpstr << "\n";
     while(std::getline(fr, tmpstr)){
+        std::vector<std::string> gene1Trs; // gene1 trs
+        std::vector<std::string> gene2Trs; // gene2 trs
+        std::vector<std::string> fuseRecs; // fusion records
+        std::vector<std::string> fuseMsks; // fusion masks
         util::split(tmpstr, vstr, "\t");
-        TFUSION_FLAG fsmask = std::atoi(vstr[31].c_str());
-        if(!rnamode && (fsmask & FUSION_FCALLFROMRNASEQ)){
-            rnamode = true;
-            FUSION_DROP_MASK |= FUSION_FINSAMEGENE;
+        util::split(vstr[20], gene1Trs, ";");
+        util::split(vstr[21], gene2Trs, ";");
+        util::split(vstr[22], fuseRecs, ";");
+        util::split(vstr[23], fuseMsks, ";");
+        std::vector<std::string> fuseGenes; // fusion genes
+        std::vector<std::string> fgvstr;
+        for(auto& e: fuseRecs){
+            util::split(e, fgvstr, "(");
+            fuseGenes.push_back(fgvstr[0]);
         }
-        int32_t svt = std::atoi(vstr[30].c_str());
-        int32_t start = std::stoi(vstr[11].c_str());
-        int32_t end = std::atoi(vstr[14].c_str());
-        std::string chr1 = vstr[10];
-        std::string chr2 = vstr[13];
-        std::string fusegene = vstr[3];
-        std::string hgene = vstr[4];
-        std::string tgene = vstr[7];
-        std::string gene1 = vstr[12];
-        std::string hend = vstr[5];
+        for(uint32_t i = 0; i < fuseRecs.size(); ++i){
+            TFUSION_FLAG fsmask = std::atoi(fuseMsks[i].c_str());
+            if(!rnamode && (fsmask & FUSION_FCALLFROMRNASEQ)){
+                rnamode = true;
+                FUSION_DROP_MASK |= FUSION_FINSAMEGENE;
+            }
+            int32_t svt = std::atoi(vstr[19].c_str());
+            int32_t start = std::stoi(vstr[4].c_str());
+            int32_t end = std::atoi(vstr[6].c_str());
+            std::string chr1 = vstr[3];
+            std::string chr2 = vstr[5];
+            std::string fusegene = fuseGenes[i];
+            std::string hgene = vstr[4];
+            std::string tgene = vstr[7];
+            std::string gene1 = vstr[12];
+            std::string hend = vstr[5];
         std::string tend = vstr[8];
         std::string hstrand = vstr[6];
         std::string tstrand = vstr[9];

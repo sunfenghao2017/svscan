@@ -1,4 +1,5 @@
 #include "stats.h"
+#include "fuserec.h"
 #include "fusionopt.h"
 
 void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
@@ -228,6 +229,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 }
 
 std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
+    FusionRecord fsr;
     std::stringstream oss;
     float af = 0.0;
     int32_t srv = mJctCnts[svr.mID].mAltQual.size();
@@ -236,97 +238,83 @@ std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
     int32_t dpr = mSpnCnts[svr.mID].mRefQual.size();
     if(svr.mPrecise) af = (double)(srv)/(double)(srv + srr);
     else af = (double)(dpv)/(double)(dpv + dpr);
-    oss << gi.mFuseGene[i].hgene << "->" << gi.mFuseGene[i].tgene << "\t"; // FusionGene
+    fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
-    if(gi.mFuseGene[i].hfrom1) oss << gi.mGene1[gi.mFuseGene[i].hidx].strand;
-    else oss << gi.mGene2[gi.mFuseGene[i].hidx].strand;
-    if(gi.mFuseGene[i].tfrom1) oss << gi.mGene1[gi.mFuseGene[i].tidx].strand << "\t";
-    else oss << gi.mGene2[gi.mFuseGene[i].tidx].strand << "\t";
+    if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;
+    else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].hidx].strand;
+    if(gi.mFuseGene[i].tfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].tidx].strand;
+    else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].tidx].strand;
     if(svr.mPrecise){// FusionReads TotalReads FusionRate
-        oss << srv << "\t";
-        oss << (srr + srv) << "\t"; 
-        oss << af << "\t";
+        fsr.srcount = srv;
+        fsr.totalreads = srv + srr;
+        fsr.fuserate = af;
     }else{
-        oss << dpv << "\t";
-        oss << (dpr + dpv) << "\t";
-        oss << af << "\t";
+        fsr.dpcount = dpv;
+        fsr.totalreads = dpr + dpv;
+        fsr.fuserate = af;
     }
-    if(gi.mGene1[i].gene == gi.mFuseGene[i].hgene){
-        // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-        oss << gi.mGene1[gi.mFuseGene[i].hidx].gene << "\t";
-        if(mOpt->rnamode){
-            oss << gi.mChr1 << "\t" << gi.mPos1 << "\t";
-        }else{
-            oss << svr.mNameChr1 << "\t" << svr.mSVStart << "\t";
-        }
-        oss <<  gi.mGene1[gi.mFuseGene[i].hidx].strand << "\t";
-        oss << gi.mGene1[gi.mFuseGene[i].hidx].name << "\t";
-        // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-        oss << gi.mGene2[gi.mFuseGene[i].tidx].gene << "\t";
-        if(mOpt->rnamode){
-            oss << gi.mChr2 << "\t" << gi.mPos2 << "\t";
-        }else{
-            oss << svr.mNameChr2 << "\t" << svr.mSVEnd << "\t";
-        }
-        oss <<  gi.mGene2[gi.mFuseGene[i].tidx].strand << "\t";
-        oss << gi.mGene2[gi.mFuseGene[i].tidx].name << "\t";
-    }else{
-        // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
-        oss << gi.mGene2[gi.mFuseGene[i].hidx].gene << "\t";
-        if(mOpt->rnamode){
-            oss << gi.mChr2 << "\t" << gi.mPos2 << "\t";
-        }else{
-            oss << svr.mNameChr2 << "\t" << svr.mSVStart << "\t";
-        }
-        oss <<  gi.mGene2[gi.mFuseGene[i].hidx].strand << "\t";
-        oss << gi.mGene2[gi.mFuseGene[i].hidx].name << "\t";
-        // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
-        oss << gi.mGene1[gi.mFuseGene[i].tidx].gene << "\t";
-        if(mOpt->rnamode){
-            oss << gi.mChr1 << "\t" << gi.mPos1 << "\t";
-        }else{
-            oss << svr.mNameChr1 << "\t" << svr.mSVEnd << "\t";
-        }
-        oss <<  gi.mGene1[gi.mFuseGene[i].tidx].strand << "\t";
-        oss << gi.mGene1[gi.mFuseGene[i].tidx].name << "\t";
-    }
-    // FusinSequence
-    if(svr.mSVT == 4) oss << svr.mInsSeq << "\t-\t";
-    else if(svr.mPrecise) oss << svr.mConsensus << "\t" << svr.mGapCoord[0] << "\t";
-    else oss << "-\t-\t";
-    if(gi.mFuseGene[i].status & FUSION_FINDB) oss << "Y\t"; // inDB
-    else oss << "N\t";
-    oss << svutil::addID(svr.mSVT) << "\t";                 // svType
-    if(svr.mSVT >= 5) oss << "-\t";
-    else oss << svr.mSize << "\t";                          // svSize
-    oss << svr.mSRSupport << "\t";                          // srCount
-    oss << svr.mPESupport << "\t";                          // dpCount
-    oss << mJctCnts[svr.mID].mAltQual.size() << "\t";       // srRescued
-    oss << mSpnCnts[svr.mID].mAltQual.size() << "\t";       // dpRescued
-    oss << mJctCnts[svr.mID].mRefQual.size() << "\t";       // srRefCount
-    oss <<mSpnCnts[svr.mID].mRefQual.size() << "\t";        // dpRefCount
-    oss << svr.mBpInsSeq.length() << "\t";                  // insBp
-    if(svr.mBpInsSeq.empty()) oss << "-\t";
-    else oss << svr.mBpInsSeq << "\t";                      // insSeq
-    oss << svr.mID << "\t";                                 // svID
-    oss << svr.mSVT << "\t";                                // svtInt
-    oss << gi.mFuseGene[i].status;                          // fsMask
+    // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
+    fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;
     if(mOpt->rnamode){
-        if(gi.mGene1[i].gene == gi.mFuseGene[i].hgene){
-            oss << "\t";
-            oss << svr.mNameChr1 << "\t";                   // ts1Name
-            oss << svr.mSVStart << "\t";                    // ts1Pos
-            oss << svr.mNameChr2 << "\t";                   // ts2Name
-            oss << svr.mSVEnd << "\n";                      // ts2Pos
-        }else{
-            oss << "\t";
-            oss << svr.mNameChr2 << "\t";                   // ts1Name
-            oss << svr.mSVEnd << "\t";                      // ts1Pos
-            oss << svr.mNameChr1 << "\t";                   // ts2Name
-            oss << svr.mSVStart << "\n";                    // ts2Pos
-        }
+        fsr.chr1 = gi.mChr1;
+        fsr.junctionposition1 = gi.mPos1;
     }else{
-        oss << "\n";
+        fsr.chr1 = svr.mNameChr1;
+        fsr.junctionposition1 = svr.mSVStart;
     }
-    return oss.str();
+    fsr.strand1 = gi.mGene1[gi.mFuseGene[i].hidx].strand;
+    fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].name;
+    // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
+    fsr.gene2 = gi.mGene2[gi.mFuseGene[i].tidx].gene;
+    if(mOpt->rnamode){
+        fsr.chr2 = gi.mChr2;
+        fsr.junctionposition2 = gi.mPos2;
+    }else{
+        fsr.chr2 = svr.mNameChr2;
+        fsr.junctionposition2 = svr.mSVEnd;
+    }
+    fsr.strand2 = gi.mGene2[gi.mFuseGene[i].tidx].strand;
+    fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].name;
+    if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){ // just swap
+        std::swap(fsr.chr1, fsr.chr2);
+        std::swap(fsr.junctionposition1, fsr.junctionposition2);
+        std::swap(fsr.strand1, fsr.strand2);
+        std::swap(fsr.transcript1, fsr.transcript2);
+    }
+    // FusinSequence fseqBp
+    if(svr.mSVT == 4 || (!svr.mPrecise)){
+        fsr.fusionsequence = "-";
+        fsr.fseqbp = "-";
+    }else{
+        fsr.fusionsequence = svr.mConsensus;
+        fsr.fseqbp = svr.mGapCoord[0];
+    }
+    // inDB
+    if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y";
+    else fsr.indb = "N";
+    fsr.svt = svutil::addID(svr.mSVT);                 // svType
+    if(svr.mSVT >= 5) fsr.svsize = "-";                // svSize
+    else fsr.svsize = svr.mSize;                    
+    fsr.srcount = svr.mSRSupport;                          // srCount
+    fsr.dpcount = svr.mPESupport;                          // dpCount
+    fsr.srrescued =  mJctCnts[svr.mID].mAltQual.size();       // srRescued
+    fsr.dprescued = mSpnCnts[svr.mID].mAltQual.size();       // dpRescued
+    fsr.srrefcount = mJctCnts[svr.mID].mRefQual.size();       // srRefCount
+    fsr.dprefcount = mSpnCnts[svr.mID].mRefQual.size();        // dpRefCount
+    fsr.insbp = svr.mBpInsSeq.length();                  // insBp
+    if(svr.mBpInsSeq.empty()) fsr.insseq = "-"; // insSeq
+    else fsr.insseq = svr.mBpInsSeq;
+    fsr.svid = svr.mID;                                 // svID
+    fsr.svint = svr.mSVT;                                // svtInt
+    fsr.fsmask = gi.mFuseGene[i].status;                          // fsMask
+    if(mOpt->rnamode){
+        fsr.ts1name = svr.mNameChr1;// ts1Name
+        fsr.ts1pos = svr.mSVStart; // ts1Pos
+        fsr.ts2name = svr.mNameChr2; //ts2Name
+        fsr.ts2pos = svr.mSVEnd;// ts2Pos
+        if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){
+            std::swap(fsr.ts1name, fsr.ts2name);
+            std::swap(fsr.ts1pos, fsr.ts2pos);
+        }
+    }
 }
