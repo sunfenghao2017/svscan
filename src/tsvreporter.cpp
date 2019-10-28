@@ -1,5 +1,4 @@
 #include "stats.h"
-#include "fuserec.h"
 #include "fusionopt.h"
 
 void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
@@ -212,14 +211,18 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
         bool reported = false;
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_FPRIMARY){
-                fw << toFuseRec(svs[i], gl[i], j);
+                FusionRecord fsr;
+                toFuseRec(fsr, svs[i], gl[i], j);
+                fw << fsr;
                 reported = true;
             }
         }
         if(!reported){
             for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
                 if(gl[i].mFuseGene[j].status & FUSION_FSUPPLEMENTARY){
-                    fs << toFuseRec(svs[i], gl[i], j);
+                    FusionRecord fsr;
+                    toFuseRec(fsr, svs[i], gl[i], j);
+                    fw << fsr;
                 }
             }
         }
@@ -228,8 +231,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
     fs.close();
 }
 
-std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
-    FusionRecord fsr;
+void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
     float af = 0.0;
     int32_t srv = mJctCnts[svr.mID].mAltQual.size();
@@ -289,29 +291,28 @@ std::string Stats::toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i){
         fsr.fusionsequence = svr.mConsensus;
         fsr.fseqbp = svr.mGapCoord[0];
     }
-    // inDB
-    if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y";
+    if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y"; // inDB
     else fsr.indb = "N";
-    fsr.svt = svutil::addID(svr.mSVT);                 // svType
-    if(svr.mSVT >= 5) fsr.svsize = "-";                // svSize
-    else fsr.svsize = svr.mSize;                    
-    fsr.srcount = svr.mSRSupport;                          // srCount
-    fsr.dpcount = svr.mPESupport;                          // dpCount
+    fsr.svt = svutil::addID(svr.mSVT);                        // svType
+    if(svr.mSVT >= 5) fsr.svsize = "-";                       // svSize
+    else fsr.svsize = svr.mSize;
+    fsr.srcount = svr.mSRSupport;                             // srCount
+    fsr.dpcount = svr.mPESupport;                             // dpCount
     fsr.srrescued =  mJctCnts[svr.mID].mAltQual.size();       // srRescued
-    fsr.dprescued = mSpnCnts[svr.mID].mAltQual.size();       // dpRescued
+    fsr.dprescued = mSpnCnts[svr.mID].mAltQual.size();        // dpRescued
     fsr.srrefcount = mJctCnts[svr.mID].mRefQual.size();       // srRefCount
-    fsr.dprefcount = mSpnCnts[svr.mID].mRefQual.size();        // dpRefCount
-    fsr.insbp = svr.mBpInsSeq.length();                  // insBp
-    if(svr.mBpInsSeq.empty()) fsr.insseq = "-"; // insSeq
+    fsr.dprefcount = mSpnCnts[svr.mID].mRefQual.size();       // dpRefCount
+    fsr.insbp = svr.mBpInsSeq.length();                       // insBp
+    if(svr.mBpInsSeq.empty()) fsr.insseq = "-";               // insSeq
     else fsr.insseq = svr.mBpInsSeq;
-    fsr.svid = svr.mID;                                 // svID
-    fsr.svint = svr.mSVT;                                // svtInt
-    fsr.fsmask = gi.mFuseGene[i].status;                          // fsMask
+    fsr.svid = svr.mID;                                       // svID
+    fsr.svint = svr.mSVT;                                     // svtInt
+    fsr.fsmask = gi.mFuseGene[i].status;                      // fsMask
     if(mOpt->rnamode){
-        fsr.ts1name = svr.mNameChr1;// ts1Name
-        fsr.ts1pos = svr.mSVStart; // ts1Pos
-        fsr.ts2name = svr.mNameChr2; //ts2Name
-        fsr.ts2pos = svr.mSVEnd;// ts2Pos
+        fsr.ts1name = svr.mNameChr1;                          // ts1Name
+        fsr.ts1pos = svr.mSVStart;                            // ts1Pos
+        fsr.ts2name = svr.mNameChr2;                          // ts2Name
+        fsr.ts2pos = svr.mSVEnd;                              // ts2Pos
         if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){
             std::swap(fsr.ts1name, fsr.ts2name);
             std::swap(fsr.ts1pos, fsr.ts2pos);

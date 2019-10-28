@@ -34,13 +34,16 @@ struct FusionReporter{
     /** parse string to FuseGeneList
      * @param fsgs FusionGene store
      * @param fsstr fuseGene field in sv.tsv
+     * @param fmsks fsMask field in sv.tsv
      * @param bp1trs TrsRecList of bp1Gene in sv.tsv
      * @param bp2trs TrsRecList of bp2Gene in sv.tsv
      */
-    void str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, const TrsRecList& bp1trs, const TrsRecList& bp2trs);
+    void str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, const std::string& fmsks, const TrsRecList& bp1trs, const TrsRecList& bp2trs);
    
-    /** parse sv.tsv into FusionRecordList */
-    void sv2fs(); 
+    /** parse sv.tsv into FusionRecordList
+     * @param frl FusionRecordList to store result
+     */
+    void sv2fsl(FusionRecordList& frl); 
 
     /** do fusion report job */
     void report();

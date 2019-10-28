@@ -230,9 +230,9 @@ struct FuseGene{
      */
     inline std::string toStr(){
         std::stringstream ss;
-        ss << hgene << "->" << tgene << "(";
-        ss << hgene << "," << hend << "," << hstrand << ";";
-        ss << tgene << "," << tend << "," << tstrand << ")";
+        ss << hgene << "->" << tgene << "|";
+        ss << hgene << "," << hend << "," << hstrand << "|";
+        ss << tgene << "," << tend << "," << tstrand;
         return ss.str();
     }
 

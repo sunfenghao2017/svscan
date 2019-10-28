@@ -4,6 +4,7 @@
 #include "util.h"
 #include "trsrec.h"
 #include "svutil.h"
+#include "fuserec.h"
 #include "options.h"
 #include "svrecord.h"
 #include "aligner.h"
@@ -463,12 +464,12 @@ class Stats{
         void reportFusionTSV(SVSet& svs, GeneInfoList& gl);
         
         /** convert an sv event to fusion record
+         * @param fsr reference of FusionRecord
          * @param svr reference of SVRecord
          * @param gi reference of GeneInfo
          * @param i which fusion will  be converted(-1 to all)
-         * @return fusion record
          */
-        std::string toFuseRec(SVRecord& svr, GeneInfo& gi, int32_t i);
+        void toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i);
 
         /** mask fusion event status 
          * @param svs reference of SVSet
