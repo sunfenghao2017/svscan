@@ -23,6 +23,7 @@ void FusionReporter::update(int argc, char** argv){
 }
 
 void FusionReporter::str2trsl(TrsRecList& trsl, const std::string& trStr){
+    if(trStr == "-") return;
     std::vector<std::string> vstr;
     util::split(trStr, vstr, ";");
     for(uint32_t i = 0; i < vstr.size(); ++i){
@@ -39,6 +40,7 @@ void FusionReporter::str2trsl(TrsRecList& trsl, const std::string& trStr){
 }
 
 void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, const std::string& fmsks, const TrsRecList& bp1trs, const TrsRecList& bp2trs){
+    if(fsStr.empty()) return;
     std::vector<std::string> mvst;
     util::split(fmsks, mvst, ";");
     std::vector<std::string> vstr;
