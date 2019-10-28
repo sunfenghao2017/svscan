@@ -60,28 +60,36 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
         fg.tend = tvstr[1];
         fg.tstrand = tvstr[2];
         for(uint32_t b1 = 0; b1 < bp1trs.size(); ++b1){
-            if(bp1trs[b1].gene == fg.hgene){
-                fg.hidx = b1;
-                fg.hfrom1 = true;
+            if(fg.hgene != "-"){
+                if(bp1trs[b1].gene == fg.hgene){
+                    fg.hidx = b1;
+                    fg.hfrom1 = true;
+                }
             }
-            if(bp1trs[b1].gene == fg.tgene){
-                if(!fg.hfrom1){
-                    fg.tidx = b1;
-                    fg.tfrom1 = true;
+            if(fg.tgene != "-"){
+                if(bp1trs[b1].gene == fg.tgene){
+                    if(!fg.hfrom1){
+                        fg.tidx = b1;
+                        fg.tfrom1 = true;
+                    }
                 }
             }
         }
         for(uint32_t b2 = 0; b2 < bp2trs.size(); ++b2){
-            if(bp2trs[b2].gene == fg.hgene){
-                if(!fg.hfrom1){
-                    fg.hidx = b2;
-                    fg.hfrom1 = false;
+            if(fg.hgene != "-"){
+                if(bp2trs[b2].gene == fg.hgene){
+                    if(!fg.hfrom1){
+                        fg.hidx = b2;
+                        fg.hfrom1 = false;
+                    }
                 }
             }
-            if(bp2trs[b2].gene == fg.tgene){
-                if(!fg.tfrom1){
-                    fg.tidx = b2;
-                    fg.tfrom1 = false;
+            if(fg.tgene != "-"){
+                if(bp2trs[b2].gene == fg.tgene){
+                    if(!fg.tfrom1){
+                        fg.tidx = b2;
+                        fg.tfrom1 = false;
+                    }
                 }
             }
         }
@@ -162,6 +170,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             fgr.gene1 = fgl[i].hgene;
             fgr.gene2 = fgl[i].tgene;
+            if(svt == 4){
+                fgl[i].hfrom1 = true;
+                fgl[i].tfrom1 = false;
+            }
             if(fgl[i].hfrom1) fgr.chr1 = chr1;
             else fgr.chr1 = chr2;
             if(fgl[i].tfrom1) fgr.chr2 = chr1;
@@ -214,7 +226,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 }
             }
             fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                     // FusionGene
-                                                                                   // FusionPattern
+            // FusionPattern
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
