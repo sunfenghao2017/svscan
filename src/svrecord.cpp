@@ -237,6 +237,19 @@ void mergeSRSVs(SVSet& sr, SVSet& msr){
 }
 
 void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
+    // filter invalid dp svs firstly
+    samFile* fp = sam_open(opt->bamfile.c_str(), "r");
+    bam_hdr_t* h = sam_hdr_read(fp);
+    for(uint32_t dpi = 0; dpi < dp.size(); ++dpi){
+        if(dp[dpi].mSVStart < 0 || dp[dpi].mSVEnd < 0 ||
+           dp[dpi].mSVEnd >= (int32_t)h->target_len[dp[dpi].mChr2] ||
+           dp[dpi].mSVStart >= (int32_t)h->target_len[dp[dpi].mChr1]){
+            dp[dpi].mMerged = true;
+        }
+    }
+    sam_close(fp);
+    bam_hdr_destroy(h);
+    // then do merge
     util::loginfo("Beg merge DP supported SVs");
     std::sort(dp.begin(), dp.end());
     int32_t totSV = dp.size();
