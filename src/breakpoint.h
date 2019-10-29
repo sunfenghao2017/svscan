@@ -6,6 +6,21 @@
 #include <htslib/sam.h>
 #include "svrecord.h"
 
+/** strategy to construct pseudo reference
+ * F stands for forward strand of reference 
+ * R stands for reverse complement of reference
+ * bp stands for breakpoint
+ * svt: 0 ------------F-----------bp------------R-----------
+ * svt: 1 ------------R-----------bp------------F-----------
+ * svt: 2 ------------F-----------bp------------F-----------
+ * svt: 3 ------------F-----------bp------------F-----------
+ * svt: 4 ------------F-----------bp------------F-----------
+ * svt: 5 ------------F-----------bp------------R-----------
+ * svt: 6 ------------R-----------bp------------F-----------
+ * svt: 7 ------------F-----------bp------------F-----------
+ * svt: 8 ------------F-----------bp------------F-----------
+ */
+
 /** class to store and analysis breakpoint of an SV */
 class BreakPoint{
     public:

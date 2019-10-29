@@ -6,10 +6,10 @@
 
 /** alignment result descriptor of SR consensus sequence against SV ref sequence */
 struct AlignDescriptor{
-    int32_t mCSStart = 0;        ///< gap starting position on consensus sequence(0-based)
-    int32_t mCSEnd = 0;          ///< gap ending position on consensus sequence(1-based)
-    int32_t mRefStart = 0;       ///< gap starting position on SV ref sequence(0-based)
-    int32_t mRefEnd = 0;         ///< gap ending position on SV ref sequence(1-based)
+    int32_t mCSStart = 0;        ///< gap starting position on consensus sequence(0-based), next alignment is gap
+    int32_t mCSEnd = 0;          ///< gap ending position on consensus sequence(1-based), this base is first after gap
+    int32_t mRefStart = 0;       ///< gap starting position on SV ref sequence(0-based), next alignment is gap
+    int32_t mRefEnd = 0;         ///< gap ending position on SV ref sequence(1-based), this base is first after gap
     int32_t mHomLeft = 0;        ///< longest homology length between left part of gapped seq and the other seq ended at gap end position(reversely) 
     int32_t mHomRight = 0;       ///< longest homology length between right part of gapped seq and the other seq started at gap start position
     double mPercID = 0;          ///< alignment identity percents of this alignment skipping leading tailing and this continuous gap
