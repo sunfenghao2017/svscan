@@ -51,7 +51,7 @@ void SVRNADBOpt::prepDB(){
     std::vector<int32_t> iint, eint;
     std::stringstream aoss; // annotation db record buffer
     std::stringstream coss; // cds bed region record buffer
-    std::stringstream uoss; // uint bed region buffer
+    std::stringstream uoss; // unit bed region buffer
     std::stringstream loss; // 3'utr length buffer
     std::set<std::string> processedTrs;
     // chr start end strand feature count trsname tgenename trsversion

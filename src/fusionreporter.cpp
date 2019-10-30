@@ -242,20 +242,20 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             if(fgl[i].hfrom1){
                 fgr.junctionposition1 = start;                                     // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;                           // Strand1;
-                fgr.transcript1 = trsl1[fgl[i].hidx].name;                         // Transcript1
+                fgr.transcript1 = trsl1[fgl[i].hidx].getTrs();                         // Transcript1
             }else{
                 fgr.junctionposition1 = end;                                       // JunctionPosition1
                 fgr.strand1 = trsl2[fgl[i].hidx].strand;                           // Strand1;
-                fgr.transcript1 = trsl2[fgl[i].hidx].name;                         // Transcript1
+                fgr.transcript1 = trsl2[fgl[i].hidx].getTrs();                         // Transcript1
             }
             if(fgl[i].tfrom1){
                 fgr.junctionposition2 = start;                                       // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;                           // Strand2
-                fgr.transcript2 = trsl1[fgl[i].tidx].name;                         // Transcript2
+                fgr.transcript2 = trsl1[fgl[i].tidx].getTrs();                         // Transcript2
             }else{
                 fgr.junctionposition2 = end;                                     // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;                           // Strand2
-                fgr.transcript2 = trsl2[fgl[i].tidx].name;                         // Transcript2
+                fgr.transcript2 = trsl2[fgl[i].tidx].getTrs();                         // Transcript2
             }
             fgr.fusionsequence = vstr[16];                                         // FusionSequence
             fgr.fseqbp = std::atoi(vstr[17].c_str());                              // fseqBp

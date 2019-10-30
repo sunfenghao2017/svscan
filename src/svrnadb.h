@@ -34,7 +34,7 @@ struct SVRNADBOpt{
         gene2trs = "./gene2trs.tsv";
         refMrna = "./cncMrna.fa.gz";
         bedCDS = "./cncMrna.cds.bed";
-        bedUnits = "./cncMrna.uint.bed";
+        bedUnits = "./cncMrna.unit.bed";
         utr3len = "./cncMrna.3utr.len";
         keepNCRna = false;
     }

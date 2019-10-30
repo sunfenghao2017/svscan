@@ -37,6 +37,22 @@ struct TrsRec{
         ret.append(number);
         return ret;
     }
+
+    /** get name,uint,strand,number rep of TrsRec
+     * @return string rep of TrsRec in name,strand,unit,number format
+     */
+    std::string getTrs(){
+        std::string ret;
+        ret.append(name);
+        ret.append(",");
+        ret.append(strand);
+        ret.append(",");
+        ret.append(unit);
+        ret.append(",");
+        ret.append(number);
+        return ret;
+    }
+
 };
 
 /** class to store a list of TrsRec */

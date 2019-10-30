@@ -261,13 +261,13 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
         fsr.chr1 = gi.mGene1[gi.mFuseGene[i].hidx].chr;
         fsr.junctionposition1 = gi.mGene1[gi.mFuseGene[i].hidx].pos;
         fsr.strand1 = gi.mGene1[gi.mFuseGene[i].hidx].strand;
-        fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].name;
+        fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].getTrs();
     }else{
         fsr.gene1 = gi.mGene2[gi.mFuseGene[i].hidx].gene;
         fsr.chr1 = gi.mGene2[gi.mFuseGene[i].hidx].chr;
         fsr.junctionposition1 = gi.mGene2[gi.mFuseGene[i].hidx].pos;
         fsr.strand1 = gi.mGene2[gi.mFuseGene[i].hidx].strand;
-        fsr.transcript1 = gi.mGene2[gi.mFuseGene[i].hidx].name;
+        fsr.transcript1 = gi.mGene2[gi.mFuseGene[i].hidx].getTrs();
     }
     // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
     if(gi.mFuseGene[i].tfrom1){
@@ -275,13 +275,13 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
         fsr.chr2 = gi.mGene1[gi.mFuseGene[i].tidx].chr;
         fsr.junctionposition2 = gi.mGene1[gi.mFuseGene[i].tidx].pos;
         fsr.strand2 = gi.mGene1[gi.mFuseGene[i].tidx].strand;
-        fsr.transcript2 = gi.mGene1[gi.mFuseGene[i].tidx].name;
+        fsr.transcript2 = gi.mGene1[gi.mFuseGene[i].tidx].getTrs();
     }else{
         fsr.gene2 = gi.mGene2[gi.mFuseGene[i].tidx].gene;
         fsr.chr2 = gi.mGene2[gi.mFuseGene[i].tidx].chr;
         fsr.junctionposition2 = gi.mGene2[gi.mFuseGene[i].tidx].pos;
         fsr.strand2 = gi.mGene2[gi.mFuseGene[i].tidx].strand;
-        fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].name;
+        fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].getTrs();
     }
     // FusinSequence fseqBp
     if(svr.mSVT == 4 || (!svr.mPrecise)){
