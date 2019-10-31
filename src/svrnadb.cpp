@@ -163,7 +163,9 @@ void SVRNADBOpt::prepDB(){
             }
         }
         // cds bed region
-        coss << trs << "\t" << std::max(rutr5end, 0) << "\t" << rutr3start << "\n";
+        int32_t rcdsBeg = std::max(rutr5end, 0);
+        int32_t rcdsEnd = rutr3start;
+        if(rcdsBeg < rcdsEnd) coss << trs << "\t" << rcdsBeg << "\t" << rcdsEnd << "\n";
         // output annotation record
         std::string arec = aoss.str();
         assert(bgzf_write(ofa, arec.c_str(), arec.size()) >= 0);

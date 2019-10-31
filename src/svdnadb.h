@@ -14,8 +14,11 @@
 
 struct SVDNADBOpt{
     std::string refSeqDB;   ///< refseq database with transcript version added
-    std::string gene2cnc; ///< gene to canonical transcripts list
+    std::string gene2cnc;   ///< gene to canonical transcripts list
     std::string svAnnoDB;   ///< sv annotation database output file
+    std::string ref2gene;   ///< refseq accession number to gene name
+    std::string bedCDS;     ///< cds bed region file of each transcript
+    std::string bedUnits;   ///< exon/utr region file of each transcript
     Software* softEnv;      ///< software env
     
     SVDNADBOpt(){
@@ -23,6 +26,9 @@ struct SVDNADBOpt{
         softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
         svAnnoDB = "./dnaAnno.gz";
+        ref2gene = "./ref2gene.tsv";
+        bedCDS = "./all.cds.bed";
+        bedUnits = "./all.unit.bed";
     }
 
     ~SVDNADBOpt(){
