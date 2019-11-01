@@ -154,7 +154,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         std::string chr2 = vstr[5];
         int32_t start = std::atoi(vstr[4].c_str());
         int32_t end = std::atoi(vstr[6].c_str());
-        int32_t srv = std::atoi(vstr[9].c_str());
+        int32_t srv = std::max(std::atoi(vstr[9].c_str()), std::atoi(vstr[7].c_str()));
         int32_t dpv = std::atoi(vstr[10].c_str());
         int32_t srr = std::atoi(vstr[11].c_str());
         int32_t dpr = std::atoi(vstr[12].c_str());
@@ -225,53 +225,52 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     fgr.fsmask &= (~FUSION_FLOWDEPTH);
                 }
             }
-            fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                     // FusionGene
-            // FusionPattern
-            if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
+            fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                   // FusionGene
+            if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand); // FusionPattern
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].tidx].strand);
-            if(srv){                                                               // FusionReads TotalReads
+            if(srv){                                                             // FusionReads TotalReads
                 fgr.fusionreads = srv;
                 fgr.totalreads = srr + srv;
             }else{
                 fgr.fusionreads = dpv;
                 fgr.totalreads = dpr + dpv;
             }
-            fgr.fuserate = af;                                                     // FusionRate
+            fgr.fuserate = af;                                                   // FusionRate
             if(fgl[i].hfrom1){
-                fgr.junctionposition1 = start;                                     // JunctionPosition1
-                fgr.strand1 = trsl1[fgl[i].hidx].strand;                           // Strand1;
-                fgr.transcript1 = trsl1[fgl[i].hidx].getTrs();                         // Transcript1
+                fgr.junctionposition1 = start;                                   // JunctionPosition1
+                fgr.strand1 = trsl1[fgl[i].hidx].strand;                         // Strand1;
+                fgr.transcript1 = trsl1[fgl[i].hidx].getTrs();                   // Transcript1
             }else{
-                fgr.junctionposition1 = end;                                       // JunctionPosition1
-                fgr.strand1 = trsl2[fgl[i].hidx].strand;                           // Strand1;
-                fgr.transcript1 = trsl2[fgl[i].hidx].getTrs();                         // Transcript1
+                fgr.junctionposition1 = end;                                     // JunctionPosition1
+                fgr.strand1 = trsl2[fgl[i].hidx].strand;                         // Strand1;
+                fgr.transcript1 = trsl2[fgl[i].hidx].getTrs();                   // Transcript1
             }
             if(fgl[i].tfrom1){
-                fgr.junctionposition2 = start;                                       // JunctionPosition2
-                fgr.strand2 = trsl1[fgl[i].tidx].strand;                           // Strand2
-                fgr.transcript2 = trsl1[fgl[i].tidx].getTrs();                         // Transcript2
+                fgr.junctionposition2 = start;                                   // JunctionPosition2
+                fgr.strand2 = trsl1[fgl[i].tidx].strand;                         // Strand2
+                fgr.transcript2 = trsl1[fgl[i].tidx].getTrs();                   // Transcript2
             }else{
                 fgr.junctionposition2 = end;                                     // JunctionPosition2
-                fgr.strand2 = trsl2[fgl[i].tidx].strand;                           // Strand2
-                fgr.transcript2 = trsl2[fgl[i].tidx].getTrs();                         // Transcript2
+                fgr.strand2 = trsl2[fgl[i].tidx].strand;                         // Strand2
+                fgr.transcript2 = trsl2[fgl[i].tidx].getTrs();                   // Transcript2
             }
-            fgr.fusionsequence = vstr[16];                                         // FusionSequence
-            fgr.fseqbp = std::atoi(vstr[17].c_str());                              // fseqBp
-            fgr.indb = ((fgr.fsmask & FUSION_FINDB) ? "Y" : "N");                  // inDB
-            fgr.svt = vstr[0];                                                     // svType
-            fgr.svsize = std::atoi(vstr[1].c_str());                               // svSize
-            fgr.srcount = std::atoi(vstr[7].c_str());                              // srCount
-            fgr.dpcount = std::atoi(vstr[8].c_str());                              // dpCount
-            fgr.srrescued = std::atoi(vstr[9].c_str());                            // srRescued
-            fgr.dprescued = std::atoi(vstr[10].c_str());                           // dpRescued
-            fgr.srrefcount  = std::atoi(vstr[11].c_str());                         // srRefCount
-            fgr.dprefcount = std::atoi(vstr[12].c_str());                          // dpRefCount
-            fgr.insbp = std::atoi(vstr[14].c_str());                               // insBp
-            fgr.insseq = vstr[15];                                                 // insSeq
-            fgr.svid = std::atoi(vstr[18].c_str());                                // svID
-            fgr.svint = std::atoi(vstr[19].c_str());                               // svInt
+            fgr.fusionsequence = vstr[16];                                       // FusionSequence
+            fgr.fseqbp = std::atoi(vstr[17].c_str());                            // fseqBp
+            fgr.indb = ((fgr.fsmask & FUSION_FINDB) ? "Y" : "N");                // inDB
+            fgr.svt = vstr[0];                                                   // svType
+            fgr.svsize = std::atoi(vstr[1].c_str());                             // svSize
+            fgr.srcount = std::atoi(vstr[7].c_str());                            // srCount
+            fgr.dpcount = std::atoi(vstr[8].c_str());                            // dpCount
+            fgr.srrescued = srv;                                                 // srRescued
+            fgr.dprescued = std::atoi(vstr[10].c_str());                         // dpRescued
+            fgr.srrefcount  = std::atoi(vstr[11].c_str());                       // srRefCount
+            fgr.dprefcount = std::atoi(vstr[12].c_str());                        // dpRefCount
+            fgr.insbp = std::atoi(vstr[14].c_str());                             // insBp
+            fgr.insseq = vstr[15];                                               // insSeq
+            fgr.svid = std::atoi(vstr[18].c_str());                              // svID
+            fgr.svint = std::atoi(vstr[19].c_str());                             // svInt
             if(fgr.fsmask & FUSION_DROP_MASK){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{

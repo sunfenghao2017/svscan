@@ -130,7 +130,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
             }
             float af = 0.0;
-            int32_t srv = mJctCnts[i].mAltQual.size();
+            int32_t srv = std::max((int32_t)mJctCnts[i].mAltQual.size(), svs[i].mSRSupport);
             int32_t srr = mJctCnts[i].mRefQual.size();
             int32_t dpv = mSpnCnts[i].mAltQual.size();
             int32_t dpr = mSpnCnts[i].mRefQual.size();
@@ -234,7 +234,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
     float af = 0.0;
-    int32_t srv = mJctCnts[svr.mID].mAltQual.size();
+    int32_t srv = std::max((int32_t)mJctCnts[svr.mID].mAltQual.size(), svr.mSRSupport);
     int32_t srr = mJctCnts[svr.mID].mRefQual.size();
     int32_t dpv = mSpnCnts[svr.mID].mAltQual.size();
     int32_t dpr = mSpnCnts[svr.mID].mRefQual.size();
@@ -298,7 +298,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     else fsr.svsize = svr.mSize;
     fsr.srcount = svr.mSRSupport;                             // srCount
     fsr.dpcount = svr.mPESupport;                             // dpCount
-    fsr.srrescued =  mJctCnts[svr.mID].mAltQual.size();       // srRescued
+    fsr.srrescued =  srv;                                     // srRescued
     fsr.dprescued = mSpnCnts[svr.mID].mAltQual.size();        // dpRescued
     fsr.srrefcount = mJctCnts[svr.mID].mRefQual.size();       // srRefCount
     fsr.dprefcount = mSpnCnts[svr.mID].mRefQual.size();       // dpRefCount
