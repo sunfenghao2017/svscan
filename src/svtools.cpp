@@ -9,7 +9,7 @@ int main(int argc, char** argv){
     }
     SVToolOpts* svtopt = new SVToolOpts();
     svtopt->update(argc, argv);
-    CLI::App app("program: " + std::string(argv[0]) + "\n" + svtopt->softEnv->cmp);
+    CLI::App app("program: " + std::string(argv[0]) + "\n" + svtopt->softEnv->getSoftInfo());
     app.get_formatter()->column_width(36);
     // merge
     VCFMerger* mergeOpt = new VCFMerger();

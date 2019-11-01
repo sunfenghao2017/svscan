@@ -17,8 +17,8 @@ struct Software{
 
     /** Software constructor */
     Software(){
-        ver = "0.0.0";
-        cmp = cmp = std::string(__TIME__) + " " + std::string(__DATE__);
+        ver = "0.1.0";
+        cmp = std::string(__TIME__) + " " + std::string(__DATE__);
         char cpath[FILENAME_MAX];
         getcwd(cpath, FILENAME_MAX);
         cwd = cpath;
@@ -53,6 +53,13 @@ struct Software{
      */
     inline std::string getExecutionTime(){
         return timer->toStr();
+    }
+
+    /** get information of Software 
+     * @return update and version info of software
+     */
+    inline std::string getSoftInfo(){
+        return "updated: " + cmp + "\nversion: " + ver + "\n";
     }
 };
 
