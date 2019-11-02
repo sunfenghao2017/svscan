@@ -10,6 +10,7 @@ struct TrsRec{
     std::string unit;    ///< uint name
     std::string strand;  ///< strand
     std::string number;  ///< count
+    std::string version; ///< transcript version
     std::string primary; ///< Y if it's a canonical transcript
     bool drop;           ///< drop from report if true
     int32_t pos;         ///< position on genome
@@ -29,6 +30,8 @@ struct TrsRec{
         ret.append(gene);
         ret.append(",");
         ret.append(name);
+        ret.append(".");
+        ret.append(version);
         ret.append(",");
         ret.append(unit);
         ret.append(",");
@@ -44,6 +47,8 @@ struct TrsRec{
     std::string getTrs(){
         std::string ret;
         ret.append(name);
+        ret.append(".");
+        ret.append(version);
         ret.append(",");
         ret.append(strand);
         ret.append(",");

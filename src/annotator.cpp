@@ -192,6 +192,7 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         tr.number = vstr[5];
         tr.name = vstr[6];
         tr.gene = vstr[7];
+        tr.version = vstr[8];
         tr.primary = vstr[9];
         tr.chr = vstr[0];
         tr.drop = false;
@@ -252,34 +253,16 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
-                if(fsg.hgene != "-"){
-                    if(fsg.hgene == gl[i].mGene1[g1].gene){
-                        fsg.hidx = g1;
-                        fsg.hfrom1 = true;
-                    }else{
-                        fsg.hidx = g2;
-                        fsg.hfrom1 = false;
-                    }
+                if(fsg.status & FUSION_FHTFLSWAPPED){
+                    fsg.hfrom1 = false;
+                    fsg.hidx = g2;
+                    fsg.tfrom1 = true;
+                    fsg.tidx = g1;
                 }else{
-                    fsg.hidx = g1;
                     fsg.hfrom1 = true;
-                }
-                if(fsg.tgene != "-"){
-                    if(fsg.tgene == gl[i].mGene1[g1].gene){
-                        if(fsg.tgene == fsg.hgene){
-                            fsg.tidx = g2;
-                            fsg.tfrom1 = false;
-                        }else{
-                            fsg.tidx = g1;
-                            fsg.tfrom1 = true;
-                        }
-                    }else{
-                        fsg.tidx = g2;
-                        fsg.tfrom1 = false;
-                    }
-                }else{
-                    fsg.tidx = g2;
+                    fsg.hidx = g1;
                     fsg.tfrom1 = false;
+                    fsg.tidx = g2;
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }
@@ -301,6 +284,7 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         util::split(rec.s, vstr, "\t");
         TrsRec tr;
         tr.strand = vstr[9];
+        tr.version = vstr[10];
         tr.unit = vstr[3];
         tr.number = vstr[4];
         tr.name = vstr[0];
@@ -346,10 +330,17 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
-                fsg.hidx = g1;
-                fsg.hfrom1 = true;
-                fsg.tidx = g2;
-                fsg.tfrom1 = false;
+                if(fsg.status & FUSION_FHTFLSWAPPED){
+                    fsg.hfrom1 = false;
+                    fsg.hidx = g2;
+                    fsg.tfrom1 = true;
+                    fsg.tidx = g1;
+                }else{
+                    fsg.hfrom1 = true;
+                    fsg.hidx = g1;
+                    fsg.tfrom1 = false;
+                    fsg.tidx = g2;
+                }
                 gl[i].mFuseGene.push_back(fsg);
             }
         }

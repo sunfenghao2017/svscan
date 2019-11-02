@@ -59,39 +59,20 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
         fg.tgene = tvstr[0];
         fg.tend = tvstr[1];
         fg.tstrand = tvstr[2];
+        if(fg.status & FUSION_FHTFLSWAPPED){
+            fg.hfrom1 = false;
+            fg.tfrom1 = true;
+        }else{
+            fg.hfrom1 = true;
+            fg.tfrom1 = false;
+        }
         for(uint32_t b1 = 0; b1 < bp1trs.size(); ++b1){
-            if(fg.hgene != "-"){
-                if(bp1trs[b1].gene == fg.hgene){
-                    fg.hidx = b1;
-                    fg.hfrom1 = true;
-                }
-            }
-            if(fg.tgene != "-"){
-                if(bp1trs[b1].gene == fg.tgene){
-                    if(!fg.hfrom1){
-                        fg.tidx = b1;
-                        fg.tfrom1 = true;
-                    }
-                }
-            }
+            if(fg.hfrom1 && bp1trs[b1].gene == fg.hgene) fg.hidx = b1;
+            if(fg.tfrom1 && bp1trs[b1].gene == fg.tgene) fg.tidx = b1;
         }
         for(uint32_t b2 = 0; b2 < bp2trs.size(); ++b2){
-            if(fg.hgene != "-"){
-                if(bp2trs[b2].gene == fg.hgene){
-                    if(!fg.hfrom1){
-                        fg.hidx = b2;
-                        fg.hfrom1 = false;
-                    }
-                }
-            }
-            if(fg.tgene != "-"){
-                if(bp2trs[b2].gene == fg.tgene){
-                    if(!fg.tfrom1){
-                        fg.tidx = b2;
-                        fg.tfrom1 = false;
-                    }
-                }
-            }
+            if((!fg.hfrom1) && bp2trs[b2].gene == fg.hgene) fg.hidx = b2;
+            if((!fg.tfrom1) && bp2trs[b2].gene == fg.tgene) fg.tidx = b2;
         }
         fsgl.push_back(fg);
     }
@@ -226,6 +207,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 }
             }
             fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                   // FusionGene
+            std::cout << fgl[i] << std::endl;
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand); // FusionPattern
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
