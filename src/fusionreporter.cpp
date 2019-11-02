@@ -207,7 +207,6 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 }
             }
             fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                   // FusionGene
-            std::cout << fgl[i] << std::endl;
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand); // FusionPattern
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
