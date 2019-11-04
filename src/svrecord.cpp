@@ -155,8 +155,8 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     if(mSVT < 4 && mSVStart >= mSVEnd) return false;
     // Precise SV from SR and SVRef split alignment found
     mPrecise = true;
-    mSVStart = finalGapStart;
-    mSVEnd = finalGapEnd;
+    mSVStart = std::max(0, finalGapStart);
+    mSVEnd = std::min(bp.mSVEndEnd, finalGapEnd);
     mSRAlignQuality = ad.mPercID;
     mAlnInsLen = ad.mCSEnd - ad.mCSStart - 1;
     mHomLen = std::max(0, ad.mHomLeft + ad.mHomRight - 2);
