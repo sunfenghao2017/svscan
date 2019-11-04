@@ -5,17 +5,17 @@ void BreakPoint::init(int32_t largeChrLen, int32_t smallChrLen){
         mSVStartBeg = std::max(0, mSVStart - mBoundary);
         mSVStartEnd = std::min(largeChrLen, mSVStart + mBoundary);
         mSVEndBeg = std::max(0, mSVEnd - mBoundary);
-        mSVEndEnd = std::min(smallChrLen, mSVEnd + mBoundary);
+        mSVEndEnd = std::min(smallChrLen - 1, mSVEnd + mBoundary);
     }else if(mSVT == 4){
         mSVStartBeg = std::max(0, mSVStart - mBoundary);
-        mSVStartEnd = std::min(largeChrLen, mSVStart + mBoundary);
+        mSVStartEnd = std::min(largeChrLen - 1, mSVStart + mBoundary);
         mSVEndBeg = mSVStartEnd;
-        mSVEndEnd = std::min(largeChrLen, mSVEnd + mBoundary);
+        mSVEndEnd = std::min(largeChrLen - 1, mSVEnd + mBoundary);
     }else if( mSVT < 4){
         mSVStartBeg = std::max(0, mSVStart - mBoundary);
         mSVStartEnd = std::min(mSVStart + mBoundary, (mSVStart + mSVEnd)/2);
         mSVEndBeg = std::max(mSVEnd - mBoundary, (mSVStart + mSVEnd)/2 + 1);
-        mSVEndEnd = std::min(smallChrLen, mSVEnd + mBoundary);
+        mSVEndEnd = std::min(smallChrLen - 1, mSVEnd + mBoundary);
     }
 }
 
