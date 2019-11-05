@@ -549,50 +549,50 @@ namespace svutil{
         switch(svt){
             case 5: // 5->5 catenation
                 if(htrs.ioffset < 10){
-                    css << htrs.unit << std::atoi(htrs.number.c_str()) - 1 << ",tI" << htrs.ioffset;
+                    css << std::toupper(htrs.unit[0]) << std::atoi(htrs.number.c_str()) - 1 << "T,I" << htrs.ioffset;
                 }else if(htrs.eoffset < 10){
-                    css << htrs.unit << htrs.number << ",tD" << htrs.eoffset;
+                    css << std::toupper(htrs.unit[0]) << htrs.number << "T,D" << htrs.eoffset;
                 }else{
-                    css << htrs.unit << std::atoi(htrs.number.c_str()) << ",hM" << htrs.ioffset;
+                    css << std::toupper(htrs.unit[0]) << std::atoi(htrs.number.c_str()) << "H,M" << htrs.ioffset;
                 }
                 if(ttrs.ioffset < 10){
-                    css << "tI" << ttrs.ioffset << "," << ttrs.unit << std::atoi(ttrs.number.c_str()) - 1;
+                    css << "I" << ttrs.ioffset << "," << std::toupper(ttrs.unit[0]) << std::atoi(ttrs.number.c_str()) - 1 << "T";
                 }else if(ttrs.eoffset < 10){
-                    css << "tD" << ttrs.eoffset << "," << ttrs.unit << ttrs.number;
+                    css << "D" << ttrs.eoffset << "," << std::toupper(ttrs.unit[0]) << ttrs.number << "T";
                 }else{
-                    css << "hM" << ttrs.ioffset << "," << ttrs.unit << ttrs.number;
+                    css << "M" << ttrs.ioffset << "," << std::toupper(ttrs.unit[0]) << ttrs.number << "H";
                 }
                 break;
             case 6: // 3->3 catenation
                 if(htrs.ioffset < 10){
-                    css << htrs.unit << htrs.number << ",hD" << htrs.ioffset;
+                    css << std::toupper(htrs.unit[0]) << htrs.number << "H,D" << htrs.ioffset;
                 }else if(htrs.eoffset < 10){
-                    css << htrs.unit << std::atoi(htrs.number.c_str()) + 1 << ",hI" << htrs.eoffset;
+                    css << std::toupper(htrs.unit[0]) << std::atoi(htrs.number.c_str()) + 1 << "H,I" << htrs.eoffset;
                 }else{
-                    css << htrs.unit << htrs.number << ",tM" << htrs.eoffset;
+                    css << std::toupper(htrs.unit[0]) << htrs.number << "T,M" << htrs.eoffset;
                 }
                 if(ttrs.ioffset < 10){
-                    css << "hD" << ttrs.ioffset << "," << ttrs.unit << ttrs.number;
+                    css << "D" << ttrs.ioffset << "," << std::toupper(ttrs.unit[0]) << ttrs.number << "H";
                 }else if(ttrs.eoffset < 10){
-                    css << "hI" << ttrs.eoffset << "," << ttrs.unit << std::atoi(ttrs.number.c_str()) + 1;
+                    css << "I" << ttrs.eoffset << "," << std::toupper(ttrs.unit[0]) << std::atoi(ttrs.number.c_str()) + 1 << "H";
                 }else{
-                    css << "tM" << ttrs.eoffset << "," << ttrs.unit << ttrs.number;
+                    css << "M" << ttrs.eoffset << "," << std::toupper(ttrs.unit[0]) << ttrs.number << "T";
                 }
                 break;
             case 7: case 8: // 5->3 catenation
                 if(htrs.ioffset < 10){
-                    css << htrs.unit << std::atoi(htrs.number.c_str()) - 1 << ",tI" << htrs.ioffset;
+                    css << std::toupper(htrs.unit[0]) << std::atoi(htrs.number.c_str()) - 1 << "T,I" << htrs.ioffset;
                 }else if(htrs.eoffset < 10){
-                    css << htrs.unit << htrs.number << ",tD" << htrs.eoffset;
+                    css << std::toupper(htrs.unit[0]) << htrs.number << "T,D" << htrs.eoffset;
                 }else{
-                    css << htrs.unit << htrs.number << ",hM" << htrs.ioffset;
+                    css << std::toupper(htrs.unit[0]) << htrs.number << "H,M" << htrs.ioffset;
                 }
                 if(ttrs.ioffset < 10){
-                    css << "hD" << ttrs.ioffset << "," << ttrs.unit << ttrs.number;
+                    css << "D" << ttrs.ioffset << "," << std::toupper(ttrs.unit[0]) << ttrs.number << "H";
                 }else if(ttrs.eoffset < 10){
-                    css << "hI" << ttrs.eoffset << "," << ttrs.unit << std::atoi(htrs.number.c_str()) + 1;
+                    css << "I" << ttrs.eoffset << "," << std::toupper(ttrs.unit[0]) << std::atoi(ttrs.number.c_str()) + 1 << "H";
                 }else{
-                    css << "tM" << ttrs.ioffset << "," << ttrs.unit << ttrs.number;
+                    css << "M" << ttrs.ioffset << "," << std::toupper(ttrs.unit[0]) << ttrs.number << "T";
                 }
                 break;
              default:
