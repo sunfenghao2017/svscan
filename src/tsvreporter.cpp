@@ -199,7 +199,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
     header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
     header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-29]
     if(mOpt->rnamode){
-        header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\n"); //[30-33]
+        header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n"); //[30-33]
     }else{
         header.append("\n");
     }
@@ -317,5 +317,6 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
             std::swap(fsr.ts1name, fsr.ts2name);
             std::swap(fsr.ts1pos, fsr.ts2pos);
         }
+        fsr.cigar = gi.mFuseGene[i].cigar;                    // fsCigar
     }
 }
