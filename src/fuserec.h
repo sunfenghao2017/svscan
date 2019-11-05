@@ -43,6 +43,7 @@ struct FusionRecord{
     int32_t ts1pos;             ///< transcript1 breakpoint(RNA only)
     std::string ts2name;        ///< transcript2 name(RNA only)
     int32_t ts2pos;             ///< transcript2 breakpoint(RNA only)
+    std::string cigar;          ///< cigar string of bp(RNA only)
 
     /** construct an FusionRecord */
     FusionRecord(){
@@ -67,7 +68,7 @@ struct FusionRecord{
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
-            os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos;
+            os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos << "\t" << fsr.cigar;
         }
         os << "\n";
        return os;

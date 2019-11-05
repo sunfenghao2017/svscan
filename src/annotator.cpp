@@ -254,15 +254,19 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
                 if(fsg.status & FUSION_FHTFLSWAPPED){
+                    // remember h/t gene sources
                     fsg.hfrom1 = false;
                     fsg.hidx = g2;
                     fsg.tfrom1 = true;
                     fsg.tidx = g1;
+                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1]
                 }else{
+                    // remember h/t gene sources
                     fsg.hfrom1 = true;
                     fsg.hidx = g1;
                     fsg.tfrom1 = false;
                     fsg.tidx = g2;
+                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2]
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }
@@ -292,6 +296,13 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         tr.chr = vstr[6];
         tr.drop = false;
         tr.pos = svutil::trpos2gnpos(pos, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()), std::atoi(vstr[7].c_str()),  vstr[9][0]);
+        if(tr.strand[0] == '+'){
+            tr.eoffset = std::atoi(vstr[8].c_str()) - tr.pos;
+            tr.ioffset = tr.pos - std::atoi(vstr[7].c_str());
+        }else{
+            tr.eoffset = tr.pos - std::atoi(vstr[7].c_str());
+            tr.ioffset = std::atoi(vstr[8].c_str()) - tr.pos;
+        }
         trsList.push_back(tr);
         if(!util::startsWith(tr.unit, "utr")) trsGotIE.insert(tr.name);
     }
@@ -331,15 +342,21 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
                 if(fsg.status & FUSION_FHTFLSWAPPED){
+                    // remember h/t gene sources
                     fsg.hfrom1 = false;
                     fsg.hidx = g2;
                     fsg.tfrom1 = true;
                     fsg.tidx = g1;
+                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1]
+                    fsg.cigar = svutil::bp2cigar(gl[i].mGene2[g2], gl[i].mGene1[g1], svs[i].mSVT);
                 }else{
+                    // remember h/t gene sources
                     fsg.hfrom1 = true;
                     fsg.hidx = g1;
                     fsg.tfrom1 = false;
                     fsg.tidx = g2;
+                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2]
+                    fsg.cigar = svutil::bp2cigar(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i].mSVT);
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }
