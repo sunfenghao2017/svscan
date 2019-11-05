@@ -548,22 +548,25 @@ namespace svutil{
         std::stringstream css;
         switch(svt){
             case 5: // 5->5 catenation
-                if(htrs.ioffset > 10) css << htrs.unit << htrs.number << "TD" << htrs.eoffset;
-                else css << htrs.unit << std::atoi(htrs.number.c_str()) - 1 << "TI" << htrs.ioffset;
-                if(ttrs.ioffset > 10) css << ttrs.unit << ttrs.number << "TD" << ttrs.eoffset;
-                else css << ttrs.unit << std::atoi(ttrs.number.c_str()) - 1 << "TI" << ttrs.ioffset;
+                if(htrs.ioffset > 10) css << htrs.unit << htrs.number << "tD" << htrs.eoffset;
+                else css << htrs.unit << std::atoi(htrs.number.c_str()) - 1 << "tI" << htrs.ioffset;
+                css << ",";
+                if(ttrs.ioffset > 10) css << ttrs.unit << ttrs.number << "tD" << ttrs.eoffset;
+                else css << ttrs.unit << std::atoi(ttrs.number.c_str()) - 1 << "tI" << ttrs.ioffset;
                 break;
             case 6: // 3->3 catenation
-                if(htrs.eoffset > 10) css << htrs.unit << htrs.number << "TM" << htrs.eoffset;  
-                else css << htrs.unit << std::atoi(htrs.number.c_str()) + 1 << "HI" << htrs.eoffset;
-                if(ttrs.eoffset > 10) css << ttrs.unit << ttrs.number << "TM" << ttrs.eoffset;
-                else css << ttrs.unit << std::stoi( ttrs.number.c_str()) + 1 << "HI" << ttrs.eoffset;
+                if(htrs.eoffset > 10) css << htrs.unit << htrs.number << "tM" << htrs.eoffset;  
+                else css << htrs.unit << std::atoi(htrs.number.c_str()) + 1 << "hI" << htrs.eoffset;
+                css << ",";
+                if(ttrs.eoffset > 10) css << ttrs.unit << ttrs.number << "tM" << ttrs.eoffset;
+                else css << ttrs.unit << std::stoi( ttrs.number.c_str()) + 1 << "hI" << ttrs.eoffset;
                 break;
             case 7: case 8: // 5->3 catenation
-                if(htrs.ioffset > 10) css << htrs.unit << htrs.number << "TD" << htrs.eoffset;
-                else css << htrs.unit << std::atoi(htrs.number.c_str()) - 1 << "TI" << htrs.ioffset;
-                if(ttrs.eoffset > 10) css << ttrs.unit << ttrs.number << "TM" << ttrs.eoffset;
-                else css << ttrs.unit << std::stoi( ttrs.number.c_str()) + 1 << "HI" << ttrs.eoffset;
+                if(htrs.ioffset > 10) css << htrs.unit << htrs.number << "tD" << htrs.eoffset;
+                else css << htrs.unit << std::atoi(htrs.number.c_str()) - 1 << "tI" << htrs.ioffset;
+                css << ",";
+                if(ttrs.eoffset > 10) css << ttrs.unit << ttrs.number << "tM" << ttrs.eoffset;
+                else css << ttrs.unit << std::stoi(ttrs.number.c_str()) + 1 << "hI" << ttrs.eoffset;
                 break;
              default:
                 break;

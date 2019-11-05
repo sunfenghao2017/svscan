@@ -296,8 +296,13 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         tr.chr = vstr[6];
         tr.drop = false;
         tr.pos = svutil::trpos2gnpos(pos, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()), std::atoi(vstr[7].c_str()),  vstr[9][0]);
-        tr.ioffset = std::atoi(vstr[8].c_str()) - tr.pos;
-        tr.eoffset = tr.pos - std::atoi(vstr[7].c_str());
+        if(tr.strand[0] == '+'){
+            tr.eoffset = std::atoi(vstr[8].c_str()) - tr.pos;
+            tr.ioffset = tr.pos - std::atoi(vstr[7].c_str());
+        }else{
+            tr.eoffset = tr.pos - std::atoi(vstr[7].c_str());
+            tr.ioffset = std::atoi(vstr[8].c_str()) - tr.pos;
+        }
         trsList.push_back(tr);
         if(!util::startsWith(tr.unit, "utr")) trsGotIE.insert(tr.name);
     }
