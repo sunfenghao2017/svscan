@@ -146,10 +146,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         for(uint32_t i = 0; i < fgl.size(); ++i){
             FusionRecord fgr;
             fgr.fsmask = fgl[i].status;
-            if(!rnamode && (fgr.fsmask & FUSION_FCALLFROMRNASEQ)){
-                rnamode = true;
-                FUSION_DROP_MASK |= FUSION_FINSAMEGENE;
-            }
+            if(!rnamode && (fgr.fsmask & FUSION_FCALLFROMRNASEQ)) rnamode = true;
             fgr.cigar = fgl[i].cigar;
             fgr.gene1 = fgl[i].hgene;
             fgr.gene2 = fgl[i].tgene;
