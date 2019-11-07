@@ -77,8 +77,6 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
                 if(gl[i].mFuseGene[j].hgene != gl[i].mFuseGene[j].tgene){
                     fpairs[gl[i].mFuseGene[j].hgene].insert(gl[i].mFuseGene[j].tgene);
-                }else{
-                    gl[i].mFuseGene[j].status |= FUSION_FINSAMEGENE;
                 }
             }
         }
@@ -118,8 +116,14 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
             }
             if(gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
-                if(svutil::trsUnitIsNear(gl[i].getTrs1(), gl[i].getTrs2(), 1)){
-                    gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
+                if(gl[i].mFuseGene[j].hfrom1){
+                    if(gl[i].mGene1[gl[i].mFuseGene[j].hidx].near(gl[i].mGene2[gl[i].mFuseGene[j].tidx], mOpt->filterOpt->mMinDelRatio)){
+                        gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
+                    }
+                }else{
+                    if(gl[i].mGene1[gl[i].mFuseGene[j].tidx].near(gl[i].mGene2[gl[i].mFuseGene[j].hidx], mOpt->filterOpt->mMinDelRatio)){
+                        gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
+                    }
                 }
             }
             if(svs[i].mPrecise){

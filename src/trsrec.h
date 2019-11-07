@@ -60,6 +60,29 @@ struct TrsRec{
         return ret;
     }
 
+    /** test whether two transcript unit is near each other
+     * @param other reference of another transcript record
+     * @return true if they'are near each other
+     */
+    bool near(const TrsRec& other, float minRate = 0.8){
+        if(name != other.name) return false; // not same transcript
+        if(unit == other.unit && number == other.number){
+            if(unit == "intron"){
+                return true; // all in same intron
+            }else if(unit == "exon"){
+                int32_t exsize = eoffset + ioffset;
+                return std::abs(ioffset - other.ioffset) / (double)exsize < minRate;
+            }else{
+                return true; // utr region
+            }
+        }
+        if(unit != other.unit){
+            if(std::abs(std::atoi(number.c_str()) - std::atoi(other.number.c_str())) <= 1){// nearby exon/intron
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 /** class to store a list of TrsRec */

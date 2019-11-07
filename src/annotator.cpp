@@ -259,14 +259,14 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
                     fsg.hidx = g2;
                     fsg.tfrom1 = true;
                     fsg.tidx = g1;
-                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1]
+                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1], TODO...
                 }else{
                     // remember h/t gene sources
                     fsg.hfrom1 = true;
                     fsg.hidx = g1;
                     fsg.tfrom1 = false;
                     fsg.tidx = g2;
-                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2]
+                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2], TODO...
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }
