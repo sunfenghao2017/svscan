@@ -116,12 +116,35 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
             }
             if(gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
+                int32_t minExon = -1, maxExon = -2;
+                std::vector<int32_t> exlist;
+                std::string gname;
                 if(gl[i].mFuseGene[j].hfrom1){
                     if(gl[i].mGene1[gl[i].mFuseGene[j].hidx].near(gl[i].mGene2[gl[i].mFuseGene[j].tidx], mOpt->filterOpt->mMinDelRatio)){
                         gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                     }
+                    if(mOpt->rnamode){
+                        minExon = std::min(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].hidx].number.c_str()), 
+                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].tidx].number.c_str()));
+                        maxExon = std::max(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].hidx].number.c_str()),
+                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].tidx].number.c_str()));
+                        gname = gl[i].mGene1[gl[i].mFuseGene[j].hidx].gene;
+                    }
                 }else{
                     if(gl[i].mGene1[gl[i].mFuseGene[j].tidx].near(gl[i].mGene2[gl[i].mFuseGene[j].hidx], mOpt->filterOpt->mMinDelRatio)){
+                        gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
+                    }
+                    if(mOpt->rnamode){
+                        minExon = std::min(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].tidx].number.c_str()), 
+                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].hidx].number.c_str()));
+                        maxExon = std::max(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].tidx].number.c_str()),
+                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].hidx].number.c_str()));
+                        gname = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
+                    }
+                }
+                if(mOpt->rnamode){
+                    for(int32_t ecnt = minExon; ecnt <= maxExon; ++ecnt) exlist.push_back(ecnt);
+                    if(!mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
                         gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                     }
                 }

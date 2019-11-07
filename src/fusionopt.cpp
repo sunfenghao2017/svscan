@@ -61,6 +61,26 @@ void FusionOptions::parseBlackList(){
     fr.close();
 }
 
+void FusionOptions::parseSameGeneEventList(){
+    std::ifstream fr(mSameGeneSVList);
+    std::vector<std::string> vstr;
+    std::vector<std::string> sve;
+    std::vector<std::string> svt;
+    std::string tmpstr;
+    while(std::getline(fr, tmpstr)){
+        util::split(tmpstr, vstr, "\t");
+        util::split(vstr[1], sve, ",");
+        util::split(vstr[2], svt, ",");
+        DetectRange dr;
+        dr.mGene = vstr[0];
+        if(sve[0] != "."){
+            for(auto& e: sve) dr.mExonList.insert(std::atoi(e.c_str()));
+        }
+        for(auto& t: svt) dr.mSVT.insert(std::atoi(t.c_str()));
+        mDetectRngMap[dr.mGene] = dr;
+    }
+    fr.close();
+}
 void FusionOptions::init(){
     mBgSVs.resize(9);
     if(!mBgBCF.empty()) getBgSVs();
@@ -68,6 +88,7 @@ void FusionOptions::init(){
         parseWhiteList();
     }
     if(!mBlackList.empty()) parseBlackList();
+    if(!mSameGeneSVList.empty()) parseSameGeneEventList();
     mInitialized = true;
 }
 
@@ -114,6 +135,21 @@ bool FusionOptions::inBlackList(const std::string& hgene, const std::string& tge
         }
     }
     return false;
+}
+
+bool FusionOptions::inSameSVRngMap(const std::string& gene, const std::vector<int32_t>& exon, int32_t svt){
+    auto giter = mDetectRngMap.find(gene);
+    if(giter == mDetectRngMap.end()) return false;
+    auto titer = giter->second.mSVT.find(svt);
+    if(titer == giter->second.mSVT.end()) return false;
+    if(!giter->second.mExonList.empty()){
+        for(auto& e: exon){
+            if(giter->second.mExonList.find(e) != giter->second.mExonList.end()) return true;
+        }
+        return false;
+    }else{
+        return true;
+    }
 }
 
 bool FusionOptions::validSV(int32_t svt, const std::string& chr1, const std::string& chr2, int32_t start, int32_t end){

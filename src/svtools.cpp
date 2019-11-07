@@ -58,6 +58,7 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--bgbcf", fuserptOpt->fuseOpt->mBgBCF, "background events BCF file");
     pfsrpt->add_option("--whitelist", fuserptOpt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--blacklist", fuserptOpt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile);
+    pfsrpt->add_option("--samegenel", fuserptOpt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile);
     // dna annodb
     SVDNADBOpt* annDBOpt = new SVDNADBOpt();
     CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");

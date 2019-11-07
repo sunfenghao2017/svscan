@@ -8,10 +8,10 @@
 #include "trsrec.h"
 
 struct FusionReporter{
-    FusionOptions* fuseOpt; ///< fusion report options
-    Software* softEnv;      ///< software environments
-    FusionRecordList fuseList;    ///< fusion list
-    bool rnamode;           ///< fusion event is from rnaseq
+    FusionOptions* fuseOpt;    ///< fusion report options
+    Software* softEnv;         ///< software environments
+    FusionRecordList fuseList; ///< fusion list
+    bool rnamode;              ///< fusion event is from rnaseq
 
     /** FusionReporter constructor */
     FusionReporter();

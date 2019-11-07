@@ -172,6 +172,22 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.fsmask &= (~FUSION_FBLACKPAIR);
             if(fuseOpt->matchHotDirec(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FCOMMONHOTDIRECT;
             else fgr.fsmask &= (~FUSION_FCOMMONHOTDIRECT);
+            if(fgl[i].status & FUSION_FINSAMEGENE && fgl[i].status & FUSION_FCALLFROMRNASEQ){
+                std::vector<int32_t> exonl;
+                int32_t minExon = -1, maxExon = -2;
+                std::string gname;
+                if(fgl[i].hfrom1){
+                    minExon = std::min(std::atoi(trsl1[fgl[i].hidx].number.c_str()), std::atoi(trsl2[fgl[i].tidx].number.c_str()));
+                    maxExon = std::max(std::atoi(trsl1[fgl[i].hidx].number.c_str()), std::atoi(trsl2[fgl[i].tidx].number.c_str()));
+                    gname = trsl1[fgl[i].hidx].gene;
+                }else{
+                    minExon = std::min(std::atoi(trsl1[fgl[i].tidx].number.c_str()), std::atoi(trsl2[fgl[i].hidx].number.c_str()));
+                    maxExon = std::max(std::atoi(trsl1[fgl[i].tidx].number.c_str()), std::atoi(trsl2[fgl[i].hidx].number.c_str()));
+                    gname = trsl1[fgl[i].tidx].gene;
+                }
+                for(int32_t excnt = minExon; excnt <= maxExon; ++excnt) exonl.push_back(excnt);
+                if(!fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask |= FUSION_FTOOSMALLSIZE;
+            }
             if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
                 if((srv < fuseOpt->mWhiteFilter.mMinSupport) && (dpv < fuseOpt->mWhiteFilter.mMinSupport)){
                     fgr.fsmask |= FUSION_FLOWSUPPORT;

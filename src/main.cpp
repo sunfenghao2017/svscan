@@ -48,6 +48,7 @@ int main(int argc, char** argv){
     app.add_option("--bgbcf", opt->fuseOpt->mBgBCF, "background events BCF file")->group("Fusion Options");
     app.add_option("--whitelist", opt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--blacklist", opt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
+    app.add_option("--samegenel", opt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
     app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
     // parse arguments
