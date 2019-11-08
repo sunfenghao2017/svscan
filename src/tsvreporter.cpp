@@ -18,7 +18,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
     }
     for(uint32_t i = 0; i < gl.size(); ++i){
         // skip false positive insertions
-        if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].mAltQual.size() * mOpt->filterOpt->mMaxFPIns) continue;
+        if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].getAltDep() * mOpt->filterOpt->mMaxFPIns) continue;
         // svType
         fw << svutil::addID(svs[i].mSVT) << "\t";
         // svSize
@@ -30,12 +30,12 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         // bp1Chr bp1Pos bp2Chr bp2Pos
         fw << gl[i].mChr1 << "\t" << gl[i].mPos1 << "\t" << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t";
         // srCount dpCount srRescued dpRescued
-        fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t" << mJctCnts[i].mAltQual.size() << "\t" << mSpnCnts[i].mAltQual.size() << "\t";
+        fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t" << mJctCnts[i].getAltDep() << "\t" << mSpnCnts[i].getAltDep() << "\t";
         // srRefCount dpRefCount
-        fw << mJctCnts[i].mRefQual.size() << "\t" <<mSpnCnts[i].mRefQual.size() << "\t";
+        fw << mJctCnts[i].getRefDep() << "\t" << mSpnCnts[i].getRefDep() << "\t";
         // AF
-        if(svs[i].mPrecise) fw << (double)(mJctCnts[i].mAltQual.size())/(double)(mJctCnts[i].mRefQual.size() + mJctCnts[i].mAltQual.size()) << "\t";
-        else fw << (double)(mSpnCnts[i].mAltQual.size())/(double)(mSpnCnts[i].mRefQual.size() + mSpnCnts[i].mAltQual.size()) << "\t";
+        if(svs[i].mPrecise) fw << (double)(mJctCnts[i].getAltDep())/(double)(mJctCnts[i].getRefDep() + mJctCnts[i].getAltDep()) << "\t";
+        else fw << (double)(mSpnCnts[i].getAltDep())/(double)(mSpnCnts[i].getRefDep() + mSpnCnts[i].getAltDep()) << "\t";
         // insBp insSeq
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
         // svSeq seqBp
@@ -123,30 +123,24 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     if(gl[i].mGene1[gl[i].mFuseGene[j].hidx].near(gl[i].mGene2[gl[i].mFuseGene[j].tidx], mOpt->filterOpt->mMinDelRatio)){
                         gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                     }
-                    if(mOpt->rnamode){
-                        minExon = std::min(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].hidx].number.c_str()), 
-                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].tidx].number.c_str()));
-                        maxExon = std::max(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].hidx].number.c_str()),
-                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].tidx].number.c_str()));
-                        gname = gl[i].mGene1[gl[i].mFuseGene[j].hidx].gene;
-                    }
+                    minExon = std::min(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].hidx].number.c_str()), 
+                                       std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].tidx].number.c_str()));
+                    maxExon = std::max(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].hidx].number.c_str()),
+                                       std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].tidx].number.c_str()));
+                    gname = gl[i].mGene1[gl[i].mFuseGene[j].hidx].gene;
                 }else{
                     if(gl[i].mGene1[gl[i].mFuseGene[j].tidx].near(gl[i].mGene2[gl[i].mFuseGene[j].hidx], mOpt->filterOpt->mMinDelRatio)){
                         gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                     }
-                    if(mOpt->rnamode){
-                        minExon = std::min(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].tidx].number.c_str()), 
-                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].hidx].number.c_str()));
-                        maxExon = std::max(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].tidx].number.c_str()),
-                                           std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].hidx].number.c_str()));
-                        gname = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
-                    }
+                    minExon = std::min(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].tidx].number.c_str()), 
+                                       std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].hidx].number.c_str()));
+                    maxExon = std::max(std::atoi(gl[i].mGene1[gl[i].mFuseGene[j].tidx].number.c_str()),
+                                       std::atoi(gl[i].mGene2[gl[i].mFuseGene[j].hidx].number.c_str()));
+                    gname = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
                 }
-                if(mOpt->rnamode){
-                    for(int32_t ecnt = minExon; ecnt <= maxExon; ++ecnt) exlist.push_back(ecnt);
-                    if(!mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
-                        gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
-                    }
+                for(int32_t ecnt = minExon; ecnt <= maxExon; ++ecnt) exlist.push_back(ecnt);
+                if(!mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
+                    gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                 }
             }
             if(svs[i].mPrecise){
@@ -157,10 +151,10 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
             }
             float af = 0.0;
-            int32_t srv = std::max((int32_t)mJctCnts[i].mAltQual.size(), svs[i].mSRSupport);
-            int32_t srr = mJctCnts[i].mRefQual.size();
-            int32_t dpv = mSpnCnts[i].mAltQual.size();
-            int32_t dpr = mSpnCnts[i].mRefQual.size();
+            int32_t srv = std::max((int32_t)mJctCnts[i].getAltDep(), svs[i].mSRSupport);
+            int32_t srr = mJctCnts[i].getRefDep();
+            int32_t dpv = mSpnCnts[i].getAltDep();
+            int32_t dpr = mSpnCnts[i].getRefDep();
             if(svs[i].mPrecise) af = (double)(srv)/(double)(srv + srr);
             else af = (double)(dpv)/(double)(dpv + dpr);
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
@@ -173,7 +167,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dpv) < mOpt->fuseOpt->mWhiteFilter.mMinDepth)){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                 }
-                if((svs[i].mSVT != 2) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
+                if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                     if(svs[i].mSize < mOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize){
                         gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                     }
@@ -188,7 +182,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth && ((dpr + dpv) < mOpt->fuseOpt->mUsualFilter.mMinDepth)){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                 }
-                if((svs[i].mSVT != 2) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
+                if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                     if(svs[i].mSize < mOpt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize){
                         gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
                     }
@@ -260,10 +254,10 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
     float af = 0.0;
-    int32_t srv = std::max((int32_t)mJctCnts[svr.mID].mAltQual.size(), svr.mSRSupport);
-    int32_t srr = mJctCnts[svr.mID].mRefQual.size();
-    int32_t dpv = mSpnCnts[svr.mID].mAltQual.size();
-    int32_t dpr = mSpnCnts[svr.mID].mRefQual.size();
+    int32_t srv = std::max((int32_t)mJctCnts[svr.mID].getAltDep(), svr.mSRSupport);
+    int32_t srr = mJctCnts[svr.mID].getRefDep();
+    int32_t dpv = mSpnCnts[svr.mID].getAltDep();
+    int32_t dpr = mSpnCnts[svr.mID].getRefDep();
     if(svr.mPrecise) af = (double)(srv)/(double)(srv + srr);
     else af = (double)(dpv)/(double)(dpv + dpr);
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
@@ -325,9 +319,9 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     fsr.srcount = svr.mSRSupport;                             // srCount
     fsr.dpcount = svr.mPESupport;                             // dpCount
     fsr.srrescued =  srv;                                     // srRescued
-    fsr.dprescued = mSpnCnts[svr.mID].mAltQual.size();        // dpRescued
-    fsr.srrefcount = mJctCnts[svr.mID].mRefQual.size();       // srRefCount
-    fsr.dprefcount = mSpnCnts[svr.mID].mRefQual.size();       // dpRefCount
+    fsr.dprescued = mSpnCnts[svr.mID].getAltDep();            // dpRescued
+    fsr.srrefcount = mJctCnts[svr.mID].getRefDep();           // srRefCount
+    fsr.dprefcount = mSpnCnts[svr.mID].getRefDep();           // dpRefCount
     fsr.insbp = svr.mBpInsSeq.length();                       // insBp
     if(svr.mBpInsSeq.empty()) fsr.insseq = "-";               // insSeq
     else fsr.insseq = svr.mBpInsSeq;
