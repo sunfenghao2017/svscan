@@ -25,10 +25,10 @@ struct SVDNADBOpt{
         softEnv = new Software();
         softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
-        svAnnoDB = "./dnaAnno.gz";
-        ref2gene = "./ref2gene.tsv";
-        bedCDS = "./all.cds.bed";
-        bedUnits = "./all.unit.bed";
+        svAnnoDB = "anno.gz";
+        ref2gene = "ref2gene.tsv";
+        bedCDS = "ref.cds.bed";
+        bedUnits = "ref.unit.bed";
     }
 
     ~SVDNADBOpt(){
