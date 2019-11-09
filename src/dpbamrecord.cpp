@@ -257,7 +257,6 @@ void DPBamRecordSet::searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& c
         if(chr1 == chr2 && svStart >= svEnd) continue; // do not support SV
         clique.insert(edgeIter->mSource);
         // Grow the clique
-        ++edgeIter;
         for(; edgeIter != compIter->second.end(); ++edgeIter){
             int32_t v;
             if(clique.find(edgeIter->mSource) == clique.end() && clique.find(edgeIter->mTarget) != clique.end()){
