@@ -121,7 +121,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
     int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
-    for(auto&refIdx : mOpt->svRefID){
+    for(auto& refIdx : mOpt->svRefID){
         // Components assigned marker
         std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
         int32_t compNum = 0;
@@ -375,7 +375,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         }
         // MSA
         bool bpRefined = false;
-        if(seqStore[svid].size() > 1){
+        if(seqStore[svid].size()){
             AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
             MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
             msa->msa(svs[svid].mConsensus);
