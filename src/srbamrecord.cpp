@@ -222,7 +222,6 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
         uint64_t pos2 = srs[edgeIter->mSource].mPos2;
         int32_t ciendhigh = srs[edgeIter->mSource].mPos2;
         int32_t inslen = srs[edgeIter->mSource].mInslen;
-        ++edgeIter;
         // Grow clique
         for(; edgeIter != compIter->second.end(); ++edgeIter){
             // Find next best edge for extension
@@ -460,6 +459,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* aln
     bool bpRefined = false;
     if(mTraSeqStore[svid].size() > 1){
         MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+        if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
         msa->msa(svs[svid].mConsensus);
         delete msa;
         if(mTriSeqStore[svid].size() > 0){
