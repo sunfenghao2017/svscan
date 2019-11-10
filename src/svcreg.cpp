@@ -10,7 +10,7 @@ void SVCreg::getCreg(){
     std::ifstream fr(ibed);
     std::string line;
     std::vector<std::string> vstr;
-    int32_t i = 0;
+    int64_t i = 0;
     while(std::getline(fr, line)){
         util::split(line, vstr, "\t");
         std::string gname = vstr[5];
@@ -21,13 +21,13 @@ void SVCreg::getCreg(){
         }
     }
     fr.close();
-    cr_sort(cr);
+    if(!cr_is_sorted(cr)) cr_sort(cr);
     cr_merge_pre_index(cr);
     // write output
     std::ofstream fw(obed);
-    for(int32_t i = 0; i < cr->n_r; ++i){
+    for(i = 0; i < cr->n_r; ++i){
         const cr_intv_t *r = &cr->r[i];
-        fw << cr->ctg[r->x>>32].name << "\t" << r->x << "\t" << r->y << "\n";
+        fw << cr->ctg[r->x>>32].name << "\t" << (int32_t)r->x << "\t" << (int32_t)r->y << "\n";
     }
     fw.close();
     cr_destroy(cr);
