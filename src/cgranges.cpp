@@ -341,6 +341,17 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	return n;
 }
 
+void cr_iterate(const cgranges_t *cr, FILE* fp){
+    for(int32_t ctg_id = 0; ctg_id < cr->n_ctg; ++ctg_id){
+        int64_t i, *b = 0, max_b = 0, n = 0;
+        n = cr_overlap_int(cr, ctg_id, 0, INT_MAX, &b, &max_b);
+        for(i = 0; i < n; ++i){
+            fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[ctg_id].name, cr_start(cr, b[i]), cr_end(cr, b[i]), cr_label(cr, b[i]));
+        }
+        free(b);
+    }
+}
+
 int64_t cr_contain_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_)
 {
 	int64_t n = 0, i, s, e, *b = *b_, m_b = *m_b_;
