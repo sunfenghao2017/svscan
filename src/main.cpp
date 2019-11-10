@@ -12,7 +12,7 @@ int main(int argc, char** argv){
     // parse commandline arguments
     Options* opt = new Options();
     CLI::App app("program: " + std::string(argv[0]) + "\n" + opt->softEnv->getSoftInfo());
-    app.get_formatter()->column_width(36);
+    app.get_formatter()->column_width(50);
     // General Options options
     app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-g,--genome", opt->genome, "reference genome/transcriptome")->required(true)->check(CLI::ExistingFile)->group("General Options");
