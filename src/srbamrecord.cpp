@@ -250,7 +250,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
               }else incompatible.insert(v);
         }
         // At least 2 split read support
-        if(clique.size() > 1){
+        if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
             int32_t svStart = pos1/clique.size();
             int32_t svEnd = pos2/clique.size();
             int32_t svISize = inslen/clique.size();
