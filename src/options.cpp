@@ -69,6 +69,10 @@ void Options::update(int argc, char** argv){
     pool = new ThreadPool::ThreadPool(std::min(contigNum, nthread));
     // show SV types to discover
     util::loginfo("SV types to discover: " + allSVT);
+    // update scan regs
+    getScanRegs();
+    // update cregs
+    getCregs();
 }
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){

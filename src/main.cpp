@@ -68,9 +68,6 @@ int main(int argc, char** argv){
     util::loginfo("CMD: " + opt->softEnv->cmd);
     // output library basic information
     util::loginfo("Library basic information:\n" + opt->libInfo->toStr());
-    // get Valid regions
-    opt->getScanRegs();
-    util::loginfo("Valid region parsed");
     // calling SV
     SVScanner* svScanner = new SVScanner(opt);
     util::loginfo("Beg scanning SV");
