@@ -131,7 +131,7 @@ void SVRNADBOpt::prepDB(){
             // chr dna-start dna-end dna-strand trsversion
             aoss << chr << "\t" << utr5start << "\t" << utr5end << "\t" << strand << "\t" << version << "\n";
             // unit bed region
-            uoss << trs << "\t" << rutr5start << "\t" << rutr5end + 1 << "\t" << trs << "\tutr5\n";
+            uoss << trs << "\t" << rutr5start << "\t" << rutr5end + 1 << "\t" << trs << "\tutr5\t" << gene << "\n";
         }
         if(utr3start < utr3end){ // 3'utr
             // transcriptname rna-start rna-end uint count genename 
@@ -139,7 +139,7 @@ void SVRNADBOpt::prepDB(){
             // chr dna-start dna-end dna-strand trsversion
             aoss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\t" << version << "\n";
             // unit bed region
-            uoss << trs << "\t" << rutr3start << "\t" << rutr3end + 1 << "\t" << trs << "\tutr3\n";
+            uoss << trs << "\t" << rutr3start << "\t" << rutr3end + 1 << "\t" << trs << "\tutr3\t" << gene << "\n";
             // 3'utr length
             loss << trs << "\t" << (rutr3end - rutr3start) << "\n"; 
         }
@@ -149,7 +149,7 @@ void SVRNADBOpt::prepDB(){
                 aoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (i + 1) << "\t" << gene << "\t";
                 aoss << chr << "\t" << iint[i] << "\t" << (eint[i] - 1) << "\t" << strand << "\t" << version << "\n";
                 // unit bed region
-                uoss << trs << "\t" << acculen << "\t" << acculen + exonlens[i] << "\t" << trs << "\texon" << (i + 1) << "\n";
+                uoss << trs << "\t" << acculen << "\t" << acculen + exonlens[i] << "\t" << trs << "\texon" << (i + 1) << "\t" << gene << "\n";
                 acculen += exonlens[i];
             }
         }else{// reverse gene
@@ -158,7 +158,7 @@ void SVRNADBOpt::prepDB(){
                 aoss << trs << "\t" << acculen << "\t" << (acculen + exonlens[i] - 1) << "\texon\t" << (exonlens.size() - i) << "\t" << gene << "\t";
                 aoss << chr << "\t" << iint[i] << "\t" << (eint[i] - 1) << "\t" << strand << "\t" << version << "\n";
                 // unit bed region
-                uoss << trs << "\t" << acculen << "\t" << acculen + exonlens[i] << "\t" << trs << "\texon" << (exonlens.size() - i) << "\n";
+                uoss << trs << "\t" << acculen << "\t" << acculen + exonlens[i] << "\t" << trs << "\texon" << (exonlens.size() - i) << "\t" << gene << "\n";
                 acculen += exonlens[i];
             }
         }

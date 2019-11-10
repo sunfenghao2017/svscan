@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "fuseflags.h"
 #include "svbam.h"
+#include "svcreg.h"
 #include "svmerge.h"
 #include "svrnadb.h"
 #include "svdnadb.h"
