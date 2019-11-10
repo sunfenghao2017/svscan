@@ -14,6 +14,7 @@
 #include "software.h"
 #include "statutil.h"
 #include "util.h"
+#include "bed.h"
 
 /** class to store library information */
 struct LibraryInfo{
@@ -160,13 +161,15 @@ class Options{
         std::string bamfile;          ///< bam file used to analysis currently
         std::string genome;           ///< reference genome file input bam used
         std::string annodb;           ///< annotation feature database file
-        std::string reg;              ///< valid region file to discovery SVs
+        std::string reg;              ///< file to store regions to scanning bam in
+        std::string creg;             ///< file to store regions that SV event must overlap
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
         samFile* fbamout;             ///< file pointer of sv bam output
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
-        RegionList validRegions;      ///< valid regions to discovery SV
+        RegionList scanRegs;          ///< regions to scan bam
+        BedRegs* overlapRegs;         ///< regions sv must overlap
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment
@@ -205,7 +208,10 @@ class Options{
         LibraryInfo* getLibInfo(const std::string& bam);
 
         /** create valid regions by exclude invalid regions */
-        void getValidRegion();
+        void getScanRegs();
+
+        /** get regions each sv event must overlap */
+        void getCregs();
 
         /** write empty result file in case input bam is empty */
         void writeEmptFile();

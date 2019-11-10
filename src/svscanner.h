@@ -14,7 +14,7 @@
 class SVScanner{
     public:
         Options* mOpt;         ///< pointer to Options object
-        RegionList mValidRegs; ///< valid regions to scan for SV
+        RegionList mScanRegs; ///< valid regions to scan for SV
         SVSet mDPSVs;          ///< DP supported SV records
         SVSet mSRSVs;          ///< SR supported SVrecords
         ContigSRs mCtgSRs;     ///< SR supporting SV on each contig
@@ -25,7 +25,7 @@ class SVScanner{
          */
         SVScanner(Options* opt){
             mOpt = opt;
-            mValidRegs = opt->validRegions;
+            mScanRegs = opt->scanRegs;
         }
 
         /** SVScanner destructor */
@@ -34,12 +34,38 @@ class SVScanner{
         /** scan bam for DP and SR supporting SVs */
         void scanDPandSR();
 
-        /** scan one conrig for DP and SR supporting SVs
+        /** scan one contig for DP and SR supporting SVs
          * @param tid contig index to scanning DP and SR supporting SVs
          * @param jctMap to store SRs
          * @param dprSet to store DPs
          */
-         void scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet* dprSet);
+        void scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet* dprSet);
+
+        /** test whether an read is valid to commpute SV by test its overlapping with creg and its mate overlapping with creg
+         * @param b pointer to bam1_t
+         * @param h pointer to bam_hdr_t
+         * @return true if its valid
+         */
+        bool inValidReg(const bam1_t* b, const bam_hdr_t* h){
+            if(!mOpt->overlapRegs) return true;
+            if(mOpt->overlapRegs->overlap(h->target_name[b->core.tid], b->core.pos - b->core.l_qseq, b->core.pos + b->core.l_qseq)){
+                return true;
+            }
+            if(mOpt->overlapRegs->overlap(h->target_name[b->core.mtid], b->core.mpos - b->core.l_qseq - mOpt->libInfo->mReadLen, b->core.mpos + b->core.l_qseq + mOpt->libInfo->mReadLen)){
+                return true;
+            }
+            uint8_t* sa = bam_aux_get(b, "SA");
+            if(sa){
+                std::vector<std::string> vstr;
+                util::split(bam_aux2Z(sa), vstr, ",");
+                int32_t refpos = std::atoi(vstr[1].c_str());
+                if(mOpt->overlapRegs->overlap(vstr[0].c_str(), refpos - b->core.l_qseq, refpos + b->core.l_qseq)){
+                    return true;
+                }
+            }
+            return false;
+        }
+
 };
 
 #endif

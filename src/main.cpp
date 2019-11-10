@@ -17,7 +17,8 @@ int main(int argc, char** argv){
     app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-g,--genome", opt->genome, "reference genome/transcriptome")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
-    app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-r,--sreg", opt->reg, "file of regions to scan bam")->required(false)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-c,--creg", opt->creg, "file of region sv must capture")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->required(false)->group("General Options");
@@ -68,7 +69,7 @@ int main(int argc, char** argv){
     // output library basic information
     util::loginfo("Library basic information:\n" + opt->libInfo->toStr());
     // get Valid regions
-    opt->getValidRegion();
+    opt->getScanRegs();
     util::loginfo("Valid region parsed");
     // calling SV
     SVScanner* svScanner = new SVScanner(opt);
