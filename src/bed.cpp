@@ -94,8 +94,5 @@ void BedRegs::loadBed(const std::string& bedFile){
 }
 
 bool BedRegs::overlap(const std::string &chr, const int32_t &beg, const int32_t &end){
-    int64_t n, *b = 0, max_b = 0;
-    n = cr_overlap(mCR, chr.c_str(), beg, end, &b, &max_b);
-    free(b);
-    return n > 0;
+    return cr_isoverlap(mCR, chr.c_str(), beg, end);
 }
