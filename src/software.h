@@ -17,7 +17,7 @@ struct Software{
 
     /** Software constructor */
     Software(){
-        ver = "0.1.0";
+        ver = "0.1.1";
         cmp = std::string(__TIME__) + " " + std::string(__DATE__);
         char cpath[FILENAME_MAX];
         getcwd(cpath, FILENAME_MAX);
