@@ -150,8 +150,8 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     spanPoint.resize(mOpt->contigNum);
     for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
         if(itsv->mPESupport == 0) continue;
-        spanPoint[itsv->mChr1].push_back(SpanPoint(itsv->mSVStart, itsv->mSVT, itsv->mID));
-        spanPoint[itsv->mChr2].push_back(SpanPoint(itsv->mSVEnd, itsv->mSVT, itsv->mID));
+        spanPoint[itsv->mChr1].push_back(SpanPoint(itsv->mSVStart, itsv->mSVT, itsv->mID, false));
+        spanPoint[itsv->mChr2].push_back(SpanPoint(itsv->mSVEnd, itsv->mSVT, itsv->mID, true));
     }
     for(uint32_t i = 0; i < spanPoint.size(); ++i) std::sort(spanPoint[i].begin(), spanPoint[i].end());
     util::loginfo("End extracting PE supported breakpoints of each SV");
@@ -259,14 +259,14 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
                     fsg.hidx = g2;
                     fsg.tfrom1 = true;
                     fsg.tidx = g1;
-                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1]
+                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1], TODO...
                 }else{
                     // remember h/t gene sources
                     fsg.hfrom1 = true;
                     fsg.hidx = g1;
                     fsg.tfrom1 = false;
                     fsg.tidx = g2;
-                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2]
+                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2], TODO...
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }

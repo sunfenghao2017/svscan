@@ -7,6 +7,7 @@ Options::Options(){
     tsvOut = "sv.tsv";
     pool = NULL;
     fbamout = NULL;
+    overlapRegs = NULL;
     filterOpt = new SVFilter();
     softEnv = new Software();
     msaOpt = new MSAOpt();
@@ -22,6 +23,7 @@ Options::~Options(){
     if(softEnv) delete softEnv;
     if(libInfo) delete libInfo;
     if(pool) delete pool;
+    if(overlapRegs) delete overlapRegs;
 }
 
 void Options::validate(){
@@ -67,6 +69,10 @@ void Options::update(int argc, char** argv){
     pool = new ThreadPool::ThreadPool(std::min(contigNum, nthread));
     // show SV types to discover
     util::loginfo("SV types to discover: " + allSVT);
+    // update scan regs
+    getScanRegs();
+    // update cregs
+    getCregs();
 }
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){
@@ -110,11 +116,11 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
     return libInfo;
 }
 
-void Options::getValidRegion(){
+void Options::getScanRegs(){
     samFile* fp = sam_open(bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     hts_idx_t* idx = sam_index_load(fp, bamfile.c_str());
-    validRegions.resize(h->n_targets);
+    scanRegs.resize(h->n_targets);
     // Parse valid region if exists
     if(!reg.empty()){
         std::ifstream fr(reg);
@@ -123,14 +129,14 @@ void Options::getValidRegion(){
         while(std::getline(fr, tmpStr)){
             util::split(tmpStr, vstr, "\t");
             int32_t tid = bam_name2id(h, vstr[0].c_str());
-            validRegions[tid].insert({std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str())});
+            scanRegs[tid].insert({std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str())});
         }
     }else{// Set valid region to whole genome if valid region list does not exists
         for(int32_t i = 0; i < h->n_targets; ++i){
             uint64_t mapped = 0, unmapped = 0;
             if(hts_idx_get_stat(idx, i, &mapped, &unmapped) >= 0){
                 if(mapped > 0){
-                    validRegions[i].insert({0, (int32_t)h->target_len[i] - 1});
+                    scanRegs[i].insert({0, (int32_t)h->target_len[i] - 1});
                 }
             }
         }
@@ -138,6 +144,13 @@ void Options::getValidRegion(){
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);
+}
+
+void Options::getCregs(){
+    if(!creg.empty()){
+        overlapRegs = new BedRegs();
+        overlapRegs->loadBed(creg);
+    }
 }
 
 void Options::writeEmptFile(){

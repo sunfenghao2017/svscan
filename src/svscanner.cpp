@@ -3,7 +3,7 @@
 #include "ThreadPool.h"
 
 void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet* dprSet){
-    if(mValidRegs[tid].empty()) return; // Skip invalid contig
+    if(mScanRegs[tid].empty()) return; // Skip invalid contig
     // Open file handles
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
@@ -24,17 +24,18 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     }
     // Iterate all read alignments on this contig and valid regions
     util::loginfo("Contig: " + std::string(h->target_name[tid]) + " starts SR and DP scanning", mOpt->logMtx);
-    for(auto regit = mValidRegs[tid].begin(); regit != mValidRegs[tid].end(); ++regit){
+    for(auto regit = mScanRegs[tid].begin(); regit != mScanRegs[tid].end(); ++regit){
         hts_itr_t* itr = sam_itr_queryi(idx, tid, regit->first, regit->second);
         while(sam_itr_next(fp, itr, b) >= 0){
             if(b->core.flag & BAM_SRSKIP_MASK) continue;// skip invalid reads
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
+            if(!inValidReg(b, h)) continue; // skip reads which do not overlap with creg, neither does its mate
             std::pair<int, int> sclens = bamutil::getSoftClipLength(b);
             if(sclens.first && sclens.second) continue; // skip reads with heading and leading clips
             if(sclens.first + sclens.second) jctMap->insertJunction(b, h); // only one softclip read can be SR candidates
             if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
-            if(mValidRegs[b->core.mtid].empty()) continue;// skip invalid regions
+            if(mScanRegs[b->core.mtid].empty()) continue;// skip invalid regions
             if(b->core.tid != b->core.mtid && b->core.qual < mOpt->filterOpt->mMinTraQual) continue;// skip quality poor read
             int32_t svt = DPBamRecord::getSVType(b, mOpt);// get sv type
             if(svt == -1) continue; // Skip PE which does not support any SV

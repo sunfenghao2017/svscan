@@ -16,18 +16,18 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                 break;
             }
         }
-        if(!hasSA){// may be duplication candidates or other sv supporting reads
-            for(uint32_t i = 0; i < iter->second.size(); ++i){
-                svtIdx = 4;
-                mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
-                                                   iter->second[i].mRefpos,
-                                                   iter->second[i].mRefidx,
-                                                   iter->second[i].mRefpos,
-                                                   rst,
-                                                   std::abs(iter->second[i].mSeqpos - iter->second[i].mSeqpos),
-                                                   iter->first));
+        if(!hasSA){// may be insertion candidates or other sv supporting reads..TODO...
+           // for(uint32_t i = 0; i < iter->second.size(); ++i){
+           //     svtIdx = 4;
+           //     mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
+           //                                        iter->second[i].mRefpos,
+           //                                        iter->second[i].mRefidx,
+           //                                        iter->second[i].mRefpos,
+           //                                        rst,
+           //                                        std::abs(iter->second[i].mSeqpos - iter->second[i].mSeqpos),
+           //                                        iter->first));
 
-            }
+           // }
             continue;
         }
         for(uint32_t i = 0; i < iter->second.size(); ++i){
@@ -121,7 +121,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
     int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
-    for(auto&refIdx : mOpt->svRefID){
+    for(auto& refIdx : mOpt->svRefID){
         // Components assigned marker
         std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
         int32_t compNum = 0;
@@ -222,7 +222,6 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
         uint64_t pos2 = srs[edgeIter->mSource].mPos2;
         int32_t ciendhigh = srs[edgeIter->mSource].mPos2;
         int32_t inslen = srs[edgeIter->mSource].mInslen;
-        ++edgeIter;
         // Grow clique
         for(; edgeIter != compIter->second.end(); ++edgeIter){
             // Find next best edge for extension
@@ -251,7 +250,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
               }else incompatible.insert(v);
         }
         // At least 2 split read support
-        if(clique.size() > 1){
+        if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
             int32_t svStart = pos1/clique.size();
             int32_t svEnd = pos2/clique.size();
             int32_t svISize = inslen/clique.size();
@@ -375,13 +374,15 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         }
         // MSA
         bool bpRefined = false;
-        if(seqStore[svid].size() > 1){
+        if(seqStore[svid].size()){
             AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
             MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+            if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
             msa->msa(svs[svid].mConsensus);
             delete msa;
             if(insStore[svid].size() > 1){
                 MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
                 imsa->msa(svs[svid].mBpInsSeq);
                 delete imsa;
             }
@@ -460,10 +461,12 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* aln
     bool bpRefined = false;
     if(mTraSeqStore[svid].size() > 1){
         MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+        if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
         msa->msa(svs[svid].mConsensus);
         delete msa;
         if(mTriSeqStore[svid].size() > 0){
             MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+            if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
             imsa->msa(svs[svid].mBpInsSeq);
             delete imsa;
         }

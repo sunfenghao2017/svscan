@@ -11,6 +11,16 @@
 #include "svutil.h"
 #include "util.h"
 
+/** class to store detect range of one gene */
+struct DetectRange{
+    std::string mGene;           /// < gene name
+    std::set<int32_t> mExonList; /// < exon list to detect
+    std::set<int32_t> mSVT;      /// < sv type to detect
+};
+
+/** type to store predefined genes to detect sv events in same gene */
+typedef std::map<std::string, DetectRange> DetectRangeMaps;
+
 /** type to store each kind of structural variants */
 typedef std::vector<std::vector<SVInfo>> SVList;
 
@@ -44,6 +54,7 @@ struct FusionOptions{
     std::string mBgBCF;                ///< background BCF file
     std::string mWhiteList;            ///< fusion event which will keep always if found
     std::string mBlackList;            ///< fusion event which will drop always if found
+    std::string mSameGeneSVList;       ///< fusion event in same gene to be reported
     std::string mInfile;               ///< input file of sver sv tsv format result file
     std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
     std::string mSupFile = "ss.tsv";   ///< output file of supplementary fusions
@@ -55,6 +66,7 @@ struct FusionOptions{
     std::set<std::string> m3Partners;  ///< genes commonly acts as 3' partner
     std::set<std::string> mWhiteGenes; ///< to store hot gene in whitelist
     std::set<std::string> mBlackGenes; ///< to store black gene which should excluded by all fusion events
+    DetectRangeMaps mDetectRngMap;     ///< detect range of sv event in the same gene
     bool mInitialized = false;         ///< FusionOptions is initialized if true
 
     /** FusionOptions constructor */
@@ -107,7 +119,15 @@ struct FusionOptions{
      * @return true if fusion is in whitelist
      */
     bool inBlackList(const std::string& hgene, const std::string& tgene);
-    
+   
+    /** test whether an fusion event in same gene is in same sv detection range
+     * @param gene gene name
+     * @param exon exon list
+     * @param svt sv type
+     * @return true if an fusion event is in same sv detection range
+     */ 
+    bool inSameSVRngMap(const std::string& gene, const std::vector<int32_t>& exon, int32_t svt);
+
     /** test whether an SV breakpoint is not in background
      * @param svt SV type
      * @param chr1 big chr of SV
@@ -126,6 +146,9 @@ struct FusionOptions{
 
     /** get fusion events in fusion blacklist */
     void parseBlackList();
+
+    /** get fusion events to report in same event */
+    void parseSameGeneEventList();
 };
 
 #endif

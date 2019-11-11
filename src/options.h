@@ -14,6 +14,7 @@
 #include "software.h"
 #include "statutil.h"
 #include "util.h"
+#include "bed.h"
 
 /** class to store library information */
 struct LibraryInfo{
@@ -104,7 +105,10 @@ struct SVFilter{
     int32_t mMinInversionRpt = 100;    ///< minimum inversion size to report
     int32_t mMinDeletionRpt = 300;     ///< minimum deletion size to report
     int32_t mMinDupRpt = 100;          ///< minimum duplication size to report
-    int32_t mMinInsRpt = 15;           ///< minimum insertion size to report
+    int32_t mMinInsRpt = 15;           ///< minimum insertion size to repor
+    uint32_t mMinSeedSR = 2;           ///< minimum seed split reads used to compute SV
+    uint32_t mMinSeedDP = 1;           ///< minimum discordant pair of reads used to compute SV
+    float mMinDelRatio = 0.8;          ///< minimum deletion ratio of an exon to report 
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
     float mMinSRResScore = 1;          ///< minimal alignment score for SR rescued
 
@@ -157,13 +161,15 @@ class Options{
         std::string bamfile;          ///< bam file used to analysis currently
         std::string genome;           ///< reference genome file input bam used
         std::string annodb;           ///< annotation feature database file
-        std::string reg;              ///< valid region file to discovery SVs
+        std::string reg;              ///< file to store regions to scanning bam in
+        std::string creg;             ///< file to store regions that SV event must overlap
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
         samFile* fbamout;             ///< file pointer of sv bam output
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
-        RegionList validRegions;      ///< valid regions to discovery SV
+        RegionList scanRegs;          ///< regions to scan bam
+        BedRegs* overlapRegs;         ///< regions sv must overlap
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment
@@ -202,7 +208,10 @@ class Options{
         LibraryInfo* getLibInfo(const std::string& bam);
 
         /** create valid regions by exclude invalid regions */
-        void getValidRegion();
+        void getScanRegs();
+
+        /** get regions each sv event must overlap */
+        void getCregs();
 
         /** write empty result file in case input bam is empty */
         void writeEmptFile();

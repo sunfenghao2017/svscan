@@ -51,11 +51,13 @@ void SVDNADBOpt::prepDB(){
         }
         if(utr5start < utr5end){
             aoss << chr << "\t" << utr5start << "\t" << utr5end << "\t" << strand << "\tutr5\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
-            uoss << chr << "\t" << utr5start << "\t" << utr5end + 1 << "\t" << strand << "\tutr5\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+            uoss << chr << "\t" << utr5start << "\t" << utr5end + 1 << "\t" << trs << "\tutr5\t";
+            uoss << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
         }
         if(utr3start < utr3end){
             aoss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\tutr3\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
-            uoss << chr << "\t" << utr3start << "\t" << utr3end + 1 << "\t" << strand << "\tutr3\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+            uoss << chr << "\t" << utr3start << "\t" << utr3end + 1 << "\t" << trs << "\tutr3\t";
+            uoss << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
         }
         // exon range
         util::split(util::rstrip(vstr[9], ","), istr, ",");
@@ -64,12 +66,12 @@ void SVDNADBOpt::prepDB(){
         util::strvec2intvec(estr, eint);
         for(uint32_t i = 0; i < iint.size(); ++i){
             aoss << chr << "\t" << iint[i] << "\t" << (eint[i] - 1) << "\t" << strand << "\texon\t";
-            uoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << strand << "\texon";
+            uoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << trs << "\texon";
             if(cdsStart < cdsEnd){
                 if(!(iint[i] > cdsEnd) && !(eint[i] - 1 < cdsStart)){
-                    coss << chr << "\t" << std::max(iint[i], cdsStart) << "\t" << std::min(eint[i], cdsEnd + 1) << "\t" <<  strand << "\texon\t";
-                    if(strand[0] == '+') coss << i + 1 << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
-                    else coss << (iint.size() - i) << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+                    coss << chr << "\t" << std::max(iint[i], cdsStart) << "\t" << std::min(eint[i], cdsEnd + 1) << "\t" << trs << "\t" << "exon\t";
+                    if(strand[0] == '+') coss << i + 1 << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
+                    else coss << (iint.size() - i) << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
                 }
             }
             if(strand[0] == '+'){
@@ -81,7 +83,7 @@ void SVDNADBOpt::prepDB(){
                 uoss << (iint.size() - i);
             }
             aoss << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
-            uoss << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+            uoss << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
         }
         // intron range
         std::vector<int32_t> intronbeg;
@@ -94,7 +96,7 @@ void SVDNADBOpt::prepDB(){
         }
         for(uint32_t i = 0; i < intronbeg.size(); ++i){
             aoss << chr << "\t" << intronbeg[i] << "\t" << intronend[i] << "\t" << strand << "\tintron\t";
-            uoss << chr << "\t" << intronbeg[i] << "\t" << intronend[i] + 1 << "\t" << strand << "\tintron";
+            uoss << chr << "\t" << intronbeg[i] << "\t" << intronend[i] + 1 << "\t" << trs << "\tintron";
             if(strand[0] == '+'){
                 aoss << i + 1;
                 uoss << i + 1;
@@ -103,7 +105,7 @@ void SVDNADBOpt::prepDB(){
                 uoss << (intronbeg.size() - i);
             }
             aoss << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
-            uoss << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+            uoss << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
         }
         // output str
         std::string recs = aoss.str();

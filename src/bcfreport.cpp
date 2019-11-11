@@ -163,9 +163,17 @@ void Stats::reportSVBCF(const SVSet& svs){
         }
         // Compute GLs
         if(itsv->mPrecise){
-            svutil::computeGL(mJctCnts[itsv->mID].mRefQual, mJctCnts[itsv->mID].mAltQual, gls, gts, gqval);
+            if(mJctCnts[itsv->mID].mRefQualBeg.size() > mJctCnts[itsv->mID].mRefQualEnd.size()){
+                svutil::computeGL(mJctCnts[itsv->mID].mRefQualBeg, mJctCnts[itsv->mID].mAltQual, gls, gts, gqval);
+            }else{
+                svutil::computeGL(mJctCnts[itsv->mID].mRefQualEnd, mJctCnts[itsv->mID].mAltQual, gls, gts, gqval);
+            }
         }else{
-            svutil::computeGL(mSpnCnts[itsv->mID].mRefQual, mSpnCnts[itsv->mID].mAltQual, gls, gts, gqval);
+            if(mSpnCnts[itsv->mID].mRefQualBeg.size() > mSpnCnts[itsv->mID].mRefQualEnd.size()){
+                svutil::computeGL(mSpnCnts[itsv->mID].mRefQualBeg, mSpnCnts[itsv->mID].mAltQual, gls, gts, gqval);
+            }else{
+                svutil::computeGL(mSpnCnts[itsv->mID].mRefQualEnd, mSpnCnts[itsv->mID].mAltQual, gls, gts, gqval);
+            }
         }
         bcf_update_genotypes(hdr, rec, gts, bcf_hdr_nsamples(hdr) * 2);
         bcf_update_format_float(hdr, rec, "GL", gls, bcf_hdr_nsamples(hdr) * 3);
@@ -187,8 +195,8 @@ void Stats::reportSVBCF(const SVSet& svs){
         bcf_update_format_int32(hdr, rec, "RCR", rcr, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "CN", cnest, bcf_hdr_nsamples(hdr));
         // Add read/pair counts
-        drcount[0] = mSpnCnts[itsv->mID].mRefQual.size();
-        dvcount[0] = mSpnCnts[itsv->mID].mAltQual.size();
+        drcount[0] = mSpnCnts[itsv->mID].getRefDep();
+        dvcount[0] = mSpnCnts[itsv->mID].getAltDep();
         bcf_update_format_int32(hdr, rec, "DR", drcount, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "DV", dvcount, bcf_hdr_nsamples(hdr));
         if(mOpt->libInfo->mIsHaploTagged){
@@ -201,8 +209,8 @@ void Stats::reportSVBCF(const SVSet& svs){
             bcf_update_format_int32(hdr, rec, "HP1DV", hp1dvcount, bcf_hdr_nsamples(hdr));
             bcf_update_format_int32(hdr, rec, "HP2DV", hp2dvcount, bcf_hdr_nsamples(hdr));
         }
-        rrcount[0] = mJctCnts[itsv->mID].mRefQual.size();
-        rvcount[0] = mJctCnts[itsv->mID].mAltQual.size();
+        rrcount[0] = mJctCnts[itsv->mID].getRefDep();
+        rvcount[0] = mJctCnts[itsv->mID].getAltDep();
         bcf_update_format_int32(hdr, rec, "RR", rrcount, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "RV", rvcount, bcf_hdr_nsamples(hdr));
         if(mOpt->libInfo->mIsHaploTagged){

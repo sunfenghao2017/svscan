@@ -12,12 +12,13 @@ int main(int argc, char** argv){
     // parse commandline arguments
     Options* opt = new Options();
     CLI::App app("program: " + std::string(argv[0]) + "\n" + opt->softEnv->getSoftInfo());
-    app.get_formatter()->column_width(36);
+    app.get_formatter()->column_width(50);
     // General Options options
     app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-g,--genome", opt->genome, "reference genome/transcriptome")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
-    app.add_option("-r,--reg", opt->reg, "valid region to disvover SV")->required(false)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-r,--sreg", opt->reg, "file of regions to scan bam")->required(false)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-c,--creg", opt->creg, "file of region sv must capture")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->required(false)->group("General Options");
@@ -35,6 +36,9 @@ int main(int argc, char** argv){
     app.add_option("--min_inv_rpt", opt->filterOpt->mMinInversionRpt, "min inversion size to report", true)->group("Threshold Options");
     app.add_option("--min_del_rpt", opt->filterOpt->mMinDeletionRpt, "min deletion size to report", true)->group("Threshold Options");
     app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
+    app.add_option("--min_seed_sr", opt->filterOpt->mMinSeedSR, "min seed split reads needed to compute SV", true)->check(CLI::Range(2, 100000))->group("Threshold Options");
+    app.add_option("--min_seed_dp", opt->filterOpt->mMinSeedDP, "min seed discordant reads needed to computr SV", true)->check(CLI::Range(1, 100000))->group("Threshold Options");
+
     // Fusion report options
     app.add_option("--whitemindep", opt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true)->group("Fusion Options");
     app.add_option("--usualmindep", opt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true)->group("Fusion Options");
@@ -48,6 +52,7 @@ int main(int argc, char** argv){
     app.add_option("--bgbcf", opt->fuseOpt->mBgBCF, "background events BCF file")->group("Fusion Options");
     app.add_option("--whitelist", opt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--blacklist", opt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
+    app.add_option("--samegenel", opt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
     app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
     // parse arguments
@@ -63,9 +68,6 @@ int main(int argc, char** argv){
     util::loginfo("CMD: " + opt->softEnv->cmd);
     // output library basic information
     util::loginfo("Library basic information:\n" + opt->libInfo->toStr());
-    // get Valid regions
-    opt->getValidRegion();
-    util::loginfo("Valid region parsed");
     // calling SV
     SVScanner* svScanner = new SVScanner(opt);
     util::loginfo("Beg scanning SV");

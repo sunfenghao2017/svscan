@@ -30,12 +30,12 @@ struct SVRNADBOpt{
         softEnv = new Software();
         softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
-        svAnnoDB = "./rnaAnno.gz";
-        gene2trs = "./gene2trs.tsv";
-        refMrna = "./cncMrna.fa.gz";
-        bedCDS = "./cncMrna.cds.bed";
-        bedUnits = "./cncMrna.unit.bed";
-        utr3len = "./cncMrna.3utr.len";
+        svAnnoDB = "anno.gz";
+        gene2trs = "gene2trs.tsv";
+        refMrna = "ref.fa.gz";
+        bedCDS = "ref.cds.bed";
+        bedUnits = "ref.unit.bed";
+        utr3len = "ref.3utr.len";
         keepNCRna = false;
     }
 
