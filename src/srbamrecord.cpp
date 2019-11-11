@@ -16,18 +16,18 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                 break;
             }
         }
-        if(!hasSA){// may be duplication candidates or other sv supporting reads
-            for(uint32_t i = 0; i < iter->second.size(); ++i){
-                svtIdx = 4;
-                mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
-                                                   iter->second[i].mRefpos,
-                                                   iter->second[i].mRefidx,
-                                                   iter->second[i].mRefpos,
-                                                   rst,
-                                                   std::abs(iter->second[i].mSeqpos - iter->second[i].mSeqpos),
-                                                   iter->first));
+        if(!hasSA){// may be insertion candidates or other sv supporting reads..TODO...
+           // for(uint32_t i = 0; i < iter->second.size(); ++i){
+           //     svtIdx = 4;
+           //     mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
+           //                                        iter->second[i].mRefpos,
+           //                                        iter->second[i].mRefidx,
+           //                                        iter->second[i].mRefpos,
+           //                                        rst,
+           //                                        std::abs(iter->second[i].mSeqpos - iter->second[i].mSeqpos),
+           //                                        iter->first));
 
-            }
+           // }
             continue;
         }
         for(uint32_t i = 0; i < iter->second.size(); ++i){
