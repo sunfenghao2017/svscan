@@ -73,10 +73,10 @@ struct FusionOptions{
     FusionOptions(){
         mWhiteFilter.mMinVAF = 0;
         mWhiteFilter.mMinSupport = 3;
-        mWhiteFilter.mMinDepth = 100;
+        mWhiteFilter.mMinDepth = 3;
         mUsualFilter.mMinVAF = 0.01;
         mUsualFilter.mMinSupport = 5;
-        mUsualFilter.mMinDepth = 300;
+        mUsualFilter.mMinDepth = 5;
     }
         
     /** FusionOptions destructor */
