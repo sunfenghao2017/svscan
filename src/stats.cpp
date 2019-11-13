@@ -141,6 +141,9 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             if(bpvalid){
                 bool onlySupportIns = true;
                 std::vector<int32_t> supportInsID;
+                // get sequence
+                std::string readOri = bamutil::getSeq(b);
+                std::string readSeq = readOri; // store origin seq
                 // Fetch all relevant SVs
                 auto itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
                 for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
@@ -148,13 +151,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
                         std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
-                        // Get sequence
-                        std::string readSeq = bamutil::getSeq(b);
-                        if(readSeq.empty() || consProbe.empty() || refProbe.empty()){
-                            util::loginfo("WARNING! Empty Seq Will Not Be Aligned!!!\n" + svs[itbp->mID].toStr(), mOpt->logMtx);
-                            continue;
-                        }
-                        std::string readOri = readSeq;
+                        readSeq = readOri;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
                         // Compute alignment to alternative haplotype
                         Aligner* altAligner = new Aligner(consProbe, readSeq, &alnCfg);
