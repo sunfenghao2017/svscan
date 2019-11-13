@@ -146,10 +146,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 std::string readSeq;
                 // Fetch all relevant SVs
                 auto itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
-                if(itbp != bpRegs[mRefIdx].end()){ // only get seq when needed
-                    readOri = bamutil::getSeq(b);
-                    readSeq = readOri; // store origin seq
-                }
                 for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
@@ -171,6 +167,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
                         std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
+                        if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
                         readSeq = readOri;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
                         // Compute alignment to alternative haplotype
