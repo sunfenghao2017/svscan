@@ -29,8 +29,8 @@ typedef std::map<std::string, std::set<std::string>> FusePairs;
 
 /** filter options for fusion event */
 struct FilterOptions{
-    int32_t mMinIntraGeneSVSize = 5000; ///< min intra-gene SV size for a valid fusion
-    int32_t mMinDepth = 300;            ///< min depth covering breakpoint needed
+    int32_t mMinIntraGeneSVSize = 2000; ///< min intra-gene SV size for a valid fusion
+    int32_t mMinDepth = 3;              ///< min depth covering breakpoint needed
     int32_t mMinSRSupport = 3;          ///< min SR support for a valid fusion
     int32_t mMinDPSupport = 3;          ///< min DP support for a valid fusion
     int32_t mMinSUSupport = 3;          ///< min SU support for a valid fusion
@@ -73,10 +73,10 @@ struct FusionOptions{
     FusionOptions(){
         mWhiteFilter.mMinVAF = 0;
         mWhiteFilter.mMinSupport = 3;
-        mWhiteFilter.mMinDepth = 100;
+        mWhiteFilter.mMinDepth = 3;
         mUsualFilter.mMinVAF = 0.01;
         mUsualFilter.mMinSupport = 5;
-        mUsualFilter.mMinDepth = 300;
+        mUsualFilter.mMinDepth = 5;
     }
         
     /** FusionOptions destructor */

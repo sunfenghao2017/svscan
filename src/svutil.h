@@ -459,10 +459,12 @@ namespace svutil{
                     break;
             }
         }
-        int32_t maxAllowed = 0.8 * seq.length();
+        int32_t maxAllowed = 0.85 * seq.length();
         for(int i = 0; i < 4; ++i){
             for(int j = i + 1; j < 4; ++j){
-                if((cnt[i] + cnt[j]) > maxAllowed) return true;
+                if((cnt[i] + cnt[j]) > maxAllowed) {
+                    return true;
+                }
             }
         }
         return false;
