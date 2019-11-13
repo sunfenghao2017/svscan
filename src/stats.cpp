@@ -153,6 +153,22 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
+                        if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
+                            ++mRefAlignedReadCount[itbp->mID];
+                            if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                                if(itbp->mIsSVEnd) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
+                                else mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
+                                uint8_t* hpptr = bam_aux_get(b, "HP");
+                                if(hpptr){
+                                    mOpt->libInfo->mIsHaploTagged = true;
+                                    int hapv = bam_aux2i(hpptr);
+                                    if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
+                                    else ++mJctCnts[itbp->mID].mRefh2; 
+                                }
+                            }
+                            continue;
+                        }
+                        // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
                         std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
                         readSeq = readOri;
