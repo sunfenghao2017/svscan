@@ -142,10 +142,14 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 bool onlySupportIns = true;
                 std::vector<int32_t> supportInsID;
                 // get sequence
-                std::string readOri = bamutil::getSeq(b);
-                std::string readSeq = readOri; // store origin seq
+                std::string readOri;
+                std::string readSeq;
                 // Fetch all relevant SVs
                 auto itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
+                if(itbp != bpRegs[mRefIdx].end()){ // only get seq when needed
+                    readOri = bamutil::getSeq(b);
+                    readSeq = readOri; // store origin seq
+                }
                 for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
