@@ -120,7 +120,6 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
     TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
     // supplementary fusion additional conditions
-    TFUSION_FLAG FUSION_KSUP_MASK = (FUSION_FPRECISE | FUSION_FMIRRORINDB);
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;
     std::vector<std::string> vstr;
@@ -310,11 +309,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     if((fgr.fsmask & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
                         fgr.fsmask |= FUSION_FPRIMARY;
                     }else{
-                        if(fgr.fsmask & FUSION_KSUP_MASK){
-                            fgr.fsmask |= FUSION_FSUPPLEMENTARY;
-                        }else{
-                            fgr.fsmask &= (~FUSION_FSUPPLEMENTARY);
-                        }
+                        fgr.fsmask |= FUSION_FSUPPLEMENTARY;
                     }
                 }
             }

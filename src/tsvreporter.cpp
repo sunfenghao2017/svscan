@@ -221,8 +221,6 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
     TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
-    // supplementary fusion additional conditions
-    TFUSION_FLAG FUSION_KSUP_MASK = (FUSION_FPRECISE | FUSION_FMIRRORINDB);
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;
@@ -230,9 +228,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             if((gl[i].mFuseGene[j].status & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
                 gl[i].mFuseGene[j].status |= FUSION_FPRIMARY;
             }else{
-                if(gl[i].mFuseGene[j].status & FUSION_KSUP_MASK){
-                    gl[i].mFuseGene[j].status |= FUSION_FSUPPLEMENTARY;
-                }
+                gl[i].mFuseGene[j].status |= FUSION_FSUPPLEMENTARY;
             }
         }
     }
