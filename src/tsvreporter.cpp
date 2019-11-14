@@ -222,7 +222,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
     TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
     // supplementary fusion additional conditions
-    TFUSION_FLAG FUSION_KSUP_MASK = FUSION_FPRECISE;
+    TFUSION_FLAG FUSION_KSUP_MASK = (FUSION_FPRECISE | FUSION_FMIRRORINDB);
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;
