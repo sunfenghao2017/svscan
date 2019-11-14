@@ -280,6 +280,8 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     }else{
                         if(fgr.fsmask & FUSION_KSUP_MASK){
                             fgr.fsmask |= FUSION_FSUPPLEMENTARY;
+                        }else{
+                            fgr.fsmask &= (~FUSION_FSUPPLEMENTARY);
                         }
                     }
                 }
