@@ -369,30 +369,18 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 if(!srseq.empty()){
                     mTraSeqStore[svid].insert(srseq);
                     mTraQualStore[svid].push_back(b->core.qual);
-                    if(svs[svid].mFromOneSR){
-                        mTraSeqStore[svid].insert(srseq);
-                        mTraQualStore[svid].push_back(b->core.qual);
-                    }
                 }
                 if(!siseq.empty()){
                     mTriSeqStore[svid].insert(siseq);
-                    if(svs[svid].mFromOneSR){
-                        mTriSeqStore[svid].insert(siseq);
-                    }
                 }
                 mLock.unlock();
             }else{
                 if(!srseq.empty()){
                     seqStore[svid].insert(srseq);
                     qualStore[svid].push_back(b->core.qual);
-                    if(svs[svid].mFromOneSR){
-                        seqStore[svid].insert(srseq);
-                        qualStore[svid].push_back(b->core.qual);
-                    }
                 }
                 if(!siseq.empty()){
                     insStore[svid].insert(siseq);
-                    if(svs[svid].mFromOneSR) insStore[svid].insert(siseq);
                 }
             }
         } 
@@ -413,16 +401,21 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         // MSA
         bool bpRefined = false;
         if(seqStore[svid].size()){
-            AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
-            MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-            if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
-            msa->msa(svs[svid].mConsensus);
-            delete msa;
-            if(insStore[svid].size() > 1){
-                MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
-                imsa->msa(svs[svid].mBpInsSeq);
-                delete imsa;
+            if(svs[svid].mFromOneSR){
+                svs[svid].mConsensus = *(seqStore[svid].begin());
+                if(insStore[svid].size()) svs[svid].mBpInsSeq = *(insStore[svid].begin());
+            }else{
+                AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
+                MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
+                msa->msa(svs[svid].mConsensus);
+                delete msa;
+                if(insStore[svid].size() > 1){
+                    MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                    if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
+                    imsa->msa(svs[svid].mBpInsSeq);
+                    delete imsa;
+                }
             }
             if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
             if(!bpRefined){
@@ -434,7 +427,6 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             }else{// SR support and qualities
                 svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
                 svs[svid].mSRSupport = seqStore[svid].size();
-                if(svs[svid].mFromOneSR) svs[svid].mSRSupport = 1;
                 svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
             }
         }
@@ -497,16 +489,21 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
 
 void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr){
     bool bpRefined = false;
-    if(mTraSeqStore[svid].size() > 1){
-        MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-        if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
-        msa->msa(svs[svid].mConsensus);
-        delete msa;
-        if(mTriSeqStore[svid].size() > 0){
-            MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-            if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
-            imsa->msa(svs[svid].mBpInsSeq);
-            delete imsa;
+    if(mTraSeqStore[svid].size()){
+        if(svs[svid].mFromOneSR){
+            svs[svid].mConsensus = *(mTraSeqStore[svid].begin());
+            if(mTriSeqStore[svid].size()) svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
+        }else{
+            MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+            if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
+            msa->msa(svs[svid].mConsensus);
+            delete msa;
+            if(mTriSeqStore[svid].size()){
+                MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+                if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
+                imsa->msa(svs[svid].mBpInsSeq);
+                delete imsa;
+            }
         }
         if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
         if(!bpRefined){
@@ -517,7 +514,6 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* aln
         }else{// SR support and qualities
             svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
             svs[svid].mSRSupport = mTraSeqStore[svid].size();
-            if(svs[svid].mFromOneSR) svs[svid].mSRSupport = 1;
             svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
         }
     }
