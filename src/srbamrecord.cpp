@@ -201,23 +201,25 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         }
     }
     // singleton sr should also be taken into consideration
-    for(auto& sr: srs){
-        if(sr.mSVID == -1){
-            SVRecord svr;
-            svr.mChr1 = sr.mChr1;
-            svr.mSVStart = sr.mPos1;
-            svr.mChr2 = sr.mChr2;
-            svr.mSVEnd = sr.mPos2;
-            svr.mCiPosLow = 0;
-            svr.mCiPosHigh = 0;
-            svr.mCiEndLow = 0;
-            svr.mCiEndHigh = 0;
-            svr.mAlnInsLen = sr.mInslen;
-            svr.mID = svs.size();
-            svr.mSVT = svt;
-            svr.mFromOneSR = true;
-            svs.push_back(svr);
-            sr.mSVID = svr.mID;
+    if(mOpt->filterOpt->mMinSeedSR < 2){
+        for(auto& sr: srs){
+            if(sr.mSVID == -1){
+                SVRecord svr;
+                svr.mChr1 = sr.mChr1;
+                svr.mSVStart = sr.mPos1;
+                svr.mChr2 = sr.mChr2;
+                svr.mSVEnd = sr.mPos2;
+                svr.mCiPosLow = 0;
+                svr.mCiPosHigh = 0;
+                svr.mCiEndLow = 0;
+                svr.mCiEndHigh = 0;
+                svr.mAlnInsLen = sr.mInslen;
+                svr.mID = svs.size();
+                svr.mSVT = svt;
+                svr.mFromOneSR = true;
+                svs.push_back(svr);
+                sr.mSVID = svr.mID;
+            }
         }
     }
     util::loginfo("End clustering SRs for SV type:" + std::to_string(svt) + ", got: " + std::to_string(svs.size() - origSize) + " SV candidates.");
@@ -515,6 +517,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* aln
         }else{// SR support and qualities
             svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
             svs[svid].mSRSupport = mTraSeqStore[svid].size();
+            if(svs[svid].mFromOneSR) svs[svid].mSRSupport = 1;
             svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
         }
     }
