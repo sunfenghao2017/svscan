@@ -158,14 +158,26 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             if(svs[i].mPrecise) af = (double)(srv)/(double)(srv + srr);
             else af = (double)(dpv)/(double)(dpv + dpr);
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
-                if((srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport) && (dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport)){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                if(svs[i].mPrecise){
+                    if(srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                }else{
+                    if(dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
+                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
                 }
                 if(af < mOpt->fuseOpt->mWhiteFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
                 }
-                if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth && ((dpr + dpv) < mOpt->fuseOpt->mWhiteFilter.mMinDepth)){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
+                if(svs[i].mPrecise){
+                    if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
+                    }
+                }else{
+                    if((dpr + dpv) < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
+                    }
                 }
                 if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                     if(svs[i].mSize < mOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize){
@@ -173,14 +185,26 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     }
                 }
             }else if(gl[i].mFuseGene[j].status & FUSION_FHOTGENE){// fusion in whitelist
-                if((srv < mOpt->fuseOpt->mUsualFilter.mMinSupport) && (dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport)){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                if(svs[i].mPrecise){
+                    if(srv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                }else{
+                    if(dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
+                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
                 }
                 if(af < mOpt->fuseOpt->mUsualFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
                 }
-                if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth && ((dpr + dpv) < mOpt->fuseOpt->mUsualFilter.mMinDepth)){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
+                if(svs[i].mPrecise){
+                    if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
+                    }
+                }else{
+                    if((dpr + dpv) < mOpt->fuseOpt->mUsualFilter.mMinDepth){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
+                    }
                 }
                 if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                     if(svs[i].mSize < mOpt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize){
@@ -192,11 +216,11 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
-                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWDEPTH);
+                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FALLGENE | FUSION_FHOTGENE);
+    TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;

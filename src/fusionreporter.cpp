@@ -114,11 +114,12 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
-                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWDEPTH);
+                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FALLGENE | FUSION_FHOTGENE);
+    TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
+    // supplementary fusion additional conditions
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;
     std::vector<std::string> vstr;
@@ -189,36 +190,68 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 if(!fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask |= FUSION_FTOOSMALLSIZE;
             }
             if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
-                if((srv < fuseOpt->mWhiteFilter.mMinSupport) && (dpv < fuseOpt->mWhiteFilter.mMinSupport)){
-                    fgr.fsmask |= FUSION_FLOWSUPPORT;
+                if(srv){
+                    if(srv < fuseOpt->mWhiteFilter.mMinSupport){
+                        fgr.fsmask |= FUSION_FLOWSUPPORT;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
+                    }
                 }else{
-                    fgr.fsmask &= (~FUSION_FLOWSUPPORT);
+                    if(dpv < fuseOpt->mWhiteFilter.mMinSupport){
+                        fgr.fsmask |= FUSION_FLOWSUPPORT;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
+                    }
                 }
                 if(af < fuseOpt->mWhiteFilter.mMinVAF){
                     fgr.fsmask |= FUSION_FLOWAF;
                 }else{
                     fgr.fsmask &= (~FUSION_FLOWAF);
                 }
-                if(((srv + srr) < fuseOpt->mWhiteFilter.mMinDepth) && ((dpr + dpv) < fuseOpt->mWhiteFilter.mMinDepth)){
-                    fgr.fsmask |= FUSION_FLOWDEPTH;
+                if(srv){
+                    if((srv + srr) < fuseOpt->mWhiteFilter.mMinDepth){
+                        fgr.fsmask |= FUSION_FLOWDEPTH;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWDEPTH);
+                    }
                 }else{
-                    fgr.fsmask &= (~FUSION_FLOWDEPTH);
+                    if((dpr + dpv) < fuseOpt->mWhiteFilter.mMinDepth){
+                        fgr.fsmask |= FUSION_FLOWDEPTH;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWDEPTH);
+                    }
                 }
             }else if(fgr.fsmask & FUSION_FHOTGENE){// fusion not in public database
-                if((srv < fuseOpt->mUsualFilter.mMinSupport) && (dpv < fuseOpt->mUsualFilter.mMinSupport)){
-                    fgr.fsmask |= FUSION_FLOWSUPPORT;
+                if(srv){
+                    if(srv < fuseOpt->mUsualFilter.mMinSupport){
+                        fgr.fsmask |= FUSION_FLOWSUPPORT;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
+                    }
                 }else{
-                    fgr.fsmask &= (~FUSION_FLOWSUPPORT);
+                    if(dpv < fuseOpt->mUsualFilter.mMinSupport){
+                        fgr.fsmask |= FUSION_FLOWSUPPORT;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
+                    }
                 }
                 if(af < fuseOpt->mUsualFilter.mMinVAF){
                     fgr.fsmask |= FUSION_FLOWAF;
                 }else{
                     fgr.fsmask &= (~FUSION_FLOWAF);
                 }
-                if(((srv + srr) < fuseOpt->mUsualFilter.mMinDepth) && ((dpr + dpv) < fuseOpt->mUsualFilter.mMinDepth)){
-                    fgr.fsmask |= FUSION_FLOWDEPTH;
+                if(srv){
+                    if((srv + srr) < fuseOpt->mUsualFilter.mMinDepth){
+                        fgr.fsmask |= FUSION_FLOWDEPTH;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWDEPTH);
+                    }
                 }else{
-                    fgr.fsmask &= (~FUSION_FLOWDEPTH);
+                    if((dpr + dpv) < fuseOpt->mUsualFilter.mMinDepth){
+                        fgr.fsmask |= FUSION_FLOWDEPTH;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWDEPTH);
+                    }
                 }
             }
             fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                   // FusionGene
