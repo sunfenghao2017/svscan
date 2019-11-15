@@ -50,6 +50,7 @@ class SVRecord{
         std::string mTraChr1Seq = "";///< larger chr reference sequence of translocation 
         std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
         bool mMerged = false;        ///< this SV has been merged if true
+        bool mFromOneSR = false;     ///< this SV comes from one seed SR
 
     public:
         /** SVRecord constructor */

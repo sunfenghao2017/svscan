@@ -238,6 +238,34 @@ void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet &svs, int32_t 
         searchCliques(compEdge, dps, svs, svt);
         compEdge.clear();
     }
+    // singleton dp should be taken into consideration
+    if(mOpt->filterOpt->mMinSeedDP < 2){
+        for(auto& dp: dps){
+            if(dp.mSVID == -1){
+                SVRecord svr;
+                svr.mChr1 = dp.mCurTid;
+                svr.mChr2 = dp.mMateTid;
+                int32_t wiggle;
+                dp.initClique(svr.mSVStart, svr.mSVEnd, wiggle, mOpt, svt);
+                svr.mPESupport = 1;
+                int32_t ciwiggle = std::max(wiggle, 50);
+                svr.mCiPosLow = -ciwiggle;
+                svr.mCiPosHigh = ciwiggle;
+                svr.mCiEndLow = -ciwiggle;
+                svr.mCiEndHigh = ciwiggle;
+                svr.mPEMapQuality = dp.mMapQual;
+                svr.mSRSupport = 0;
+                svr.mSRAlignQuality = 0;
+                svr.mPrecise = 0;
+                svr.mSVT = svt;
+                svr.mAlnInsLen = 0;
+                svr.mHomLen = 0;
+                int32_t svid = svs.size();
+                dp.mSVID = svid;
+                svs.push_back(svr);
+            }
+        }
+    }
 }
 
 void DPBamRecordSet::searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& compEdge, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt){
@@ -291,6 +319,9 @@ void DPBamRecordSet::searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& c
             svr.mAlnInsLen = 0;
             svr.mHomLen = 0;
             svs.push_back(svr);
+            int32_t svid = svs.size();
+            for(auto& e: clique)
+                dps[e].mSVID = svid;
         }
     }
 }

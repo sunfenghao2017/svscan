@@ -12,6 +12,9 @@ class Annotator{
         Options* mOpt; ///< pointer to Options
 
     public:
+        /** default constructor of Annotator */
+        Annotator(){}
+
         /** constructor of Annotator
          * @param opt pointer to Options object
          */
@@ -30,12 +33,28 @@ class Annotator{
          * @param gl reference of GeneInfoList
          */
         void geneAnnoDNA(SVSet& svs, GeneInfoList& gl);
+
+        /** annotate DNA SV gene information in a range of svs
+         * @param svs reference of SVRecords
+         * @param gl reference of GeneInfoList
+         * @param begIdx beginning index of svs to annotate
+         * @param endIdx ending index of svs to annotate
+         */
+        void rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx);
         
         /** annotate RNA SV gene information
          * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
          */
         void geneAnnoRNA(SVSet& svs, GeneInfoList& gl);
+
+        /** annotate RNA SV gene information in a range of svs
+         * @param svs reference of SVRecords
+         * @param gl reference of GeneInfoList
+         * @param begIdx beginning index of svs to annotate
+         * @param endIdx ending index of svs to annotate
+         */
+        void rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx);
 
         /** get first overlap of an region against an region set
          * @param s region sets

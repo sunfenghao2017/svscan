@@ -12,14 +12,15 @@
 /** Class to store discordant pair of reads alignment record which supports SVs */
 class DPBamRecord{
     public:
-        int32_t mCurTid;   ///< current read(second read in coordinate sorted bam) bam record reference id b->core.tid
-        int32_t mCurPos;   ///< current read(second read in coordinate sorted bam) bam record mapping starting pos b->core.pos
-        int32_t mMateTid;  ///< mate read(first read in coordinate sorted bam) bam record reference id b->core.mtid
-        int32_t mMatePos;  ///< mate read(first read in coordinate sorted bam) bam record mapping starting pos b->core.mpos
-        int32_t mCurAlen;  ///< current read(second read in coordinate sorted bam) bam record consumed reference length bam_cigar2rlen(b)
-        int32_t mMateAlen; ///< mate read(first read in coordinate sorted bam) bam record consumed reference length bam_cigar2rlen(mateb)
-        uint8_t mMapQual;  ///< b->core.qual, b is the record of read on large rcoordinate or larger chr in a pair
-        int32_t mSVT;      ///< SV type this DPBamRecord supports
+        int32_t mCurTid;    ///< current read(second read in coordinate sorted bam) bam record reference id b->core.tid
+        int32_t mCurPos;    ///< current read(second read in coordinate sorted bam) bam record mapping starting pos b->core.pos
+        int32_t mMateTid;   ///< mate read(first read in coordinate sorted bam) bam record reference id b->core.mtid
+        int32_t mMatePos;   ///< mate read(first read in coordinate sorted bam) bam record mapping starting pos b->core.mpos
+        int32_t mCurAlen;   ///< current read(second read in coordinate sorted bam) bam record consumed reference length bam_cigar2rlen(b)
+        int32_t mMateAlen;  ///< mate read(first read in coordinate sorted bam) bam record consumed reference length bam_cigar2rlen(mateb)
+        uint8_t mMapQual;   ///< b->core.qual, b is the record of read on large rcoordinate or larger chr in a pair
+        int32_t mSVT;       ///< SV type this DPBamRecord supports
+        int32_t mSVID = -1; ///< id of SV event this DPBamRecord supports;
 
     public:
         /** DPBamRecord constructor
@@ -45,6 +46,7 @@ class DPBamRecord{
             }
             mMapQual = b->core.qual;
             mSVT = svt;
+            mSVID = -1;
         }
 
         /** DPBamRecord destructor */
