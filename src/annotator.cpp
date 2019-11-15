@@ -237,10 +237,29 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
 }
 
 void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
+    // split range list 
+    std::vector<std::pair<int32_t, int32_t>> vpidx;
+    int32_t totalSV = svs.size();
+    int32_t eachTSV = totalSV / mOpt->nthread;
+    for(int32_t i = 0; i < mOpt->nthread; ++i){
+        std::pair<int32_t, int32_t> p;
+        p.first = i * eachTSV;
+        p.second += (i + 1) * eachTSV;
+    }
+    vpidx[vpidx.size() - 1].second = svs.size();
+    // parallel run
+    std::vector<std::future<void>> annRets(vpidx.size());
+    for(uint32_t i = 0; i < vpidx.size(); ++i){
+        annRets[i] = mOpt->pool->enqueue(&Annotator::rangeGeneAnnoDNA, this, std::ref(svs), std::ref(gl), vpidx[i].first, vpidx[i].second);
+    }
+    for(auto& e: annRets) e.get();
+}
+
+void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx){
     gl.resize(svs.size());
     htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
-    for(uint32_t i = 0; i < svs.size(); ++i){
+    for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascripts at breakpoint 1
         getDNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
         gl[i].mPos1 = svs[i].mSVStart;
@@ -325,10 +344,29 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
 }
 
 void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
+    // split range list 
+    std::vector<std::pair<int32_t, int32_t>> vpidx;
+    int32_t totalSV = svs.size();
+    int32_t eachTSV = totalSV / mOpt->nthread;
+    for(int32_t i = 0; i < mOpt->nthread; ++i){
+        std::pair<int32_t, int32_t> p;
+        p.first = i * eachTSV;
+        p.second += (i + 1) * eachTSV;
+    }
+    vpidx[vpidx.size() - 1].second = svs.size();
+    // parallel run
+    std::vector<std::future<void>> annRets(vpidx.size());
+    for(uint32_t i = 0; i < vpidx.size(); ++i){
+        annRets[i] = mOpt->pool->enqueue(&Annotator::rangeGeneAnnoRNA, this, std::ref(svs), std::ref(gl), vpidx[i].first, vpidx[i].second);
+    }
+    for(auto& e: annRets) e.get();
+}
+
+void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx){
     gl.resize(svs.size());
     htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
-    for(uint32_t i = 0; i < svs.size(); ++i){
+    for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascript at breakpoint 1
         getRNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
         gl[i].mChr1 = gl[i].mGene1[0].chr;
