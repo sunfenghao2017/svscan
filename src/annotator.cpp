@@ -245,8 +245,9 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
         std::pair<int32_t, int32_t> p;
         p.first = i * eachTSV;
         p.second += (i + 1) * eachTSV;
+        vpidx.push_back(p);
     }
-    vpidx[vpidx.size() - 1].second = svs.size();
+    if(vpidx.size()) vpidx[vpidx.size() - 1].second = svs.size();
     // parallel run
     std::vector<std::future<void>> annRets(vpidx.size());
     for(uint32_t i = 0; i < vpidx.size(); ++i){
@@ -352,8 +353,9 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
         std::pair<int32_t, int32_t> p;
         p.first = i * eachTSV;
         p.second += (i + 1) * eachTSV;
+        vpidx.push_back(p);
     }
-    vpidx[vpidx.size() - 1].second = svs.size();
+    if(vpidx.size()) vpidx[vpidx.size() - 1].second = svs.size();
     // parallel run
     std::vector<std::future<void>> annRets(vpidx.size());
     for(uint32_t i = 0; i < vpidx.size(); ++i){
