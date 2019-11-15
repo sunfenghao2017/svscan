@@ -200,6 +200,26 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             compEdge.clear();
         }
     }
+    // singleton sr should also be taken into consideration
+    for(auto& sr: srs){
+        if(sr.mSVID == -1){
+            SVRecord svr;
+            svr.mChr1 = sr.mChr1;
+            svr.mSVStart = sr.mPos1;
+            svr.mChr2 = sr.mChr2;
+            svr.mSVEnd = sr.mPos2;
+            svr.mCiPosLow = 0;
+            svr.mCiPosHigh = 0;
+            svr.mCiEndLow = 0;
+            svr.mCiEndHigh = 0;
+            svr.mAlnInsLen = sr.mInslen;
+            svr.mID = svs.size();
+            svr.mSVT = svt;
+            svr.mFromOneSR = true;
+            svs.push_back(svr);
+            sr.mSVID = svr.mID;
+        }
+    }
     util::loginfo("End clustering SRs for SV type:" + std::to_string(svt) + ", got: " + std::to_string(svs.size() - origSize) + " SV candidates.");
 }
 
@@ -347,15 +367,31 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 if(!srseq.empty()){
                     mTraSeqStore[svid].insert(srseq);
                     mTraQualStore[svid].push_back(b->core.qual);
+                    if(svs[svid].mFromOneSR){
+                        mTraSeqStore[svid].insert(srseq);
+                        mTraQualStore[svid].push_back(b->core.qual);
+                    }
                 }
-                if(!siseq.empty()) mTriSeqStore[svid].insert(siseq);
+                if(!siseq.empty()){
+                    mTriSeqStore[svid].insert(siseq);
+                    if(svs[svid].mFromOneSR){
+                        mTriSeqStore[svid].insert(siseq);
+                    }
+                }
                 mLock.unlock();
             }else{
                 if(!srseq.empty()){
                     seqStore[svid].insert(srseq);
                     qualStore[svid].push_back(b->core.qual);
+                    if(svs[svid].mFromOneSR){
+                        seqStore[svid].insert(srseq);
+                        qualStore[svid].push_back(b->core.qual);
+                    }
                 }
-                if(!siseq.empty()) insStore[svid].insert(siseq);
+                if(!siseq.empty()){
+                    insStore[svid].insert(siseq);
+                    if(svs[svid].mFromOneSR) insStore[svid].insert(siseq);
+                }
             }
         } 
     }
@@ -396,6 +432,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             }else{// SR support and qualities
                 svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
                 svs[svid].mSRSupport = seqStore[svid].size();
+                if(svs[svid].mFromOneSR) svs[svid].mSRSupport = 1;
                 svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
             }
         }
@@ -408,7 +445,6 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
     fai_destroy(fai);
     bam_destroy1(b);
 }
-
 
 void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // Construct bool filter of SR mapping positions
