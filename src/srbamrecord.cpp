@@ -467,12 +467,26 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     for(auto& e: asret) e.get();
     // assemble translocation srs
     util::loginfo("Beg assembling SRs across chromosomes", mOpt->logMtx);
+    std::vector<int32_t> crsvids;
+    for(uint32_t cri = 0; cri < svs.size(); ++cri){
+        if(svs[cri].mSVT >= 5) crsvids.push_back(cri);
+    }
+    std::vector<std::pair<int32_t, int32_t>> vpidx;
+    int32_t totalSV = crsvids.size();
+    int32_t eachTSV = totalSV / mOpt->nthread;
+    for(int32_t iidx = 0; iidx < mOpt->nthread; ++iidx){
+        std::pair<int32_t, int32_t> p;
+        p.first = iidx * eachTSV;
+        p.second = (iidx + 1) * eachTSV;
+        if(p.second <= totalSV) vpidx.push_back(p);
+        else break;
+    }
+    if(vpidx.size()) vpidx[vpidx.size() - 1].second = svs.size();
+    else vpidx.push_back({0, vpidx.size()});
     AlignConfig* alnCfg = new AlignConfig(5, -4, -10, -1, true, true);
-    std::vector<std::future<void>> casret;
-    for(auto& sve: svs){
-        if(sve.mSVT >= 5){
-            casret.push_back(mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), sve.mID, alnCfg, hdr));
-        }
+    std::vector<std::future<void>> casret(vpidx.size());
+    for(uint32_t pidx = 0; pidx < vpidx.size(); ++pidx){
+        casret[pidx] = mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), alnCfg, hdr, std::ref(crsvids), vpidx[pidx].first, vpidx[pidx].second);
     }
     for(auto& e: casret) e.get();
     // Add ChrName
@@ -487,34 +501,37 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     util::loginfo("End assembling SRs across chromosomes", mOpt->logMtx);
 }
 
-void SRBamRecordSet::assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr){
-    bool bpRefined = false;
-    if(mTraSeqStore[svid].size()){
-        if(svs[svid].mFromOneSR){
-            svs[svid].mConsensus = *(mTraSeqStore[svid].begin());
-            if(mTriSeqStore[svid].size()) svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
-        }else{
-            MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-            if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
-            msa->msa(svs[svid].mConsensus);
-            delete msa;
-            if(mTriSeqStore[svid].size()){
-                MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-                if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
-                imsa->msa(svs[svid].mBpInsSeq);
-                delete imsa;
+void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx){
+    for(int32_t cidx = begIdx; cidx < endIdx; ++cidx){
+        int32_t svid = crsidx[cidx];
+        bool bpRefined = false;
+        if(mTraSeqStore[svid].size()){
+            if(svs[svid].mFromOneSR){
+                svs[svid].mConsensus = *(mTraSeqStore[svid].begin());
+                if(mTriSeqStore[svid].size()) svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
+            }else{
+                MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+                if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
+                msa->msa(svs[svid].mConsensus);
+                delete msa;
+                if(mTriSeqStore[svid].size()){
+                    MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+                    if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
+                    imsa->msa(svs[svid].mBpInsSeq);
+                    delete imsa;
+                }
             }
-        }
-        if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
-        if(!bpRefined){
-            svs[svid].mConsensus = "";
-            svs[svid].mSVRef = "";
-            svs[svid].mSRSupport = 0;
-            svs[svid].mSRAlignQuality = 0;
-        }else{// SR support and qualities
-            svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
-            svs[svid].mSRSupport = mTraSeqStore[svid].size();
-            svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
+            if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
+            if(!bpRefined){
+                svs[svid].mConsensus = "";
+                svs[svid].mSVRef = "";
+                svs[svid].mSRSupport = 0;
+                svs[svid].mSRAlignQuality = 0;
+            }else{// SR support and qualities
+                svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
+                svs[svid].mSRSupport = mTraSeqStore[svid].size();
+                svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
+            }
         }
     }
 }
