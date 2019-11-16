@@ -303,13 +303,13 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
     util::loginfo("Beg augmenting SR supported SV candidates with DPs");
     for(uint32_t i = 0; i < svs.size(); ++i){
         for(int32_t j = chridx[svs[i].mChr1].first; j <= chridx[svs[i].mChr1].second; ++j){
-            if(dp[j].mSVT != svs[i].mSVT || svs[i].mChr2 != dp[j].mChr2 || dp[j].mMerged) continue;
+            if(pe[j].mSVT != svs[i].mSVT || svs[i].mChr2 != pe[j].mChr2 || pe[j].mMerged) continue;
             // Test whether breakpoint is within PE confidence interval
-            if(svs[i].mSVStart >= dp[j].mSVStart + dp[j].mCiPosLow && svs[i].mSVStart <= dp[j].mSVStart + dp[j].mCiPosHigh &&
-               svs[i].mSVEnd >= dp[j].mSVEnd + dp[j].mCiEndLow && svs[i].mSVEnd <= dp[j].mSVEnd + dp[j].mCiEndHigh){
-                svs[i].mPESupport = dp[j].mPESupport;
-                svs[i].mPEMapQuality = dp[j].mPEMapQuality;
-                dp[j].mMerged = true;
+            if(svs[i].mSVStart >= pe[j].mSVStart + pe[j].mCiPosLow && svs[i].mSVStart <= pe[j].mSVStart + pe[j].mCiPosHigh &&
+               svs[i].mSVEnd >= pe[j].mSVEnd + pe[j].mCiEndLow && svs[i].mSVEnd <= pe[j].mSVEnd + pe[j].mCiEndHigh){
+                svs[i].mPESupport = pe[j].mPESupport;
+                svs[i].mPEMapQuality = pe[j].mPEMapQuality;
+                pe[j].mMerged = true;
             }
         }
     }
