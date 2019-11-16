@@ -467,22 +467,43 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     for(auto& e: asret) e.get();
     // assemble translocation srs
     util::loginfo("Beg assembling SRs across chromosomes", mOpt->logMtx);
-    std::vector<int32_t> crsvids;
+    std::vector<int32_t> nonOnesIds;
+    std::vector<int32_t> yesOnesIds;
     for(uint32_t cri = 0; cri < svs.size(); ++cri){
-        if(svs[cri].mSVT >= 5) crsvids.push_back(cri);
+        if(svs[cri].mSVT >= 5){
+            if(svs[cri].mFromOneSR) yesOnesIds.push_back(cri);
+            else nonOnesIds.push_back(cri);
+        }
+    }
+    std::vector<std::pair<int32_t, int32_t>> nspidx, yspidx;
+    int32_t nps = util::divideVecIdx(nonOnesIds.size(), mOpt->nthread, nspidx);
+    int32_t yps = util::divideVecIdx(yesOnesIds.size(), mOpt->nthread, yspidx);
+    std::vector<int32_t> crsvids;
+    int32_t cps = 0;
+    for(cps = 0; cps < std::min(nps, yps); ++cps){
+        for(int32_t insp = nspidx[cps].first; insp < nspidx[cps].second; ++insp){
+            crsvids.push_back(nonOnesIds[insp]);
+        }
+        for(int32_t iysp = yspidx[cps].first; iysp < yspidx[cps].second; ++iysp){
+            crsvids.push_back(yesOnesIds[iysp]);
+        }
+    }
+    if(cps < nps){
+        for(; cps < nps; ++cps){
+            for(int32_t insp = nspidx[cps].first; insp < nspidx[cps].second; ++insp){
+                crsvids.push_back(nonOnesIds[insp]);
+            }
+        }
+    }
+    if(cps < yps){
+        for(; cps < yps; ++cps){
+            for(int32_t iysp = yspidx[cps].first; iysp < yspidx[cps].second; ++iysp){
+                crsvids.push_back(yesOnesIds[iysp]);
+            }
+        }
     }
     std::vector<std::pair<int32_t, int32_t>> vpidx;
-    int32_t totalSV = crsvids.size();
-    int32_t eachTSV = totalSV / mOpt->nthread;
-    for(int32_t iidx = 0; iidx < mOpt->nthread; ++iidx){
-        std::pair<int32_t, int32_t> p;
-        p.first = iidx * eachTSV;
-        p.second = (iidx + 1) * eachTSV;
-        if(p.second <= totalSV) vpidx.push_back(p);
-        else break;
-    }
-    if(vpidx.size()) vpidx[vpidx.size() - 1].second = svs.size();
-    else vpidx.push_back({0, vpidx.size()});
+    util::divideVecIdx(crsvids.size(), mOpt->nthread, vpidx);
     AlignConfig* alnCfg = new AlignConfig(5, -4, -10, -1, true, true);
     std::vector<std::future<void>> casret(vpidx.size());
     for(uint32_t pidx = 0; pidx < vpidx.size(); ++pidx){

@@ -240,17 +240,7 @@ void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
     gl.resize(svs.size());
     // split range list 
     std::vector<std::pair<int32_t, int32_t>> vpidx;
-    int32_t totalSV = svs.size();
-    int32_t eachTSV = totalSV / mOpt->nthread;
-    for(int32_t i = 0; i < mOpt->nthread; ++i){
-        std::pair<int32_t, int32_t> p;
-        p.first = i * eachTSV;
-        p.second = (i + 1) * eachTSV;
-        if(p.second <= totalSV) vpidx.push_back(p);
-        else break;
-    }
-    if(vpidx.size()) vpidx[vpidx.size() - 1].second = svs.size();
-    else vpidx.push_back({0, vpidx.size()});
+    util::divideVecIdx(svs.size(), mOpt->nthread, vpidx);
     // parallel run
     std::vector<std::future<void>> annRets(vpidx.size());
     for(uint32_t i = 0; i < vpidx.size(); ++i){
@@ -350,17 +340,7 @@ void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
     gl.resize(svs.size());
     // split range list 
     std::vector<std::pair<int32_t, int32_t>> vpidx;
-    int32_t totalSV = svs.size();
-    int32_t eachTSV = totalSV / mOpt->nthread;
-    for(int32_t i = 0; i < mOpt->nthread; ++i){
-        std::pair<int32_t, int32_t> p;
-        p.first = i * eachTSV;
-        p.second = (i + 1) * eachTSV;
-        if(p.second <= totalSV) vpidx.push_back(p);
-        else break;
-    }
-    if(vpidx.size()) vpidx[vpidx.size() - 1].second = svs.size();
-    else vpidx.push_back({0, svs.size()});
+    util::divideVecIdx(svs.size(), mOpt->nthread, vpidx);
     // parallel run
     std::vector<std::future<void>> annRets(vpidx.size());
     for(uint32_t i = 0; i < vpidx.size(); ++i){
