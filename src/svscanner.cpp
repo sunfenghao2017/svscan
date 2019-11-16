@@ -133,7 +133,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg merging SVs from SRs and DPs");
     SVSet mergedSVs;
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
-    util::loginfo("End merging SVs from SRs and DPs");
+    util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs.size()));
     util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
     std::sort(mergedSVs.begin(), mergedSVs.end());

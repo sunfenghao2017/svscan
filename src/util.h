@@ -54,7 +54,7 @@ namespace util{
 
     /** get rid of the leading and ending white space characters of a string
      * @param str string to be stripped in both ends
-     * @param str string to be stripped from back
+     * @param pat string to be stripped from back
      * @return a string with white spaces stripped in both ends
      */
     inline std::string strip(const std::string& str, const std::string& pat = " \t\n\v\f\r"){
@@ -72,7 +72,7 @@ namespace util{
 
     /** get rid of the left leading white space characters of a string
      * @param str string to be stripped from front
-     * @param pat chrs to be stripped from str
+     * @param pat string to be stripped from back
      * @return a string with left leading white spaces stripped
      */
     inline std::string lstrip(const std::string& str, const std::string& pat = " \t\n\v\f\r"){
@@ -85,7 +85,7 @@ namespace util{
 
     /** get rid of the trailling white space characters of a string
      * @param str string to be stripped from back
-     * @param pat chrs to be stripped from str
+     * @param pat string to be stripped from back
      * @return a string with right ending white spaces stripped
      */
     inline std::string rstrip(const std::string& str, const std::string& pat = " \t\n\v\f\r"){
@@ -835,6 +835,30 @@ namespace util{
             }
         }
         return s;
+    }
+
+    /** divide vector index into even split
+     * @param vsize original vector size to split
+     * @param nsplit number of splits expected
+     * @param vpidx split result vector
+     * @return actual split got
+     */
+    inline int32_t divideVecIdx(int32_t vsize, int32_t nsplit, std::vector<std::pair<int32_t, int32_t>>& vpidx){
+        if(!nsplit){
+            vpidx.push_back({0, vsize});
+            return 1;
+        }
+        int32_t perSize = vsize / nsplit;
+        for(int32_t iidx = 0; iidx < nsplit; ++iidx){
+            std::pair<int32_t, int32_t> p;
+            p.first = iidx * perSize;
+            p.second = (iidx + 1) * perSize;
+            if(p.second <= vsize) vpidx.push_back(p);
+            else break;
+        }
+        if(vpidx.size()) vpidx[vpidx.size() - 1].second = vsize;
+        else vpidx.push_back({0, vsize});
+        return vpidx.size();
     }
 }
 

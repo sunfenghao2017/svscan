@@ -181,7 +181,7 @@ class SRBamRecordSet{
 
         void assembleOneContig(SVSet& svs, int32_t refIdx);
 
-        void assembleCrossChr(SVSet& svs, int32_t svid, AlignConfig* alnCfg, bam_hdr_t* hdr);
+        void assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
 };
 
 #endif
