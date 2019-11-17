@@ -62,11 +62,10 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         if(seq) free(seq);
     }
     util::loginfo("End gathering N regions in reference");
-    std::vector<std::vector<CovRecord>> covRecs;
-    if(false){
+    std::vector<std::vector<CovRecord>> covRecs(h->n_targets); //coverage records of 3-part of each SV events
+    if(false){// ah!!!, guess what...
         util::loginfo("Beg extracting left/middle/right regions for each SV");
         // Add control regions
-        covRecs.resize(h->n_targets); //coverage records of 3-part of each SV events
         int32_t lastID = svs.size();
         for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
             int halfsize = (itsv->mSVEnd - itsv->mSVStart) / 2; 
