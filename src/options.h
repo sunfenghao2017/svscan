@@ -185,6 +185,7 @@ class Options{
         MSAOpt* msaOpt;               ///< MSA options
         Software* softEnv;            ///< softare environment option
         bool rnamode;                 ///< find rna structural variants
+        bool writebcf;                ///< write bcf if true
 
     public:
         /** Options constructor */

@@ -187,9 +187,13 @@ struct SpanningCount{
     int32_t mRefh2 = 0;               ///< count HP tag with value not 1 supporting reference reads
     int32_t mAlth1 = 0;               ///< count HP tag with value 1 supporting SV reads
     int32_t mAlth2 = 0;               ///< count HP tag with value not 1 supporting SV reads
+    int32_t mRefCntBeg = 0;           ///< number of reads which are more likely to be reference on sv starting pos
+    int32_t mRefCntEnd = 0;           ///< number of reads which are more likely to be reference on sv ending pos
+    int32_t mAltCnt = 0;              ///< number of reads which are more likely to SV supporting
     std::vector<uint8_t> mRefQualBeg; ///< mapQ of reads which are more likely to be reference on sv starting pos
     std::vector<uint8_t> mRefQualEnd; ///< mapQ of reads which are more likely to be reference on sv ending pos
-    std::vector<uint8_t> mAltQual; ///< mapQ of reads which are more likely to be SV supporting on sv starting pos
+    std::vector<uint8_t> mAltQual;    ///< mapQ of reads which are more likely to be SV supporting
+
 
     
     /** constructor */
@@ -202,15 +206,15 @@ struct SpanningCount{
      * @return ref depth of sv
      */
     inline int32_t getRefDep(){
-        if(mRefQualBeg.size() > mRefQualEnd.size()) return mRefQualBeg.size();
-        else return mRefQualEnd.size();
+        if(mRefCntBeg > mRefCntEnd) return mRefCntBeg;
+        else return mRefCntEnd;
     }
     
     /** get alt depth of one sv event
      * @return alt depth of sv
      */
     inline int32_t getAltDep(){
-        return mAltQual.size();
+        return mAltCnt;
     }
 
     /** operator to output SpanningCount object to ostream
@@ -220,9 +224,9 @@ struct SpanningCount{
      */
     inline friend std::ostream& operator<<(std::ostream& os, const SpanningCount& sc){
         os << "=========================================================\n";
-        os << "Read pairs which support REF haplotype on SV starting pos: " << sc.mRefQualBeg.size() << "\n";
-        os << "Read pairs which support REF haplotype on SV ending pos: " << sc.mRefQualEnd.size() << "\n";
-        os << "Read pairs which support ALT haplotype on SV ending pos: " << sc.mAltQual.size() << "\n";
+        os << "Read pairs which support REF haplotype on SV starting pos: " << sc.mRefCntBeg << "\n";
+        os << "Read pairs which support REF haplotype on SV ending pos: " << sc.mRefCntEnd << "\n";
+        os << "Read pairs which support ALT haplotype on SV ending pos: " << sc.mAltCnt << "\n";
         os << "HP == 1 read pair which support REF haplotype: " << sc.mRefh1 << "\n";
         os << "HP != 1 read pair which support REF haplotype: " << sc.mRefh2 << "\n";
         os << "HP == 1 read pair which support ALT haplotype: " << sc.mAlth1 << "\n";
@@ -234,14 +238,17 @@ struct SpanningCount{
 
 /** Single read which spanning SV breakpoint Stat object*/
 struct JunctionCount{
-    int32_t mRefh1 = 0;            ///< count HP tag with value 1 supporting reference reads
-    int32_t mRefh2 = 0;            ///< count HP tag with value not 1 supporting reference reads
-    int32_t mAlth1 = 0;            ///< count HP tag with value 1 supporting SV reads
-    int32_t mAlth2 = 0;            ///< count HP tag with value not 1 supporting SV reads
-    int32_t mFPIns = 0;            ///< false positive insertion supporting number
+    int32_t mRefh1 = 0;               ///< count HP tag with value 1 supporting reference reads
+    int32_t mRefh2 = 0;               ///< count HP tag with value not 1 supporting reference reads
+    int32_t mAlth1 = 0;               ///< count HP tag with value 1 supporting SV reads
+    int32_t mAlth2 = 0;               ///< count HP tag with value not 1 supporting SV reads
+    int32_t mFPIns = 0;               ///< false positive insertion supporting number
+    int32_t mRefCntBeg = 0;           ///< number of reads which are more likely to be reference on sv starting pos
+    int32_t mRefCntEnd = 0;           ///< number of reads which are more likely to be reference on sv ending pos
+    int32_t mAltCnt = 0;              ///< number of reads which are more likely to SV supporting
     std::vector<uint8_t> mRefQualBeg; ///< mapQ of reads which are more likely to be reference on sv starting pos
     std::vector<uint8_t> mRefQualEnd; ///< mapQ of reads which are more likely to be reference on sv ending pos
-    std::vector<uint8_t> mAltQual; ///< mapQ of reads which are more likely to be SV supporting
+    std::vector<uint8_t> mAltQual;    ///< mapQ of reads which are more likely to be SV supporting
     
     /** constructor */
     JunctionCount(){}
@@ -253,15 +260,15 @@ struct JunctionCount{
      * @return ref depth of sv
      */
     inline int32_t getRefDep(){
-        if(mRefQualBeg.size() > mRefQualEnd.size()) return mRefQualBeg.size();
-        else return mRefQualEnd.size();
+        if(mRefCntBeg > mRefCntEnd) return mRefCntBeg;
+        else return mRefCntEnd;
     }
     
     /** get alt depth of one sv event
      * @return alt depth of sv
      */
     inline int32_t getAltDep(){
-        return mAltQual.size();
+        return mAltCnt;
     }
     
     /** operator to output JunctionCount object to ostream
@@ -271,9 +278,9 @@ struct JunctionCount{
      */
     inline friend std::ostream& operator<<(std::ostream& os, const JunctionCount& jc){
         os << "=========================================================\n";
-        os << "Read pairs which support REF haplotype on SV starting pos: " << jc.mRefQualBeg.size() << "\n";
-        os << "Read pairs which support REF haplotype on SV ending pos: " << jc.mRefQualEnd.size() << "\n";
-        os << "Read pairs which support ALT haplotype on SV ending pos: " << jc.mAltQual.size() << "\n";
+        os << "Read pairs which support REF haplotype on SV starting pos: " << jc.mRefCntBeg << "\n";
+        os << "Read pairs which support REF haplotype on SV ending pos: " << jc.mRefCntEnd << "\n";
+        os << "Read pairs which support ALT haplotype on SV ending pos: " << jc.mAltCnt << "\n";
         os << "HP == 1 read which support REF haplotype: " << jc.mRefh1 << "\n";
         os << "HP != 1 read which support REF haplotype: " << jc.mRefh2 << "\n";
         os << "HP == 1 read which support ALT haplotype: " << jc.mAlth1 << "\n";
@@ -414,8 +421,6 @@ class Stats{
         std::vector<JunctionCount> mJctCnts;               ///< Single read spanning SV breakpoint stats
         std::vector<SpanningCount> mSpnCnts;               ///< Paired-end read spanning SV breakpoint stats
         std::vector<std::pair<int32_t, int32_t>> mCovCnts; ///< base and fragment coverage count of each SV event
-        std::vector<int32_t> mRefAlignedReadCount;         ///< REF like read count of each SV
-        std::vector<int32_t> mRefAlignedSpanCount;         ///< REF like read pair count of each SV
 
     public:
         /** Stats constructor */
@@ -429,9 +434,10 @@ class Stats{
         Stats(Options* opt, int32_t n, int32_t refidx);
 
         /** Stats constructor
+         * @param opt pointer to Options object
          * @param n total SV number
          */
-        Stats(int32_t n);
+        Stats(Options* opt, int32_t n);
 
         /** Stats destructor */
         ~Stats(){}
@@ -447,7 +453,7 @@ class Stats{
          * @return reference of ostream object
          */
         inline friend std::ostream& operator<<(std::ostream& os, const Stats& st){
-            for(uint32_t id = 0; id < st.mReadCnts.size(); ++id){
+            for(uint32_t id = 0; id < st.mJctCnts.size(); ++id){
                 os << "SV ID: " << id << "\n";
                 os << "Read Count:\n" << st.mReadCnts[id];
                 os << "Junction Read Count:\n" << st.mJctCnts[id];
