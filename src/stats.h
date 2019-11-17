@@ -452,7 +452,7 @@ class Stats{
          * @return reference of ostream object
          */
         inline friend std::ostream& operator<<(std::ostream& os, const Stats& st){
-            for(uint32_t id = 0; id < st.mReadCnts.size(); ++id){
+            for(uint32_t id = 0; id < st.mJctCnts.size(); ++id){
                 os << "SV ID: " << id << "\n";
                 os << "Read Count:\n" << st.mReadCnts[id];
                 os << "Junction Read Count:\n" << st.mJctCnts[id];

@@ -13,10 +13,12 @@ Stats::Stats(int32_t n){
 }
 
 void Stats::init(int n){
-    mReadCnts.resize(n, ReadCount());
+    if(mOpt->writebcf){
+        mReadCnts.resize(n, ReadCount());
+        mCovCnts.resize(3 * n, {0, 0});
+    }
     mJctCnts.resize(n, JunctionCount());
     mSpnCnts.resize(n, SpanningCount());
-    mCovCnts.resize(3 * n, {0, 0});
 }
 
 uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual){
@@ -44,10 +46,6 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     ret->mOpt = sts[0]->mOpt;
     for(int32_t j = 0; j < n; ++j){
         for(uint32_t i = 0; i < sts.size(); ++i){
-            // RC
-            ret->mReadCnts[j].mLeftRC += sts[i]->mReadCnts[j].mLeftRC;
-            ret->mReadCnts[j].mRightRC += sts[i]->mReadCnts[j].mRightRC;
-            ret->mReadCnts[j].mRC += sts[i]->mReadCnts[j].mRC;
             // SC
             ret->mJctCnts[j].mAlth1 += sts[i]->mJctCnts[j].mAlth1;
             ret->mJctCnts[j].mAlth2 += sts[i]->mJctCnts[j].mAlth2;
@@ -63,9 +61,15 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mSpnCnts[j].mAltQual.insert(ret->mSpnCnts[j].mAltQual.end(), sts[i]->mSpnCnts[j].mAltQual.begin(), sts[i]->mSpnCnts[j].mAltQual.end());
             ret->mSpnCnts[j].mRefQualBeg.insert(ret->mSpnCnts[j].mRefQualBeg.end(), sts[i]->mSpnCnts[j].mRefQualBeg.begin(), sts[i]->mSpnCnts[j].mRefQualBeg.end());
             ret->mSpnCnts[j].mRefQualEnd.insert(ret->mSpnCnts[j].mRefQualEnd.end(), sts[i]->mSpnCnts[j].mRefQualEnd.begin(), sts[i]->mSpnCnts[j].mRefQualEnd.end());
-            // Cov
-            ret->mCovCnts[j].first += sts[i]->mCovCnts[j].first;
-            ret->mCovCnts[j].second += sts[i]->mCovCnts[j].second;
+            if(opt->writebcf){
+                // RC
+                ret->mReadCnts[j].mLeftRC += sts[i]->mReadCnts[j].mLeftRC;
+                ret->mReadCnts[j].mRightRC += sts[i]->mReadCnts[j].mRightRC;
+                ret->mReadCnts[j].mRC += sts[i]->mReadCnts[j].mRC;
+                // Cov
+                ret->mCovCnts[j].first += sts[i]->mCovCnts[j].first;
+                ret->mCovCnts[j].second += sts[i]->mCovCnts[j].second;
+            }
         }
     }
     return ret;
@@ -107,13 +111,15 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             int opint = bam_cigar_op(cigar[i]);
             int oplen = bam_cigar_oplen(cigar[i]);
             if(opint == BAM_CMATCH || opint == BAM_CDIFF || opint == BAM_CEQUAL){
-                // Assign base counts to SVs
-                int32_t rcep = rp + oplen;
-                for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
-                    if(covRecs[mRefIdx][rc].mStart < rcep &&  covRecs[mRefIdx][rc].mEnd > rp){
-                        int32_t minPos = std::max(covRecs[mRefIdx][rc].mStart, rp);
-                        int32_t maxPos = std::min(covRecs[mRefIdx][rc].mEnd, rcep);
-                        for(int32_t ki = minPos; ki < maxPos; ++ki) mCovCnts[covRecs[mRefIdx][rc].mID].first += 1;
+                if(mOpt->writebcf){
+                    // Assign base counts to SVs
+                    int32_t rcep = rp + oplen;
+                    for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
+                        if(covRecs[mRefIdx][rc].mStart < rcep &&  covRecs[mRefIdx][rc].mEnd > rp){
+                            int32_t minPos = std::max(covRecs[mRefIdx][rc].mStart, rp);
+                            int32_t maxPos = std::min(covRecs[mRefIdx][rc].mEnd, rcep);
+                            for(int32_t ki = minPos; ki < maxPos; ++ki) mCovCnts[covRecs[mRefIdx][rc].mID].first += 1;
+                        }
                     }
                 }
                 rp += oplen;
@@ -252,15 +258,17 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         if((!(b->core.flag & BAM_FPAIRED)) || covRecs[b->core.mtid].empty()) continue;
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
             if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
-            // Read-depth fragment counting
-            if(b->core.tid == b->core.mtid){
-                // Count mid point (fragment counting)
-                int32_t midPos = b->core.pos + bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b))/2;
-                // Assign fragment counts to SVs
-                for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
-                    if(midPos >= covRecs[mRefIdx][rc].mStart && midPos < covRecs[mRefIdx][rc].mEnd){
-                        mCovCnts[covRecs[mRefIdx][rc].mID].second += 1;
-                        break;
+            if(mOpt->writebcf){
+                // Read-depth fragment counting
+                if(b->core.tid == b->core.mtid){
+                    // Count mid point (fragment counting)
+                    int32_t midPos = b->core.pos + bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b))/2;
+                    // Assign fragment counts to SVs
+                    for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
+                        if(midPos >= covRecs[mRefIdx][rc].mStart && midPos < covRecs[mRefIdx][rc].mEnd){
+                            mCovCnts[covRecs[mRefIdx][rc].mID].second += 1;
+                            break;
+                        }
                     }
                 }
             }
@@ -352,17 +360,19 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             }
         }
     }
-    // Compute read counts
-    int32_t lastID = svs.size();
-    for(uint32_t id = 0; id < svs.size(); ++id){
-        if(svs[id].mSize <= mOpt->libInfo->mMaxNormalISize){
-            mReadCnts[id].mRC = mCovCnts[id].first;
-            mReadCnts[id].mLeftRC = mCovCnts[id + lastID].first;
-            mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].first;
-        }else{
-            mReadCnts[id].mRC = mCovCnts[id].second;
-            mReadCnts[id].mLeftRC = mCovCnts[id + lastID].second;
-            mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].second;
+    if(mOpt->writebcf){
+        // Compute read counts
+        int32_t lastID = svs.size();
+        for(uint32_t id = 0; id < svs.size(); ++id){
+            if(svs[id].mSize <= mOpt->libInfo->mMaxNormalISize){
+                mReadCnts[id].mRC = mCovCnts[id].first;
+                mReadCnts[id].mLeftRC = mCovCnts[id + lastID].first;
+                mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].first;
+            }else{
+                mReadCnts[id].mRC = mCovCnts[id].second;
+                mReadCnts[id].mLeftRC = mCovCnts[id + lastID].second;
+                mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].second;
+            }
         }
     }
     util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
