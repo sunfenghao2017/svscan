@@ -40,7 +40,6 @@ uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual)
 Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     Stats* ret = new Stats(opt, n);
     if(sts.size() == 0) return ret;
-    ret->mOpt = sts[0]->mOpt;
     for(int32_t j = 0; j < n; ++j){
         for(uint32_t i = 0; i < sts.size(); ++i){
             // SC
@@ -98,10 +97,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     const uint16_t COV_STAT_SKIP_MASK = (BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP | BAM_FMUNMAP);
     auto itbp = bpRegs[mRefIdx].begin();
     auto itspan = spPts[mRefIdx].begin();
+    auto aitspan = spPts[mRefIdx].begin();
     auto ltbp = itbp;
     auto ltsp = itspan;
+    auto atsp = itspan;
     int32_t lp = -1;
     int32_t ls = -1;
+    int32_t la = -1;
     while(sam_itr_next(fp, itr, b) >= 0){
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
@@ -338,22 +340,27 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     }
                 }
                 if(spanvalid){
-                    // Fetch all relevant SVs
-                    auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(pbegin));
-                    for(; itspan != spPts[mRefIdx].end() && pend >= itspan->mBpPos; ++itspan){
-                        if(svt == itspan->mSVT && svs[itspan->mID].mChr1 == b->core.tid && svs[itspan->mID].mChr2 == b->core.mtid){
-                            mSpnCnts[itspan->mID].mAltCnt += 1;
-                            if(mOpt->writebcf) mSpnCnts[itspan->mID].mAltQual.push_back(b->core.qual);
+                    if(la != pbegin){
+                        aitspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(pbegin));
+                        la = pbegin;
+                        atsp = aitspan;
+                    }else{
+                        aitspan = atsp;
+                    }
+                    for(; aitspan != spPts[mRefIdx].end() && pend >= aitspan->mBpPos; ++aitspan){
+                        if(svt == aitspan->mSVT && svs[aitspan->mID].mChr1 == b->core.tid && svs[aitspan->mID].mChr2 == b->core.mtid){
+                            mSpnCnts[aitspan->mID].mAltCnt += 1;
+                            if(mOpt->writebcf) mSpnCnts[aitspan->mID].mAltQual.push_back(b->core.qual);
                             uint8_t* hpptr = bam_aux_get(b, "HP");
                             if(hpptr){
                                 mOpt->libInfo->mIsHaploTagged = true;
                                 int hap = bam_aux2i(hpptr);
-                                if(hap == 1) ++mSpnCnts[itspan->mID].mAlth1;
-                                else ++mSpnCnts[itspan->mID].mAlth2;
+                                if(hap == 1) ++mSpnCnts[aitspan->mID].mAlth1;
+                                else ++mSpnCnts[aitspan->mID].mAlth2;
                             }
                             if(mOpt->fbamout){
                                 mOpt->outMtx.lock();
-                                bam_aux_update_int(b, "ZF", itspan->mID);
+                                bam_aux_update_int(b, "ZF", aitspan->mID);
                                 assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                                 mOpt->outMtx.unlock();
                             }
