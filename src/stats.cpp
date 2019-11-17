@@ -48,6 +48,9 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mJctCnts[j].mAlth2 += sts[i]->mJctCnts[j].mAlth2;
             ret->mJctCnts[j].mRefh1 += sts[i]->mJctCnts[j].mRefh1;
             ret->mJctCnts[j].mFPIns += sts[i]->mJctCnts[j].mFPIns;
+            ret->mJctCnts[j].mAltCnt += sts[i]->mJctCnts[j].mAltCnt;
+            ret->mJctCnts[j].mRefCntBeg += sts[i]->mJctCnts[j].mRefCntBeg;
+            ret->mJctCnts[j].mRefCntEnd += sts[i]->mJctCnts[j].mRefCntEnd;
             ret->mJctCnts[j].mAltQual.insert(ret->mJctCnts[j].mAltQual.end(), sts[i]->mJctCnts[j].mAltQual.begin(), sts[i]->mJctCnts[j].mAltQual.end());
             ret->mJctCnts[j].mRefQualBeg.insert(ret->mJctCnts[j].mRefQualBeg.end(), sts[i]->mJctCnts[j].mRefQualBeg.begin(), sts[i]->mJctCnts[j].mRefQualBeg.end());
             ret->mJctCnts[j].mRefQualEnd.insert(ret->mJctCnts[j].mRefQualEnd.end(), sts[i]->mJctCnts[j].mRefQualEnd.begin(), sts[i]->mJctCnts[j].mRefQualEnd.end());
@@ -55,6 +58,9 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mSpnCnts[j].mAlth1 += sts[i]->mSpnCnts[j].mAlth1;
             ret->mSpnCnts[j].mAlth2 += sts[i]->mSpnCnts[j].mAlth2;
             ret->mSpnCnts[j].mRefh1 += sts[i]->mSpnCnts[j].mRefh1;
+            ret->mSpnCnts[j].mAltCnt += sts[i]->mSpnCnts[j].mAltCnt;
+            ret->mSpnCnts[j].mRefCntBeg += sts[i]->mSpnCnts[j].mRefCntBeg;
+            ret->mSpnCnts[j].mRefCntEnd += sts[i]->mSpnCnts[j].mRefCntEnd;
             ret->mSpnCnts[j].mAltQual.insert(ret->mSpnCnts[j].mAltQual.end(), sts[i]->mSpnCnts[j].mAltQual.begin(), sts[i]->mSpnCnts[j].mAltQual.end());
             ret->mSpnCnts[j].mRefQualBeg.insert(ret->mSpnCnts[j].mRefQualBeg.end(), sts[i]->mSpnCnts[j].mRefQualBeg.begin(), sts[i]->mSpnCnts[j].mRefQualBeg.end());
             ret->mSpnCnts[j].mRefQualEnd.insert(ret->mSpnCnts[j].mRefQualEnd.end(), sts[i]->mSpnCnts[j].mRefQualEnd.begin(), sts[i]->mSpnCnts[j].mRefQualEnd.end());
