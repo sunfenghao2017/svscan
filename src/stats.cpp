@@ -17,8 +17,6 @@ void Stats::init(int n){
     mJctCnts.resize(n, JunctionCount());
     mSpnCnts.resize(n, SpanningCount());
     mCovCnts.resize(3 * n, {0, 0});
-    mRefAlignedReadCount.resize(n, 0);
-    mRefAlignedSpanCount.resize(n, 0);
 }
 
 uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual){
@@ -68,10 +66,6 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             // Cov
             ret->mCovCnts[j].first += sts[i]->mCovCnts[j].first;
             ret->mCovCnts[j].second += sts[i]->mCovCnts[j].second;
-            // REF Reads
-            ret->mRefAlignedReadCount[j] += sts[i]->mRefAlignedReadCount[j];
-            // REF Pairs
-            ret->mRefAlignedSpanCount[j] += sts[i]->mRefAlignedSpanCount[j];
         }
     }
     return ret;
@@ -150,10 +144,14 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
-                            ++mRefAlignedReadCount[itbp->mID];
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
-                                if(itbp->mIsSVEnd) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
-                                else mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
+                                if(itbp->mIsSVEnd){
+                                    mJctCnts[itbp->mID].mRefCntEnd += 1;
+                                    if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
+                                }else{
+                                    mJctCnts[itbp->mID].mRefCntBeg += 1;
+                                    if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
+                                }
                                 uint8_t* hpptr = bam_aux_get(b, "HP");
                                 if(hpptr){
                                     mOpt->libInfo->mIsHaploTagged = true;
@@ -179,10 +177,9 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         if(scoreAlt > mOpt->filterOpt->mMinSRResScore){
                             if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                             if(itbp->mSVT != 4) onlySupportIns = false;
-                            uint8_t* qual = bam_get_qual(b);
-                            uint32_t aq = getAlignmentQual(altResult, qual);
-                            if(aq >= mOpt->filterOpt->mMinGenoQual){
-                                mJctCnts[itbp->mID].mAltQual.push_back(std::min(aq, (uint32_t)b->core.qual));
+                            if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                                mJctCnts[itbp->mID].mAltCnt += 1;
+                                if(mOpt->writebcf) mJctCnts[itbp->mID].mAltQual.push_back(b->core.qual);
                                 uint8_t* hpptr = bam_aux_get(b, "HP");
                                 if(hpptr){
                                     mOpt->libInfo->mIsHaploTagged = true;
@@ -245,9 +242,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     // Fetch all relevant SVs
                     auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
                     for(; itspan != spPts[mRefIdx].end() && (st + spanlen) >= itspan->mBpPos; ++itspan){
-                        if(itspan->mIsSVEnd) mSpnCnts[itspan->mID].mRefQualEnd.push_back(b->core.qual);
-                        else mSpnCnts[itspan->mID].mRefQualBeg.push_back(b->core.qual); 
-                        ++mRefAlignedSpanCount[itspan->mID];
+                        if(itspan->mIsSVEnd){
+                            mSpnCnts[itspan->mID].mRefCntEnd += 1;
+                            if(mOpt->writebcf) mSpnCnts[itspan->mID].mRefQualEnd.push_back(b->core.qual);
+                        }else{
+                            mSpnCnts[itspan->mID].mRefCntBeg += 1;
+                            if(mOpt->writebcf) mSpnCnts[itspan->mID].mRefQualBeg.push_back(b->core.qual);
+                        }
                         uint8_t* hpptr = bam_aux_get(b, "HP");
                         if(hpptr){
                             mOpt->libInfo->mIsHaploTagged = true;
@@ -282,7 +283,8 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(pbegin));
                     for(; itspan != spPts[mRefIdx].end() && pend >= itspan->mBpPos; ++itspan){
                         if(svt == itspan->mSVT && svs[itspan->mID].mChr1 == b->core.tid && svs[itspan->mID].mChr2 == b->core.mtid){
-                            mSpnCnts[itspan->mID].mAltQual.push_back(b->core.qual);
+                            mSpnCnts[itspan->mID].mAltCnt += 1;
+                            if(mOpt->writebcf) mSpnCnts[itspan->mID].mAltQual.push_back(b->core.qual);
                             uint8_t* hpptr = bam_aux_get(b, "HP");
                             if(hpptr){
                                 mOpt->libInfo->mIsHaploTagged = true;

@@ -72,6 +72,9 @@ void Options::update(int argc, char** argv){
     getScanRegs();
     // update cregs
     getCregs();
+    // write bcf or not
+    if(bcfOut.empty()) writebcf = false;
+    else writebcf = true;
 }
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){

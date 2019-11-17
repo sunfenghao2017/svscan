@@ -62,54 +62,57 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         if(seq) free(seq);
     }
     util::loginfo("End gathering N regions in reference");
-    util::loginfo("Beg extracting left/middle/right regions for each SV");
-    // Add control regions
-    std::vector<std::vector<CovRecord>> covRecs(h->n_targets); //coverage records of 3-part of each SV events
-    int32_t lastID = svs.size();
-    for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
-        int halfsize = (itsv->mSVEnd - itsv->mSVStart) / 2; 
-        if(itsv->mSVT >= 4) halfsize = 500;
-        // Left control region
-        CovRecord covLeft;
-        covLeft.mID = lastID + itsv->mID;
-        covLeft.mStart = std::max(0, itsv->mSVStart - halfsize);
-        covLeft.mEnd = itsv->mSVStart;
-        auto itp = getFirstOverlap(nreg[itsv->mChr1], {covLeft.mStart, covLeft.mEnd});
-        while(itp != nreg[itsv->mChr1].end()){
-            covLeft.mStart = std::max(itp->first - halfsize, 0);
-            covLeft.mEnd = itp->first;
-            itp = getFirstOverlap(nreg[itsv->mChr1], {covLeft.mStart, covLeft.mEnd});
-        }
-        covRecs[itsv->mChr1].push_back(covLeft);
-        // Actual SV region
-        CovRecord covMiddle;
-        covMiddle.mID = itsv->mID;
-        covMiddle.mStart = itsv->mSVStart;
-        covMiddle.mEnd = itsv->mSVEnd;
-        if(itsv->mSVT >= 4){
-            covMiddle.mStart = std::max(itsv->mSVStart - halfsize, 0);
-            covMiddle.mEnd = std::min((int32_t)h->target_len[itsv->mChr2], itsv->mSVEnd + halfsize);
-        }
-        itsv->mSize = itsv->mSVEnd - itsv->mSVStart;
-        if(itsv->mSVT == 4) itsv->mSize = itsv->mInsSeq.size();
-        if(itsv->mSVT >= 5) itsv->mSize = 666666666;
-        covRecs[itsv->mChr1].push_back(covMiddle);
-        // Right control region
-        CovRecord covRight;
-        covRight.mID = 2 * lastID + itsv->mID;
-        covRight.mStart = itsv->mSVEnd;
-        covRight.mEnd = std::min((int32_t)h->target_len[itsv->mChr2], itsv->mSVEnd + halfsize);
-        itp = getFirstOverlap(nreg[itsv->mChr2], {covRight.mStart, covRight.mEnd});
-        while(itp != nreg[itsv->mChr2].end()){
-            covRight.mStart = itp->second;
-            covRight.mEnd = itp->second + halfsize;
+    std::vector<std::vector<CovRecord>> covRecs;
+    if(false){
+        util::loginfo("Beg extracting left/middle/right regions for each SV");
+        // Add control regions
+        covRecs.resize(h->n_targets); //coverage records of 3-part of each SV events
+        int32_t lastID = svs.size();
+        for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
+            int halfsize = (itsv->mSVEnd - itsv->mSVStart) / 2; 
+            if(itsv->mSVT >= 4) halfsize = 500;
+            // Left control region
+            CovRecord covLeft;
+            covLeft.mID = lastID + itsv->mID;
+            covLeft.mStart = std::max(0, itsv->mSVStart - halfsize);
+            covLeft.mEnd = itsv->mSVStart;
+            auto itp = getFirstOverlap(nreg[itsv->mChr1], {covLeft.mStart, covLeft.mEnd});
+            while(itp != nreg[itsv->mChr1].end()){
+                covLeft.mStart = std::max(itp->first - halfsize, 0);
+                covLeft.mEnd = itp->first;
+                itp = getFirstOverlap(nreg[itsv->mChr1], {covLeft.mStart, covLeft.mEnd});
+            }
+            covRecs[itsv->mChr1].push_back(covLeft);
+            // Actual SV region
+            CovRecord covMiddle;
+            covMiddle.mID = itsv->mID;
+            covMiddle.mStart = itsv->mSVStart;
+            covMiddle.mEnd = itsv->mSVEnd;
+            if(itsv->mSVT >= 4){
+                covMiddle.mStart = std::max(itsv->mSVStart - halfsize, 0);
+                covMiddle.mEnd = std::min((int32_t)h->target_len[itsv->mChr2], itsv->mSVEnd + halfsize);
+            }
+            itsv->mSize = itsv->mSVEnd - itsv->mSVStart;
+            if(itsv->mSVT == 4) itsv->mSize = itsv->mInsSeq.size();
+            if(itsv->mSVT >= 5) itsv->mSize = 666666666;
+            covRecs[itsv->mChr1].push_back(covMiddle);
+            // Right control region
+            CovRecord covRight;
+            covRight.mID = 2 * lastID + itsv->mID;
+            covRight.mStart = itsv->mSVEnd;
+            covRight.mEnd = std::min((int32_t)h->target_len[itsv->mChr2], itsv->mSVEnd + halfsize);
             itp = getFirstOverlap(nreg[itsv->mChr2], {covRight.mStart, covRight.mEnd});
+            while(itp != nreg[itsv->mChr2].end()){
+                covRight.mStart = itp->second;
+                covRight.mEnd = itp->second + halfsize;
+                itp = getFirstOverlap(nreg[itsv->mChr2], {covRight.mStart, covRight.mEnd});
+            }
+            covRecs[itsv->mChr2].push_back(covRight);
         }
-        covRecs[itsv->mChr2].push_back(covRight);
+        // Sort Coverage Records
+        for(auto& refIndex : mOpt->svRefID) std::sort(covRecs[refIndex].begin(), covRecs[refIndex].end());
+        util::loginfo("End extracting left/middle/right regions for each SV");
     }
-    // Sort Coverage Records
-    for(auto& refIndex : mOpt->svRefID) std::sort(covRecs[refIndex].begin(), covRecs[refIndex].end());
-    util::loginfo("End extracting left/middle/right regions for each SV");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(h->n_targets);
     std::vector<int32_t> refAlignedReadCount(svs.size());
