@@ -3,7 +3,6 @@
 Options::Options(){
     madCutoff = 9;
     nthread = 8;
-    bcfOut = "sv.bcf";
     tsvOut = "sv.tsv";
     pool = NULL;
     fbamout = NULL;
@@ -190,6 +189,7 @@ void Options::writeEmptFile(){
     fw << header;
     fw.close();
     // sv bcf
+    if(bcfOut.empty()) return;
     samFile* samfp = sam_open(bamfile.c_str(), "r");
     hts_set_fai_filename(samfp, genome.c_str());
     bam_hdr_t* bamhdr = sam_hdr_read(samfp);

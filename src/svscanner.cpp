@@ -176,9 +176,11 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg writing Fusions to TSV file");
     covStat->reportFusionTSV(mergedSVs, gl);
     util::loginfo("End writing Fusions to TSV file");
-    util::loginfo("Beg writing SVs to BCF file");
-    covStat->reportSVBCF(mergedSVs);
-    util::loginfo("End writing SVs to BCF file");
+    if(!mOpt->bcfOut.empty()){
+        util::loginfo("Beg writing SVs to BCF file");
+        covStat->reportSVBCF(mergedSVs);
+        util::loginfo("End writing SVs to BCF file");
+    }
     delete covAnn;
     delete covStat;
 }

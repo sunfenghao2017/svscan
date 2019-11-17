@@ -166,7 +166,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         }
                         // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
-                        std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
                         if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
                         readSeq = readOri;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
@@ -176,49 +175,26 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         int alnScore = altAligner->needle(altResult);
                         int matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
-                        // Compute alignment to reference haplotype
-                        Aligner* refAligner = new Aligner(refProbe, readOri, &alnCfg);
-                        Matrix2D<char>* refResult = new Matrix2D<char>();
-                        alnScore = refAligner->needle(refResult);
-                        matchThreshold = mOpt->filterOpt->mFlankQuality * refProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * refProbe.size() * alnCfg.mMisMatch;
-                        double scoreRef = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
-                        if(scoreRef > mOpt->filterOpt->mMinSRResScore || scoreAlt > mOpt->filterOpt->mMinSRResScore){
-                            if(scoreRef > scoreAlt){
-                                ++mRefAlignedReadCount[itbp->mID];
-                                uint8_t* qual = bam_get_qual(b);
-                                uint32_t rq = getAlignmentQual(refResult, qual);
-                                if(rq >= mOpt->filterOpt->mMinGenoQual){
-                                    if(itbp->mIsSVEnd) mJctCnts[itbp->mID].mRefQualEnd.push_back(std::min(rq, (uint32_t)b->core.qual));
-                                    else mJctCnts[itbp->mID].mRefQualBeg.push_back(std::min(rq, (uint32_t)b->core.qual));
-                                    uint8_t* hpptr = bam_aux_get(b, "HP");
-                                    if(hpptr){
-                                        mOpt->libInfo->mIsHaploTagged = true;
-                                        int hapv = bam_aux2i(hpptr);
-                                        if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
-                                        else ++mJctCnts[itbp->mID].mRefh2; 
-                                    }
+                        if(scoreAlt > mOpt->filterOpt->mMinSRResScore){
+                            if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
+                            if(itbp->mSVT != 4) onlySupportIns = false;
+                            uint8_t* qual = bam_get_qual(b);
+                            uint32_t aq = getAlignmentQual(altResult, qual);
+                            if(aq >= mOpt->filterOpt->mMinGenoQual){
+                                mJctCnts[itbp->mID].mAltQual.push_back(std::min(aq, (uint32_t)b->core.qual));
+                                uint8_t* hpptr = bam_aux_get(b, "HP");
+                                if(hpptr){
+                                    mOpt->libInfo->mIsHaploTagged = true;
+                                    int hapv = bam_aux2i(hpptr);
+                                    if(hapv == 1) ++mJctCnts[itbp->mID].mAlth1;
+                                    else ++mJctCnts[itbp->mID].mAlth2;
                                 }
-                            }else{
-                                if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
-                                if(itbp->mSVT != 4) onlySupportIns = false;
-                                uint8_t* qual = bam_get_qual(b);
-                                uint32_t aq = getAlignmentQual(altResult, qual);
-                                if(aq >= mOpt->filterOpt->mMinGenoQual){
-                                    mJctCnts[itbp->mID].mAltQual.push_back(std::min(aq, (uint32_t)b->core.qual));
-                                    uint8_t* hpptr = bam_aux_get(b, "HP");
-                                    if(hpptr){
-                                        mOpt->libInfo->mIsHaploTagged = true;
-                                        int hapv = bam_aux2i(hpptr);
-                                        if(hapv == 1) ++mJctCnts[itbp->mID].mAlth1;
-                                        else ++mJctCnts[itbp->mID].mAlth2;
-                                    }
-                                    if(mOpt->fbamout){
-                                        mOpt->outMtx.lock();
-                                        bam_aux_update_int(b, "ZF", itbp->mID);
-                                        assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                                        mOpt->outMtx.unlock();
-                                    }
+                                if(mOpt->fbamout){
+                                    mOpt->outMtx.lock();
+                                    bam_aux_update_int(b, "ZF", itbp->mID);
+                                    assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                    mOpt->outMtx.unlock();
                                 }
                             }
                         }
@@ -226,10 +202,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         altAligner = NULL;
                         delete altResult;
                         altResult = NULL;
-                        delete refAligner;
-                        refAligner = NULL;
-                        delete refResult;
-                        refResult = NULL;
                     }
                 }
                 if(supportInsID.size() > 0 && (!onlySupportIns)){
