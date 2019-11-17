@@ -89,6 +89,12 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
     bam1_t* b = bam_init1();
     AlignConfig alnCfg(5, -4, -4, -4, false, true);   
     const uint16_t COV_STAT_SKIP_MASK = (BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP | BAM_FMUNMAP);
+    auto itbp = bpRegs[mRefIdx].begin();
+    auto itspan = spPts[mRefIdx].begin();
+    auto ltbp = itbp;
+    auto ltsp = itspan;
+    int32_t lp = -1;
+    int32_t ls = -1;
     while(sam_itr_next(fp, itr, b) >= 0){
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
@@ -139,7 +145,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 std::string readOri;
                 std::string readSeq;
                 // Fetch all relevant SVs
-                auto itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
+                if(rbegin != lp){
+                    itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
+                    ltbp = itbp;
+                    lp = rbegin;
+                }else{// if same pos, do not search again, searching is really a time consuming work...
+                    itbp = ltbp;
+                }
                 for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
@@ -270,7 +282,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 }
                 if(spanvalid){
                     // Fetch all relevant SVs
-                    auto itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
+                    if(st != ls){
+                        itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
+                        ls = st;
+                        ltsp = itspan;
+                    }else{ // not search again if st is the same...
+                        itspan = ltsp;
+                    }
                     for(; itspan != spPts[mRefIdx].end() && (st + spanlen) >= itspan->mBpPos; ++itspan){
                         if(itspan->mIsSVEnd){
                             mSpnCnts[itspan->mID].mRefCntEnd += 1;
