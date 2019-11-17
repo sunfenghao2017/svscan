@@ -434,9 +434,10 @@ class Stats{
         Stats(Options* opt, int32_t n, int32_t refidx);
 
         /** Stats constructor
+         * @param opt pointer to Options object
          * @param n total SV number
          */
-        Stats(int32_t n);
+        Stats(Options* opt, int32_t n);
 
         /** Stats destructor */
         ~Stats(){}

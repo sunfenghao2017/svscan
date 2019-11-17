@@ -6,8 +6,8 @@ Stats::Stats(Options* opt, int32_t n, int32_t refidx){
     init(n);
 }
 
-Stats::Stats(int32_t n){
-    mOpt = NULL;
+Stats::Stats(Options* opt, int32_t n){
+    mOpt = opt;
     mRefIdx = -1;
     init(n);
 }
@@ -38,11 +38,8 @@ uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual)
 }
 
 Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
-    Stats* ret = new Stats(n);
-    if(sts.size() == 0){
-        ret->mOpt = opt;
-        return ret;
-    }
+    Stats* ret = new Stats(opt, n);
+    if(sts.size() == 0) return ret;
     ret->mOpt = sts[0]->mOpt;
     for(int32_t j = 0; j < n; ++j){
         for(uint32_t i = 0; i < sts.size(); ++i){
