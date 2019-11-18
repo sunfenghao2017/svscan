@@ -22,6 +22,8 @@
 struct CtgRdCnt{
     int64_t mReadCnt = 0; ///< read counts
     int32_t mTid = -1;    ///< contig index
+    int32_t mBeg = -1;    ///< contig beg
+    int32_t mEnd = -1;    ///< contig end
 
     /** operator to compare two contig read counts
      * @param other reference of CtgRdCnt
