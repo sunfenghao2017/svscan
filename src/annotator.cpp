@@ -75,24 +75,26 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
                 lend = (int32_t)r->y;
             }
         }else{
-            if(ltid < 0){
-                ltid = tid;
-                lbeg = (int32_t)r->x;
-                lend = (int32_t)r->y;
-                lsum = r->label;
-            }else{
+            if(ltid > 0){
                 CtgRdCnt crc;
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
                 crc.mReadCnt = lsum;
                 ctgRng.push_back(crc);
-                ltid = tid;
-                lbeg = (int32_t)r->x;
-                lend = (int32_t)r->y;
-                lsum = r->label;
             }
+            ltid = tid;
+            lbeg = (int32_t)r->x;
+            lend = (int32_t)r->y;
+            lsum = r->label;
         }
+    }
+    if(lsum > 0){
+        CtgRdCnt crc;
+        crc.mBeg = lbeg;
+        crc.mEnd = lend;
+        crc.mReadCnt = lsum;
+        ctgRng.push_back(crc);
     }
 }
 
