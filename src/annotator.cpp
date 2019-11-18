@@ -53,7 +53,6 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         cr_add(svregs[tid], name, (int32_t)r->x, (int32_t)r->y, r->label);
     }
     for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
-    cr_destroy(crsv);
     util::loginfo("End construct SVs cgranges_t");
     util::loginfo("Beg split SVs cgranges_t");
     std::vector<CtgRdCnt> ctgRng;
@@ -95,6 +94,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
             }
         }
     }
+    cr_destroy(crsv);
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(mOpt->bamheader->n_targets);
