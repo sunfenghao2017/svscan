@@ -85,10 +85,29 @@ void SVScanner::scanDPandSR(){
         jct[i] = new JunctionMap(mOpt);
         dps[i] = new DPBamRecordSet(mOpt);
     }
+    // Stat reads count in each contig
+    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
+    hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
+    std::vector<CtgRdCnt> ctgRdStat;
+    for(int32_t i = 0; i < mOpt->contigNum; ++i){
+        uint64_t unmapped  = 0, mapped = 0;
+        if(hts_idx_get_stat(idx, i, &mapped, &unmapped) >= 0){
+            if(mapped > 0){
+                CtgRdCnt crc;
+                crc.mTid = i;
+                crc.mReadCnt = mapped;
+                ctgRdStat.push_back(crc);
+            }
+        }
+    }
+    std::sort(ctgRdStat.begin(), ctgRdStat.end());
+    sam_close(fp);
+    hts_idx_destroy(idx);
     // Parallel processing each contig
     std::vector<std::future<void>> scanret(mOpt->contigNum);
-    for(int32_t i = 0; i < mOpt->contigNum; ++i){
-        scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, i, jct[i], dps[i]);
+    for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
+        int32_t refidx = ctgRdStat[i].mTid;
+        scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, refidx, jct[refidx], dps[refidx]);
     }
     for(auto& e: scanret) e.get();
     // Merge and clean
