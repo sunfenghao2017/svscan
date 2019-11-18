@@ -1,22 +1,11 @@
 #include "stats.h"
 
-Stats::Stats(Options* opt, int32_t n, int32_t refidx){
-    mOpt = opt;
-    mRefIdx = refidx;
-    init(n);
-}
-
 Stats::Stats(Options* opt, int32_t n){
     mOpt = opt;
-    mRefIdx = -1;
     init(n);
 }
 
 void Stats::init(int n){
-    if(mOpt->writebcf){
-        mReadCnts.resize(n, ReadCount());
-        mCovCnts.resize(3 * n, {0, 0});
-    }
     mJctCnts.resize(n, JunctionCount());
     mSpnCnts.resize(n, SpanningCount());
 }
@@ -63,50 +52,47 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mSpnCnts[j].mAltQual.insert(ret->mSpnCnts[j].mAltQual.end(), sts[i]->mSpnCnts[j].mAltQual.begin(), sts[i]->mSpnCnts[j].mAltQual.end());
             ret->mSpnCnts[j].mRefQualBeg.insert(ret->mSpnCnts[j].mRefQualBeg.end(), sts[i]->mSpnCnts[j].mRefQualBeg.begin(), sts[i]->mSpnCnts[j].mRefQualBeg.end());
             ret->mSpnCnts[j].mRefQualEnd.insert(ret->mSpnCnts[j].mRefQualEnd.end(), sts[i]->mSpnCnts[j].mRefQualEnd.begin(), sts[i]->mSpnCnts[j].mRefQualEnd.end());
-            if(opt->writebcf){
-                // RC
-                ret->mReadCnts[j].mLeftRC += sts[i]->mReadCnts[j].mLeftRC;
-                ret->mReadCnts[j].mRightRC += sts[i]->mReadCnts[j].mRightRC;
-                ret->mReadCnts[j].mRC += sts[i]->mReadCnts[j].mRC;
-                // Cov
-                ret->mCovCnts[j].first += sts[i]->mCovCnts[j].first;
-                ret->mCovCnts[j].second += sts[i]->mCovCnts[j].second;
-            }
         }
     }
     return ret;
 }
 
-void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts){
+void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx, int32_t chrBeg, int32_t chrEnd, cgranges_t* ctgCgrs){
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
-    util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
+    util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[refIdx]), mOpt->logMtx);
     // Flag breakpoint regions
     std::set<bool> bpOccupied;
-    for(uint32_t i = 0; i < bpRegs[mRefIdx].size(); ++i){
-        for(int32_t k = bpRegs[mRefIdx][i].mRegStart; k < bpRegs[mRefIdx][i].mRegEnd; ++k) bpOccupied.insert(k);
+    for(uint32_t i = 0; i < bpRegs[refIdx].size(); ++i){
+        for(int32_t k = bpRegs[refIdx][i].mRegStart; k < bpRegs[refIdx][i].mRegEnd; ++k) bpOccupied.insert(k);
     }
     // Flag spanning breakpoints
     std::set<bool> spanBp;
-    for(uint32_t i = 0; i < spPts[mRefIdx].size(); ++i) spanBp.insert(spPts[mRefIdx][i].mBpPos);
+    for(uint32_t i = 0; i < spPts[refIdx].size(); ++i) spanBp.insert(spPts[refIdx][i].mBpPos);
     // Count reads
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
-    hts_itr_t* itr = sam_itr_queryi(idx, mRefIdx, 0, h->target_len[mRefIdx]);
+    hts_itr_t* itr = sam_itr_queryi(idx, refIdx, chrBeg, chrEnd);
     bam1_t* b = bam_init1();
     AlignConfig alnCfg(5, -4, -4, -4, false, true);   
     const uint16_t COV_STAT_SKIP_MASK = (BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP | BAM_FMUNMAP);
-    auto itbp = bpRegs[mRefIdx].begin();
-    auto itspan = spPts[mRefIdx].begin();
-    auto aitspan = spPts[mRefIdx].begin();
+    auto itbp = bpRegs[refIdx].begin();
+    auto itspnr = spPts[refIdx].begin();
+    auto itspna = spPts[refIdx].begin();
     auto ltbp = itbp;
-    auto ltsp = itspan;
-    auto atsp = itspan;
-    int32_t lp = -1;
-    int32_t ls = -1;
-    int32_t la = -1;
+    auto ltsp = itspnr;
+    auto ltap = itspna;
+    int32_t lpos = -1;
+    int32_t lsprp = -1;
+    int32_t lspap = -1;
     while(sam_itr_next(fp, itr, b) >= 0){
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
+        if(!cr_isoverlap(ctgCgrs, 
+                         h->target_name[b->core.tid], 
+                         std::max(0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
+                         std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[b->core.tid]))){
+           continue;
+        }
         // Count aligned basepair (small InDels)
         int32_t leadingSC = 0;
         int32_t tailingSC = 0;
@@ -116,17 +102,6 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             int opint = bam_cigar_op(cigar[i]);
             int oplen = bam_cigar_oplen(cigar[i]);
             if(opint == BAM_CMATCH || opint == BAM_CDIFF || opint == BAM_CEQUAL){
-                if(mOpt->writebcf){
-                    // Assign base counts to SVs
-                    int32_t rcep = rp + oplen;
-                    for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
-                        if(covRecs[mRefIdx][rc].mStart < rcep &&  covRecs[mRefIdx][rc].mEnd > rp){
-                            int32_t minPos = std::max(covRecs[mRefIdx][rc].mStart, rp);
-                            int32_t maxPos = std::min(covRecs[mRefIdx][rc].mEnd, rcep);
-                            for(int32_t ki = minPos; ki < maxPos; ++ki) mCovCnts[covRecs[mRefIdx][rc].mID].first += 1;
-                        }
-                    }
-                }
                 rp += oplen;
             }else if(opint == BAM_CDEL){
                 rp += oplen;
@@ -142,7 +117,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
             int32_t rbegin = std::max(0, b->core.pos - leadingSC);
-            int32_t rend = std::min(rbegin + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
+            int32_t rend = std::min(rbegin + b->core.l_qseq, (int32_t)h->target_len[refIdx]);
             for(int32_t k = rbegin; k < rend; ++k){
                 if(bpOccupied.find(k) != bpOccupied.end()){
                     bpvalid = true;
@@ -156,14 +131,14 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 std::string readOri;
                 std::string readSeq;
                 // Fetch all relevant SVs
-                if(rbegin != lp){
-                    itbp = std::lower_bound(bpRegs[mRefIdx].begin(), bpRegs[mRefIdx].end(), BpRegion(rbegin));
+                if(rbegin != lpos){
+                    itbp = std::lower_bound(bpRegs[refIdx].begin(), bpRegs[refIdx].end(), BpRegion(rbegin));
                     ltbp = itbp;
-                    lp = rbegin;
+                    lpos = rbegin;
                 }else{// if same pos, do not search again, searching is really a time consuming work...
                     itbp = ltbp;
                 }
-                for(; itbp != bpRegs[mRefIdx].end() && rend >= itbp->mBpPos; ++itbp){
+                for(; itbp != bpRegs[refIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
@@ -207,6 +182,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                         if(scoreRef > mOpt->filterOpt->mMinSRResScore || scoreAlt > mOpt->filterOpt->mMinSRResScore){
                             if(scoreRef > scoreAlt){
                                 if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                                    mOpt->logMtx.lock();
                                     if(itbp->mIsSVEnd){
                                         mJctCnts[itbp->mID].mRefCntEnd += 1;
                                         if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
@@ -221,11 +197,13 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                         if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
                                         else ++mJctCnts[itbp->mID].mRefh2;
                                     }
+                                    mOpt->logMtx.unlock();
                                 }
                             }else{
                                 if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                                 if(itbp->mSVT != 4) onlySupportIns = false;
                                 if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                                    mOpt->logMtx.lock();
                                     mJctCnts[itbp->mID].mAltCnt += 1;
                                     if(mOpt->writebcf) mJctCnts[itbp->mID].mAltQual.push_back(b->core.qual);
                                     uint8_t* hpptr = bam_aux_get(b, "HP");
@@ -236,11 +214,10 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                                         else ++mJctCnts[itbp->mID].mAlth2;
                                     }
                                     if(mOpt->fbamout){
-                                        mOpt->outMtx.lock();
                                         bam_aux_update_int(b, "ZF", itbp->mID);
                                         assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                                        mOpt->outMtx.unlock();
                                     }
+                                    mOpt->logMtx.unlock();
                                 }
                             }
                         }
@@ -260,23 +237,9 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
             }
         }
         // Read-count and spanning annotation
-        if((!(b->core.flag & BAM_FPAIRED)) || covRecs[b->core.mtid].empty()) continue;
+        if(!(b->core.flag & BAM_FPAIRED)) continue;
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
             if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
-            if(mOpt->writebcf){
-                // Read-depth fragment counting
-                if(b->core.tid == b->core.mtid){
-                    // Count mid point (fragment counting)
-                    int32_t midPos = b->core.pos + bam_cigar2rlen(b->core.n_cigar, bam_get_cigar(b))/2;
-                    // Assign fragment counts to SVs
-                    for(uint32_t rc = 0; rc < covRecs[mRefIdx].size(); ++rc){
-                        if(midPos >= covRecs[mRefIdx][rc].mStart && midPos < covRecs[mRefIdx][rc].mEnd){
-                            mCovCnts[covRecs[mRefIdx][rc].mID].second += 1;
-                            break;
-                        }
-                    }
-                }
-            }
             // Spanning counting
             int32_t outerISize = b->core.pos + b->core.l_qseq - b->core.mpos;
             // Normal spanning pair
@@ -287,7 +250,7 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 int32_t pbegin = b->core.mpos;
                 int32_t st = pbegin + 0.1 * outerISize;
                 bool spanvalid = false;
-                for(int32_t i = st; i < st + spanlen && i < (int32_t)h->target_len[mRefIdx]; ++i){
+                for(int32_t i = st; i < st + spanlen && i < (int32_t)h->target_len[refIdx]; ++i){
                     if(spanBp.find(i) != spanBp.end()){
                         spanvalid = true;
                         break;
@@ -295,28 +258,30 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 }
                 if(spanvalid){
                     // Fetch all relevant SVs
-                    if(st != ls){
-                        itspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(st));
-                        ls = st;
-                        ltsp = itspan;
+                    if(st != lsprp){
+                        itspnr = std::lower_bound(spPts[refIdx].begin(), spPts[refIdx].end(), SpanPoint(st));
+                        lsprp = st;
+                        ltsp = itspnr;
                     }else{ // not search again if st is the same...
-                        itspan = ltsp;
+                        itspnr = ltsp;
                     }
-                    for(; itspan != spPts[mRefIdx].end() && (st + spanlen) >= itspan->mBpPos; ++itspan){
-                        if(itspan->mIsSVEnd){
-                            mSpnCnts[itspan->mID].mRefCntEnd += 1;
-                            if(mOpt->writebcf) mSpnCnts[itspan->mID].mRefQualEnd.push_back(b->core.qual);
+                    for(; itspnr != spPts[refIdx].end() && (st + spanlen) >= itspnr->mBpPos; ++itspnr){
+                        mOpt->logMtx.lock();
+                        if(itspnr->mIsSVEnd){
+                            mSpnCnts[itspnr->mID].mRefCntEnd += 1;
+                            if(mOpt->writebcf) mSpnCnts[itspnr->mID].mRefQualEnd.push_back(b->core.qual);
                         }else{
-                            mSpnCnts[itspan->mID].mRefCntBeg += 1;
-                            if(mOpt->writebcf) mSpnCnts[itspan->mID].mRefQualBeg.push_back(b->core.qual);
+                            mSpnCnts[itspnr->mID].mRefCntBeg += 1;
+                            if(mOpt->writebcf) mSpnCnts[itspnr->mID].mRefQualBeg.push_back(b->core.qual);
                         }
                         uint8_t* hpptr = bam_aux_get(b, "HP");
                         if(hpptr){
                             mOpt->libInfo->mIsHaploTagged = true;
                             int hap = bam_aux2i(hpptr);
-                            if(hap == 1) ++mSpnCnts[itspan->mID].mRefh1;
-                            else ++mSpnCnts[itspan->mID].mRefh2;
+                            if(hap == 1) ++mSpnCnts[itspnr->mID].mRefh1;
+                            else ++mSpnCnts[itspnr->mID].mRefh2;
                         }
+                        mOpt->logMtx.unlock();
                     }
                 }
             }
@@ -328,10 +293,10 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                 // Spanning a breakpoint?
                 bool spanvalid = false;
                 int32_t pbegin = b->core.pos;
-                int32_t pend = std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[mRefIdx]);
+                int32_t pend = std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[refIdx]);
                 if(b->core.flag & BAM_FREVERSE){
                     pbegin = std::max(0, b->core.pos + b->core.l_qseq - mOpt->libInfo->mMaxNormalISize);
-                    pend = std::min(b->core.pos + b->core.l_qseq, (int32_t)h->target_len[mRefIdx]);
+                    pend = std::min(b->core.pos + b->core.l_qseq, (int32_t)h->target_len[refIdx]);
                 }
                 for(int32_t i = pbegin; i < pend; ++i){
                     if(spanBp.find(i) != spanBp.end()){
@@ -340,52 +305,38 @@ void Stats::stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& co
                     }
                 }
                 if(spanvalid){
-                    if(la != pbegin){
-                        aitspan = std::lower_bound(spPts[mRefIdx].begin(), spPts[mRefIdx].end(), SpanPoint(pbegin));
-                        la = pbegin;
-                        atsp = aitspan;
+                    if(lspap != pbegin){
+                        itspna = std::lower_bound(spPts[refIdx].begin(), spPts[refIdx].end(), SpanPoint(pbegin));
+                        lspap = pbegin;
+                        ltap = itspna;
                     }else{
-                        aitspan = atsp;
+                        itspna = ltap;
                     }
-                    for(; aitspan != spPts[mRefIdx].end() && pend >= aitspan->mBpPos; ++aitspan){
-                        if(svt == aitspan->mSVT && svs[aitspan->mID].mChr1 == b->core.tid && svs[aitspan->mID].mChr2 == b->core.mtid){
-                            mSpnCnts[aitspan->mID].mAltCnt += 1;
-                            if(mOpt->writebcf) mSpnCnts[aitspan->mID].mAltQual.push_back(b->core.qual);
+                    for(; itspna != spPts[refIdx].end() && pend >= itspna->mBpPos; ++itspna){
+                        if(svt == itspna->mSVT && svs[itspna->mID].mChr1 == b->core.tid && svs[itspna->mID].mChr2 == b->core.mtid){
+                            mOpt->logMtx.lock();
+                            mSpnCnts[itspna->mID].mAltCnt += 1;
+                            if(mOpt->writebcf) mSpnCnts[itspna->mID].mAltQual.push_back(b->core.qual);
                             uint8_t* hpptr = bam_aux_get(b, "HP");
                             if(hpptr){
                                 mOpt->libInfo->mIsHaploTagged = true;
                                 int hap = bam_aux2i(hpptr);
-                                if(hap == 1) ++mSpnCnts[aitspan->mID].mAlth1;
-                                else ++mSpnCnts[aitspan->mID].mAlth2;
+                                if(hap == 1) ++mSpnCnts[itspna->mID].mAlth1;
+                                else ++mSpnCnts[itspna->mID].mAlth2;
                             }
                             if(mOpt->fbamout){
-                                mOpt->outMtx.lock();
-                                bam_aux_update_int(b, "ZF", aitspan->mID);
+                                bam_aux_update_int(b, "ZF", itspna->mID);
                                 assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                                mOpt->outMtx.unlock();
                             }
+                            mOpt->logMtx.unlock();
                         }
                     }
                 }
             }
         }
     }
-    if(mOpt->writebcf){
-        // Compute read counts
-        int32_t lastID = svs.size();
-        for(uint32_t id = 0; id < svs.size(); ++id){
-            if(svs[id].mSize <= mOpt->libInfo->mMaxNormalISize){
-                mReadCnts[id].mRC = mCovCnts[id].first;
-                mReadCnts[id].mLeftRC = mCovCnts[id + lastID].first;
-                mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].first;
-            }else{
-                mReadCnts[id].mRC = mCovCnts[id].second;
-                mReadCnts[id].mLeftRC = mCovCnts[id + lastID].second;
-                mReadCnts[id].mRightRC = mCovCnts[id + 2 * lastID].second;
-            }
-        }
-    }
-    util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[mRefIdx]), mOpt->logMtx);
+    util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[refIdx]) +
+                  "[" + std::to_string(chrBeg) + "," + std::to_string(chrEnd) + "]", mOpt->logMtx);
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);

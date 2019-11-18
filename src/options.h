@@ -184,6 +184,7 @@ class Options{
         FusionOptions* fuseOpt;       ///< fusion report options
         MSAOpt* msaOpt;               ///< MSA options
         Software* softEnv;            ///< softare environment option
+        bam_hdr_t* bamheader;         ///< bam header
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
 
