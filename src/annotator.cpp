@@ -91,6 +91,7 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
     }
     if(lsum > 0){
         CtgRdCnt crc;
+        crc.mTid = ltid;
         crc.mBeg = lbeg;
         crc.mEnd = lend;
         crc.mReadCnt = lsum;
@@ -125,7 +126,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     util::loginfo("End construct SVs cgranges_t");
     util::loginfo("Beg split SVs cgranges_t");
     std::vector<CtgRdCnt> ctgRng;
-    cgrsplit(crsv, ctgRng, 10000);
+    cgrsplit(crsv, ctgRng, 1000);
     cr_destroy(crsv);
     std::sort(ctgRng.begin(), ctgRng.end());
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
