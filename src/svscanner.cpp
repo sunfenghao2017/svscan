@@ -138,21 +138,6 @@ void SVScanner::scanDPandSR(){
     getDPSVRef(mergedSVs, mOpt);
     std::sort(mergedSVs.begin(), mergedSVs.end());
     util::loginfo("End fetching reference of SV supported by DP only");
-    // Store all regions of SV into cgranges_t
-    util::loginfo("Beg merge SVs regions into cgranges_t");
-    cgranges_t* crsv = cr_init();
-    int32_t regBeg = -1, regEnd = -1;
-    for(uint32_t i = 0; i < mergedSVs.size(); ++i){
-        regBeg = std::max(0, mergedSVs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(mergedSVs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[mergedSVs[i].mChr1]);
-        cr_add(crsv, mergedSVs[i].mNameChr1.c_str(), regBeg, regEnd, i); 
-        regBeg = std::max(0, mergedSVs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(mergedSVs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[mergedSVs[i].mChr2]);
-        cr_add(crsv, mergedSVs[i].mNameChr2.c_str(), regBeg, regEnd, i);
-    }
-    cr_merge_pre_index(crsv);
-    cr_iterate(crsv, stderr);
-    util::loginfo("End merge SVs regions into cgranges_t");
     // Get Allele info of SVs and updatev SVsupporting contigs
     mOpt->svRefID.clear();
     for(uint32_t i = 0; i < mergedSVs.size(); ++i){

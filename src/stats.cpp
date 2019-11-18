@@ -57,7 +57,7 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     return ret;
 }
 
-void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx){
+void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx, int32_t chrBeg, int32_t chrEnd, cgranges_t* ctgCgrs){
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[refIdx]), mOpt->logMtx);
@@ -71,7 +71,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     for(uint32_t i = 0; i < spPts[refIdx].size(); ++i) spanBp.insert(spPts[refIdx][i].mBpPos);
     // Count reads
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
-    hts_itr_t* itr = sam_itr_queryi(idx, refIdx, 0, h->target_len[refIdx]);
+    hts_itr_t* itr = sam_itr_queryi(idx, refIdx, chrBeg, chrEnd);
     bam1_t* b = bam_init1();
     AlignConfig alnCfg(5, -4, -4, -4, false, true);   
     const uint16_t COV_STAT_SKIP_MASK = (BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP | BAM_FMUNMAP);
@@ -87,6 +87,12 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     while(sam_itr_next(fp, itr, b) >= 0){
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
+        if(!cr_isoverlap(ctgCgrs, 
+                         h->target_name[b->core.tid], 
+                         std::max(0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
+                         std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[b->core.tid]))){
+           continue;
+        }
         // Count aligned basepair (small InDels)
         int32_t leadingSC = 0;
         int32_t tailingSC = 0;
@@ -329,7 +335,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             }
         }
     }
-    util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[refIdx]), mOpt->logMtx);
+    util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[refIdx]) +
+                  "[" + std::to_string(chrBeg) + "," + std::to_string(chrEnd) + "]", mOpt->logMtx);
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);

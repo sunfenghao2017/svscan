@@ -30,12 +30,36 @@ std::set<std::pair<int32_t, int32_t>>::iterator Annotator::getFirstOverlap(const
 }
 
 Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
-    // Open file handler
-    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, mOpt->genome.c_str());
-    bam_hdr_t* h = sam_hdr_read(fp);
+    // Store all regions of SV into cgranges_t
+    util::loginfo("Beg construct SVs cgranges_t");
+    cgranges_t* crsv = cr_init();
+    int32_t regBeg = -1, regEnd = -1;
+    for(uint32_t i = 0; i < svs.size(); ++i){
+        regBeg = std::max(0, svs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i].mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr1]);
+        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, i);
+        regBeg = std::max(0, svs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr2]);
+        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, i);
+    }
+    if(!cr_is_sorted(crsv)) cr_sort(crsv);
+    cr_merge_pre_index(crsv);
+    std::vector<cgranges_t*> svregs(mOpt->contigNum, NULL);
+    std::vector<std::pair<int32_t, int32_t>> ctgRng(mOpt->contigNum, {INT_MAX, 0});
+    for(uint32_t i = 0; i < svregs.size(); ++i) svregs[i] = cr_init();
+    for(int64_t i = 0; i < crsv->n_r; ++i){
+        const cr_intv_t *r = &crsv->r[i];
+        const char* name = crsv->ctg[r->x>>32].name;
+        int32_t tid = bam_name2id(mOpt->bamheader, name);
+        cr_add(svregs[tid], name, (int32_t)r->x, (int32_t)r->y, -1);
+        ctgRng[tid].first = std::min((int32_t)r->x, ctgRng[tid].first);
+        ctgRng[tid].second = std::max((int32_t)r->y, ctgRng[tid].second);
+    }
+    for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
+    cr_destroy(crsv);
+    util::loginfo("End construct SVs cgranges_t");
     // Preprocess REF and ALT
-    ContigBpRegions bpRegion(h->n_targets);
+    ContigBpRegions bpRegion(mOpt->bamheader->n_targets);
     std::vector<int32_t> refAlignedReadCount(svs.size());
     std::vector<int32_t> refAlignedSpanCount(svs.size());
     util::loginfo("Beg extracting breakpoint regions of each precisely classified SV");
@@ -47,12 +71,12 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
             if(bpPoint){// SV ending position region
                 regChr = itsv->mChr2;
                 regStart = std::max(0, itsv->mSVEnd - mOpt->filterOpt->mMinFlankSize);
-                regEnd = std::min(itsv->mSVEnd + mOpt->filterOpt->mMinFlankSize, (int32_t)h->target_len[itsv->mChr2]);
+                regEnd = std::min(itsv->mSVEnd + mOpt->filterOpt->mMinFlankSize, (int32_t)mOpt->bamheader->target_len[itsv->mChr2]);
                 bpPos = itsv->mSVEnd;
             }else{// SV starting position region
                 regChr = itsv->mChr1;
                 regStart = std::max(0, itsv->mSVStart - mOpt->filterOpt->mMinFlankSize);
-                regEnd = std::min(itsv->mSVStart + mOpt->filterOpt->mMinFlankSize, (int32_t)h->target_len[itsv->mChr1]);
+                regEnd = std::min(itsv->mSVStart + mOpt->filterOpt->mMinFlankSize, (int32_t)mOpt->bamheader->target_len[itsv->mChr1]);
                 bpPos = itsv->mSVStart;
             }
             BpRegion br;
@@ -79,14 +103,13 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     for(uint32_t i = 0; i < spanPoint.size(); ++i) std::sort(spanPoint[i].begin(), spanPoint[i].end());
     util::loginfo("End extracting PE supported breakpoints of each SV");
-    // Clean-up
-    sam_close(fp);
     // Get coverage from each contig in parallel
     Stats* covStats = new Stats(mOpt, svs.size());
     std::vector<std::future<void>> statRets(mOpt->svRefID.size());
     int32_t i = 0;
     for(auto& refidx: mOpt->svRefID){
-        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx);
+        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx,
+                                          ctgRng[refidx].first, ctgRng[refidx].second, svregs[refidx]);
         ++i;
     }
     for(auto& e: statRets) e.get();

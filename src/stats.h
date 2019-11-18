@@ -18,6 +18,9 @@
 #include <htslib/sam.h>
 #include <htslib/faidx.h>
 
+/** type to store contig cgranges */
+typedef std::vector<cgranges_t*> CtgCgrs;
+
 /** class to store spanning PE supporting SV starting/ending positions */
 struct SpanPoint{
     int32_t mBpPos = 0;    ///< spanning PE supporting SV starting/ending positionss
@@ -466,8 +469,9 @@ class Stats{
          * @param bpRegs SV breakpoint regions on each contig
          * @param spPts SV DP read mapping position on each contig
          * @param refIdx reference index
+         * @param ctgCgrs sv events cgranges_t on each contig
          */
-        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx);
+        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx, int32_t chrBeg, int32_t chrEnd, cgranges_t* ctgCgrs);
 
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats

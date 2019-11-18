@@ -76,6 +76,7 @@ void cr_index2(cgranges_t *cr, int32_t merge);
 
 int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
 int64_t cr_contain(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
+int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
 
 // only check overlap or not
 bool cr_isoverlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en);
