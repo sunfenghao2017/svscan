@@ -86,6 +86,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     int32_t lsprp = -1;
     int32_t lspap = -1;
     while(sam_itr_next(fp, itr, b) >= 0){
+        if(b->core.pos < chrBeg) continue;
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         if(!cr_isoverlap(ctgCgrs, 
