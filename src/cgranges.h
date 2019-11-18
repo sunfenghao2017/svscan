@@ -93,7 +93,10 @@ void cr_sort(cgranges_t *cr);
 int64_t cr_merge_pre_index(cgranges_t *cr); // NB: call *after* cr_sort() but *before* cr_index_prepare()
 
 // user defined iterator to outpt cr to fp
-void cr_iterate(const cgranges_t *cr, FILE* fp);
+void cr_iter_indexed(const cgranges_t *cr, FILE* fp);
+
+// user defined iterator to output cr to fp
+void cr_iter_usual(const cgranges_t *cr, FILE* fp);
 
 #ifdef __cplusplus
 }

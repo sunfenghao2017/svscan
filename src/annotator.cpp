@@ -37,27 +37,65 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     for(uint32_t i = 0; i < svs.size(); ++i){
         regBeg = std::max(0, svs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
         regEnd = std::min(svs[i].mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr1]);
-        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, i);
+        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, 1);
         regBeg = std::max(0, svs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
         regEnd = std::min(svs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr2]);
-        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, i);
+        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, 1);
     }
     if(!cr_is_sorted(crsv)) cr_sort(crsv);
     cr_merge_pre_index(crsv);
     std::vector<cgranges_t*> svregs(mOpt->contigNum, NULL);
-    std::vector<std::pair<int32_t, int32_t>> ctgRng(mOpt->contigNum, {INT_MAX, 0});
     for(uint32_t i = 0; i < svregs.size(); ++i) svregs[i] = cr_init();
     for(int64_t i = 0; i < crsv->n_r; ++i){
         const cr_intv_t *r = &crsv->r[i];
         const char* name = crsv->ctg[r->x>>32].name;
         int32_t tid = bam_name2id(mOpt->bamheader, name);
-        cr_add(svregs[tid], name, (int32_t)r->x, (int32_t)r->y, -1);
-        ctgRng[tid].first = std::min((int32_t)r->x, ctgRng[tid].first);
-        ctgRng[tid].second = std::max((int32_t)r->y, ctgRng[tid].second);
+        cr_add(svregs[tid], name, (int32_t)r->x, (int32_t)r->y, r->label);
     }
     for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
     cr_destroy(crsv);
     util::loginfo("End construct SVs cgranges_t");
+    util::loginfo("Beg split SVs cgranges_t");
+    std::vector<CtgRdCnt> ctgRng;
+    int32_t ltid = -1, lbeg = -1, lend = -1, lsum = 0;
+    for(int64_t i = 0; i < crsv->n_r; ++i){
+        const cr_intv_t *r = &crsv->r[i];
+        const char* name = crsv->ctg[r->x>>32].name;
+        int32_t tid = bam_name2id(mOpt->bamheader, name);
+        if(tid == ltid){
+            if(lsum >= 10000){
+                CtgRdCnt crc;
+                crc.mBeg = lbeg;
+                crc.mEnd = lend;
+                crc.mTid = ltid;
+                ctgRng.push_back(crc);
+                lbeg = (int32_t)r->x;
+                lend = (int32_t)r->y;
+                lsum = r->label;
+            }else{
+                lsum += r->label;
+                lend = (int32_t)r->y;
+            }
+        }else{
+            if(ltid < 0){
+                ltid = tid;
+                lbeg = (int32_t)r->x;
+                lend = (int32_t)r->y;
+                lsum = r->label;
+            }else{
+                CtgRdCnt crc;
+                crc.mBeg = lbeg;
+                crc.mEnd = lend;
+                crc.mTid = ltid;
+                ctgRng.push_back(crc);
+                ltid = tid;
+                lbeg = (int32_t)r->x;
+                lend = (int32_t)r->y;
+                lsum = r->label;
+            }
+        }
+    }
+    util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(mOpt->bamheader->n_targets);
     std::vector<int32_t> refAlignedReadCount(svs.size());
@@ -103,31 +141,13 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     for(uint32_t i = 0; i < spanPoint.size(); ++i) std::sort(spanPoint[i].begin(), spanPoint[i].end());
     util::loginfo("End extracting PE supported breakpoints of each SV");
-    // Stat reads count in each contig
-    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
-    std::vector<CtgRdCnt> ctgRdStat;
-    for(auto& refidx: mOpt->svRefID){
-        uint64_t unmapped  = 0, mapped = 0;
-        if(hts_idx_get_stat(idx, refidx, &mapped, &unmapped) >= 0){
-            if(mapped > 0){
-                CtgRdCnt crc;
-                crc.mTid = refidx;
-                crc.mReadCnt = mapped;
-                ctgRdStat.push_back(crc);
-            }
-        }
-    }
-    std::sort(ctgRdStat.begin(), ctgRdStat.end());
-    sam_close(fp);
-    hts_idx_destroy(idx);
     // Get coverage from each contig in parallel
     Stats* covStats = new Stats(mOpt, svs.size());
-    std::vector<std::future<void>> statRets(ctgRdStat.size());
-    for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
-        int32_t refidx = ctgRdStat[i].mTid;
+    std::vector<std::future<void>> statRets(ctgRng.size());
+    for(uint32_t i = 0; i < ctgRng.size(); ++i){
+        int32_t refidx = ctgRng[i].mTid;
         statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx,
-                                          ctgRng[refidx].first, ctgRng[refidx].second, svregs[refidx]);
+                                          ctgRng[i].mBeg, ctgRng[i].mEnd, svregs[refidx]);
     }
     for(auto& e: statRets) e.get();
     for(auto& e: svregs) cr_destroy(e);

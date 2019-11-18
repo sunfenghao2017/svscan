@@ -182,7 +182,7 @@ int32_t cr_is_sorted(const cgranges_t *cr)
 
 int64_t cr_merge_pre_index(cgranges_t *cr) // NB: call *before* cr_index_prepare()
 {
-	int64_t i, n, n_less = 0;
+	int64_t i, n, n_less = 0, n_merged = 0;
 	uint64_t st, en;
 	if (cr->n_r == 0) return 0;
 	st = en = 0;
@@ -192,11 +192,12 @@ int64_t cr_merge_pre_index(cgranges_t *cr) // NB: call *before* cr_index_prepare
 		s = r->x, e = (r->x&0xffffffff00000000ULL) | r->y;
 		if (s <= en) {
 			en = en > e? en : e;
+            n_merged += r->label;
 		} else {
 			if (en > st) {
 				if (n != i) {
 					cr_intv_t *p = &cr->r[n++];
-					p->x = st, p->y = (uint32_t)en, p->rev = 0, p->label = -1;
+					p->x = st, p->y = (uint32_t)en, p->rev = 0, p->label += n_merged, n_merged = 0;
 				} else ++n;
 			}
 			st = s, en = e;
@@ -204,7 +205,7 @@ int64_t cr_merge_pre_index(cgranges_t *cr) // NB: call *before* cr_index_prepare
 	}
 	if (n != i) {
 		cr_intv_t *p = &cr->r[n++];
-		p->x = st, p->y = (uint32_t)en, p->rev = 0, p->label = -1;
+		p->x = st, p->y = (uint32_t)en, p->rev = 0, p->label += n_merged;
 	} else ++n;
 	n_less = cr->n_r - n;
 	cr->n_r = n;
@@ -378,7 +379,7 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	return n;
 }
 
-void cr_iterate(const cgranges_t *cr, FILE* fp){
+void cr_iter_indexed(const cgranges_t *cr, FILE* fp){
     for(int32_t ctg_id = 0; ctg_id < cr->n_ctg; ++ctg_id){
         int64_t i, *b = 0, max_b = 0, n = 0;
         n = cr_overlap_int(cr, ctg_id, 0, INT_MAX, &b, &max_b);
@@ -386,6 +387,13 @@ void cr_iterate(const cgranges_t *cr, FILE* fp){
             fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[ctg_id].name, cr_start(cr, b[i]), cr_end(cr, b[i]), cr_label(cr, b[i]));
         }
         free(b);
+    }
+}
+
+void cr_iter_usual(const cgranges_t *cr, FILE* fp){
+    for(int i = 0; i < cr->n_r; ++i){
+         const cr_intv_t *r = &cr->r[i];
+         fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[r->x>>32].name, (int32_t)r->x, (int32_t)r->y, r->label);
     }
 }
 
