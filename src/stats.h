@@ -416,20 +416,12 @@ typedef std::vector<std::vector<SpanPoint>> ContigSpanPoints;
 class Stats{
     public:
         Options* mOpt;                                     ///< pointer to Options
-        int32_t mRefIdx;                                   ///< reference index
         std::vector<JunctionCount> mJctCnts;               ///< Single read spanning SV breakpoint stats
         std::vector<SpanningCount> mSpnCnts;               ///< Paired-end read spanning SV breakpoint stats
 
     public:
         /** Stats constructor */
         Stats(){}
-
-        /** Stats constructor
-         * @param opt pointer to Options object
-         * @param n total SVs to process
-         * @param refidx reference index to compute statistics
-         */
-        Stats(Options* opt, int32_t n, int32_t refidx);
 
         /** Stats constructor
          * @param opt pointer to Options object
@@ -473,8 +465,9 @@ class Stats{
          * @param svs reference of SVSet(all SVs)
          * @param bpRegs SV breakpoint regions on each contig
          * @param spPts SV DP read mapping position on each contig
+         * @param refIdx reference index
          */
-        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts);
+        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx);
 
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats

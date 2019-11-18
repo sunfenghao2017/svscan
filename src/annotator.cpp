@@ -82,18 +82,15 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     // Clean-up
     sam_close(fp);
     // Get coverage from each contig in parallel
-    std::vector<Stats*> covStats(mOpt->svRefID.size(), NULL);
+    Stats* covStats = new Stats(mOpt, svs.size());
     std::vector<std::future<void>> statRets(mOpt->svRefID.size());
     int32_t i = 0;
     for(auto& refidx: mOpt->svRefID){
-        covStats[i] = new Stats(mOpt, svs.size(), refidx);
-        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats[i], std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint));
+        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx);
         ++i;
     }
     for(auto& e: statRets) e.get();
-    Stats* finalStat = Stats::merge(covStats, svs.size(), mOpt);
-    for(auto& e: covStats) delete e;
-    return finalStat;
+    return covStats;
 }
 
 void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx){
