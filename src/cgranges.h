@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <vector>
 
 typedef struct {    // a contig
 	char *name;     // name of the contig

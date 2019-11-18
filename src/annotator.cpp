@@ -29,40 +29,36 @@ std::set<std::pair<int32_t, int32_t>>::iterator Annotator::getFirstOverlap(const
     return s.end();
 }
 
-Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
-    // Store all regions of SV into cgranges_t
-    util::loginfo("Beg construct SVs cgranges_t");
-    cgranges_t* crsv = cr_init();
-    int32_t regBeg = -1, regEnd = -1;
-    for(uint32_t i = 0; i < svs.size(); ++i){
-        regBeg = std::max(0, svs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(svs[i].mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr1]);
-        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, 1);
-        regBeg = std::max(0, svs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(svs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr2]);
-        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, 1);
-    }
-    if(!cr_is_sorted(crsv)) cr_sort(crsv);
-    cr_merge_pre_index(crsv);
-    std::vector<cgranges_t*> svregs(mOpt->contigNum, NULL);
-    for(uint32_t i = 0; i < svregs.size(); ++i) svregs[i] = cr_init();
-    for(int64_t i = 0; i < crsv->n_r; ++i){
-        const cr_intv_t *r = &crsv->r[i];
-        const char* name = crsv->ctg[r->x>>32].name;
-        int32_t tid = bam_name2id(mOpt->bamheader, name);
-        cr_add(svregs[tid], name, (int32_t)r->x, (int32_t)r->y, r->label);
-    }
-    for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
-    util::loginfo("End construct SVs cgranges_t");
-    util::loginfo("Beg split SVs cgranges_t");
-    std::vector<CtgRdCnt> ctgRng;
+void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, int32_t us){
+    ctgRng.clear();
     int32_t ltid = -1, lbeg = -1, lend = -1, lsum = 0;
-    for(int64_t i = 0; i < crsv->n_r; ++i){
-        const cr_intv_t *r = &crsv->r[i];
-        const char* name = crsv->ctg[r->x>>32].name;
+    for(int64_t i = 0; i < cr->n_r; ++i){
+        const cr_intv_t *r = &cr->r[i];
+        const char* name = cr->ctg[r->x>>32].name;
         int32_t tid = bam_name2id(mOpt->bamheader, name);
+        if(r->label > us){// jut split these regions independently
+            int32_t nsp = ((int32_t)r->y - (int32_t)r->x) / us + 1;
+            std::vector<std::pair<int32_t, int32_t>> vpidx;
+            util::divideVecIdx((int32_t)r->y - (int32_t)r->x, nsp, vpidx);
+            for(uint32_t ki = 0; ki < vpidx.size(); ++ki){
+                CtgRdCnt irc;
+                irc.mBeg = (int32_t)r->x + vpidx[i].first;
+                irc.mEnd = (int32_t)r->x + vpidx[i].second;
+                irc.mTid = tid;
+                ctgRng.push_back(irc);
+            }
+            if(r->label > 0){// append previous left ones
+                CtgRdCnt crc;
+                crc.mBeg = lbeg;
+                crc.mEnd = lend;
+                crc.mTid = ltid;
+                ctgRng.push_back(crc);
+            }
+            ltid = lbeg = lend = -1; lsum = 0; // reinitialize
+            continue;
+        }
         if(tid == ltid){
-            if(lsum >= 10000){
+            if(lsum >= us){
                 CtgRdCnt crc;
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
@@ -94,6 +90,36 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
             }
         }
     }
+}
+
+Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
+    // Store all regions of SV into cgranges_t
+    util::loginfo("Beg construct SVs cgranges_t");
+    cgranges_t* crsv = cr_init();
+    int32_t regBeg = -1, regEnd = -1;
+    for(uint32_t i = 0; i < svs.size(); ++i){
+        regBeg = std::max(0, svs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i].mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr1]);
+        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, 1);
+        regBeg = std::max(0, svs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr2]);
+        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, 1);
+    }
+    if(!cr_is_sorted(crsv)) cr_sort(crsv);
+    cr_merge_pre_index(crsv);
+    std::vector<cgranges_t*> svregs(mOpt->contigNum, NULL);
+    for(uint32_t i = 0; i < svregs.size(); ++i) svregs[i] = cr_init();
+    for(int64_t i = 0; i < crsv->n_r; ++i){
+        const cr_intv_t *r = &crsv->r[i];
+        const char* name = crsv->ctg[r->x>>32].name;
+        int32_t tid = bam_name2id(mOpt->bamheader, name);
+        cr_add(svregs[tid], name, (int32_t)r->x, (int32_t)r->y, r->label);
+    }
+    for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
+    util::loginfo("End construct SVs cgranges_t");
+    util::loginfo("Beg split SVs cgranges_t");
+    std::vector<CtgRdCnt> ctgRng;
+    cgrsplit(crsv, ctgRng, 10000);
     cr_destroy(crsv);
     std::sort(ctgRng.begin(), ctgRng.end());
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");

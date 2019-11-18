@@ -28,6 +28,13 @@ class Annotator{
          */
         Stats* covAnnotate(SVSet& svs);
 
+        /** split a cgranges_t by contig and label sum
+         * @param cr pointer to cgranget_st
+         * @param us unit sum to split
+         * @param re result list
+         */
+        void cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, int32_t us = 10000);
+
         /** annotate DNA SV gene information
          * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
