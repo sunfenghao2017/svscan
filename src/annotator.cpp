@@ -130,6 +130,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
                                           ctgRng[refidx].first, ctgRng[refidx].second, svregs[refidx]);
     }
     for(auto& e: statRets) e.get();
+    for(auto& e: svregs) cr_destroy(e);
     return covStats;
 }
 
