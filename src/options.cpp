@@ -7,6 +7,7 @@ Options::Options(){
     pool = NULL;
     fbamout = NULL;
     overlapRegs = NULL;
+    bamheader = NULL;
     filterOpt = new SVFilter();
     softEnv = new Software();
     msaOpt = new MSAOpt();
@@ -23,6 +24,7 @@ Options::~Options(){
     if(libInfo) delete libInfo;
     if(pool) delete pool;
     if(overlapRegs) delete overlapRegs;
+    if(bamheader) bam_hdr_destroy(bamheader);
 }
 
 void Options::validate(){
@@ -75,6 +77,10 @@ void Options::update(int argc, char** argv){
     // write bcf or not
     if(bcfOut.empty()) writebcf = false;
     else writebcf = true;
+    // parse bam header
+    samFile* fp = sam_open(bamfile.c_str(), "r");
+    bamheader = sam_hdr_read(fp);
+    sam_close(fp);
 }
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){
