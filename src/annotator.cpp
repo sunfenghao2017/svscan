@@ -103,14 +103,31 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     for(uint32_t i = 0; i < spanPoint.size(); ++i) std::sort(spanPoint[i].begin(), spanPoint[i].end());
     util::loginfo("End extracting PE supported breakpoints of each SV");
+    // Stat reads count in each contig
+    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
+    hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
+    std::vector<CtgRdCnt> ctgRdStat;
+    for(auto& refidx: mOpt->svRefID){
+        uint64_t unmapped  = 0, mapped = 0;
+        if(hts_idx_get_stat(idx, refidx, &mapped, &unmapped) >= 0){
+            if(mapped > 0){
+                CtgRdCnt crc;
+                crc.mTid = refidx;
+                crc.mReadCnt = mapped;
+                ctgRdStat.push_back(crc);
+            }
+        }
+    }
+    std::sort(ctgRdStat.begin(), ctgRdStat.end());
+    sam_close(fp);
+    hts_idx_destroy(idx);
     // Get coverage from each contig in parallel
     Stats* covStats = new Stats(mOpt, svs.size());
-    std::vector<std::future<void>> statRets(mOpt->svRefID.size());
-    int32_t i = 0;
-    for(auto& refidx: mOpt->svRefID){
+    std::vector<std::future<void>> statRets(ctgRdStat.size());
+    for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
+        int32_t refidx = ctgRdStat[i].mTid;
         statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx,
                                           ctgRng[refidx].first, ctgRng[refidx].second, svregs[refidx]);
-        ++i;
     }
     for(auto& e: statRets) e.get();
     return covStats;

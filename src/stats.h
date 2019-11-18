@@ -18,8 +18,19 @@
 #include <htslib/sam.h>
 #include <htslib/faidx.h>
 
-/** type to store contig cgranges */
-typedef std::vector<cgranges_t*> CtgCgrs;
+/** class to store reads count in each contig */
+struct CtgRdCnt{
+    int64_t mReadCnt = 0; ///< read counts
+    int32_t mTid = -1;    ///< contig index
+
+    /** operator to compare two contig read counts
+     * @param other reference of CtgRdCnt
+     * @return true it this one has less read counts
+     */
+    bool operator<(const CtgRdCnt& other) const{
+        return mReadCnt > other.mReadCnt;
+    }
+};
 
 /** class to store spanning PE supporting SV starting/ending positions */
 struct SpanPoint{
