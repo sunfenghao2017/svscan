@@ -45,13 +45,15 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
                 irc.mBeg = (int32_t)r->x + vpidx[i].first;
                 irc.mEnd = (int32_t)r->x + vpidx[i].second;
                 irc.mTid = tid;
+                irc.mReadCnt = us;
                 ctgRng.push_back(irc);
             }
-            if(r->label > 0){// append previous left ones
+            if(lsum > 0){// append previous left ones
                 CtgRdCnt crc;
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
+                crc.mReadCnt = lsum;
                 ctgRng.push_back(crc);
             }
             ltid = lbeg = lend = -1; lsum = 0; // reinitialize
@@ -63,6 +65,7 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
+                crc.mReadCnt = lsum;
                 ctgRng.push_back(crc);
                 lbeg = (int32_t)r->x;
                 lend = (int32_t)r->y;
@@ -82,6 +85,7 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
+                crc.mReadCnt = lsum;
                 ctgRng.push_back(crc);
                 ltid = tid;
                 lbeg = (int32_t)r->x;
