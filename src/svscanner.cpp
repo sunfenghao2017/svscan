@@ -104,7 +104,7 @@ void SVScanner::scanDPandSR(){
     sam_close(fp);
     hts_idx_destroy(idx);
     // Parallel processing each contig
-    std::vector<std::future<void>> scanret(mOpt->contigNum);
+    std::vector<std::future<void>> scanret(ctgRdStat.size());
     for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
         int32_t refidx = ctgRdStat[i].mTid;
         scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, refidx, jct[refidx], dps[refidx]);

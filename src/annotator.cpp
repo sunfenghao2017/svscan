@@ -123,7 +123,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     hts_idx_destroy(idx);
     // Get coverage from each contig in parallel
     Stats* covStats = new Stats(mOpt, svs.size());
-    std::vector<std::future<void>> statRets(mOpt->svRefID.size());
+    std::vector<std::future<void>> statRets(ctgRdStat.size());
     for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
         int32_t refidx = ctgRdStat[i].mTid;
         statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx,
