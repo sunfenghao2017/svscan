@@ -60,7 +60,8 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
 void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx, int32_t chrBeg, int32_t chrEnd, cgranges_t* ctgCgrs){
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
-    util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[refIdx]), mOpt->logMtx);
+    util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[refIdx]) +
+                  " [" + std::to_string(chrBeg) + "," + std::to_string(chrEnd) + "]", mOpt->logMtx);
     // Flag breakpoint regions
     std::set<bool> bpOccupied;
     for(uint32_t i = 0; i < bpRegs[refIdx].size(); ++i){
@@ -336,7 +337,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         }
     }
     util::loginfo("End gathering coverage information on contig: " + std::string(h->target_name[refIdx]) +
-                  "[" + std::to_string(chrBeg) + "," + std::to_string(chrEnd) + "]", mOpt->logMtx);
+                  " [" + std::to_string(chrBeg) + "," + std::to_string(chrEnd) + "]", mOpt->logMtx);
     // Clean-up
     sam_close(fp);
     bam_hdr_destroy(h);
