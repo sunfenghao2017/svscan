@@ -38,10 +38,6 @@ void Stats::reportSVBCF(const SVSet& svs){
     bcf_hdr_append(hdr, "##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Log10-scaled genotype likelihoods for RR,RA,AA genotypes\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype Quality\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Per-sample genotype filter\">");
-    bcf_hdr_append(hdr, "##FORMAT=<ID=RC,Number=1,Type=Integer,Description=\"Raw high-quality read counts for the SV\">");
-    bcf_hdr_append(hdr, "##FORMAT=<ID=RCL,Number=1,Type=Integer,Description=\"Raw high-quality read counts for the left control region\">");
-    bcf_hdr_append(hdr, "##FORMAT=<ID=RCR,Number=1,Type=Integer,Description=\"Raw high-quality read counts for the right control region\">");
-    bcf_hdr_append(hdr, "##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Read-depth based copy-number estimate for autosomal sites\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# high-quality reference pairs\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# high-quality variant pairs\">");
     if(mOpt->libInfo->mIsHaploTagged){
@@ -91,10 +87,6 @@ void Stats::reportSVBCF(const SVSet& svs){
     // Genotype arrays
     int* gts = (int32_t*)std::calloc(bcf_hdr_nsamples(hdr) * 2,  sizeof(int));
     float* gls = (float*)std::calloc(bcf_hdr_nsamples(hdr) * 3, sizeof(float));
-    int* rcl = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
-    int* rc = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
-    int* rcr = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
-    int* cnest = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     int* drcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     int* dvcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     int* hp1drcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
@@ -182,18 +174,6 @@ void Stats::reportSVBCF(const SVSet& svs){
         if(gqval[0] < mOpt->passOpt->mMinGenoQual) ftarr = "LowQual";
         else ftarr = "PASS";
         bcf_update_format_string(hdr, rec, "FT", &ftarr, bcf_hdr_nsamples(hdr));
-        // Compute RCs
-        rcl[0] = mReadCnts[itsv->mID].mLeftRC;
-        rc[0] = mReadCnts[itsv->mID].mRC;
-        rcr[0] = mReadCnts[itsv->mID].mRightRC;
-        cnest[0] = -1;
-        if(rcl[0] + rcr[0] > 0){
-            cnest[0] = std::round(2.0 * rc[0] / (rcl[0] + rcr[0]));
-        }
-        bcf_update_format_int32(hdr, rec, "RCL", rcl, bcf_hdr_nsamples(hdr));
-        bcf_update_format_int32(hdr, rec, "RC", rc, bcf_hdr_nsamples(hdr));
-        bcf_update_format_int32(hdr, rec, "RCR", rcr, bcf_hdr_nsamples(hdr));
-        bcf_update_format_int32(hdr, rec, "CN", cnest, bcf_hdr_nsamples(hdr));
         // Add read/pair counts
         drcount[0] = mSpnCnts[itsv->mID].getRefDep();
         dvcount[0] = mSpnCnts[itsv->mID].getAltDep();
@@ -238,10 +218,6 @@ void Stats::reportSVBCF(const SVSet& svs){
     // Cleanup allocated memory
     free(gts);
     free(gls);
-    free(rcl);
-    free(rc);
-    free(rcr);
-    free(cnest);
     free(drcount);
     free(dvcount);
     free(hp1drcount);

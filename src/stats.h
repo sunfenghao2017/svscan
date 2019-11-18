@@ -417,10 +417,8 @@ class Stats{
     public:
         Options* mOpt;                                     ///< pointer to Options
         int32_t mRefIdx;                                   ///< reference index
-        std::vector<ReadCount> mReadCnts;                  ///< read count stat of each SV
         std::vector<JunctionCount> mJctCnts;               ///< Single read spanning SV breakpoint stats
         std::vector<SpanningCount> mSpnCnts;               ///< Paired-end read spanning SV breakpoint stats
-        std::vector<std::pair<int32_t, int32_t>> mCovCnts; ///< base and fragment coverage count of each SV event
 
     public:
         /** Stats constructor */
@@ -455,7 +453,6 @@ class Stats{
         inline friend std::ostream& operator<<(std::ostream& os, const Stats& st){
             for(uint32_t id = 0; id < st.mJctCnts.size(); ++id){
                 os << "SV ID: " << id << "\n";
-                os << "Read Count:\n" << st.mReadCnts[id];
                 os << "Junction Read Count:\n" << st.mJctCnts[id];
                 os << "Discordant Read Pair Count:\n" << st.mSpnCnts[id];
             }
@@ -474,11 +471,10 @@ class Stats{
 
         /** gather coverage information of one contig
          * @param svs reference of SVSet(all SVs)
-         * @param covRecs coverage records of 3-part of each SV events on each contig
          * @param bpRegs SV breakpoint regions on each contig
          * @param spPts SV DP read mapping position on each contig
          */
-        void stat(const SVSet& svs, const std::vector<std::vector<CovRecord>>& covRecs,  const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts);
+        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts);
 
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats
