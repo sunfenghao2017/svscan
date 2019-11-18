@@ -42,8 +42,8 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
             util::divideVecIdx((int32_t)r->y - (int32_t)r->x, nsp, vpidx);
             for(uint32_t ki = 0; ki < vpidx.size(); ++ki){
                 CtgRdCnt irc;
-                irc.mBeg = (int32_t)r->x + vpidx[i].first;
-                irc.mEnd = (int32_t)r->x + vpidx[i].second;
+                irc.mBeg = (int32_t)r->x + vpidx[ki].first;
+                irc.mEnd = (int32_t)r->x + vpidx[ki].second;
                 irc.mTid = tid;
                 irc.mReadCnt = us;
                 ctgRng.push_back(irc);
