@@ -95,6 +95,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
         }
     }
     cr_destroy(crsv);
+    std::sort(ctgRng.begin(), ctgRng.end());
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(mOpt->bamheader->n_targets);
