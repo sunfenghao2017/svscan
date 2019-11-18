@@ -37,7 +37,7 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
         const char* name = cr->ctg[r->x>>32].name;
         int32_t tid = bam_name2id(mOpt->bamheader, name);
         if(r->label > us){// jut split these regions independently
-            int32_t nsp = ((int32_t)r->y - (int32_t)r->x) / us + 1;
+            int32_t nsp = r->label / us + 1;
             std::vector<std::pair<int32_t, int32_t>> vpidx;
             util::divideVecIdx((int32_t)r->y - (int32_t)r->x, nsp, vpidx);
             for(uint32_t ki = 0; ki < vpidx.size(); ++ki){
