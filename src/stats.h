@@ -19,18 +19,29 @@
 #include <htslib/faidx.h>
 
 /** class to store reads count in each contig */
-struct CtgRdCnt{
-    int64_t mReadCnt = 0; ///< read counts
-    int32_t mTid = -1;    ///< contig index
-    int32_t mBeg = -1;    ///< contig beg
-    int32_t mEnd = -1;    ///< contig end
+struct RegItemCnt{
+    int64_t mCount = 0;       ///< read counts
+    int32_t mTid = -1;        ///< contig index
+    int32_t mBeg = -1;        ///< contig beg
+    int32_t mEnd = -1;        ///< contig end
+    bool mInterleved = false; ///< if true this region is contiguous to previous one
 
     /** operator to compare two contig read counts
-     * @param other reference of CtgRdCnt
+     * @param other reference of RegItemCnt
      * @return true it this one has less read counts
      */
-    bool operator<(const CtgRdCnt& other) const{
-        return mReadCnt > other.mReadCnt;
+    inline bool operator<(const RegItemCnt& other) const{
+        return mCount > other.mCount;
+    }
+
+    /** operator to output a RegItemCnt to ostream
+     * @param os reference of ostream
+     * @param ric reference of RegItemCnt 
+     * @return reference of ostream
+     */
+    inline friend std::ostream& operator<<(std::ostream& os, const RegItemCnt& ric){
+        os << ric.mTid << "\t[" << ric.mBeg << "," << ric.mEnd << "] " << ric.mCount << "," << std::boolalpha << ric.mInterleved << std::endl;
+        return os;
     }
 };
 
@@ -481,10 +492,10 @@ class Stats{
          * @param svs reference of SVSet(all SVs)
          * @param bpRegs SV breakpoint regions on each contig
          * @param spPts SV DP read mapping position on each contig
-         * @param refIdx reference index
+         * @param regInfo reference of RegItemCnt object
          * @param ctgCgrs sv events cgranges_t on each contig
          */
-        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx, int32_t chrBeg, int32_t chrEnd, cgranges_t* ctgCgrs);
+        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, const RegItemCnt& regInfo, cgranges_t* ctgCgr);
 
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats

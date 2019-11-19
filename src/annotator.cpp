@@ -29,7 +29,7 @@ std::set<std::pair<int32_t, int32_t>>::iterator Annotator::getFirstOverlap(const
     return s.end();
 }
 
-void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, int32_t us){
+void Annotator::cgrsplit(const cgranges_t* cr, std::vector<RegItemCnt>& ctgRng, int32_t us){
     ctgRng.clear();
     int32_t ltid = -1, lbeg = -1, lend = -1, lsum = 0;
     for(int64_t i = 0; i < cr->n_r; ++i){
@@ -41,19 +41,20 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
             std::vector<std::pair<int32_t, int32_t>> vpidx;
             util::divideVecIdx((int32_t)r->y - (int32_t)r->x, nsp, vpidx);
             for(uint32_t ki = 0; ki < vpidx.size(); ++ki){
-                CtgRdCnt irc;
+                RegItemCnt irc;
                 irc.mBeg = (int32_t)r->x + vpidx[ki].first;
                 irc.mEnd = (int32_t)r->x + vpidx[ki].second;
                 irc.mTid = tid;
-                irc.mReadCnt = us;
+                irc.mCount = us;
+                if(ki) irc.mInterleved = true;
                 ctgRng.push_back(irc);
             }
             if(lsum > 0){// append previous left ones
-                CtgRdCnt crc;
+                RegItemCnt crc;
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
-                crc.mReadCnt = lsum;
+                crc.mCount = lsum;
                 ctgRng.push_back(crc);
             }
             ltid = lbeg = lend = -1; lsum = 0; // reinitialize
@@ -61,11 +62,11 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
         }
         if(tid == ltid){
             if(lsum >= us){
-                CtgRdCnt crc;
+                RegItemCnt crc;
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
-                crc.mReadCnt = lsum;
+                crc.mCount = lsum;
                 ctgRng.push_back(crc);
                 lbeg = (int32_t)r->x;
                 lend = (int32_t)r->y;
@@ -76,11 +77,11 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
             }
         }else{
             if(ltid > 0){
-                CtgRdCnt crc;
+                RegItemCnt crc;
                 crc.mBeg = lbeg;
                 crc.mEnd = lend;
                 crc.mTid = ltid;
-                crc.mReadCnt = lsum;
+                crc.mCount = lsum;
                 ctgRng.push_back(crc);
             }
             ltid = tid;
@@ -90,10 +91,11 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, in
         }
     }
     if(lsum > 0){
-        CtgRdCnt crc;
+        RegItemCnt crc;
+        crc.mTid = ltid;
         crc.mBeg = lbeg;
         crc.mEnd = lend;
-        crc.mReadCnt = lsum;
+        crc.mCount = lsum;
         ctgRng.push_back(crc);
     }
 }
@@ -124,10 +126,10 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
     util::loginfo("End construct SVs cgranges_t");
     util::loginfo("Beg split SVs cgranges_t");
-    std::vector<CtgRdCnt> ctgRng;
-    cgrsplit(crsv, ctgRng, 10000);
-    cr_destroy(crsv);
+    std::vector<RegItemCnt> ctgRng;
+    cgrsplit(crsv, ctgRng, 1000);
     std::sort(ctgRng.begin(), ctgRng.end());
+    cr_destroy(crsv);
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(mOpt->bamheader->n_targets);
@@ -178,9 +180,8 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     Stats* covStats = new Stats(mOpt, svs.size());
     std::vector<std::future<void>> statRets(ctgRng.size());
     for(uint32_t i = 0; i < ctgRng.size(); ++i){
-        int32_t refidx = ctgRng[i].mTid;
-        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), std::ref(spanPoint), refidx,
-                                          ctgRng[i].mBeg, ctgRng[i].mEnd, svregs[refidx]);
+        statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), 
+                                          std::ref(spanPoint), std::ref(ctgRng[i]), svregs[ctgRng[i].mTid]);
     }
     for(auto& e: statRets) e.get();
     for(auto& e: svregs) cr_destroy(e);
@@ -245,7 +246,7 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         if(!tr.drop) trl.push_back(tr);
     }
     // cleanup
-    hts_itr_destroy(itr);
+    if(itr) hts_itr_destroy(itr);
     if(rec.s) free(rec.s);
 }
 
@@ -297,7 +298,7 @@ void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
             }
         }
     }
-    tbx_destroy(tbx);
+    if(tbx) tbx_destroy(tbx);
     hts_close(fp);
 }
 
@@ -345,7 +346,7 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         if(!tr.drop) trl.push_back(tr);
     }
     // cleanup
-    hts_itr_destroy(itr);
+    if(itr) hts_itr_destroy(itr);
     if(rec.s) free(rec.s);
 }
 
@@ -399,6 +400,6 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
             }
         }
     }
-    tbx_destroy(tbx);
+    if(tbx) tbx_destroy(tbx);
     hts_close(fp);
 }
