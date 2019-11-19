@@ -148,6 +148,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                                mOpt->logMtx.lock();
                                 if(itbp->mIsSVEnd){
                                     mJctCnts[itbp->mID].mRefCntEnd += 1;
                                     if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
@@ -162,6 +163,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
                                     else ++mJctCnts[itbp->mID].mRefh2; 
                                 }
+                                mOpt->logMtx.unlock();
                             }
                             continue;
                         }
