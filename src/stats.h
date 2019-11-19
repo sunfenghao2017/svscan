@@ -30,8 +30,18 @@ struct RegItemCnt{
      * @param other reference of RegItemCnt
      * @return true it this one has less read counts
      */
-    bool operator<(const RegItemCnt& other) const{
+    inline bool operator<(const RegItemCnt& other) const{
         return mCount > other.mCount;
+    }
+
+    /** operator to output a RegItemCnt to ostream
+     * @param os reference of ostream
+     * @param ric reference of RegItemCnt 
+     * @return reference of ostream
+     */
+    inline friend std::ostream& operator<<(std::ostream& os, const RegItemCnt& ric){
+        os << ric.mTid << "\t[" << ric.mBeg << "," << ric.mEnd << "] " << ric.mCount << "," << std::boolalpha << ric.mInterleved << std::endl;
+        return os;
     }
 };
 
