@@ -302,6 +302,7 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
     // Augment SR SVs with PE records
     util::loginfo("Beg augmenting SR supported SV candidates with DPs");
     for(uint32_t i = 0; i < svs.size(); ++i){
+        if(chridx[svs[i].mChr1].first < 0) continue;
         for(int32_t j = chridx[svs[i].mChr1].first; j <= chridx[svs[i].mChr1].second; ++j){
             if(pe[j].mSVT != svs[i].mSVT || svs[i].mChr2 != pe[j].mChr2 || pe[j].mMerged) continue;
             // Test whether breakpoint is within PE confidence interval
