@@ -57,7 +57,10 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     return ret;
 }
 
-void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, int32_t refIdx, int32_t chrBeg, int32_t chrEnd, cgranges_t* ctgCgrs){
+void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, const RegItemCnt& regInfo, cgranges_t* ctgCgr){
+    int32_t refIdx = regInfo.mTid;
+    int32_t chrBeg = regInfo.mBeg;
+    int32_t chrEnd = regInfo.mEnd;
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     util::loginfo("Beg gathering coverage information on contig: " + std::string(h->target_name[refIdx]) +
@@ -86,10 +89,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     int32_t lsprp = -1;
     int32_t lspap = -1;
     while(sam_itr_next(fp, itr, b) >= 0){
-        if(b->core.pos < chrBeg) continue;
+        if(regInfo.mInterleved && b->core.pos < chrBeg) continue;
         if(b->core.flag & COV_STAT_SKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
-        if(!cr_isoverlap(ctgCgrs, 
+        if(!cr_isoverlap(ctgCgr, 
                          h->target_name[b->core.tid], 
                          std::max(0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
                          std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[b->core.tid]))){

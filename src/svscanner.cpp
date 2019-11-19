@@ -88,14 +88,14 @@ void SVScanner::scanDPandSR(){
     // Stat reads count in each contig
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
-    std::vector<CtgRdCnt> ctgRdStat;
+    std::vector<RegItemCnt> ctgRdStat;
     for(int32_t i = 0; i < mOpt->contigNum; ++i){
         uint64_t unmapped  = 0, mapped = 0;
         if(hts_idx_get_stat(idx, i, &mapped, &unmapped) >= 0){
             if(mapped > 0){
-                CtgRdCnt crc;
+                RegItemCnt crc;
                 crc.mTid = i;
-                crc.mReadCnt = mapped;
+                crc.mCount = mapped;
                 ctgRdStat.push_back(crc);
             }
         }

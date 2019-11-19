@@ -33,7 +33,7 @@ class Annotator{
          * @param us unit sum to split
          * @param re result list
          */
-        void cgrsplit(const cgranges_t* cr, std::vector<CtgRdCnt>& ctgRng, int32_t us = 10000);
+        void cgrsplit(const cgranges_t* cr, std::vector<RegItemCnt>& ctgRng, int32_t us = 1000);
 
         /** annotate DNA SV gene information
          * @param svs reference of SVRecords
