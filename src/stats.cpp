@@ -346,6 +346,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     sam_close(fp);
     bam_hdr_destroy(h);
     bam_destroy1(b);
-    hts_itr_destroy(itr);
+    if(itr) hts_itr_destroy(itr);
     hts_idx_destroy(idx);
 }
