@@ -50,6 +50,7 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
     if(!fstsv.empty()){
         std::ifstream fr(fstsv);
         std::string line;
+        std::getline(fr, line);
         std::vector<std::string> vstr;
         while(std::getline(fr, line)){
             util::split(line, vstr, "\t");
@@ -60,6 +61,7 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
     if(!sstsv.empty()){
         std::ifstream fr(sstsv);
         std::string line;
+        std::getline(fr, line);
         std::vector<std::string> vstr;
         while(std::getline(fr, line)){
             util::split(line, vstr, "\t");
