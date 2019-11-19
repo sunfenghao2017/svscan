@@ -5,7 +5,7 @@ svscan_LDADD = $(LDFLAGS)
 svscan_SOURCES = aligner.cpp breakpoint.cpp annotator.cpp dpbamrecord.cpp junction.cpp \
 		 stats.cpp bcfreport.cpp fusionopt.cpp main.cpp msa.cpp options.cpp \
 		 region.cpp srbamrecord.cpp svrecord.cpp svscanner.cpp tsvreporter.cpp \
-		 cgranges.cpp bed.cpp
+		 cgranges.cpp bed.cpp bamtotb.cpp
 
 svtools_LDADD = $(LDFLAGS)
 
