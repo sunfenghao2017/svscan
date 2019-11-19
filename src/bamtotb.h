@@ -16,7 +16,7 @@ class BamToTable{
         std::string fstsv;  ///< primary fusion result tsv
         std::string sstsv;  ///< secondary fusion result tsv
         std::string bamtb;  ///< bam output table
-        int32_t svidf = 18; ///< svid column index in tsv
+        int32_t svidf = 28; ///< svid column index in tsv
 
     /** BamToTable constructor */
     BamToTable(){

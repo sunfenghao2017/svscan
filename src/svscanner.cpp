@@ -200,6 +200,16 @@ void SVScanner::scanDPandSR(){
         covStat->reportSVBCF(mergedSVs);
         util::loginfo("End writing SVs to BCF file");
     }
+    if(!mOpt->bam2tb.empty() && !mOpt->bamout.empty()){
+        util::loginfo("Beg writing fusion supporting bam records to excel file");
+        BamToTable btt;
+        btt.svbam = mOpt->bamout;
+        btt.fstsv = mOpt->fuseOpt->mOutFile;
+        btt.sstsv = mOpt->fuseOpt->mSupFile;
+        btt.bamtb = mOpt->bam2tb;
+        btt.b2t();
+        util::loginfo("End writing fusion supporting bam records to excel file");
+    }
     delete covAnn;
     delete covStat;
 }

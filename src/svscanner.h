@@ -6,6 +6,7 @@
 #include "srbamrecord.h"
 #include "svrecord.h"
 #include "options.h"
+#include "bamtotb.h"
 #include <utility>
 #include <vector>
 #include <map>
