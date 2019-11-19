@@ -168,6 +168,7 @@ class Options{
         std::string bamout;           ///< output SV supporting bam record file
         samFile* fbamout;             ///< file pointer of sv bam output
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
+        int32_t batchsvn;             ///< batch sv events to annotate coverage 
         RegionList scanRegs;          ///< regions to scan bam
         BedRegs* overlapRegs;         ///< regions sv must overlap
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)

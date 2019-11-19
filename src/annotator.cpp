@@ -127,7 +127,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     util::loginfo("End construct SVs cgranges_t");
     util::loginfo("Beg split SVs cgranges_t");
     std::vector<RegItemCnt> ctgRng;
-    cgrsplit(crsv, ctgRng, 1000);
+    cgrsplit(crsv, ctgRng, mOpt->batchsvn);
     std::sort(ctgRng.begin(), ctgRng.end());
     cr_destroy(crsv);
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");

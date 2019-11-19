@@ -3,6 +3,7 @@
 Options::Options(){
     madCutoff = 9;
     nthread = 8;
+    batchsvn = 10000;
     tsvOut = "sv.tsv";
     pool = NULL;
     fbamout = NULL;
