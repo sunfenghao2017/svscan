@@ -107,7 +107,7 @@ struct SVFilter{
     int32_t mMinDupRpt = 100;          ///< minimum duplication size to report
     int32_t mMinInsRpt = 15;           ///< minimum insertion size to repor
     uint32_t mMinSeedSR = 1;           ///< minimum seed split reads used to compute SV
-    uint32_t mMinSeedDP = 1;           ///< minimum discordant pair of reads used to compute SV
+    uint32_t mMinSeedDP = 2;           ///< minimum discordant pair of reads used to compute SV
     float mMinDelRatio = 0.8;          ///< minimum deletion ratio of an exon to report 
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
     float mMinSRResScore = 1;          ///< minimal alignment score for SR rescued
