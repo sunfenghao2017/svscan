@@ -31,19 +31,18 @@ void BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_f
      for(size_t i = 0; i < vclen.size(); ++i) worksheet_set_column(sheet, i, i, vclen[i], fmt);
 }
 
-std::string BamToTable::b2s(bam1_t* b, bam_hdr_t* h){
-    std::stringstream ss;
-    ss << h->target_name[b->core.tid] << "\t" << b->core.pos << "\t"; // chr pos 
-    ss << h->target_name[b->core.mtid] << "\t" << b->core.mpos << "\t"; // mchr mpos
-    ss << bamutil::getCigar(b) << "\t"; // cigar
-    std::string mc = bamutil::getStrTag(b, "MC"); // mcigar
-    if(mc.empty()) ss << "-\t";
-    else ss << mc << "\t";
-    std::string sa = bamutil::getStrTag(b, "SA"); // sa
-    if(sa.empty()) ss << "-\t";
-    else ss << sa << "\t";
-    ss << bamutil::getSeq(b) << "\n"; // seq
-    return ss.str();
+void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
+    br.chr = h->target_name[b->core.tid];
+    br.pos = b->core.pos;
+    br.mchr = h->target_name[b->core.mtid];
+    br.mpos = b->core.mpos;
+    br.cigar = bamutil::getCigar(b);
+    br.mcigar = bamutil::getStrTag(b, "MC");
+    br.sa = bamutil::getStrTag(b, "SA");
+    br.barcode = bamutil::getStrTag(b, "BC");
+    br.seq = bamutil::getSeq(b);
+    br.svid = id;
+    br.qname = bamutil::getQName(b);
 }
 
 void BamToTable::getsvid(std::set<int32_t>& svids){
@@ -79,9 +78,9 @@ void BamToTable::b2t(){
     format_set_align(format, LXW_ALIGN_LEFT);
     format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
     std::string header = "chr\tpos\tmchr\tmpos\tcigar\tmcigar\tsa\tseq\n";
-    std::map<int32_t, std::pair<std::string, lxw_worksheet*>> svid2result;
+    std::map<int32_t, std::pair<BamRecVector, lxw_worksheet*>> svid2result;
     for(auto& id: svids){
-        svid2result[id].first.append(header);
+        svid2result[id].first = BamRecVector();
         svid2result[id].second = workbook_add_worksheet(workbook, std::to_string(id).c_str());
     }
     samFile* fp = sam_open(svbam.c_str(), "r");
@@ -93,12 +92,22 @@ void BamToTable::b2t(){
             int32_t id= bam_aux2i(data);
             auto iter = svid2result.find(id);
             if(iter != svid2result.end()){
-                iter->second.first.append(b2s(b, h));
+                BamRec br;
+                b2r(b, h, br, id);
+                iter->second.first.push_back(br);
             }
         }
     }
     for(auto iter = svid2result.begin(); iter != svid2result.end(); ++iter){
-        lines2sheet(iter->second.second, iter->second.first, format);
+        std::sort(iter->second.first.begin(), iter->second.first.end());
+        std::vector<std::string> vres;
+        vres.push_back(BamRec::getHeader());
+        for(auto irec = iter->second.first.begin(); irec != iter->second.first.end(); ++irec){
+            vres.push_back(irec->toStr());
+        }
+        std::string res;
+        util::join(vres, res, "\n");
+        lines2sheet(iter->second.second, res, format);
     }
     workbook_close(workbook);
     sam_close(fp);
