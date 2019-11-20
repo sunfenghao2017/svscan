@@ -220,6 +220,18 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     int32_t stid = bam_name2id(h, vstr[0].c_str());
                                     int32_t irpos = std::atoi(vstr[1].c_str());
                                     int32_t erpos = irpos;
+                                    bool safwd = (vstr[2][0] == '+');
+                                    bool orifwd = !(b->core.flag & BAM_FREVERSE);
+                                    int32_t catt = itbp->mSVT;
+                                    if(itbp->mSVT >= 5) catt -= 5;
+                                    if(catt <= 1){
+                                        if(safwd == orifwd) validRSR = false;
+                                        goto notvalidsr;
+                                    }
+                                    if(catt >= 2){
+                                        if(safwd != orifwd) validRSR = false;
+                                        goto notvalidsr;
+                                    }
                                     char* scg = const_cast<char*>(vstr[3].c_str());
                                     int32_t sscl = 0, sscr = 0;
                                     int32_t stotlen = 0;
@@ -265,6 +277,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         validRSR = false;
                                     }
                                 }
+notvalidsr:
                                 if(validRSR){
                                     if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                                     if(itbp->mSVT != 4) onlySupportIns = false;
