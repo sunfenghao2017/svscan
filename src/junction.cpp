@@ -52,8 +52,10 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     // parse supplenmentary alignment record then
     uint8_t* sa = bam_aux_get(b, "SA");
     if(sa){
+        std::string sastr = bam_aux2Z(sa);
+        if(sastr.find_first_of(";") != sastr.find_last_of(";")) return inserted;
         std::vector<std::string> vstr;
-        util::split(bam_aux2Z(sa), vstr, ",");
+        util::split(sastr, vstr, ",");
         int32_t tid = bam_name2id(h, vstr[0].c_str());
         refpos = std::atoi(vstr[1].c_str());
         fw = (vstr[2][0] == '+');

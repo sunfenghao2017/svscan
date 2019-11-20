@@ -118,6 +118,11 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             }
         }
         if(leadingSC && tailingSC) continue; // skip reads with both leading and tailing softclips
+        uint8_t* sa = bam_aux_get(b, "SA");
+        std::string sastr = bam_aux2Z(sa);
+        if(sa){ // skip reads with cliped part in repeat regions
+            if(sastr.find_first_of(";") != sastr.find_last_of(";")) continue;
+        }
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
@@ -207,24 +212,78 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     mOpt->logMtx.unlock();
                                 }
                             }else{
-                                if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
-                                if(itbp->mSVT != 4) onlySupportIns = false;
-                                if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
-                                    mOpt->logMtx.lock();
-                                    mJctCnts[itbp->mID].mAltCnt += 1;
-                                    if(mOpt->writebcf) mJctCnts[itbp->mID].mAltQual.push_back(b->core.qual);
-                                    uint8_t* hpptr = bam_aux_get(b, "HP");
-                                    if(hpptr){
-                                        mOpt->libInfo->mIsHaploTagged = true;
-                                        int hapv = bam_aux2i(hpptr);
-                                        if(hapv == 1) ++mJctCnts[itbp->mID].mAlth1;
-                                        else ++mJctCnts[itbp->mID].mAlth2;
+                                bool validRSR = true;
+                                if(sa){
+                                    std::vector<std::string> vstr;
+                                    util::split(sastr, vstr, ",");
+                                    int32_t stid = bam_name2id(h, vstr[0].c_str());
+                                    int32_t irpos = std::atoi(vstr[1].c_str());
+                                    int32_t erpos = irpos;
+                                    char* scg = const_cast<char*>(vstr[3].c_str());
+                                    int32_t sscl = 0, sscr = 0;
+                                    int32_t stotlen = 0;
+                                    while(*scg && *scg != '*'){
+                                        long num = 0;
+                                        if(std::isdigit((int)*scg)){
+                                            num = std::strtol(scg, &scg, 10);
+                                            stotlen += num;
+                                        }else{
+                                            num = 1;
+                                        }
+                                        if(*scg == 'S'){
+                                            if(stotlen == num){
+                                                sscl = num;
+                                            }else{
+                                                sscr = num;
+                                            }
+                                        }
+                                        switch(bam_cigar_type(*scg)){
+                                            case 2: case 3:
+                                                erpos += num;
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                        ++scg;
                                     }
-                                    if(mOpt->fbamout){
-                                        bam_aux_update_int(b, "ZF", itbp->mID);
-                                        assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                    if(sscl ^ sscr){
+                                        int32_t bppos = irpos;
+                                        if(sscr) bppos = erpos;
+                                        if(itbp->mIsSVEnd){
+                                            if(std::abs(bppos - svs[itbp->mID].mSVStart) > mOpt->filterOpt->mMinRefSep || 
+                                               svs[itbp->mID].mChr1 != stid){
+                                                validRSR = false;
+                                            }
+                                        }else{
+                                            if(std::abs(bppos - svs[itbp->mID].mSVEnd) > mOpt->filterOpt->mMinRefSep ||
+                                               svs[itbp->mID].mChr2 != stid){
+                                                validRSR = false;
+                                            }
+                                        }
+                                    }else{
+                                        validRSR = false;
                                     }
-                                    mOpt->logMtx.unlock();
+                                }
+                                if(validRSR){
+                                    if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
+                                    if(itbp->mSVT != 4) onlySupportIns = false;
+                                    if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                                        mOpt->logMtx.lock();
+                                        mJctCnts[itbp->mID].mAltCnt += 1;
+                                        if(mOpt->writebcf) mJctCnts[itbp->mID].mAltQual.push_back(b->core.qual);
+                                        uint8_t* hpptr = bam_aux_get(b, "HP");
+                                        if(hpptr){
+                                            mOpt->libInfo->mIsHaploTagged = true;
+                                            int hapv = bam_aux2i(hpptr);
+                                            if(hapv == 1) ++mJctCnts[itbp->mID].mAlth1;
+                                            else ++mJctCnts[itbp->mID].mAlth2;
+                                        }
+                                        if(mOpt->fbamout){
+                                            bam_aux_update_int(b, "ZF", itbp->mID);
+                                            assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                        }
+                                        mOpt->logMtx.unlock();
+                                    }
                                 }
                             }
                         }
