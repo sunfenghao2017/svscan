@@ -81,7 +81,6 @@ void BamToTable::b2t(){
     lxw_format* format = workbook_add_format(workbook);
     format_set_align(format, LXW_ALIGN_LEFT);
     format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
-    std::string header = "chr\tpos\tmchr\tmpos\tcigar\tmcigar\tsa\tseq\n";
     std::map<int32_t, std::pair<BamRecVector, lxw_worksheet*>> svid2result;
     for(auto& id: svids){
         svid2result[id].first = BamRecVector();

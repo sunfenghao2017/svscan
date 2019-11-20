@@ -27,7 +27,11 @@ struct BamRec{
     int32_t svid;        ///< sv id
     
     /** constructor */
-    BamRec(){}
+    BamRec(){
+        sa = '-';
+        mcigar = "-";
+        barcode = "-";
+    }
 
     /** destructor */
     ~BamRec(){}
