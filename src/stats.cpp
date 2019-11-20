@@ -36,7 +36,8 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mJctCnts[j].mAlth2 += sts[i]->mJctCnts[j].mAlth2;
             ret->mJctCnts[j].mRefh1 += sts[i]->mJctCnts[j].mRefh1;
             ret->mJctCnts[j].mFPIns += sts[i]->mJctCnts[j].mFPIns;
-            ret->mJctCnts[j].mAltCnt += sts[i]->mJctCnts[j].mAltCnt;
+            ret->mJctCnts[j].mAltCntBeg += sts[i]->mJctCnts[j].mAltCntBeg;
+            ret->mJctCnts[j].mAltCntEnd += sts[i]->mJctCnts[j].mAltCntEnd;
             ret->mJctCnts[j].mRefCntBeg += sts[i]->mJctCnts[j].mRefCntBeg;
             ret->mJctCnts[j].mRefCntEnd += sts[i]->mJctCnts[j].mRefCntEnd;
             ret->mJctCnts[j].mAltQual.insert(ret->mJctCnts[j].mAltQual.end(), sts[i]->mJctCnts[j].mAltQual.begin(), sts[i]->mJctCnts[j].mAltQual.end());
@@ -46,7 +47,8 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mSpnCnts[j].mAlth1 += sts[i]->mSpnCnts[j].mAlth1;
             ret->mSpnCnts[j].mAlth2 += sts[i]->mSpnCnts[j].mAlth2;
             ret->mSpnCnts[j].mRefh1 += sts[i]->mSpnCnts[j].mRefh1;
-            ret->mSpnCnts[j].mAltCnt += sts[i]->mSpnCnts[j].mAltCnt;
+            ret->mSpnCnts[j].mAltCntBeg += sts[i]->mSpnCnts[j].mAltCntBeg;
+            ret->mSpnCnts[j].mAltCntEnd += sts[i]->mSpnCnts[j].mAltCntEnd;
             ret->mSpnCnts[j].mRefCntBeg += sts[i]->mSpnCnts[j].mRefCntBeg;
             ret->mSpnCnts[j].mRefCntEnd += sts[i]->mSpnCnts[j].mRefCntEnd;
             ret->mSpnCnts[j].mAltQual.insert(ret->mSpnCnts[j].mAltQual.end(), sts[i]->mSpnCnts[j].mAltQual.begin(), sts[i]->mSpnCnts[j].mAltQual.end());
@@ -156,10 +158,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
                                 mOpt->logMtx.lock();
                                 if(itbp->mIsSVEnd){
-                                    mJctCnts[itbp->mID].mRefCntEnd += 1;
+                                    ++mJctCnts[itbp->mID].mRefCntEnd;
                                     if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
                                 }else{
-                                    mJctCnts[itbp->mID].mRefCntBeg += 1;
+                                    ++mJctCnts[itbp->mID].mRefCntBeg;
                                     if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
                                 }
                                 uint8_t* hpptr = bam_aux_get(b, "HP");
@@ -197,10 +199,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
                                     mOpt->logMtx.lock();
                                     if(itbp->mIsSVEnd){
-                                        mJctCnts[itbp->mID].mRefCntEnd += 1;
+                                        ++mJctCnts[itbp->mID].mRefCntEnd;
                                         if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
                                     }else{
-                                        mJctCnts[itbp->mID].mRefCntBeg += 1;
+                                        ++mJctCnts[itbp->mID].mRefCntBeg;
                                         if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
                                     }
                                     uint8_t* hpptr = bam_aux_get(b, "HP");
@@ -283,7 +285,8 @@ notvalidsr:
                                     if(itbp->mSVT != 4) onlySupportIns = false;
                                     if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
                                         mOpt->logMtx.lock();
-                                        mJctCnts[itbp->mID].mAltCnt += 1;
+                                        if(itbp->mIsSVEnd) ++mJctCnts[itbp->mID].mAltCntEnd;
+                                        else ++mJctCnts[itbp->mID].mAltCntBeg;
                                         if(mOpt->writebcf) mJctCnts[itbp->mID].mAltQual.push_back(b->core.qual);
                                         uint8_t* hpptr = bam_aux_get(b, "HP");
                                         if(hpptr){
@@ -348,10 +351,10 @@ notvalidsr:
                     for(; itspnr != spPts[refIdx].end() && (st + spanlen) >= itspnr->mBpPos; ++itspnr){
                         mOpt->logMtx.lock();
                         if(itspnr->mIsSVEnd){
-                            mSpnCnts[itspnr->mID].mRefCntEnd += 1;
+                            ++mSpnCnts[itspnr->mID].mRefCntEnd;
                             if(mOpt->writebcf) mSpnCnts[itspnr->mID].mRefQualEnd.push_back(b->core.qual);
                         }else{
-                            mSpnCnts[itspnr->mID].mRefCntBeg += 1;
+                            ++mSpnCnts[itspnr->mID].mRefCntBeg;
                             if(mOpt->writebcf) mSpnCnts[itspnr->mID].mRefQualBeg.push_back(b->core.qual);
                         }
                         uint8_t* hpptr = bam_aux_get(b, "HP");
@@ -395,7 +398,8 @@ notvalidsr:
                     for(; itspna != spPts[refIdx].end() && pend >= itspna->mBpPos; ++itspna){
                         if(svt == itspna->mSVT && svs[itspna->mID].mChr1 == b->core.tid && svs[itspna->mID].mChr2 == b->core.mtid){
                             mOpt->logMtx.lock();
-                            mSpnCnts[itspna->mID].mAltCnt += 1;
+                            if(itspna->mIsSVEnd) ++mSpnCnts[itspna->mID].mAltCntEnd;
+                            else ++mSpnCnts[itspna->mID].mAltCntBeg;
                             if(mOpt->writebcf) mSpnCnts[itspna->mID].mAltQual.push_back(b->core.qual);
                             uint8_t* hpptr = bam_aux_get(b, "HP");
                             if(hpptr){
