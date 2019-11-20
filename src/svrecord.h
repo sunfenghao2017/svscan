@@ -226,7 +226,7 @@ class SVRecord{
                 if(sclen.first <= inslen) return;
                 rseq = wseq.substr(0, sclen.first - inslen);
                 rseq.append(wseq.substr(sclen.first));
-                iseq = wseq.substr(sclen.first - inslen - 1, inslen);
+                iseq = wseq.substr(sclen.first - inslen, inslen);
             }else if(sclen.second){
                 if(sclen.second <= inslen) return;
                 rseq = wseq.substr(0, b->core.l_qseq - sclen.second);
