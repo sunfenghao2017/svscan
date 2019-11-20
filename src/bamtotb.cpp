@@ -43,6 +43,10 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.seq = bamutil::getSeq(b);
     br.svid = id;
     br.qname = bamutil::getQName(b);
+    if(b->core.flag & BAM_FREVERSE) br.strand = '-';
+    else br.strand = '+';
+    if(b->core.flag & BAM_FMREVERSE) br.mstrand = '-';
+    else br.mstrand = '+';
 }
 
 void BamToTable::getsvid(std::set<int32_t>& svids){

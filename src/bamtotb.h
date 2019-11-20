@@ -13,8 +13,10 @@
 struct BamRec{
     std::string chr;     ///< chr
     int32_t pos;         ///< pos
+    char strand;         ///< strand
     std::string mchr;    ///< mate chr
     int32_t mpos;        ///< mate pos
+    char mstrand;        ///< mate strand
     std::string cigar;   ///< cigar
     std::string mcigar;  ///< mate cigar
     std::string sa;      ///< sa
@@ -33,7 +35,8 @@ struct BamRec{
     /** convert BamRec to string */
     inline std::string toStr(){
         std::ostringstream oss;
-        oss << chr << "\t" << pos << "\t" << mchr << "\t" << mpos << "\t";
+        oss << chr << "\t" << pos << "\t" << strand << "\t";
+        oss << mchr << "\t" << mpos << "\t" << mstrand << "\t";
         oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << seq << "\t";
         oss << barcode << "\t" << qname;
         return oss.str();
@@ -41,7 +44,7 @@ struct BamRec{
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "chr\tpos\tmchr\tmpos\tcigar\tmcigar\tsa\tseq\tbarcode\tqname";
+        return "chr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tseq\tbarcode\tqname";
     }
 
     /** compare two BamRec */
