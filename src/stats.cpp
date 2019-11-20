@@ -119,8 +119,9 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         }
         if(leadingSC && tailingSC) continue; // skip reads with both leading and tailing softclips
         uint8_t* sa = bam_aux_get(b, "SA");
-        std::string sastr = bam_aux2Z(sa);
+        std::string sastr;
         if(sa){ // skip reads with cliped part in repeat regions
+            sastr = bam_aux2Z(sa);
             if(sastr.find_first_of(";") != sastr.find_last_of(";")) continue;
         }
         // Check read length for junction annotation
