@@ -265,12 +265,12 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         int32_t bppos = irpos;
                                         if(sscr) bppos = erpos;
                                         if(itbp->mIsSVEnd){
-                                            if(std::abs(bppos - svs[itbp->mID].mSVStart) > mOpt->filterOpt->mMinRefSep || 
+                                            if(std::abs(bppos - svs[itbp->mID].mSVStart) > mOpt->filterOpt->mMaxReadSep || 
                                                svs[itbp->mID].mChr1 != stid){
                                                 validRSR = false;
                                             }
                                         }else{
-                                            if(std::abs(bppos - svs[itbp->mID].mSVEnd) > mOpt->filterOpt->mMinRefSep ||
+                                            if(std::abs(bppos - svs[itbp->mID].mSVEnd) > mOpt->filterOpt->mMaxReadSep ||
                                                svs[itbp->mID].mChr2 != stid){
                                                 validRSR = false;
                                             }
