@@ -50,7 +50,10 @@ struct BamRec{
                (sname == other.sname && svid < other.svid) ||
                (sname == other.sname && svid == other.svid && chr < other.chr) ||
                (sname == other.sname && svid == other.svid && chr == other.chr && sa.length() > other.sa.length()) || 
-               (sname == other.sname && svid == other.svid && chr == other.chr && sa.length() == other.sa.length() && pos < other.pos);
+               (sname == other.sname && svid == other.svid && chr == other.chr && sa.length() == other.sa.length() && pos < other.pos) || 
+               (sname == other.sname && svid == other.svid && chr == other.chr && sa.length() == other.sa.length() && pos == other.pos && mchr < other.mchr) ||
+               (sname == other.sname && svid == other.svid && chr == other.chr && sa.length() == other.sa.length() && pos == other.pos && mchr == other.mchr && 
+                mpos < other.mpos);
     }
 };
 
