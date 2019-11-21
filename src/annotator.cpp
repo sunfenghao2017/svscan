@@ -276,9 +276,13 @@ void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
         gl[i].mPos2 = svs[i].mSVEnd;
         gl[i].mChr2 = svs[i].mNameChr2;
         // annotate fusion gene
+        std::set<std::string> fgAdded;
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
+                std::string newFg = fsg.hgene + "->" + fsg.tgene;
+                if(fgAdded.find(newFg) != fgAdded.end()) continue; // do not add twice for A,B->A,B
+                fgAdded.insert(newFg);
                 if(fsg.status & FUSION_FHTFLSWAPPED){
                     // remember h/t gene sources
                     fsg.hfrom1 = false;
