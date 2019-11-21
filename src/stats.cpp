@@ -125,6 +125,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         if(sa){ // skip reads with cliped part in repeat regions
             sastr = bam_aux2Z(sa);
             if(sastr.find_first_of(";") != sastr.find_last_of(";")) continue;
+            if(sastr.find_first_of("SH") != sastr.find_last_of("SH")) continue;
         }
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
@@ -227,12 +228,16 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     int32_t catt = itbp->mSVT;
                                     if(itbp->mSVT >= 5) catt -= 5;
                                     if(catt <= 1){
-                                        if(safwd == orifwd) validRSR = false;
-                                        goto notvalidsr;
+                                        if(safwd == orifwd){
+                                            validRSR = false;
+                                            goto notvalidsr;
+                                        }
                                     }
                                     if(catt >= 2){
-                                        if(safwd != orifwd) validRSR = false;
-                                        goto notvalidsr;
+                                        if(safwd != orifwd){
+                                            validRSR = false;
+                                            goto notvalidsr;
+                                        }
                                     }
                                     char* scg = const_cast<char*>(vstr[3].c_str());
                                     int32_t sscl = 0, sscr = 0;
@@ -242,18 +247,13 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         if(std::isdigit((int)*scg)){
                                             num = std::strtol(scg, &scg, 10);
                                             stotlen += num;
-                                        }else{
-                                            num = 1;
                                         }
-                                        if(*scg == 'S'){
-                                            if(stotlen == num){
-                                                sscl = num;
-                                            }else{
-                                                sscr = num;
-                                            }
-                                        }
-                                        switch(bam_cigar_type(*scg)){
-                                            case 2: case 3:
+                                        switch(*scg){
+                                            case 'S':
+                                                if(stotlen == num) sscl = num;
+                                                else sscr = num;
+                                                break;
+                                            case 'M': case '=': case 'X': case 'D': case 'N':
                                                 erpos += num;
                                                 break;
                                             default:
@@ -265,12 +265,14 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         int32_t bppos = irpos;
                                         if(sscr) bppos = erpos;
                                         if(itbp->mIsSVEnd){
-                                            if(std::abs(bppos - svs[itbp->mID].mSVStart) > mOpt->filterOpt->mMaxReadSep || 
+                                            if(bppos < svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosLow ||
+                                               bppos > svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosHigh ||
                                                svs[itbp->mID].mChr1 != stid){
                                                 validRSR = false;
                                             }
                                         }else{
-                                            if(std::abs(bppos - svs[itbp->mID].mSVEnd) > mOpt->filterOpt->mMaxReadSep ||
+                                            if(bppos < svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndLow ||
+                                               bppos > svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndHigh ||
                                                svs[itbp->mID].mChr2 != stid){
                                                 validRSR = false;
                                             }
