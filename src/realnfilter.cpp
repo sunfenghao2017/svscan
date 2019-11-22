@@ -29,8 +29,7 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             palnret.push_back(e);
         }
     }
-    if(palnret.empty()) return false; // no mapping
-    if(palnret.size() > 2){
+    if(palnret.size() != 2){
         for(auto& e: palnret) bam_destroy1(e);
         return false; // repeat region
     }
@@ -85,5 +84,3 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
     obp.adjustpt();
     return bp.agree(obp);
 }
-
-
