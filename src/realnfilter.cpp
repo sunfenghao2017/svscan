@@ -13,8 +13,8 @@ void BpPair::adjustpt(){
 bool BpPair::agree(const BpPair& other){
     if(tid1 != other.tid1) return false;
     if(tid2 != other.tid2) return false;
-    if(std::abs(pos1 - other.pos1) > 10) return false;
-    if(std::abs(pos2 - other.pos2) > 10) return false;
+    if(std::abs(pos1 - other.pos1) > 100) return false;
+    if(std::abs(pos2 - other.pos2) > 100) return false;
     return true;
 }
 
