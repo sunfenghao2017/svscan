@@ -25,8 +25,10 @@ struct FuseFlags{
         flagmap[FUSION_FLOWSUPPORT] = "fusion support too small";
         flagmap[FUSION_FLOWDEPTH] = "fusion breakpoint depth too low";
         flagmap[FUSION_FPRECISE] = "fusion breakpoint is precise with concensus sequnce";
-        flagmap[FUSION_FCALLFROMRNASEQ] = "this fusion event is called from rna seq";
-        flagmap[FUSION_FMIRRORINDB] = "this fusion event's mirror event is in public db";
+        flagmap[FUSION_FCALLFROMRNASEQ] = "fusion event is called from rna seq";
+        flagmap[FUSION_FMIRRORINDB] = "fusion event's mirror event is in public db";
+        flagmap[FUSION_FHTFLSWAPPED] = "fusion event's h/t gene swapped against bp1/2 gene";
+        flagmap[FUSION_FREALNPASSED] = "fusion event has passed consensus sequence realignment";
     }
 
     ~FuseFlags(){}

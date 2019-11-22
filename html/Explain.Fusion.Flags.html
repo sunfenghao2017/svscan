@@ -479,7 +479,9 @@
         ["fusion breakpoint depth too low", 0x10000],
         ["fusion breakpoint is precise with concensus sequnce", 0x20000],
         ["fusion event is computed from rna seq data", 0x40000],
-        ["fusion mirror event is in public db", 0x80000]];
+        ["fusion mirror event is in public db", 0x80000],
+        ["fusion event h/t is reverse to sv event bp1/2", 0x100000],
+        ["fusion event concensus seq passed realignment", 0x200000]];
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary  = ""; 
@@ -572,6 +574,8 @@
                     <br><input type="checkbox" name="cb17" id="cb17" onclick="checkboxClicked();"> &nbsp; fusion breakpoint is precise with concensus sequnce
                     <br><input type="checkbox" name="cb18" id="cb18" onclick="checkboxClicked();"> &nbsp; fusion event is computed from rna seq data
                     <br><input type="checkbox" name="cb19" id="cb19" onclick="checkboxClicked();"> &nbsp; fusion mirror event is in public db
+                    <br><input type="checkbox" name="cb20" id="cb20" onclick="checkboxClicked();"> &nbsp; fusion event h/t is reverse to sv event bp1/2
+                    <br><input type="checkbox" name="cb21" id="cb21" onclick="checkboxClicked();"> &nbsp; fusion event concensus seq passed realignment
                 </td>
                 <td style="text-align: left; vertical-align: top; width: 50%">
                     <strong>Summary:</strong><br>

@@ -3,10 +3,8 @@
 
 #include <string>
 #include <zlib.h>
-#include "kseq.h"
+#include <bwa/kseq.h>
 #include "cgranges.h"
-
-KSTREAM_INIT(gzFile, gzread, 0x10000)
 
 typedef struct {
     int32_t l;
