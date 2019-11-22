@@ -51,7 +51,6 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
         uint32_t* data = bam_get_cigar(palnret[i]);
         int r = palnret[i]->core.pos;
         int lsc = 0;
-        int rsc = 0;
         for(uint32_t j = 0; j < palnret[i]->core.n_cigar; ++j){
             uint32_t oplen = bam_cigar_oplen(data[j]);
             int opmask = bam_cigar_op(data[j]);
@@ -64,7 +63,6 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             }
             if(opmask == BAM_CSOFT_CLIP){
                 if(j == 0) lsc = oplen;
-                else rsc = oplen;
             }
         }
         if(i){
