@@ -274,18 +274,18 @@ namespace bamutil{
     /** modify the ith base of one alignment record
      * @param b pointer to bam1_t struct
      * @param i position at which to change nucleotide(0 based)
-     * @param ch nucleotide to change to
+     * @param c nucleotide to change to, this is the 8bit represent of base(seq_nt16_table[chr] will convert an base character to this type)
      */
-    inline void setBase(bam1_t* b, int i, char ch){
+    inline void setBase(bam1_t* b, int i, uint8_t c){
         if(i < 0 || i > b->core.l_qseq - 1){
             std::cerr << "Invalid position to set base!" << std::endl;
             std::exit(1);
         }
         uint8_t* seq = bam_get_seq(b);
         if(i % 2 == 1){
-            seq[i/2] = (seq[i/2] & 0xF0) | seq_nt16_table[ch - 0];
+            seq[i/2] = (seq[i/2] & 0xF0) | c;
         }else{
-            seq[i/2] = (seq[i/2] & 0x0F) | (seq_nt16_table[ch - 0] << 4);
+            seq[i/2] = (seq[i/2] & 0x0F) | (c << 4);
         }
     }
     
@@ -347,9 +347,7 @@ namespace bamutil{
      */
     inline int getEditDistance(const bam1_t* b){
         uint8_t* data = bam_aux_get(b, "NM");
-        if(!data){
-            return 0;
-        }
+        if(!data) return 0;
         return bam_aux2i(data);
     }
 
@@ -694,7 +692,6 @@ namespace bamutil{
                     if(x+j >= ref_len || ref[x+j] == '\0') break; // out of bounds
                     c1 = bam_seqi(seq, z), c2 = seq_nt16_table[(int)ref[x+j]];
                     if((c1 == c2 && c1 != 15 && c2 != 15) || c1 == 0) { // a match
-                        seq[z/2] &= (z&1)? 0xf0 : 0x0f;
                         ++u;
                     }else{
                         kputw(u, str); kputc(toupper(ref[x+j]), str);

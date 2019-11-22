@@ -23,15 +23,17 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
     mBWA->alignSeq("seq", seq, alnret);
     std::vector<bam1_t*> palnret;
     for(auto& e: alnret){
-        if(e->core.flag & (BAM_FSECONDARY | BAM_FUNMAP)){
+        if((e->core.flag & (BAM_FSECONDARY | BAM_FUNMAP)) || e->core.qual <= 0){
             bam_destroy1(e);
         }else{
-            palnret.push_back(e);
+            std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
+            if(clip.first ^ clip.second) palnret.push_back(e);
         }
     }
     if(palnret.size() != 2){
         for(auto& e: palnret) bam_destroy1(e);
-        return false; // repeat region
+        if(palnret.size()) return true;
+        else return false;
     }
     bool valid = true;
     BpPair bp;
