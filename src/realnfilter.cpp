@@ -27,7 +27,17 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             bam_destroy1(e);
         }else{
             std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-            if(clip.first ^ clip.second) palnret.push_back(e);
+            if(clip.first + clip.second == 0){// no clip
+                bam_destroy1(e);
+            }else if(clip.first ^ clip.second){// good, one clip
+                palnret.push_back(e);
+            }else if(clip.first && clip.second){
+                if((clip.first < 10 && clip.second > 10) || (clip.first > 10 && clip.second < 10)){
+                    palnret.push_back(e);
+                }else{
+                    bam_destroy1(e);
+                }
+            }
         }
     }
     if(palnret.size() != 2){
@@ -57,26 +67,18 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
                 else rsc = oplen;
             }
         }
-        if(lsc && rsc){
-            valid = false;
-            break;
-        }
         if(i){
             bp.tid2 = palnret[i]->core.tid;
-            if(lsc) bp.pos2 = palnret[i]->core.pos;
+            if(lsc < 10) bp.pos2 = palnret[i]->core.pos;
             else bp.pos2 = r;
         }else{
             bp.tid1 = palnret[i]->core.tid;
-            if(lsc) bp.pos1 = palnret[i]->core.pos;
+            if(lsc < 10) bp.pos1 = palnret[i]->core.pos;
             else bp.pos1 = r;
         }
     }
-    if(!valid){
-        for(auto& e: palnret){
-            bam_destroy1(e);
-        }
-        return valid;
-    }
+    for(auto& e: palnret) bam_destroy1(e);
+    if(!valid) return false;
     BpPair obp;
     obp.tid1 = bam_name2id(mHeader, chr1.c_str());
     obp.tid2 = bam_name2id(mHeader, chr2.c_str());
