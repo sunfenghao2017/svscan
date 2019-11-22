@@ -46,6 +46,7 @@ int main(int argc, char** argv){
     pfsrpt->add_option("-v,--svf", fuserptOpt->fuseOpt->mSVModFile, "updated sv tsv file, if empty, no update will done", true);
     pfsrpt->add_option("-f,--iflag", fuserptOpt->fuseOpt->mFsMaskInclude, "fusion flags which must be set", true);
     pfsrpt->add_option("-F,--eflag", fuserptOpt->fuseOpt->mFsMaskExclude, "fusion flags which must be unset", true);
+    pfsrpt->add_option("-g,--genome", fuserptOpt->fuseOpt->mRef, "reference used in alignment of BAM", true);
     pfsrpt->add_option("--whitemindep", fuserptOpt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true);
     pfsrpt->add_option("--usualmindep", fuserptOpt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true);
     pfsrpt->add_option("--whiteminr", fuserptOpt->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);

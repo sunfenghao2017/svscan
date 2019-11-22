@@ -30,14 +30,18 @@ class RealnFilter{
     }
 
     RealnFilter(const std::string& ref){
-        mBWA = new OnlineBWA();
-        mBWA->loadIndex(ref);
-        mHeader =mBWA->getBamHeader();
+        init(ref);
     }
 
     ~RealnFilter(){
         if(mBWA) delete mBWA;
         if(mHeader) bam_hdr_destroy(mHeader);
+    }
+
+    void init(const std::string& ref){
+        mBWA = new OnlineBWA();
+        mBWA->loadIndex(ref);
+        mHeader =mBWA->getBamHeader();
     }
 
     bool validCCSeq(const std::string& seq, const std::string& chr1, int32_t pos1, const std::string& chr2, int32_t pos2);

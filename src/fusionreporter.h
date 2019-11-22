@@ -1,6 +1,7 @@
 #ifndef FUSION_REPORTER_H
 #define FUSION_REPORTER_H
 
+#include "realnfilter.h"
 #include "fusionopt.h"
 #include "software.h"
 #include "fuserec.h"
