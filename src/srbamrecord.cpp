@@ -407,12 +407,14 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             }else{
                 AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
                 MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
+                msa->mMinCovForCS = 1;
+                //if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
                 if(insStore[svid].size() > 1){
                     MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                    if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
+                    //if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
+                    imsa->mMinCovForCS = 1;
                     imsa->msa(svs[svid].mBpInsSeq);
                     delete imsa;
                 }
@@ -532,12 +534,14 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
                 if(mTriSeqStore[svid].size()) svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
             }else{
                 MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-                if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
+                //if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
+                msa->mMinCovForCS = 1;
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
                 if(mTriSeqStore[svid].size()){
                     MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-                    if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
+                    //if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
+                    imsa->mMinCovForCS = 1;
                     imsa->msa(svs[svid].mBpInsSeq);
                     delete imsa;
                 }

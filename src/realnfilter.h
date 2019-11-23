@@ -44,7 +44,7 @@ class RealnFilter{
         mHeader =mBWA->getBamHeader();
     }
 
-    bool validCCSeq(const std::string& seq, const std::string& chr1, int32_t pos1, const std::string& chr2, int32_t pos2);
+    bool validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2);
 };
 
 #endif

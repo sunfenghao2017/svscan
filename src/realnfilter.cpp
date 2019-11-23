@@ -18,7 +18,8 @@ bool BpPair::agree(const BpPair& other){
     return true;
 }
 
-bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t pos1, const std::string& chr2, int32_t pos2){
+bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2){
+    return true;
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
     std::vector<bam1_t*> palnret;
