@@ -27,11 +27,8 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             bam_destroy1(e);
         }else{
             std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-            if(clip.first + clip.second == 0){
-                bam_destroy1(e);
-            }else if(clip.first ^ clip.second){
-                palnret.push_back(e);
-            }
+            if(clip.first ^ clip.second) palnret.push_back(e);
+            else bam_destroy1(e);
         }
     }
     if(palnret.size() != 2){
@@ -52,7 +49,6 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
         uint32_t* data = bam_get_cigar(palnret[i]);
         int r = palnret[i]->core.pos;
         int lsc = 0;
-        int rsc = 0;
         for(uint32_t j = 0; j < palnret[i]->core.n_cigar; ++j){
             uint32_t oplen = bam_cigar_oplen(data[j]);
             int opmask = bam_cigar_op(data[j]);
@@ -65,7 +61,6 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             }
             if(opmask == BAM_CSOFT_CLIP){
                 if(j == 0) lsc = oplen;
-                else rsc = oplen;
             }
         }
         if(i){
