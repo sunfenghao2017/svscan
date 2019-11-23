@@ -261,7 +261,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         }
                                         ++scg;
                                     }
-                                    if(sscl ^ sscr){
+                                    if((sscl > 0) ^ (sscr > 0)){
                                         int32_t bppos = irpos;
                                         if(sscr) bppos = erpos;
                                         if(itbp->mIsSVEnd){

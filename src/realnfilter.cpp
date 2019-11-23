@@ -27,7 +27,7 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             bam_destroy1(e);
         }else{
             std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-            if(clip.first ^ clip.second) palnret.push_back(e);
+            if((clip.first > 0) ^ (clip.second > 0)) palnret.push_back(e);
             else bam_destroy1(e);
         }
     }
