@@ -4,21 +4,21 @@ void BpPair::adjustpt(){
     if(tid1 > tid2){
         std::swap(tid1, tid2);
         std::swap(pos1, pos2);
+        swapped = true;
     }
     if(tid1 == tid2 && pos1 > pos2){
         std::swap(pos1, pos2);
+        swapped = true;
     }
 }
 
 bool BpPair::agree(const BpPair& other){
     if(tid1 != other.tid1) return false;
     if(tid2 != other.tid2) return false;
-    if(std::abs(pos1 - other.pos1) > 10) return false;
-    if(std::abs(pos2 - other.pos2) > 10) return false;
     return true;
 }
 
-bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t pos1, const std::string& chr2, int32_t pos2){
+bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
     std::vector<bam1_t*> palnret;
@@ -75,5 +75,15 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
     }
     nbp.adjustpt();
     for(auto& e: palnret) bam_destroy1(e);
-    return obp.agree(nbp);
+    bool valid = obp.agree(nbp);
+    if(valid){
+        if(obp.swapped){
+            pos2 = nbp.pos1;
+            pos1 = nbp.pos2;
+        }else{
+            pos2 = nbp.pos2;
+            pos1 = nbp.pos1;
+        }
+    }
+    return valid;
 }

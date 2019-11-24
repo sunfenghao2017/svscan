@@ -108,12 +108,6 @@ void FusionReporter::report(){
 
 void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     fuseOpt->init();
-    RealnFilter realnFilter;
-    bool doReFilt = false;
-    if(!fuseOpt->mRef.empty()){
-        realnFilter.init(fuseOpt->mRef);
-        doReFilt = true;
-    }
     std::ofstream fsv;
     if(!fuseOpt->mSVModFile.empty()){ // update sv tsv file if needed
         fsv.open(fuseOpt->mSVModFile.c_str());
@@ -149,8 +143,6 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         int32_t dpr = std::atoi(vstr[12].c_str());
         float af = std::atof(vstr[13].c_str());
         bool notinbg= fuseOpt->validSV(svt, chr1, chr2, start, end);
-        bool passReAlnFilter = true;
-        if(srv > 0 && doReFilt) passReAlnFilter = realnFilter.validCCSeq(vstr[16], chr1, start, chr2, end);
         FusionRecordList frl;
         for(uint32_t i = 0; i < fgl.size(); ++i){
             FusionRecord fgr;
@@ -167,8 +159,6 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.chr1 = chr2;
             if(fgl[i].tfrom1) fgr.chr2 = chr1;
             else fgr.chr2 = chr2;
-            if(passReAlnFilter) fgr.fsmask |= FUSION_FREALNPASSED;
-            else fgr.fsmask &= (~FUSION_FREALNPASSED);
             if(notinbg) fgr.fsmask &= (~FUSION_FFBG);
             else fgr.fsmask |= FUSION_FFBG;
             if(fuseOpt->hasWhiteGene(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FHOTGENE;

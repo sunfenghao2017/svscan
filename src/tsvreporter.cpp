@@ -215,24 +215,13 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         } 
     }
-    // mask realign mask
-    for(uint32_t i = 0; i < gl.size(); ++i){
-        if(svs[i].mPrecise){
-            bool ccrevalid = realnFilter.validCCSeq(svs[i].mConsensus, svs[i].mNameChr1, svs[i].mSVStart, svs[i].mNameChr2, svs[i].mSVEnd);
-            for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
-                if(ccrevalid) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
-            }
-        }else{
-            for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
-        }
-    }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
                                      FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED);
+    TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;

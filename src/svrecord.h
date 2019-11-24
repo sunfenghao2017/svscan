@@ -9,6 +9,7 @@
 #include "aligner.h"
 #include "aligncfg.h"
 #include "matrix2d.h"
+#include "realnfilter.h"
 #include "alndescriptor.h"
 #include <htslib/faidx.h>
 #include <htslib/sam.h>
@@ -306,9 +307,9 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs, Options* opt);
 /** merge SVSet supported by SR only
  * @param sr SVSet supported by SR
  * @param msr SVSet merged
+ * @param opt pointer to Options
  */
-void mergeSRSVs(SVSet& sr, SVSet& msr);
-
+void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt);
 
 /** merge SVSet supported by DP only
  * @param dp SVSet supported by SR

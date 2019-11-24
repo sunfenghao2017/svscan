@@ -191,7 +191,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     return true;
 }
 
-void mergeSRSVs(SVSet& sr, SVSet& msr){
+void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     util::loginfo("Beg merge SR supported SVs");
     std::sort(sr.begin(), sr.end());
     int32_t maxCI = 0;
@@ -231,9 +231,18 @@ void mergeSRSVs(SVSet& sr, SVSet& msr){
             }
         }
     }
+    // refine bp using BWT
+    RealnFilter* rf = new RealnFilter(opt->genome);
+    for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
+        if(sriter->mMerged) continue;
+        if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd)){
+            sriter->mMerged = true;
+        }
+    }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
     util::loginfo(std::to_string(sr.size()) + " SR supported SVs merged into " + std::to_string(msr.size()) + " ones");
     sr.clear();
+    delete rf;
 }
 
 void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
@@ -289,7 +298,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
 
 void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
     // Merge SR SVSet
-    mergeSRSVs(sr, svs);
+    mergeSRSVs(sr, svs, opt);
     // Merge DP SVset
     SVSet pe;
     mergeDPSVs(dp, pe, opt);

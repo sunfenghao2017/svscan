@@ -12,7 +12,6 @@
 #include "matrix2d.h"
 #include "aligncfg.h"
 #include "srbamrecord.h"
-#include "realnfilter.h"
 #include "dpbamrecord.h"
 #include "alndescriptor.h"
 #include <unordered_map>
