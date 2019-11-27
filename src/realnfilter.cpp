@@ -66,11 +66,11 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
         if(i){
             nbp.tid1 = palnret[i]->core.tid;
             if(lsc) nbp.pos1 = palnret[i]->core.pos;
-            else nbp.pos1 = r;
+            else nbp.pos1 = r - 1;
         }else{
             nbp.tid2 = palnret[i]->core.tid;
             if(lsc) nbp.pos2 = palnret[i]->core.pos;
-            else nbp.pos2 = r;
+            else nbp.pos2 = r - 1;
         }
     }
     nbp.adjustpt();
@@ -78,11 +78,11 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
     bool valid = obp.agree(nbp);
     if(valid){
         if(obp.swapped){
-            pos2 = std::min(nbp.pos1, (int32_t)mHeader->target_len[nbp.tid1]);
-            pos1 = std::min(nbp.pos2, (int32_t)mHeader->target_len[nbp.tid2]);
+            pos2 = nbp.pos1;
+            pos1 = nbp.pos2;
         }else{
-            pos2 = std::min(nbp.pos2, (int32_t)mHeader->target_len[nbp.tid2]);
-            pos1 = std::min(nbp.pos1, (int32_t)mHeader->target_len[nbp.tid1]);
+            pos2 = nbp.pos2;
+            pos1 = nbp.pos1;
         }
     }
     return valid;
