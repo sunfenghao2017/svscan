@@ -69,6 +69,12 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
         for(uint32_t i = 0; i < gl.size(); ++i){
             TrsRecList exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr1, svs[i].mSVStart, svs[i].mSVStart + 1);
             TrsRecList exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr2, svs[i].mSVEnd, svs[i].mSVEnd + 1);
+            for(uint32_t k = 0; k < exgs.size(); ++k){
+                exgs[k].pos = svs[i].mSVStart;
+            }
+            for(uint32_t k = 0; k < exge.size(); ++k){
+                exge[k].pos = svs[i].mSVEnd;
+            }
             int32_t g1osize = gl[i].mGene1.size();
             int32_t g2osize = gl[i].mGene2.size();
             std::copy(exgs.begin(), exgs.end(), std::back_inserter(gl[i].mGene1));
