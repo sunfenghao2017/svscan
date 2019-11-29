@@ -19,7 +19,15 @@ struct TrsRec{
     std::string chr;     ///< used only in RNA sv
 
     /** TrsRec constructor */
-    TrsRec(){}
+    TrsRec(){
+        name = "-";
+        gene = "-";
+        unit = "-";
+        strand = "+";
+        number = "-";
+        version = "-";
+        primary = "-";
+    }
 
     /** TrsRec destructor */
     ~TrsRec(){}

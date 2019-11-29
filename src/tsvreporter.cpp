@@ -64,6 +64,37 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
     RealnFilter realnFilter(mOpt->genome);
+    // annotate extra gene fusion events
+    if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
+        for(uint32_t i = 0; i < gl.size(); ++i){
+            std::vector<std::string> exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr1, svs[i].mSVStart, svs[i].mSVStart + 1);
+            std::vector<std::string> exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr2, svs[i].mSVEnd, svs[i].mSVEnd + 1);
+            FuseGeneList extfl;
+            for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+                for(auto& gsn: exgs){
+                    FuseGene fg = gl[i].mFuseGene[j];
+                    if(fg.hfrom1) fg.hgene = gsn;
+                    else fg.tgene = gsn;
+                    extfl.push_back(fg);
+                }
+                for(auto& gsn: exge){
+                    FuseGene fg = gl[i].mFuseGene[j];
+                    if(fg.tfrom1) fg.hgene = gsn;
+                    else fg.tgene = gsn;
+                    extfl.push_back(fg);
+                }
+            }
+            for(uint32_t k = 0; k < extfl.size(); ++k){
+                if(extfl[k].hgene != "-" && extfl[k].tgene != "-"){
+                    extfl[k].status |= FUSION_FALLGENE;
+                    extfl[k].status |= FUSION_FCOMMONHOTDIRECT;
+                    extfl[k].status |= FUSION_FINDB;
+                    extfl[k].status |= FUSION_FNORMALCATDIRECT;
+                }
+            }
+            std::copy(extfl.begin(), extfl.end(), std::back_inserter(gl[i].mFuseGene));
+        }
+    }
     // mask hot gene status
     std::map<std::string, std::set<std::string>> fpairs;
     for(uint32_t i = 0; i < gl.size(); ++i){
@@ -214,31 +245,6 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
             }
         }   
-    }
-    // annotate extra gene fusion events
-    if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
-        for(uint32_t i = 0; i < gl.size(); ++i){
-            std::vector<std::string> exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr1, svs[i].mSVStart, svs[i].mSVStart + 1);
-            std::vector<std::string> exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr2, svs[i].mSVEnd, svs[i].mSVEnd + 1);
-            FuseGeneList extfl;
-            for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
-                for(auto& gsn: exgs){
-                    FuseGene fg = gl[i].mFuseGene[j];
-                    if(fg.hfrom1) fg.hgene = gsn;
-                    else fg.tgene = gsn;
-                    fg.status |= FUSION_FPRIMARY;
-                    extfl.push_back(fg);
-                }
-                for(auto& gsn: exge){
-                    FuseGene fg = gl[i].mFuseGene[j];
-                    if(fg.tfrom1) fg.hgene = gsn;
-                    else fg.tgene = gsn;
-                    fg.status |= FUSION_FPRIMARY;
-                    extfl.push_back(fg);
-                }
-            }
-            std::copy(extfl.begin(), extfl.end(), std::back_inserter(gl[i].mFuseGene));
-        }
     }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |

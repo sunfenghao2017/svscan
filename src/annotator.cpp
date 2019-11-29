@@ -245,6 +245,8 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
     for(auto& tr: trsList){
         if(!tr.drop) trl.push_back(tr);
     }
+    // if empty, append an empty tr
+    if(trl.empty()) trl.push_back(TrsRec());
     // cleanup
     if(itr) hts_itr_destroy(itr);
     if(rec.s) free(rec.s);
