@@ -40,7 +40,6 @@ int main(int argc, char** argv){
     app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
     app.add_option("--min_seed_sr", opt->filterOpt->mMinSeedSR, "min seed split reads needed to compute SV", true)->check(CLI::Range(1, 100000))->group("Threshold Options");
     app.add_option("--min_seed_dp", opt->filterOpt->mMinSeedDP, "min seed discordant reads needed to computr SV", true)->check(CLI::Range(1, 100000))->group("Threshold Options");
-
     // Fusion report options
     app.add_option("--whitemindep", opt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true)->group("Fusion Options");
     app.add_option("--usualmindep", opt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true)->group("Fusion Options");
@@ -55,6 +54,7 @@ int main(int argc, char** argv){
     app.add_option("--whitelist", opt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--blacklist", opt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--samegenel", opt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile)->group("Fusion Options");
+    app.add_option("--extraanno", opt->fuseOpt->mExtraAnnoList, "extra annoation gene list")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
     app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
     // parse arguments

@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 #include <htslib/vcf.h>
+#include "extanno.h"
 #include "svinfo.h"
 #include "svutil.h"
 #include "util.h"
@@ -48,6 +49,7 @@ struct FilterOptions{
 struct FusionOptions{
     FilterOptions mWhiteFilter;        ///< filter options for fusion events in whitelist
     FilterOptions mUsualFilter;        ///< filter options for fusion event not in whitelist
+    ExtraAnno mExtraAnnotator;         ///< extra gene annotator 
     uint32_t mFsMaskInclude;           ///< result must match this fusion mask;
     uint32_t mFsMaskExclude;           ///< result must not match this fusion mask;
     int32_t mMaxBpOffset = 10;         ///< max breakpoint offset of an SV against background SV to be excluded
@@ -56,6 +58,7 @@ struct FusionOptions{
     std::string mWhiteList;            ///< fusion event which will keep always if found
     std::string mBlackList;            ///< fusion event which will drop always if found
     std::string mSameGeneSVList;       ///< fusion event in same gene to be reported
+    std::string mExtraAnnoList;        ///< fusion gene which should be annotated seperately
     std::string mInfile;               ///< input file of sver sv tsv format result file
     std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
     std::string mSupFile = "ss.tsv";   ///< output file of supplementary fusions

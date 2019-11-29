@@ -89,6 +89,7 @@ void FusionOptions::init(){
     }
     if(!mBlackList.empty()) parseBlackList();
     if(!mSameGeneSVList.empty()) parseSameGeneEventList();
+    if(!mExtraAnnoList.empty()) mExtraAnnotator.init(mExtraAnnoList);
     mInitialized = true;
 }
 
