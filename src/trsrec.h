@@ -23,8 +23,7 @@ struct TrsRec{
         name = "-";
         gene = "-";
         unit = "-";
-        strand = "+";
-        number = "-";
+        strand = "-";
         version = "-";
         primary = "-";
     }

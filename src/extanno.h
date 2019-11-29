@@ -2,6 +2,7 @@
 #define EXTRA_ANNO_H
 
 #include "cgranges.h"
+#include "trsrec.h"
 #include "util.h"
 #include <fstream>
 #include <string>
@@ -9,8 +10,8 @@
 
 class ExtraAnno{
     public:
-        cgranges_t* extCrgs;             ///< cgranges_t to store bed information
-        std::vector<std::string> gnames; ///< gene names of each record
+        cgranges_t* extCrgs; ///< cgranges_t to store bed information
+        TrsRecList trecs;    ///< gene names of each record
 
     ExtraAnno(){
         extCrgs = NULL;
@@ -25,6 +26,7 @@ class ExtraAnno{
     }
 
     void init(const std::string& bedf);
-    std::vector<std::string> anno(const std::string& chr, int32_t beg, int32_t end);
+
+    TrsRecList anno(const std::string& chr, int32_t beg, int32_t end);
 };
 #endif

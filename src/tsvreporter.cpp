@@ -67,20 +67,34 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
         for(uint32_t i = 0; i < gl.size(); ++i){
-            std::vector<std::string> exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr1, svs[i].mSVStart, svs[i].mSVStart + 1);
-            std::vector<std::string> exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr2, svs[i].mSVEnd, svs[i].mSVEnd + 1);
+            TrsRecList exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr1, svs[i].mSVStart, svs[i].mSVStart + 1);
+            TrsRecList exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr2, svs[i].mSVEnd, svs[i].mSVEnd + 1);
+            int32_t g1osize = gl[i].mGene1.size();
+            int32_t g2osize = gl[i].mGene2.size();
+            std::copy(exgs.begin(), exgs.end(), std::back_inserter(gl[i].mGene1));
+            std::copy(exge.begin(), exge.end(), std::back_inserter(gl[i].mGene2));
             FuseGeneList extfl;
             for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
-                for(auto& gsn: exgs){
+                for(uint32_t k = 0; k < exgs.size(); ++k){
                     FuseGene fg = gl[i].mFuseGene[j];
-                    if(fg.hfrom1) fg.hgene = gsn;
-                    else fg.tgene = gsn;
+                    if(fg.hfrom1){
+                        fg.hgene = exgs[k].gene;
+                        fg.hidx = g1osize + k;
+                    }else{
+                        fg.tgene = exgs[k].gene;
+                        fg.tidx = g1osize + k;
+                    }
                     extfl.push_back(fg);
                 }
-                for(auto& gsn: exge){
+                for(uint32_t k = 0; k < exge.size(); ++k){
                     FuseGene fg = gl[i].mFuseGene[j];
-                    if(fg.tfrom1) fg.hgene = gsn;
-                    else fg.tgene = gsn;
+                    if(fg.tfrom1){
+                        fg.hgene = exge[k].gene;
+                        fg.hidx = g2osize + k;
+                    }else{
+                        fg.tgene = exge[k].gene;
+                        fg.tidx = g2osize + k;
+                    }
                     extfl.push_back(fg);
                 }
             }
