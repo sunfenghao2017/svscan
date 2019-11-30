@@ -266,6 +266,21 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }   
     }
+    // adjust hot gene in normal catenation direction
+    for(uint32_t i = 0; i < gl.size(); ++i){
+        for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+            if(gl[i].mFuseGene[j].status & FUSION_FNORMALCATDIRECT) continue;
+            if(gl[i].mFuseGene[j].status & FUSION_FCOMMONHOTDIRECT) continue;
+            if(gl[i].mFuseGene[j].status & FUSION_FHOTGENE){
+                std::swap(gl[i].mFuseGene[j].hend, gl[i].mFuseGene[j].tend);
+                std::swap(gl[i].mFuseGene[j].hfrom1, gl[i].mFuseGene[j].tfrom1);
+                std::swap(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene);
+                std::swap(gl[i].mFuseGene[j].hidx, gl[i].mFuseGene[j].tidx);
+                std::swap(gl[i].mFuseGene[j].hstrand, gl[i].mFuseGene[j].tstrand);
+                gl[i].mFuseGene[j].status |= FUSION_FNORMALCATDIRECT;
+            }
+        }
+    }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
                                      FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
