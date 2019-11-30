@@ -59,8 +59,15 @@ void FuseWOpt::prepWlist(){
     }
     // print warning information about hot gene not found in db
     for(auto& e: gset){
-        if(!(e.second & 4)) std::cout << e.first << " is not in fusedb just append them!!!" << std::endl;
-        fw << e.first << "\t" << e.first << "\tY\tY\tY\tY\n";
+        if(!(e.second & 4)){
+            std::cout << e.first << " is not in fusedb just append them!!!" << std::endl;
+            std::string hotStr;
+            if(e.second & 2) hotStr.append("Y\t");
+            else hotStr.append("N\t");
+            if(e.second & 1) hotStr.append("Y\n");
+            else hotStr.append("N\n");
+            fw << e.first << "\t" << e.first << "\tY\tY\t" << hotStr;
+        }
     }
     fr.close();
     fw.close();
