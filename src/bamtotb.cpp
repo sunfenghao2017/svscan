@@ -81,11 +81,7 @@ void BamToTable::b2t(){
     lxw_format* format = workbook_add_format(workbook);
     format_set_align(format, LXW_ALIGN_LEFT);
     format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
-    std::map<int32_t, std::pair<BamRecVector, lxw_worksheet*>> svid2result;
-    for(auto& id: svids){
-        svid2result[id].first = BamRecVector();
-        svid2result[id].second = workbook_add_worksheet(workbook, std::to_string(id).c_str());
-    }
+    BamRecVector brecs;
     samFile* fp = sam_open(svbam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
@@ -93,25 +89,22 @@ void BamToTable::b2t(){
         uint8_t* data = bam_aux_get(b, "ZF");
         if(data){
             int32_t id= bam_aux2i(data);
-            auto iter = svid2result.find(id);
-            if(iter != svid2result.end()){
+            auto iter = svids.find(id);
+            if(iter != svids.end()){
                 BamRec br;
                 b2r(b, h, br, id);
-                iter->second.first.push_back(br);
+                brecs.push_back(br);
             }
         }
     }
-    for(auto iter = svid2result.begin(); iter != svid2result.end(); ++iter){
-        std::sort(iter->second.first.begin(), iter->second.first.end());
-        std::vector<std::string> vres;
-        vres.push_back(BamRec::getHeader());
-        for(auto irec = iter->second.first.begin(); irec != iter->second.first.end(); ++irec){
-            vres.push_back(irec->toStr());
-        }
-        std::string res;
-        util::join(vres, res, "\n");
-        lines2sheet(iter->second.second, res, format);
+    std::sort(brecs.begin(), brecs.end());
+    std::stringstream oss;
+    oss << BamRec::getHeader();
+    for(uint32_t i = 0; i < brecs.size(); ++i){
+        oss << brecs[i].toStr();
     }
+    lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
+    lines2sheet(rsheet, oss.str(), format);
     workbook_close(workbook);
     sam_close(fp);
     bam_hdr_destroy(h);
