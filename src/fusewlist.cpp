@@ -46,11 +46,11 @@ void FuseWOpt::prepWlist(){
                 else hotStr.append("N\t");
             }else hotStr.append("-\t");
             if(titer != gset.end()){
-                if(titer->second & 1) hotStr.append("Y\t");
-                else hotStr.append("N\t");
-            }else hotStr.append("-\t");
+                if(titer->second & 1) hotStr.append("Y\n");
+                else hotStr.append("N\n");
+            }else hotStr.append("-\n");
             // hgene tgene hgene_in_hot tgene_in_hot hgene_in_right_dir t_gene_in_right_dir
-            recs.insert(hgene + "\t" + tgene + "\t" + hotStr + "\n");
+            recs.insert(hgene + "\t" + tgene + "\t" + hotStr);
         }
     }
     std::ofstream fw(whitelist);
