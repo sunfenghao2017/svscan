@@ -42,13 +42,13 @@ void FuseWOpt::prepWlist(){
             if(hotMark[1]) hotStr.append("Y\t");
             else hotStr.append("N\t");
             if(hiter != gset.end()){
-                if(hiter->second & 2) hotStr.append("\tY");
-                else hotStr.append("\tN");
-            }else hotStr.append("\t-");
+                if(hiter->second & 2) hotStr.append("Y\t");
+                else hotStr.append("N\t");
+            }else hotStr.append("-\t");
             if(titer != gset.end()){
-                if(titer->second & 1) hotStr.append("\tY");
-                else hotStr.append("\tN");
-            }else hotStr.append("\t-");
+                if(titer->second & 1) hotStr.append("Y\t");
+                else hotStr.append("N\t");
+            }else hotStr.append("-\t");
             // hgene tgene hgene_in_hot tgene_in_hot hgene_in_right_dir t_gene_in_right_dir
             recs.insert(hgene + "\t" + tgene + "\t" + hotStr + "\n");
         }
