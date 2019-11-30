@@ -277,7 +277,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 std::swap(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene);
                 std::swap(gl[i].mFuseGene[j].hidx, gl[i].mFuseGene[j].tidx);
                 std::swap(gl[i].mFuseGene[j].hstrand, gl[i].mFuseGene[j].tstrand);
-                gl[i].mFuseGene[j].status |= FUSION_FNORMALCATDIRECT;
+                gl[i].mFuseGene[j].status |= FUSION_FCOMMONHOTDIRECT;
                 if(gl[i].mFuseGene[j].status & FUSION_FHTFLSWAPPED){
                     gl[i].mFuseGene[j].status &= (~FUSION_FHTFLSWAPPED);
                 }
