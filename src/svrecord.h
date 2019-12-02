@@ -52,6 +52,7 @@ class SVRecord{
         std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
         bool mMerged = false;        ///< this SV has been merged if true
         bool mFromOneSR = false;     ///< this SV comes from one seed SR
+        bool mPassRealn = true;      ///< this SV has passed realignment by online bwa
 
     public:
         /** SVRecord constructor */

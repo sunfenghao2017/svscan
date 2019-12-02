@@ -236,7 +236,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
         if(sriter->mMerged) continue;
         if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd)){
-            sriter->mMerged = true;
+            sriter->mPassRealn = false;
         }
     }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});

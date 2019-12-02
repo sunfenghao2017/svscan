@@ -120,6 +120,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(mOpt->rnamode) gl[i].mFuseGene[j].status |= FUSION_FCALLFROMRNASEQ; // mask rna/dna calling
+            if(svs[i].mPassRealn) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
             if((gl[i].mFuseGene[j].status & FUSION_FALLGENE)){
                 if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                     gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
@@ -290,7 +291,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = FUSION_FHOTGENE;
+    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED);
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;
