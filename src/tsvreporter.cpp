@@ -34,8 +34,8 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         // srRefCount dpRefCount
         fw << mJctCnts[i].getRefDep() << "\t" << mSpnCnts[i].getRefDep() << "\t";
         // AF
-        if(svs[i].mPrecise) fw << (double)(mJctCnts[i].getAltDep())/(double)(mJctCnts[i].getRefDep() + mJctCnts[i].getAltDep()) << "\t";
-        else fw << (double)(mSpnCnts[i].getAltDep())/(double)(mSpnCnts[i].getRefDep() + mSpnCnts[i].getAltDep()) << "\t";
+        if(svs[i].mPrecise) fw << (double)(std::max(mJctCnts[i].getAltDep(), svs[i].mSRSupport))/(double)(mJctCnts[i].getRefDep() + mJctCnts[i].getAltDep()) << "\t";
+        else fw << (double)(std::max(mSpnCnts[i].getAltDep(), svs[i].mPESupport))/(double)(mSpnCnts[i].getRefDep() + mSpnCnts[i].getAltDep()) << "\t";
         // insBp insSeq
         fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
         // svSeq seqBp
