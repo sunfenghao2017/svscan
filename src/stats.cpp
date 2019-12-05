@@ -399,22 +399,41 @@ notvalidsr:
                     }
                     for(; itspna != spPts[refIdx].end() && pend >= itspna->mBpPos; ++itspna){
                         if(svt == itspna->mSVT && svs[itspna->mID].mChr1 == b->core.tid && svs[itspna->mID].mChr2 == b->core.mtid){
-                            mOpt->logMtx.lock();
-                            if(itspna->mIsSVEnd) ++mSpnCnts[itspna->mID].mAltCntEnd;
-                            else ++mSpnCnts[itspna->mID].mAltCntBeg;
-                            if(mOpt->writebcf) mSpnCnts[itspna->mID].mAltQual.push_back(b->core.qual);
-                            uint8_t* hpptr = bam_aux_get(b, "HP");
-                            if(hpptr){
-                                mOpt->libInfo->mIsHaploTagged = true;
-                                int hap = bam_aux2i(hpptr);
-                                if(hap == 1) ++mSpnCnts[itspna->mID].mAlth1;
-                                else ++mSpnCnts[itspna->mID].mAlth2;
+                            // valid dp in pe-mode
+                            bool validDPE = true;
+                            if(itspna->mIsSVEnd){
+                                if(std::abs(b->core.pos - svs[itspna->mID].mSVEnd) > mOpt->libInfo->mMaxNormalISize){
+                                    validDPE = false;
+                                }
+                                if(std::abs(b->core.mpos - svs[itspna->mID].mSVStart) > mOpt->libInfo->mMaxNormalISize){
+                                    validDPE = false;
+                                }
+                            }else{
+                                if(std::abs(b->core.pos - svs[itspna->mID].mSVStart) > mOpt->libInfo->mMaxNormalISize){
+                                    validDPE = false;
+                                }
+                                if(std::abs(b->core.mpos - svs[itspna->mID].mSVEnd) > mOpt->libInfo->mMaxNormalISize){
+                                    validDPE = false;
+                                }
                             }
-                            if(mOpt->fbamout){
-                                bam_aux_update_int(b, "ZF", itspna->mID);
-                                assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                            if(validDPE){
+                                mOpt->logMtx.lock();
+                                if(itspna->mIsSVEnd) ++mSpnCnts[itspna->mID].mAltCntEnd;
+                                else ++mSpnCnts[itspna->mID].mAltCntBeg;
+                                if(mOpt->writebcf) mSpnCnts[itspna->mID].mAltQual.push_back(b->core.qual);
+                                uint8_t* hpptr = bam_aux_get(b, "HP");
+                                if(hpptr){
+                                    mOpt->libInfo->mIsHaploTagged = true;
+                                    int hap = bam_aux2i(hpptr);
+                                    if(hap == 1) ++mSpnCnts[itspna->mID].mAlth1;
+                                    else ++mSpnCnts[itspna->mID].mAlth2;
+                                }
+                                if(mOpt->fbamout){
+                                    bam_aux_update_int(b, "ZF", itspna->mID);
+                                    assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                }
+                                mOpt->logMtx.unlock();
                             }
-                            mOpt->logMtx.unlock();
                         }
                     }
                 }
