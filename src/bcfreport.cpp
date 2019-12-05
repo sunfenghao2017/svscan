@@ -7,7 +7,7 @@
 void Stats::reportSVBCF(const SVSet& svs){
     // Open file handler
     samFile* samfp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_set_fai_filename(samfp, mOpt->genome.c_str());
+    hts_set_fai_filename(samfp, mOpt->alnref.c_str());
     bam_hdr_t* bamhdr = sam_hdr_read(samfp);
     htsFile* fp = bcf_open(mOpt->bcfOut.c_str(), "wb");
     bcf_hdr_t* hdr = bcf_hdr_init("w");
@@ -55,7 +55,7 @@ void Stats::reportSVBCF(const SVSet& svs){
         bcf_hdr_append(hdr, "##FORMAT=<ID=HP2RV,Number=1,Type=Integer,Description=\"# high-quality variant junction reads on haplotype 2\">");
     }
     // Add reference
-    std::string refloc = "##reference=" + mOpt->genome;
+    std::string refloc = "##reference=" + mOpt->alnref;
     bcf_hdr_append(hdr, refloc.c_str());
     for(int i = 0; i < bamhdr->n_targets; ++i){
         std::string ctginfo("##contig=<ID=");

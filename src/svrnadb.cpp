@@ -45,7 +45,7 @@ void SVRNADBOpt::prepDB(){
     std::ofstream ofc(bedCDS); // cds bed region
     std::ofstream ofu(bedUnits); // unit bed region
     std::ofstream ofl(utr3len); // 3'utr length
-    faidx_t* fai = fai_load(genome.c_str());
+    faidx_t* fai = fai_load(alnref.c_str());
     bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> istr, estr;
     std::vector<int32_t> iint, eint;

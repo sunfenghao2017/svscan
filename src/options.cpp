@@ -30,7 +30,7 @@ Options::~Options(){
 
 void Options::validate(){
     // check genome indexed
-    if(!util::exists(genome + ".fai")){
+    if(!util::exists(alnref + ".fai")){
         util::errorExit("Genome must be indexed by `samtools faidx`");
     }
 }
@@ -201,7 +201,7 @@ void Options::writeEmptFile(){
     // sv bcf
     if(bcfOut.empty()) return;
     samFile* samfp = sam_open(bamfile.c_str(), "r");
-    hts_set_fai_filename(samfp, genome.c_str());
+    hts_set_fai_filename(samfp, alnref.c_str());
     bam_hdr_t* bamhdr = sam_hdr_read(samfp);
     htsFile* fp = bcf_open(bcfOut.c_str(), "wb");
     bcf_hdr_t* hdr = bcf_hdr_init("w");
@@ -241,7 +241,7 @@ void Options::writeEmptFile(){
     bcf_hdr_append(hdr, "##FORMAT=<ID=RR,Number=1,Type=Integer,Description=\"# high-quality reference junction reads\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=RV,Number=1,Type=Integer,Description=\"# high-quality variant junction reads\">");
     // Add reference
-    std::string refloc = "##reference=" + genome;
+    std::string refloc = "##reference=" + alnref;
     bcf_hdr_append(hdr, refloc.c_str());
     for(int i = 0; i < bamhdr->n_targets; ++i){
         std::string ctginfo("##contig=<ID=");

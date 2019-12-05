@@ -159,8 +159,10 @@ typedef std::vector<std::set<std::pair<int32_t, int32_t>>> RegionList;
 class Options{
     public:
         std::string bamfile;          ///< bam file used to analysis currently
-        std::string genome;           ///< reference genome file input bam used
+        std::string alnref;           ///< reference used to align reads in bam
+        std::string genome;           ///< genome reference of the species(rna mode)
         std::string annodb;           ///< annotation feature database file
+        std::string gannodb;          ///< genome annotation database file(rna mode)
         std::string reg;              ///< file to store regions to scanning bam in
         std::string creg;             ///< file to store regions that SV event must overlap
         std::string bcfOut;           ///< output SV bcf result file

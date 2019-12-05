@@ -14,7 +14,7 @@
 #include "software.h"
 
 struct SVRNADBOpt{
-    std::string genome;     ///< genome fasta file
+    std::string alnref;     ///< alignment reference file
     std::string refSeqDB;   ///< refseq database with transcript version added
     std::string cncTrsList; ///< canonical transcripts list
     std::string svAnnoDB;   ///< sv annotation database output file

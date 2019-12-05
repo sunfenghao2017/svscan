@@ -307,10 +307,10 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
     if(mSRMapPos[refIdx].empty()) return;
     // Open file handles
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, mOpt->genome.c_str());
+    hts_set_fai_filename(fp, mOpt->alnref.c_str());
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     bam_hdr_t* hdr = sam_hdr_read(fp);
-    faidx_t* fai = fai_load(mOpt->genome.c_str());
+    faidx_t* fai = fai_load(mOpt->alnref.c_str());
     bam1_t* b = bam_init1();
     util::loginfo("Beg assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
     const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP | BAM_FSUPPLEMENTARY);
@@ -445,7 +445,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
 void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // Construct bool filter of SR mapping positions
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, mOpt->genome.c_str());
+    hts_set_fai_filename(fp, mOpt->alnref.c_str());
     bam_hdr_t* hdr = sam_hdr_read(fp);
     for(uint32_t svt = 0; svt < mSRs.size(); ++svt){
         for(uint32_t i = 0; i < mSRs[svt].size(); ++i){

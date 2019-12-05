@@ -7,7 +7,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     // Open file handles
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
-    hts_set_fai_filename(fp, mOpt->genome.c_str());
+    hts_set_fai_filename(fp, mOpt->alnref.c_str());
     bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
     const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);

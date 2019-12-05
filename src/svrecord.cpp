@@ -232,7 +232,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
     }
     // refine bp using BWT
-    RealnFilter* rf = new RealnFilter(opt->genome);
+    RealnFilter* rf = new RealnFilter(opt->alnref);
     for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
         if(sriter->mMerged) continue;
         if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd)){
@@ -332,9 +332,9 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
 void getDPSVRef(SVSet& pe, Options* opt){
     // Open file handler
     samFile* fp = sam_open(opt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, opt->genome.c_str());
+    hts_set_fai_filename(fp, opt->alnref.c_str());
     bam_hdr_t* h = sam_hdr_read(fp);
-    faidx_t* fai = fai_load(opt->genome.c_str());
+    faidx_t* fai = fai_load(opt->alnref.c_str());
     // get SVRef on same chr
     for(auto sviter = pe.begin(); sviter != pe.end(); ++sviter){
         if(sviter->mPrecise) continue;

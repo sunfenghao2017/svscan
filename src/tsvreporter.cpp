@@ -63,7 +63,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
-    RealnFilter realnFilter(mOpt->genome);
+    RealnFilter realnFilter(mOpt->alnref);
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
         for(uint32_t i = 0; i < gl.size(); ++i){

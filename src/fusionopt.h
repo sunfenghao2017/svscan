@@ -36,6 +36,9 @@ struct FilterOptions{
     int32_t mMinDPSupport = 3;          ///< min DP support for a valid fusion
     int32_t mMinSUSupport = 3;          ///< min SU support for a valid fusion
     int32_t mMinSupport = 3;            ///< min supporting reads needed for a valid fusion
+    int32_t mMinSRSeed = 3;             ///< min SR seed for a valid fusion
+    int32_t mMinDPSeed = 3;             ///< min DP seed for a valid fusion
+    int32_t mMinSUSeed = 3;             ///< min SU seed for a valid fusion
     float mMinVAF = 0;                  ///< min VAF needed for a valid fusion
 
     /** FilterOptions constructor */
@@ -78,9 +81,13 @@ struct FusionOptions{
         mWhiteFilter.mMinVAF = 0;
         mWhiteFilter.mMinSupport = 3;
         mWhiteFilter.mMinDepth = 30;
+        mWhiteFilter.mMinSRSeed = 1;
+        mWhiteFilter.mMinDPSeed = 2;
         mUsualFilter.mMinVAF = 0.01;
         mUsualFilter.mMinSupport = 5;
         mUsualFilter.mMinDepth = 50;
+        mUsualFilter.mMinSRSeed = 2;
+        mUsualFilter.mMinDPSeed = 3;
     }
         
     /** FusionOptions destructor */

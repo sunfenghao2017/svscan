@@ -49,6 +49,10 @@ int main(int argc, char** argv){
     pfsrpt->add_option("-g,--genome", fuserptOpt->fuseOpt->mRef, "reference used in alignment of BAM", true);
     pfsrpt->add_option("--whitemindep", fuserptOpt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true);
     pfsrpt->add_option("--usualmindep", fuserptOpt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true);
+    pfsrpt->add_option("--whiteminsrs", fuserptOpt->fuseOpt->mWhiteFilter.mMinSRSeed, "min sr seeds for an valid fusion break point in whitelist", true);
+    pfsrpt->add_option("--usualminsrs", fuserptOpt->fuseOpt->mUsualFilter.mMinSRSeed, "min sr seeds for an valid fusion break point not in whitelist", true);
+    pfsrpt->add_option("--whitemindps", fuserptOpt->fuseOpt->mWhiteFilter.mMinDPSeed, "min dp seeds for an valid fusion break point in whitelist", true);
+    pfsrpt->add_option("--usualmindps", fuserptOpt->fuseOpt->mUsualFilter.mMinDPSeed, "min dp seeds for an valid fusion break point not in whitelist", true);
     pfsrpt->add_option("--whiteminr", fuserptOpt->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);
     pfsrpt->add_option("--usualminr", fuserptOpt->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true);
     pfsrpt->add_option("--whiteminaf", fuserptOpt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true);
@@ -74,7 +78,7 @@ int main(int argc, char** argv){
     CLI::App* prnadb = app.add_subcommand("rnadb", "prepare RNA sv annotation database for svscan");
     prnadb->add_option("-i,--in", rnaDBOpt->refSeqDB, "refseq database with transcript version added")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-m,--mtrs", rnaDBOpt->cncTrsList, "canonical transcript name list")->required(true)->check(CLI::ExistingFile);
-    prnadb->add_option("-g,--genome", rnaDBOpt->genome, "genome reference fasta file path")->required(true)->check(CLI::ExistingFile);
+    prnadb->add_option("-g,--genome", rnaDBOpt->alnref, "genome reference fasta file path")->required(true)->check(CLI::ExistingFile);
     prnadb->add_option("-a,--anno", rnaDBOpt->svAnnoDB, "output file path of sv annotation db", true);
     prnadb->add_option("-t,--gene2trs", rnaDBOpt->gene2trs, "output file path of transcript used by each gene", true);
     prnadb->add_option("-r,--refmrna", rnaDBOpt->refMrna, "output file path of refmrna fasta", true);

@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     app.get_formatter()->column_width(50);
     // General Options options
     app.add_option("-b,--bam", opt->bamfile, "bam file")->required(true)->check(CLI::ExistingFile)->group("General Options");
-    app.add_option("-g,--genome", opt->genome, "reference genome/transcriptome")->required(true)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-g,--alnref", opt->alnref, "reference file used in input bam")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-a,--anno", opt->annodb, "annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-r,--sreg", opt->reg, "file of regions to scan bam")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-c,--creg", opt->creg, "file of region sv must capture")->required(false)->check(CLI::ExistingFile)->group("General Options");
@@ -26,7 +26,9 @@ int main(int argc, char** argv){
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");
     app.add_option("--batchsvn", opt->batchsvn, "number of svs to annotate coverage in one thread", true)->check(CLI::Range(1000, 1000000))->group("General Options");
-    app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data")->group("General Options");
+    CLI::Option* prna = app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data")->group("General Options");
+    app.add_option("--genome", opt->genome, "genome file corresponding to the rna transcriptome")->needs(prna)->group("General Options");
+    app.add_option("--ganno", opt->gannodb, "genome file annotation database")->needs(prna)->group("General Options");
     // Control options
     app.add_option("--min_ref_sep", opt->filterOpt->mMinRefSep, "min sv length to compute", true)->group("Threshold Options");
     app.add_option("--max_read_sep", opt->filterOpt->mMaxReadSep, "max read split mapping pos allowed to compute sv", true)->group("Threshold Options");
@@ -42,7 +44,11 @@ int main(int argc, char** argv){
     app.add_option("--min_seed_dp", opt->filterOpt->mMinSeedDP, "min seed discordant reads needed to computr SV", true)->check(CLI::Range(1, 100000))->group("Threshold Options");
     // Fusion report options
     app.add_option("--whitemindep", opt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true)->group("Fusion Options");
-    app.add_option("--usualmindep", opt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point ont in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualmindep", opt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whiteminsrs", opt->fuseOpt->mWhiteFilter.mMinSRSeed, "min sr seeds for an valid fusion break point in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualminsrs", opt->fuseOpt->mUsualFilter.mMinSRSeed, "min sr seeds for an valid fusion break point not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whitemindps", opt->fuseOpt->mWhiteFilter.mMinDPSeed, "min dp seeds for an valid fusion break point in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualmindps", opt->fuseOpt->mUsualFilter.mMinDPSeed, "min dp seeds for an valid fusion break point not in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminr", opt->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true)->group("Fusion Options");
     app.add_option("--usualminr", opt->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminaf", opt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true)->group("Fusion Options");
