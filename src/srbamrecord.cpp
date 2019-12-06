@@ -121,6 +121,9 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
     int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
+    if(mOpt->debug){
+        std::cout << "Beg clustering SRs for SV type:" << svt << std::endl;
+    }
     for(auto& refIdx : mOpt->svRefID){
         // Components assigned marker
         std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
@@ -231,6 +234,9 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         }
     }
     util::loginfo("End clustering SRs for SV type:" + std::to_string(svt) + ", got: " + std::to_string(svs.size() - origSize) + " SV candidates.");
+    if(mOpt->debug){
+        std::cout << "End clustering SRs for SV type:" << svt << std::endl;
+    }
 }
 
 void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
