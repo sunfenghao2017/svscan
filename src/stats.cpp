@@ -321,8 +321,6 @@ notvalidsr:
                 }
             }
         }
-        // skip read with SA
-        if(sa) continue;
         // Read-count and spanning annotation
         if(!(b->core.flag & BAM_FPAIRED)) continue;
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
