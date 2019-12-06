@@ -206,25 +206,31 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             float af = 0.0;
             int32_t srv = std::max((int32_t)mJctCnts[i].getAltDep(), svs[i].mSRSupport);
             int32_t srr = mJctCnts[i].getRefDep();
-            int32_t dpv = mSpnCnts[i].getAltDep();
+            int32_t dpv = std::max((int32_t)mSpnCnts[i].getAltDep(), svs[i].mPESupport);
             int32_t dpr = mSpnCnts[i].getRefDep();
             if(svs[i].mPrecise) af = (double)(srv)/(double)(srv + srr);
             else af = (double)(dpv)/(double)(dpv + dpr);
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
                 if(svs[i].mPrecise){
-                    if(srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
+                    if(srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport && dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                    if(svs[i].mSRSupport < mOpt->fuseOpt->mWhiteFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mWhiteFilter.mMinDPSeed){
                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                     }
                 }else{
                     if(dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
-                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                    if(svs[i].mPESupport < mOpt->fuseOpt->mWhiteFilter.mMinDPSeed){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                     }
                 }
                 if(af < mOpt->fuseOpt->mWhiteFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
                 }
                 if(svs[i].mPrecise){
-                    if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
+                    if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth && (dpv + dpr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
                         gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                     }
                 }else{
@@ -239,19 +245,25 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
             }else if(gl[i].mFuseGene[j].status & FUSION_FHOTGENE){// fusion in whitelist
                 if(svs[i].mPrecise){
-                    if(srv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
+                    if(srv < mOpt->fuseOpt->mUsualFilter.mMinSupport && dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                    if(svs[i].mSRSupport < mOpt->fuseOpt->mUsualFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                     }
                 }else{
                     if(dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
                          gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                     }
+                    if(svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
                 }
                 if(af < mOpt->fuseOpt->mUsualFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
                 }
                 if(svs[i].mPrecise){
-                    if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth){
+                    if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth && (dpv + dpr) < mOpt->fuseOpt->mUsualFilter.mMinDepth){
                         gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                     }
                 }else{

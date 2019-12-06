@@ -81,13 +81,13 @@ struct FusionOptions{
         mWhiteFilter.mMinVAF = 0;
         mWhiteFilter.mMinSupport = 3;
         mWhiteFilter.mMinDepth = 30;
-        mWhiteFilter.mMinSRSeed = 1;
-        mWhiteFilter.mMinDPSeed = 2;
+        mWhiteFilter.mMinSRSeed = 3;
+        mWhiteFilter.mMinDPSeed = 3;
         mUsualFilter.mMinVAF = 0.01;
         mUsualFilter.mMinSupport = 5;
         mUsualFilter.mMinDepth = 50;
-        mUsualFilter.mMinSRSeed = 2;
-        mUsualFilter.mMinDPSeed = 3;
+        mUsualFilter.mMinSRSeed = 5;
+        mUsualFilter.mMinDPSeed = 5;
     }
         
     /** FusionOptions destructor */
