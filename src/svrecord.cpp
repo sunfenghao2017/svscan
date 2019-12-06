@@ -199,6 +199,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         maxCI = std::max(maxCI, std::max(std::abs(sr[i].mCiPosLow), std::abs(sr[i].mCiPosHigh)));
         maxCI = std::max(maxCI, std::max(std::abs(sr[i].mCiEndLow), std::abs(sr[i].mCiEndHigh)));
     }
+    maxCI = std::max(opt->filterOpt->mMaxReadSep, maxCI);
     int32_t totSV = sr.size();
     for(int32_t i = 0; i < totSV; ++i){
         if(sr[i].mMerged) continue;
@@ -215,8 +216,8 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
             if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI) break;
             // Test whether breakpoints within SR condidence interval
-            if(sr[i].mSVStart >= sr[j].mSVStart + sr[j].mCiPosLow && sr[i].mSVStart <= sr[j].mSVStart + sr[j].mCiPosHigh &&
-               sr[i].mSVEnd >= sr[j].mSVEnd + sr[j].mCiEndLow && sr[i].mSVEnd <= sr[j].mSVEnd + sr[j].mCiEndHigh){
+            if(sr[i].mSVStart >= sr[j].mSVStart - maxCI && sr[i].mSVStart <= sr[j].mSVStart + maxCI &&
+               sr[i].mSVEnd >= sr[j].mSVEnd - maxCI && sr[i].mSVEnd <= sr[j].mSVEnd + maxCI){
                 if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) sr[i].mMerged = true;
             }
         }
@@ -225,8 +226,8 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
             if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI) break;
             // Test whether breakpoints within SR condidence interval
-            if(sr[i].mSVStart >= sr[j].mSVStart + sr[j].mCiPosLow && sr[i].mSVStart <= sr[j].mSVStart + sr[j].mCiPosHigh &&
-               sr[i].mSVEnd >= sr[j].mSVEnd + sr[j].mCiEndLow && sr[i].mSVEnd <= sr[j].mSVEnd + sr[j].mCiEndHigh){
+            if(sr[i].mSVStart >= sr[j].mSVStart - maxCI && sr[i].mSVStart <= sr[j].mSVStart + maxCI &&
+               sr[i].mSVEnd >= sr[j].mSVEnd - maxCI && sr[i].mSVEnd <= sr[j].mSVEnd + maxCI){
                 if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) sr[i].mMerged = true;
             }
         }
