@@ -242,6 +242,15 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
     util::loginfo(std::to_string(sr.size()) + " SR supported SVs merged into " + std::to_string(msr.size()) + " ones");
+    if(opt->debug){
+        std::cout << "Merged SR SV IDs:";
+        for(uint32_t i = 0; i < sr.size(); ++i){
+            if(sr[i].mMerged){
+                std::cout << "\t" << i;
+            }
+        }
+        std::cout << std::endl;
+    }
     sr.clear();
     delete rf;
 }
@@ -294,6 +303,15 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     }
     std::copy_if(dp.begin(), dp.end(), std::back_inserter(mdp), [&](const SVRecord& sv){return !sv.mMerged;});
     util::loginfo(std::to_string(dp.size()) + " DP supported SVs merged into " + std::to_string(mdp.size()) + " ones");
+    if(opt->debug){
+        std::cout << " Merged DP SV IDs:";
+        for(uint32_t i = 0; i < dp.size(); ++i){
+            if(dp[i].mMerged){
+                std::cout << "\t" << i;
+            }
+        }
+        std::cout << std::endl;
+    }
     dp.clear();
 }
 

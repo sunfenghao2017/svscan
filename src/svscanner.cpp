@@ -137,6 +137,13 @@ void SVScanner::scanDPandSR(){
             mOpt->svRefID.insert(f.mChr2);
         }
     }
+    if(mOpt->debug){
+        std::cout << "svRefID:";
+        for(auto& srfid: mOpt->svRefID){
+            std::cout << "\t" << srfid;
+        }
+        std::cout << std::endl;
+    }
     srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
     if(mOpt->debug){

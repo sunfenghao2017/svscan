@@ -125,6 +125,9 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         std::cout << "Beg clustering SRs for SV type:" << svt << std::endl;
     }
     for(auto& refIdx : mOpt->svRefID){
+        if(mOpt->debug){
+            std::cout << "Beg clustering SRs wich chr1 ID: " << refIdx << std::endl;
+        }
         // Components assigned marker
         std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
         int32_t compNum = 0;
@@ -153,8 +156,10 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             }
             // Search possible connectable node
             for(uint32_t j = i + 1; j < srs.size(); ++j){
-                if(srs[j].mChr1 != refIdx) continue; // same chr
+                if(srs[j].mChr1 != refIdx) continue; // same chr1
                 if(srs[j].mPos1 - srs[i].mPos1 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
+                if(srs[j].mChr2 != srs[i].mChr2) break; // same chr2
+                if(srs[j].mPos2 - srs[i].mPos2 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
                 // Update last connected node
                 if(j > lastConnectedNodesEnd) lastConnectedNodesEnd = j;
                 // Assign components
@@ -245,11 +250,17 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
         // Sort edges by weight
         std::sort(compIter->second.begin(), compIter->second.end());
         if(mOpt->debug){
+            std::cout << "Beg output component:" << std::endl;
             for(auto dbiter = compIter->second.begin(); dbiter != compIter->second.end(); ++dbiter){
                 std::cout << *dbiter << std::endl;
             }
+            std::cout << "End output component:" << std::endl;
+            std::cout << "Beg search cliques: " << std::endl;
         }
         auto edgeIter = compIter->second.begin();
+        if(mOpt->debug){
+            std::cout << "Beg edge: " << *edgeIter << std::endl;
+        }
         // Find a large clique
         std::set<int32_t> clique, incompatible;
         // Initialization clique
@@ -280,6 +291,9 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
             int32_t newCiEndHigh = std::max(srs[v].mPos2, ciendhigh);
             if((newCiPosHigh - newCiPosLow) < mOpt->filterOpt->mMaxReadSep &&
                (newCiEndHigh - newCiEndLow) < mOpt->filterOpt->mMaxReadSep){// Accept new vertex
+                if(mOpt->debug){
+                    std::cout << "edge: " << v << " add compatible" << std::endl;
+                }
                 clique.insert(v);
                 ciposlow = newCiPosLow;
                 pos1 += srs[v].mPos1;
@@ -288,7 +302,10 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
                 pos2 += srs[v].mPos2;
                 ciendhigh = newCiEndHigh;
                 inslen += srs[v].mInslen;
-              }else incompatible.insert(v);
+              }else{
+                  incompatible.insert(v);
+                  std::cout << "edge: " << v << " not compatibale" << std::endl;
+              }
         }
         // At least 2 split read support
         if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
