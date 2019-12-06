@@ -87,6 +87,7 @@ void Options::update(int argc, char** argv){
 LibraryInfo* Options::getLibInfo(const std::string& bam){
     LibraryInfo* libInfo = new LibraryInfo();
     int32_t nread = 0;
+    int32_t ttread = 0;
     samFile* fp = sam_open(bam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
@@ -94,13 +95,14 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
     const uint16_t BAM_SKIP_RECORD_MASK = (BAM_FREAD2 | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP);
     while(sam_read1(fp, h, b) >= 0){
         if(b->core.flag & BAM_SKIP_RECORD_MASK) continue;
+        ++ttread;
         readLen.push_back(b->core.l_qseq);
         if(b->core.flag & BAM_FPAIRED && b->core.tid == b->core.mtid){
             vecISize.push_back(std::abs(b->core.isize));
             if(++nread > libInfo->mMaxSample) break;
         }
     }
-    if(!nread){
+    if(!ttread){
         sam_close(fp);
         bam_destroy1(b);
         bam_hdr_destroy(h);
@@ -110,8 +112,8 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
         exit(EXIT_SUCCESS);
     }
     libInfo->mReadLen = statutil::median(readLen);
-    libInfo->mMedian = statutil::median(vecISize);
-    libInfo->mMad = statutil::mad(vecISize, libInfo->mMedian);
+    if(!vecISize.empty()) libInfo->mMedian = statutil::median(vecISize);
+    if(!vecISize.empty()) libInfo->mMad = statutil::mad(vecISize, libInfo->mMedian);
     libInfo->mMaxNormalISize = libInfo->mMedian + (5 * libInfo->mMad);
     libInfo->mMinNormalISize = std::max(0, libInfo->mMedian - (5 * libInfo->mMad));
     libInfo->mMinISizeCutoff = std::max(0, libInfo->mMedian - (madCutoff * libInfo->mMad));
