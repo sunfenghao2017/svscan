@@ -252,12 +252,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                     }
                 }else{
-                    if(dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
-                         gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                    if(svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
+                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                 }
                 if(af < mOpt->fuseOpt->mUsualFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
@@ -267,9 +262,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                         gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                     }
                 }else{
-                    if((dpr + dpv) < mOpt->fuseOpt->mUsualFilter.mMinDepth){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
-                    }
+                    gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                 }
                 if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                     if(svs[i].mSize < mOpt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize){
