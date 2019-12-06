@@ -316,8 +316,10 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
         for(int32_t j = chridx[svs[i].mChr1].first; j <= chridx[svs[i].mChr1].second; ++j){
             if(pe[j].mSVT != svs[i].mSVT || svs[i].mChr2 != pe[j].mChr2 || pe[j].mMerged) continue;
             // Test whether breakpoint is within PE confidence interval
-            if(svs[i].mSVStart >= pe[j].mSVStart + pe[j].mCiPosLow && svs[i].mSVStart <= pe[j].mSVStart + pe[j].mCiPosHigh &&
-               svs[i].mSVEnd >= pe[j].mSVEnd + pe[j].mCiEndLow && svs[i].mSVEnd <= pe[j].mSVEnd + pe[j].mCiEndHigh){
+            if(svs[i].mSVStart >= pe[j].mSVStart - std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiPosHigh) && 
+               svs[i].mSVStart <= pe[j].mSVStart + std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiPosHigh) &&
+               svs[i].mSVEnd >= pe[j].mSVEnd - std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiEndHigh) && 
+               svs[i].mSVEnd <= pe[j].mSVEnd + std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiEndHigh)){
                 svs[i].mPESupport = pe[j].mPESupport;
                 svs[i].mPEMapQuality = pe[j].mPEMapQuality;
                 pe[j].mMerged = true;
