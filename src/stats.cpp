@@ -127,6 +127,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             if(sastr.find_first_of(";") != sastr.find_last_of(";")) continue;
             if(sastr.find_first_of("SH") != sastr.find_last_of("SH")) continue;
         }
+        std::set<int32_t> sptids;
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
@@ -300,6 +301,7 @@ notvalidsr:
                                         if(mOpt->fbamout){
                                             bam_aux_update_int(b, "ZF", itbp->mID);
                                             assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                            sptids.insert(itbp->mID);
                                         }
                                         mOpt->logMtx.unlock();
                                     }
@@ -429,8 +431,10 @@ notvalidsr:
                                     else ++mSpnCnts[itspna->mID].mAlth2;
                                 }
                                 if(mOpt->fbamout){
-                                    bam_aux_update_int(b, "ZF", itspna->mID);
-                                    assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                    if(sptids.find(itspna->mID) == sptids.end()){
+                                        bam_aux_update_int(b, "ZF", itspna->mID);
+                                        assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                                    }
                                 }
                                 mOpt->logMtx.unlock();
                             }
