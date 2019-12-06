@@ -53,8 +53,8 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--usualminsrs", fuserptOpt->fuseOpt->mUsualFilter.mMinSRSeed, "min sr seeds for an valid fusion break point not in whitelist", true);
     pfsrpt->add_option("--whitemindps", fuserptOpt->fuseOpt->mWhiteFilter.mMinDPSeed, "min dp seeds for an valid fusion break point in whitelist", true);
     pfsrpt->add_option("--usualmindps", fuserptOpt->fuseOpt->mUsualFilter.mMinDPSeed, "min dp seeds for an valid fusion break point not in whitelist", true);
-    pfsrpt->add_option("--whiteminr", fuserptOpt->fuseOpt->mWhiteFilter.mMinSupport, "min reads support for an valid fusion in whitelist", true);
-    pfsrpt->add_option("--usualminr", fuserptOpt->fuseOpt->mUsualFilter.mMinSupport, "min reads support for an valid fusion not in whitelist", true);
+    pfsrpt->add_option("--whiteminttr", fuserptOpt->fuseOpt->mWhiteFilter.mMinSupport, "min total reads for an valid fusion in whitelist", true);
+    pfsrpt->add_option("--usualminttr", fuserptOpt->fuseOpt->mUsualFilter.mMinSupport, "min total reads for an valid fusion not in whitelist", true);
     pfsrpt->add_option("--whiteminaf", fuserptOpt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true);
     pfsrpt->add_option("--usualminaf", fuserptOpt->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true);
     pfsrpt->add_option("--whiteminigs", fuserptOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion in whitelist", true);

@@ -198,6 +198,22 @@ class DPBamRecordSet{
             }
             return os;
         }
+        
+        /** operator to output an DPBamRecordSet to ostream
+         * @param os reference of ostream object
+         * @param dps reference of DPBamRecordSet object
+         * @return reference of ostream object
+         */
+        inline friend std::ostream& operator<<(std::ostream& os, const DPBamRecordSet* dps){
+            for(uint32_t i = 0; i < dps->mDPs.size(); ++i){
+                os << "SVT: " << i << ":" << dps->mDPs[i].size() << "\n";
+                for(uint32_t j = 0; j < dps->mDPs[i].size(); ++j){
+                    os << dps->mDPs[i][j];
+                }
+                os << "\n";
+            }
+            return os;
+        }
 
         /** inert an DPBamRecord
          * @param b pointer to bam1_t* struct which is the latter read in coordinate sorted bam which is DP

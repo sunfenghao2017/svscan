@@ -139,6 +139,10 @@ void SVScanner::scanDPandSR(){
     }
     srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
+    if(mOpt->debug){
+        std::cout << "SR SV Cluster result: " << std::endl;
+        std::cout << srs << std::endl;
+    }
     util::loginfo("Beg assembling SRs and refining breakpoints");
     srs.assembleSplitReads(mSRSVs);
     util::loginfo("End assembling SRs and refining breakpoints");
@@ -147,7 +151,17 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg clustering DPs");
     dprSet->cluster(mDPSVs);
     util::loginfo("End clustering DPs");
+    if(mOpt->debug){
+        std::cout << "DP SV Cluster result: " << std::endl;
+        std::cout << dprSet << std::endl;
+    }
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
+    if(mOpt->debug){
+        std::cout << "DP SVS found: " << std::endl;
+        std::cout << mDPSVs << std::endl;
+        std::cout << "SR SVS found: " << std::endl;
+        std::cout << mSRSVs << std::endl;
+    }
     // Merge SR and DP SVs
     util::loginfo("Beg merging SVs from SRs and DPs");
     SVSet mergedSVs;

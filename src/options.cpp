@@ -17,6 +17,7 @@ Options::Options(){
     libInfo = NULL;
     contigNum = 0;
     rnamode = false;
+    debug = false;
 }
 
 Options::~Options(){

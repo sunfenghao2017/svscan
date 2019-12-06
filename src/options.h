@@ -191,6 +191,7 @@ class Options{
         bam_hdr_t* bamheader;         ///< bam header
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
+        bool debug;                   ///< debug mode if true
 
     public:
         /** Options constructor */

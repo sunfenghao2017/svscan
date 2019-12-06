@@ -146,6 +146,23 @@ class SRBamRecordSet{
             return os;
         }
 
+        /** operator to output an SRBamRecordSet object to ostream
+         * @param os reference of ostream object
+         * @param srs pointer to SRBamRecordSet object
+         * @return reference of ostream
+         */
+        inline friend std::ostream& operator<<(std::ostream& os, const SRBamRecordSet* srs){
+            for(uint32_t i = 0; i < srs->mSRs.size(); ++i){
+                os << "SVT: " << i << "\n";
+                for(uint32_t j = 0; j < srs->mSRs[i].size(); ++j){
+                    os << "===== " << j + 1 << " =====\n";
+                    os << srs->mSRs[i][j];
+                }
+                os << "\n";
+            }
+            return os;
+        }
+
         /** class all Junction reads record in JunctionMap into SRBamRecord vector according to SV type they support
          * @param jctMap pointer to JunctionMap
          */
