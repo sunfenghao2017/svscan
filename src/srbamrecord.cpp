@@ -130,9 +130,17 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         size_t lastConnectedNodesEnd = 0;
         size_t lastConnectedNodesBeg = 0;
         for(uint32_t i = 0; i < srs.size(); ++i){
+            if(mOpt->debug){
+                std::cout << "index of srs: " << i << std::endl;
+                std::cout << "lastConnectedNodesEnd: " << lastConnectedNodesEnd << std::endl;
+                std::cout << "lastConnectedNodesBeg: " << lastConnectedNodesBeg << std::endl;
+            }
             if(srs[i].mChr1 != refIdx) continue;
             // Safe to clean the graph ?
             if(i > lastConnectedNodesEnd){
+                if(mOpt->debug){
+                    std::cout << "clean the last graph now" << std::endl;
+                }
                 // Clean edge lists
                 if(!compEdge.empty()){
                     searchCliques(compEdge, srs, svs, svt);
@@ -230,6 +238,11 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
     for(auto compIter = compEdge.begin(); compIter != compEdge.end(); ++compIter){
         // Sort edges by weight
         std::sort(compIter->second.begin(), compIter->second.end());
+        if(mOpt->debug){
+            for(auto dbiter = compIter->second.begin(); dbiter != compIter->second.end(); ++dbiter){
+                std::cout << *dbiter << std::endl;
+            }
+        }
         auto edgeIter = compIter->second.begin();
         // Find a large clique
         std::set<int32_t> clique, incompatible;
