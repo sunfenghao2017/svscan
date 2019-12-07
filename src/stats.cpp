@@ -101,8 +101,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
            continue;
         }
         // Count aligned basepair (small InDels)
-        int32_t leadingSC = 0;
-        int32_t tailingSC = 0;
+        int32_t leadingSC = 0, leadingHC = 0;
+        int32_t tailingSC = 0, tailingHC = 0;
         int32_t rp = 0; // reference pos
         uint32_t* cigar = bam_get_cigar(b);
         for(uint32_t i = 0; i < b->core.n_cigar; ++i){
@@ -117,8 +117,12 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             }else if(opint == BAM_CSOFT_CLIP){
                 if(i == 0) leadingSC = oplen;
                 else tailingSC = opint;
+            }else if(opint == BAM_CHARD_CLIP){
+                if(i == 0) leadingHC = oplen;
+                else tailingHC = oplen;
             }
         }
+        if(leadingHC || tailingHC) continue; // skip reads with any hardclipings
         if(leadingSC && tailingSC) continue; // skip reads with both leading and tailing softclips
         uint8_t* sa = bam_aux_get(b, "SA");
         std::string sastr;
@@ -254,6 +258,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                                 if(stotlen == num) sscl = num;
                                                 else sscr = num;
                                                 break;
+                                            case 'H':
+                                                goto notvalidsr;
                                             case 'M': case '=': case 'X': case 'D': case 'N':
                                                 erpos += num;
                                                 break;

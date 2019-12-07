@@ -100,6 +100,20 @@ namespace bamutil{
         std::cerr << "Qual:  " << getQual(b) << std::endl;
     }
     
+    /** output an alignment record to std::cerr */
+    inline void dump(const bam1_t* b, const bam_hdr_t* h){
+        std::cerr << "R:     " << h->target_name[b->core.tid] << ":" << b->core.pos << "\n";
+        if(b->core.mtid >= 0){
+            std::cerr << "M:     " << h->target_name[b->core.mtid] << ":" <<  b->core.mpos << "\n";
+        }
+        std::cerr << "TLEN:  " << b->core.isize << "\n";
+        std::cerr << "FLAG:  " << b->core.flag << "\n";
+        std::cerr << "QName: " << getQName(b) << "\n";
+        std::cerr << "Cigar: " << getCigar(b) << "\n";
+        std::cerr << "Seq:   " << getSeq(b) << "\n";
+        std::cerr << "Qual:  " << getQual(b) << std::endl;
+    }
+    
     /** convert an alignment record to string
      * @param b pointer to bam1_t struct
      * @return str representation of b
@@ -612,6 +626,34 @@ namespace bamutil{
                 }else{
                     ret.second = bam_cigar_oplen(cigarStr[i]);
                 }
+            }
+        }
+        return ret;
+    }
+
+    /** get softclip length of left/right softclip
+     * @param b pointer to bam1_t
+     * @param lhc left hard clip length
+     * @param rhc right hard clip length
+     * @return <leftClipLength, rightClipLength>
+     */
+    inline std::pair<int, int> getClipLength(const bam1_t* b, int& lhc, int& rhc){
+        std::pair<int, int> ret = {0, 0};
+        lhc = 0;
+        rhc = 0;
+        uint32_t* cigarStr = bam_get_cigar(b);
+        for(uint32_t i = 0; i < b->core.n_cigar; ++i){
+            switch(bam_cigar_op(cigarStr[i])){
+                case BAM_CSOFT_CLIP:
+                    if(i == 0) ret.first = bam_cigar_oplen(cigarStr[i]);
+                    else ret.second = bam_cigar_oplen(cigarStr[i]);
+                    break;
+                case BAM_CHARD_CLIP:
+                    if(i == 0) lhc = bam_cigar_oplen(cigarStr[i]);
+                    else rhc = bam_cigar_oplen(cigarStr[i]);
+                    break;
+                default:
+                    break;
             }
         }
         return ret;
