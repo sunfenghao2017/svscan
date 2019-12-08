@@ -286,6 +286,8 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene[j].status |= FUSION_FCOMMONHOTDIRECT;
                 if(gl[i].mFuseGene[j].status & FUSION_FHTFLSWAPPED){
                     gl[i].mFuseGene[j].status &= (~FUSION_FHTFLSWAPPED);
+                }else{
+                    gl[i].mFuseGene[j].status |= FUSION_FHTFLSWAPPED;
                 }
             }
         }

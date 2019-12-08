@@ -249,6 +249,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
     for(auto compIter = compEdge.begin(); compIter != compEdge.end(); ++compIter){
         // Sort edges by weight
         std::sort(compIter->second.begin(), compIter->second.end());
+        auto edgeIter = compIter->second.begin();
         if(mOpt->debug & DEBUG_FCALL){
             std::cout << "Beg output component:" << std::endl;
             for(auto dbiter = compIter->second.begin(); dbiter != compIter->second.end(); ++dbiter){
@@ -256,9 +257,6 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
             }
             std::cout << "End output component:" << std::endl;
             std::cout << "Beg search cliques: " << std::endl;
-        }
-        auto edgeIter = compIter->second.begin();
-        if(mOpt->debug & DEBUG_FCALL){
             std::cout << "Beg edge: " << *edgeIter << std::endl;
         }
         // Find a large clique
@@ -304,7 +302,9 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
                 inslen += srs[v].mInslen;
               }else{
                   incompatible.insert(v);
-                  std::cout << "edge: " << v << " not compatibale" << std::endl;
+                  if(mOpt->debug & DEBUG_FCALL){
+                      std::cout << "edge: " << v << " not compatibale" << std::endl;
+                  }
               }
         }
         // At least 2 split read support
