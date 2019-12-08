@@ -555,6 +555,8 @@ namespace svutil{
      */
     inline void getexon(TrsRec& htrs, TrsRec& ttrs, int32_t svt){
         int32_t catt = svt;
+        htrs.exon = -1;
+        ttrs.exon = -1;
         if(catt >= 5) catt -= 5;
         switch(catt){
             case 0: // 5->5 catenation
@@ -624,8 +626,10 @@ namespace svutil{
             default:
                 break;
         }
-        htrs.uexon = "exon" + std::to_string(htrs.exon);
-        ttrs.uexon = "exon" + std::to_string(ttrs.exon);
+        if(htrs.exon != -1) htrs.uexon = "exon" + std::to_string(htrs.exon);
+        else htrs.uexon = htrs.unit;
+        if(ttrs.exon != -1) ttrs.uexon = "exon" + std::to_string(ttrs.exon);
+        else ttrs.uexon = ttrs.unit;
     }
 }
 
