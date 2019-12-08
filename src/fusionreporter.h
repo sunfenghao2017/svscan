@@ -11,7 +11,8 @@ struct FusionReporter{
     FusionOptions* fuseOpt;    ///< fusion report options
     Software* softEnv;         ///< software environments
     FusionRecordList fuseList; ///< fusion list
-    bool rnamode;              ///< fusion event is from rnaseq
+    bool rnamode = false;      ///< fusion event is from rnaseq
+    bool debug = false;        ///< do debug if true
 
     /** FusionReporter constructor */
     FusionReporter();

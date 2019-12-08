@@ -327,6 +327,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.ts2name = vstr[26];                                            // ts2Name
                 fgr.ts2pos = std::atoi(vstr[27].c_str());                          // ts2Pos
             }
+            if(debug){
+                std::cout << tmpstr << std::endl;
+                std::cout << fgr << std::endl;
+            }
             frl.push_back(fgr);
         }
         bool reported = false;
