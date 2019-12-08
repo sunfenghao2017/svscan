@@ -626,10 +626,8 @@ namespace svutil{
             default:
                 break;
         }
-        if(htrs.exon != -1) htrs.uexon = "exon" + std::to_string(htrs.exon);
-        else htrs.uexon = htrs.unit;
-        if(ttrs.exon != -1) ttrs.uexon = "exon" + std::to_string(ttrs.exon);
-        else ttrs.uexon = ttrs.unit;
+        if(htrs.exon == -1) htrs.exon= std::atoi(htrs.number.c_str());
+        if(ttrs.exon == -1) ttrs.exon = std::atoi(ttrs.number.c_str());
     }
 }
 

@@ -8,7 +8,6 @@ struct TrsRec{
     std::string name;    ///< transcript name
     std::string gene;    ///< gene name
     std::string unit;    ///< uint name
-    std::string uexon;   ///< approximate exon unit
     std::string strand;  ///< strand
     std::string number;  ///< count
     std::string version; ///< transcript version
@@ -50,12 +49,12 @@ struct TrsRec{
         ret.append(",");
         ret.append(number);
         ret.append(",");
-        ret.append(uexon);
+        ret.append(std::to_string(exon));
         return ret;
     }
 
     /** get name,uint,strand,number rep of TrsRec
-     * @return string rep of TrsRec in name,strand,unit,number,uexon format
+     * @return string rep of TrsRec in name,strand,unit,number,exon format
      */
     std::string getTrs(){
         std::string ret;
@@ -69,7 +68,7 @@ struct TrsRec{
         ret.append(",");
         ret.append(number);
         ret.append(",");
-        ret.append(uexon);
+        ret.append(std::to_string(exon));
         return ret;
     }
 
