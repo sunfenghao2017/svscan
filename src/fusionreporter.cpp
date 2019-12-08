@@ -112,7 +112,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED);
+    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE);
     // supplementary fusion additional conditions
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;
@@ -244,11 +244,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                         fgr.fsmask &= (~FUSION_FLOWSUPPORT);
                     }
                 }else{
-                    if(dpv < fuseOpt->mUsualFilter.mMinSupport || dps < fuseOpt->mUsualFilter.mMinDPSeed){
-                        fgr.fsmask |= FUSION_FLOWSUPPORT;
-                    }else{
-                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
-                    }
+                    fgr.fsmask |= FUSION_FLOWSUPPORT;
                 }
                 if(af < fuseOpt->mUsualFilter.mMinVAF){
                     fgr.fsmask |= FUSION_FLOWAF;
@@ -262,11 +258,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                         fgr.fsmask &= (~FUSION_FLOWDEPTH);
                     }
                 }else{
-                    if((dpr + dpv) < fuseOpt->mUsualFilter.mMinDepth){
-                        fgr.fsmask |= FUSION_FLOWDEPTH;
-                    }else{
-                        fgr.fsmask &= (~FUSION_FLOWDEPTH);
-                    }
+                    fgr.fsmask |= FUSION_FLOWDEPTH;
                 }
             }
             fgr.fusegene = fgl[i].hgene + "->" + fgl[i].tgene;                   // FusionGene
