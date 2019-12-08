@@ -120,12 +120,29 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     std::getline(fr, tmpstr);
     if(!fuseOpt->mSVModFile.empty()) fsv << tmpstr << "\n";
     while(std::getline(fr, tmpstr)){
+        if(debug){
+            std::cout << tmpstr << std::endl;
+        }
         util::split(tmpstr, vstr, "\t");
         TrsRecList trsl1, trsl2;
         str2trsl(trsl1, vstr[20]);
         str2trsl(trsl2, vstr[21]);
         FuseGeneList fgl;
         str2fsgs(fgl, vstr[22], vstr[23], trsl1, trsl2);
+        if(debug){
+            std::cout << "FuseGeneList fgl: " << std::endl;
+            for(uint32_t flidx = 0; flidx < fgl.size(); ++flidx){
+                std::cout << fgl[flidx].debugStr() << std::endl;
+            }
+            std::cout << "TrsRecList trsl1: " << std::endl;
+            for(uint32_t trsidx = 0; trsidx < trsl1.size(); ++trsidx){
+                std::cout << trsl1[trsidx].toStr() << std::endl;
+            }
+            std::cout << "TrsRecList trsl2: " << std::endl;
+            for(uint32_t trsidx = 0; trsidx < trsl2.size(); ++trsidx){
+                std::cout << trsl2[trsidx].toStr() << std::endl;
+            }
+        }
         int32_t svt = std::atoi(vstr[19].c_str());
         std::string chr1 = vstr[3];
         std::string chr2 = vstr[5];
@@ -328,7 +345,6 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.ts2pos = std::atoi(vstr[27].c_str());                          // ts2Pos
             }
             if(debug){
-                std::cout << tmpstr << std::endl;
                 std::cout << fgr << std::endl;
             }
             frl.push_back(fgr);

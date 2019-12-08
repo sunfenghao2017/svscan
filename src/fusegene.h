@@ -246,6 +246,24 @@ struct FuseGene{
         os << fg.tgene << "\t" << fg.tend << "\t" << fg.tstrand << "\t";
         return os;
     }
+
+    /** get debug info of FuseGene */
+    inline std::string debugStr(){
+        std::stringstream oss;
+        oss << "hgene:   " << hgene << "\n";
+        oss << "hend:    " << hend << "\n";
+        oss << "hstrand: " << hstrand << "\n";
+        oss << "tgene:   " << tgene << "\n";
+        oss << "tend:    " << tend << "\n";
+        oss << "tstrand: " << tstrand << "\n";
+        oss << "hidx:    " << hidx << "\n";
+        oss << "tidx:    " << tidx << "\n";
+        oss << "hfrom1:  " << std::boolalpha << hfrom1 << "\n";
+        oss << "tfrom1:  " << std::boolalpha << tfrom1 << "\n";
+        oss << "cigar:   " << cigar << "\n";
+        oss << "status:  " << status;
+        return oss.str();
+    }
 };
 
 /** class to store a list of FuseGene */

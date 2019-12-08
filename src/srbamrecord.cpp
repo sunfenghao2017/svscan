@@ -121,11 +121,11 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
     int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
-    if(mOpt->debug){
+    if(mOpt->debug & DEBUG_FCALL){
         std::cout << "Beg clustering SRs for SV type:" << svt << std::endl;
     }
     for(auto& refIdx : mOpt->svRefID){
-        if(mOpt->debug){
+        if(mOpt->debug & DEBUG_FCALL){
             std::cout << "Beg clustering SRs wich chr1 ID: " << refIdx << std::endl;
         }
         // Components assigned marker
@@ -136,7 +136,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         size_t lastConnectedNodesEnd = 0;
         size_t lastConnectedNodesBeg = 0;
         for(uint32_t i = 0; i < srs.size(); ++i){
-            if(mOpt->debug){
+            if(mOpt->debug & DEBUG_FCALL){
                 std::cout << "index of srs: " << i << std::endl;
                 std::cout << "lastConnectedNodesEnd: " << lastConnectedNodesEnd << std::endl;
                 std::cout << "lastConnectedNodesBeg: " << lastConnectedNodesBeg << std::endl;
@@ -144,7 +144,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             if(srs[i].mChr1 != refIdx) continue;
             // Safe to clean the graph ?
             if(i > lastConnectedNodesEnd){
-                if(mOpt->debug){
+                if(mOpt->debug & DEBUG_FCALL){
                     std::cout << "clean the last graph now" << std::endl;
                 }
                 // Clean edge lists
@@ -239,7 +239,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         }
     }
     util::loginfo("End clustering SRs for SV type:" + std::to_string(svt) + ", got: " + std::to_string(svs.size() - origSize) + " SV candidates.");
-    if(mOpt->debug){
+    if(mOpt->debug & DEBUG_FCALL){
         std::cout << "End clustering SRs for SV type:" << svt << std::endl;
     }
 }
@@ -249,7 +249,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
     for(auto compIter = compEdge.begin(); compIter != compEdge.end(); ++compIter){
         // Sort edges by weight
         std::sort(compIter->second.begin(), compIter->second.end());
-        if(mOpt->debug){
+        if(mOpt->debug & DEBUG_FCALL){
             std::cout << "Beg output component:" << std::endl;
             for(auto dbiter = compIter->second.begin(); dbiter != compIter->second.end(); ++dbiter){
                 std::cout << *dbiter << std::endl;
@@ -258,7 +258,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
             std::cout << "Beg search cliques: " << std::endl;
         }
         auto edgeIter = compIter->second.begin();
-        if(mOpt->debug){
+        if(mOpt->debug & DEBUG_FCALL){
             std::cout << "Beg edge: " << *edgeIter << std::endl;
         }
         // Find a large clique
@@ -291,7 +291,7 @@ void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& 
             int32_t newCiEndHigh = std::max(srs[v].mPos2, ciendhigh);
             if((newCiPosHigh - newCiPosLow) < mOpt->filterOpt->mMaxReadSep &&
                (newCiEndHigh - newCiEndLow) < mOpt->filterOpt->mMaxReadSep){// Accept new vertex
-                if(mOpt->debug){
+                if(mOpt->debug & DEBUG_FCALL){
                     std::cout << "edge: " << v << " add compatible" << std::endl;
                 }
                 clique.insert(v);

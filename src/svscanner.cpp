@@ -139,7 +139,7 @@ void SVScanner::scanDPandSR(){
             mOpt->svRefID.insert(f.mChr2);
         }
     }
-    if(mOpt->debug){
+    if(mOpt->debug & DEBUG_FCALL){
         std::cout << "svRefID:";
         for(auto& srfid: mOpt->svRefID){
             std::cout << "\t" << srfid;
@@ -148,7 +148,7 @@ void SVScanner::scanDPandSR(){
     }
     srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
-    if(mOpt->debug){
+    if(mOpt->debug & DEBUG_FCALL){
         std::cout << "SR SV Cluster result: " << std::endl;
         std::cout << srs << std::endl;
     }
@@ -160,12 +160,12 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg clustering DPs");
     dprSet->cluster(mDPSVs);
     util::loginfo("End clustering DPs");
-    if(mOpt->debug){
+    if(mOpt->debug & DEBUG_FCALL){
         std::cout << "DP SV Cluster result: " << std::endl;
         std::cout << dprSet << std::endl;
     }
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
-    if(mOpt->debug){
+    if(mOpt->debug & DEBUG_FCALL){
         std::cout << "DP SVS found: " << std::endl;
         std::cout << mDPSVs << std::endl;
         std::cout << "SR SVS found: " << std::endl;

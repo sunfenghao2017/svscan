@@ -16,6 +16,12 @@
 #include "util.h"
 #include "bed.h"
 
+#define DEBUG_FCALL 0x1 ///< calling debug mask
+#define DEBUG_FANNC 0x2 ///< coverage anno debug mask
+#define DEBUG_FANNG 0x4 ///< gene anno debug mask
+
+typedef uint32_t DEBUG_TYPE; ///< debug type
+
 /** class to store library information */
 struct LibraryInfo{
     int32_t mMaxSample = 1000000; ///< maximum number of reads used to generate library information
@@ -191,7 +197,7 @@ class Options{
         bam_hdr_t* bamheader;         ///< bam header
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
-        bool debug;                   ///< debug mode if true
+        DEBUG_TYPE debug;             ///< debug mode
 
     public:
         /** Options constructor */
