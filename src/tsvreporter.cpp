@@ -32,9 +32,11 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.dpRefCount = mSpnCnts[i].getRefDep();
         // AF
         if(svs[i].mPrecise){
-            svr.af = (double)(std::max(mJctCnts[i].getAltDep(), svs[i].mSRSupport))/(mJctCnts[i].getRefDep() + mJctCnts[i].getAltDep());
+            int32_t srv = std::max(mJctCnts[i].getAltDep(), svs[i].mSRSupport);
+            svr.af = (double)(srv)/(mJctCnts[i].getRefDep() + srv);
         }else{
-            svr.af = (double)(std::max(mSpnCnts[i].getAltDep(), svs[i].mPESupport))/(mSpnCnts[i].getRefDep() + mSpnCnts[i].getAltDep());
+            int32_t dpv = std::max(mSpnCnts[i].getAltDep(), svs[i].mPESupport);
+            svr.af = (double)(dpv)/(mSpnCnts[i].getRefDep() + dpv);
         }
         // insBp insSeq
         svr.insBp = svs[i].mBpInsSeq.length();
