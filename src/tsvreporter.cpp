@@ -309,6 +309,10 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gl[i].mFuseGene[j].status &= (~FUSION_FMIRRORINDB);
                     gl[i].mFuseGene[j].status |= FUSION_FINDB;
                 }
+                if(gl[i].mFuseGene[j].status & FUSION_FINDB){
+                    gl[i].mFuseGene[j].status &= (~FUSION_FINDB);
+                    gl[i].mFuseGene[j].status |= FUSION_FMIRRORINDB;
+                }
             }
         }
     }
