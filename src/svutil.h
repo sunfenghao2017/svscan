@@ -547,6 +547,86 @@ namespace svutil{
         }
         return css.str();
     }
+
+    /** get exon partipated into sv event
+     * @param htrs 5' part transcript 
+     * @param ttrs 3' part transcript
+     * @param svt SV type
+     */
+    inline void getexon(TrsRec& htrs, TrsRec& ttrs, int32_t svt){
+        int32_t catt = svt;
+        if(catt >= 5) catt -= 5;
+        switch(catt){
+            case 0: // 5->5 catenation
+                if(htrs.unit[0] != 'e'){
+                    if(htrs.strand == "+"){
+                        htrs.exon = std::atoi(htrs.number.c_str());
+                    }else{
+                        htrs.exon = std::atoi(htrs.number.c_str()) + 1;
+                    }
+                }
+                if(ttrs.unit[0] != 'e'){
+                    if(ttrs.strand == "+"){
+                        ttrs.exon = std::atoi(ttrs.number.c_str());
+                    }else{
+                        ttrs.exon = std::atoi(ttrs.number.c_str()) + 1;
+                    }
+                }
+                break;
+            case 1: // 3->3 catenation
+                if(htrs.unit[0] != 'e'){
+                    if(htrs.strand == "+"){
+                        htrs.exon = std::atoi(htrs.number.c_str()) + 1;
+                    }else{
+                        htrs.exon = std::atoi(htrs.number.c_str());
+                    }
+                }
+                if(ttrs.unit[0] != 'e'){
+                    if(ttrs.strand == "+"){
+                        ttrs.exon = std::atoi(ttrs.number.c_str()) + 1;
+                    }else{
+                        ttrs.exon = std::atoi(ttrs.number.c_str());
+                    }
+                }
+                break;
+            case 2: // 5->3 catenation
+                if(htrs.unit[0] != 'e'){
+                    if(htrs.strand == "+"){
+                        htrs.exon = std::atoi(htrs.number.c_str());
+                    }else{
+                        htrs.exon = std::atoi(htrs.number.c_str()) + 1;
+                    }
+                }
+                if(ttrs.unit[0] != 'e'){
+                    if(ttrs.strand == "+"){
+                        ttrs.exon = std::atoi(ttrs.number.c_str()) + 1;
+                    }else{
+                        ttrs.exon = std::atoi(ttrs.number.c_str());
+                    }
+                }
+                break;
+            case 3: // 3->5 catenation
+                if(htrs.unit[0] != 'e'){
+                    if(htrs.strand == "+"){
+                        htrs.exon = std::atoi(htrs.number.c_str()) + 1;
+                    }else{
+                        htrs.exon = std::atoi(htrs.number.c_str());
+                    }
+                }
+                if(ttrs.unit[0] != 'e'){
+                    if(ttrs.strand == "+"){
+                        ttrs.exon = std::atoi(ttrs.number.c_str());
+                    }else{
+                        ttrs.exon = std::atoi(ttrs.number.c_str()) + 1;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        htrs.uexon = "exon" + std::to_string(htrs.exon);
+        ttrs.uexon = "exon" + std::to_string(ttrs.exon);
+    }
 }
 
 #endif

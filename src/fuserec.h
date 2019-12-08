@@ -39,6 +39,8 @@ struct FusionRecord{
     int32_t svid;               ///< sv id
     int32_t svint;              ///< svtype, precise integer representation
     TFUSION_FLAG fsmask;        ///< fusion mask
+    std::string exon1;          ///< approximate gene1 exon(DNA only)
+    std::string exon2;          ///< approximate gene2 exon(DNA only)
     std::string ts1name;        ///< transcript1 name(RNA only)
     int32_t ts1pos;             ///< transcript1 breakpoint(RNA only)
     std::string ts2name;        ///< transcript2 name(RNA only)
@@ -69,6 +71,8 @@ struct FusionRecord{
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos << "\t" << fsr.cigar;
+        }else{
+            os << "\t" << fsr.exon1 << "\t" << fsr.exon2;
         }
         os << "\n";
        return os;

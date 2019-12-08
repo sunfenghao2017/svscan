@@ -8,6 +8,7 @@ struct TrsRec{
     std::string name;    ///< transcript name
     std::string gene;    ///< gene name
     std::string unit;    ///< uint name
+    std::string uexon;   ///< approximate exon unit
     std::string strand;  ///< strand
     std::string number;  ///< count
     std::string version; ///< transcript version
@@ -16,6 +17,7 @@ struct TrsRec{
     int32_t pos;         ///< position on genome
     int32_t eoffset;     ///< offset to end of unit  
     int32_t ioffset;     ///< offset to beg of unit
+    int32_t exon;        ///< exon number catenated
     std::string chr;     ///< used only in RNA sv
 
     /** TrsRec constructor */
@@ -47,11 +49,13 @@ struct TrsRec{
         ret.append(strand);
         ret.append(",");
         ret.append(number);
+        ret.append(",");
+        ret.append(uexon);
         return ret;
     }
 
     /** get name,uint,strand,number rep of TrsRec
-     * @return string rep of TrsRec in name,strand,unit,number format
+     * @return string rep of TrsRec in name,strand,unit,number,uexon format
      */
     std::string getTrs(){
         std::string ret;
@@ -64,6 +68,8 @@ struct TrsRec{
         ret.append(unit);
         ret.append(",");
         ret.append(number);
+        ret.append(",");
+        ret.append(uexon);
         return ret;
     }
 
