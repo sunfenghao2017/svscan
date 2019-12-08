@@ -135,6 +135,12 @@ bool FusionOptions::inBlackList(const std::string& hgene, const std::string& tge
             return true;
         }
     }
+    auto rit = mBlackFusions.find(tgene);
+    if(rit != mBlackFusions.end()){
+        if(rit->second.find(hgene) != rit->second.end()){
+            return true;
+        }
+    }
     return false;
 }
 
