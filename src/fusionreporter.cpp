@@ -277,23 +277,23 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             if(fgl[i].hfrom1){
                 fgr.junctionposition1 = start;                                   // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;                         // Strand1;
-                fgr.transcript1 = trsl1[fgl[i].hidx].getTrs();                   // Transcript1
+                fgr.transcript1 = trsl1[fgl[i].hidx].getTrsWithVer();            // Transcript2
                 fgr.exon1 = trsl1[fgl[i].hidx].exon;                             // exon1
             }else{
                 fgr.junctionposition1 = end;                                     // JunctionPosition1
                 fgr.strand1 = trsl2[fgl[i].hidx].strand;                         // Strand1;
-                fgr.transcript1 = trsl2[fgl[i].hidx].getTrs();                   // Transcript1
+                fgr.transcript1 = trsl2[fgl[i].hidx].getTrsWithVer();            // Transcript1
                 fgr.exon1 = trsl2[fgl[i].hidx].exon;                             // exon1
             }
             if(fgl[i].tfrom1){
                 fgr.junctionposition2 = start;                                   // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;                         // Strand2
-                fgr.transcript2 = trsl1[fgl[i].tidx].getTrs();                   // Transcript2
+                fgr.transcript2 = trsl1[fgl[i].tidx].getTrsWithVer();            // Transcript2
                 fgr.exon2 = trsl1[fgl[i].tidx].exon;                             // exon2
             }else{
                 fgr.junctionposition2 = end;                                     // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;                         // Strand2
-                fgr.transcript2 = trsl2[fgl[i].tidx].getTrs();                   // Transcript2
+                fgr.transcript2 = trsl2[fgl[i].tidx].getTrsWithVer();            // Transcript2
                 fgr.exon2 = trsl2[fgl[i].tidx].exon;                             // exon2 
             }
             fgr.fusionsequence = vstr[16];                                       // FusionSequence

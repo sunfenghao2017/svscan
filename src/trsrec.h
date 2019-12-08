@@ -71,6 +71,23 @@ struct TrsRec{
         ret.append(std::to_string(exon));
         return ret;
     }
+    
+    /** get name,uint,strand,number rep of TrsRec
+     * @return string rep of TrsRec in name,strand,unit,number,exon format
+     */
+    std::string getTrsWithVer(){
+        std::string ret;
+        ret.append(name);
+        ret.append(",");
+        ret.append(strand);
+        ret.append(",");
+        ret.append(unit);
+        ret.append(",");
+        ret.append(number);
+        ret.append(",");
+        ret.append(std::to_string(exon));
+        return ret;
+    }
 
     /** test whether two transcript unit is near each other
      * @param other reference of another transcript record
