@@ -375,7 +375,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     float af = 0.0;
     int32_t srv = std::max((int32_t)mJctCnts[svr.mID].getAltDep(), svr.mSRSupport);
     int32_t srr = mJctCnts[svr.mID].getRefDep();
-    int32_t dpv = mSpnCnts[svr.mID].getAltDep();
+    int32_t dpv = std::max((int32_t)mSpnCnts[svr.mID].getAltDep(), svr.mPESupport);
     int32_t dpr = mSpnCnts[svr.mID].getRefDep();
     if(svr.mPrecise) af = (double)(srv)/(double)(srv + srr);
     else af = (double)(dpv)/(double)(dpv + dpr);
