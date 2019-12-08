@@ -35,6 +35,7 @@ void FusionReporter::str2trsl(TrsRecList& trsl, const std::string& trStr){
         tr.unit = tvstr[2];
         tr.strand = tvstr[3];
         tr.number = tvstr[4];
+        tr.exon = std::atoi(tvstr[5].c_str());
         trsl.push_back(tr);
     }
 }
@@ -82,14 +83,7 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
 void FusionReporter::report(){
     sv2fsl(fuseList);
     // output valid fusions
-    std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
-    header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
-    header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
-    header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
-    header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
-    header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-30]
-    if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\n"); //[31-34]
-    else header.append("\n");
+    std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
     std::ofstream fs(fuseOpt->mSupFile);
     fw << header;
@@ -137,8 +131,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         std::string chr2 = vstr[5];
         int32_t start = std::atoi(vstr[4].c_str());
         int32_t end = std::atoi(vstr[6].c_str());
+        int32_t srs = std::atoi(vstr[7].c_str());
+        int32_t dps = std::atoi(vstr[8].c_str());
         int32_t srv = std::max(std::atoi(vstr[9].c_str()), std::atoi(vstr[7].c_str()));
-        int32_t dpv = std::atoi(vstr[10].c_str());
+        int32_t dpv = std::max(std::atoi(vstr[10].c_str()), std::atoi(vstr[8].c_str()));
         int32_t srr = std::atoi(vstr[11].c_str());
         int32_t dpr = std::atoi(vstr[12].c_str());
         float af = std::atof(vstr[13].c_str());
@@ -191,13 +187,14 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
                 if(srv){
-                    if(srv < fuseOpt->mWhiteFilter.mMinSupport){
+                    if((srv < fuseOpt->mWhiteFilter.mMinSupport && dpv < fuseOpt->mWhiteFilter.mMinSupport) || 
+                       (srs < fuseOpt->mWhiteFilter.mMinSRSeed && dps < fuseOpt->mWhiteFilter.mMinDPSeed)){
                         fgr.fsmask |= FUSION_FLOWSUPPORT;
                     }else{
                         fgr.fsmask &= (~FUSION_FLOWSUPPORT);
                     }
                 }else{
-                    if(dpv < fuseOpt->mWhiteFilter.mMinSupport){
+                    if(dpv < fuseOpt->mWhiteFilter.mMinSupport || dps < fuseOpt->mWhiteFilter.mMinDPSeed){
                         fgr.fsmask |= FUSION_FLOWSUPPORT;
                     }else{
                         fgr.fsmask &= (~FUSION_FLOWSUPPORT);
@@ -223,13 +220,14 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 }
             }else if(fgr.fsmask & FUSION_FHOTGENE){// fusion not in public database
                 if(srv){
-                    if(srv < fuseOpt->mUsualFilter.mMinSupport){
+                    if((srv < fuseOpt->mUsualFilter.mMinSupport && dpv < fuseOpt->mUsualFilter.mMinSupport) || 
+                       (srs < fuseOpt->mUsualFilter.mMinSRSeed && dps < fuseOpt->mUsualFilter.mMinDPSeed)){
                         fgr.fsmask |= FUSION_FLOWSUPPORT;
                     }else{
                         fgr.fsmask &= (~FUSION_FLOWSUPPORT);
                     }
                 }else{
-                    if(dpv < fuseOpt->mUsualFilter.mMinSupport){
+                    if(dpv < fuseOpt->mUsualFilter.mMinSupport || dps < fuseOpt->mUsualFilter.mMinDPSeed){
                         fgr.fsmask |= FUSION_FLOWSUPPORT;
                     }else{
                         fgr.fsmask &= (~FUSION_FLOWSUPPORT);
@@ -271,19 +269,23 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.junctionposition1 = start;                                   // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;                         // Strand1;
                 fgr.transcript1 = trsl1[fgl[i].hidx].getTrs();                   // Transcript1
+                fgr.exon1 = trsl1[fgl[i].hidx].exon;                             // exon1
             }else{
                 fgr.junctionposition1 = end;                                     // JunctionPosition1
                 fgr.strand1 = trsl2[fgl[i].hidx].strand;                         // Strand1;
                 fgr.transcript1 = trsl2[fgl[i].hidx].getTrs();                   // Transcript1
+                fgr.exon1 = trsl2[fgl[i].hidx].exon;                             // exon1
             }
             if(fgl[i].tfrom1){
                 fgr.junctionposition2 = start;                                   // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;                         // Strand2
                 fgr.transcript2 = trsl1[fgl[i].tidx].getTrs();                   // Transcript2
+                fgr.exon2 = trsl1[fgl[i].tidx].exon;                             // exon2
             }else{
                 fgr.junctionposition2 = end;                                     // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;                         // Strand2
                 fgr.transcript2 = trsl2[fgl[i].tidx].getTrs();                   // Transcript2
+                fgr.exon2 = trsl2[fgl[i].tidx].exon;                             // exon2 
             }
             fgr.fusionsequence = vstr[16];                                       // FusionSequence
             fgr.fseqbp = std::atoi(vstr[17].c_str());                            // fseqBp

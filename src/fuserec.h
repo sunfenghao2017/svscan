@@ -77,6 +77,22 @@ struct FusionRecord{
         os << "\n";
        return os;
     }
+
+    /** get headline of final output
+     * @param rnamode rnamode or not
+     * @return headline
+     */
+    static std::string gethead(bool rnamode = false){
+        std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
+        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
+        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
+        header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
+        header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-29]
+        if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n"); //[30-33]
+        else header.append("\texon1\texon2\n");
+        return header;
+    }
 };
 
 /** class to store a list of FusionRecords */
