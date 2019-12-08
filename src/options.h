@@ -19,6 +19,7 @@
 #define DEBUG_FCALL 0x1 ///< calling debug mask
 #define DEBUG_FANNC 0x2 ///< coverage anno debug mask
 #define DEBUG_FANNG 0x4 ///< gene anno debug mask
+#define DEBUG_FOUTF 0x8 ///< output debug mask
 
 typedef uint32_t DEBUG_TYPE; ///< debug type
 

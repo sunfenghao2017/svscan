@@ -147,6 +147,9 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     // mask other status of fusions
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+            if(mOpt->debug & DEBUG_FOUTF){
+                std::cout << gl[i].mFuseGene[j].debugStr();
+            }
             if(mOpt->fuseOpt->hasBlackGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FBLACKGENE;
             }
