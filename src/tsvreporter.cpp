@@ -1,62 +1,76 @@
 #include "stats.h"
+#include "svrec.h"
 #include "fusionopt.h"
 
 void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
-    fw << "svType\tsvSize\tbpMark\t";//[0,2]
-    fw << "bp1Chr\tbp1Pos\tbp2Chr\tbp2Pos\t"; // [3,6]
-    fw << "srCount\tdpCount\t";// [7,8]
-    fw << "srRescued\tdpRescued\t"; // [9,10]
-    fw << "srRefCount\tdpRefCount\tAF\t"; // [11,13]
-    fw << "insBp\tinsSeq\tsvSeq\tseqBp\t";// [14,17]
-    fw << "ID\tsvtInt\t"; // [18,19]
-    fw << "bp1Gene\tbp2Gene\tfuseGene\tfsMask"; // [20,23]
-    if(mOpt->rnamode){
-        fw << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[24,27]
-    }else{
-        fw << "\n";
-    }
+    fw << SVRec::gethead(mOpt->rnamode);
     for(uint32_t i = 0; i < gl.size(); ++i){
         // skip false positive insertions
         if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].getAltDep() * mOpt->filterOpt->mMaxFPIns) continue;
+        SVRec svr;
         // svType
-        fw << svutil::addID(svs[i].mSVT) << "\t";
+        svr.svType = svutil::addID(svs[i].mSVT);
         // svSize
-        if(svs[i].mSVT >= 5) fw << "-" << "\t";
-        else if(svs[i].mSVT == 4) fw << svs[i].mInsSeq.size() << "\t";
-        else fw << svs[i].mSize << "\t";
+        if(svs[i].mSVT >= 5) svr.svSize = -1;
+        else if(svs[i].mSVT == 4) svr.svSize = svs[i].mInsSeq.size();
+        else svr.svSize = svs[i].mSize;
         // bpMark
-        fw << svutil::getBpMark(svs[i].mSVT) << "\t";
+        svr.bpMark = svutil::getBpMark(svs[i].mSVT);
         // bp1Chr bp1Pos bp2Chr bp2Pos
-        fw << gl[i].mChr1 << "\t" << gl[i].mPos1 << "\t" << gl[i].mChr2 << "\t" << gl[i].mPos2 << "\t";
+        svr.bp1Chr = gl[i].mChr1;
+        svr.bp1Pos = gl[i].mPos1;
+        svr.bp2Chr = gl[i].mChr2;
+        svr.bp2Pos = gl[i].mPos2;
         // srCount dpCount srRescued dpRescued
-        fw << svs[i].mSRSupport << "\t" << svs[i].mPESupport << "\t" << mJctCnts[i].getAltDep() << "\t" << mSpnCnts[i].getAltDep() << "\t";
+        svr.srCount = svs[i].mSRSupport;
+        svr.dpCount = svs[i].mPESupport;
+        svr.srRescued = mJctCnts[i].getAltDep();
+        svr.dpRescued = mSpnCnts[i].getAltDep();
         // srRefCount dpRefCount
-        fw << mJctCnts[i].getRefDep() << "\t" << mSpnCnts[i].getRefDep() << "\t";
+        svr.srRefCount = mJctCnts[i].getRefDep();
+        svr.dpRefCount = mSpnCnts[i].getRefDep();
         // AF
-        if(svs[i].mPrecise) fw << (double)(std::max(mJctCnts[i].getAltDep(), svs[i].mSRSupport))/(double)(mJctCnts[i].getRefDep() + mJctCnts[i].getAltDep()) << "\t";
-        else fw << (double)(std::max(mSpnCnts[i].getAltDep(), svs[i].mPESupport))/(double)(mSpnCnts[i].getRefDep() + mSpnCnts[i].getAltDep()) << "\t";
+        if(svs[i].mPrecise){
+            svr.af = (double)(std::max(mJctCnts[i].getAltDep(), svs[i].mSRSupport))/(mJctCnts[i].getRefDep() + mJctCnts[i].getAltDep());
+        }else{
+            svr.af = (double)(std::max(mSpnCnts[i].getAltDep(), svs[i].mPESupport))/(mSpnCnts[i].getRefDep() + mSpnCnts[i].getAltDep());
+        }
         // insBp insSeq
-        fw << svs[i].mBpInsSeq.length() << "\t" << (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq) << "\t"; 
+        svr.insBp = svs[i].mBpInsSeq.length();
+        svr.insSeq = (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq);
         // svSeq seqBp
-        if(svs[i].mSVT == 4) fw << svs[i].mInsSeq << "\t-\t";
-        else if(svs[i].mPrecise) fw << svs[i].mConsensus << "\t" << svs[i].mGapCoord[0] << "\t";
-        else fw << "-\t-\t";
+        if(svs[i].mSVT == 4){
+            svr.svSeq = svs[i].mInsSeq;
+            svr.seqBp = 0;
+        }else if(svs[i].mPrecise){
+            svr.svSeq = svs[i].mConsensus;
+            svr.seqBp = svs[i].mGapCoord[0];
+        }else{
+            svr.svSeq = "-";
+            svr.seqBp = 0;
+        }
         // svID svtInt
-        fw << svs[i].mID << "\t" << svs[i].mSVT << "\t";
-        // bp1Gene bp2Gene svID
-        if(gl[i].mGene1.empty()) fw << "-\t";
-        else fw << gl[i].getTrs1() << "\t";
-        if(gl[i].mGene2.empty()) fw << "-\t";
-        else fw << gl[i].getTrs2() << "\t";
+        svr.id = svs[i].mID;
+        svr.svInt = svs[i].mSVT;
+        // bp1Gene bp2Gene
+        if(gl[i].mGene1.empty()) svr.bp1Gene = "-";
+        else svr.bp1Gene = gl[i].getTrs1();
+        if(gl[i].mGene2.empty()) svr.bp2Gene = "-";
+        else svr.bp2Gene = gl[i].getTrs2();
         // fuseGene fsMask
-        fw << gl[i].getFuseGene() << "\t" << gl[i].getFsMask();
+        svr.fuseGene = gl[i].getFuseGene();
+        svr.fsMask = gl[i].getFsMask();
         if(mOpt->rnamode){
             // ts1Name ts1Pos ts2Name ts2Pos
-            fw << "\t" << svs[i].mNameChr1 << "\t" << svs[i].mSVStart << "\t" << svs[i].mNameChr2 << "\t" << svs[i].mSVEnd << "\n";
-        }else{
-            fw << "\n";
+            svr.trs1Name = svs[i].mNameChr1;
+            svr.trs1Pos = svs[i].mSVStart;
+            svr.trs2Name = svs[i].mNameChr2;
+            svr.trs2Pos = svs[i].mSVEnd;
+            svr.rnamode = true;
         }
+        // output
+        fw << svr;
     }
     fw.close();
 }
