@@ -141,7 +141,8 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
                 std::cout << "lastConnectedNodesEnd: " << lastConnectedNodesEnd << std::endl;
                 std::cout << "lastConnectedNodesBeg: " << lastConnectedNodesBeg << std::endl;
             }
-            if(srs[i].mChr1 != refIdx) continue;
+            if(srs[i].mChr1 < refIdx) continue;
+            if(srs[i].mChr1 > refIdx) break;
             // Safe to clean the graph ?
             if(i > lastConnectedNodesEnd){
                 if(mOpt->debug & DEBUG_FCALL){
