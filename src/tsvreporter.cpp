@@ -321,7 +321,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
     if(mOpt->rnamode){
         header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n"); //[30-33]
     }else{
-        header.append("\n");
+        header.append("\texon1\texon2\n");
     }
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
     std::ofstream fs(mOpt->fuseOpt->mSupFile);
