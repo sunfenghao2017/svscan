@@ -145,6 +145,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     AlignDescriptor ad;
     if(!findSplit(alnResult, ad)){
         if(opt->debug & DEBUG_FCALL){
+            std::cout << "debug_find_split_fail_SVID: " << mID << std::endl;
             std::cout << *alnResult << std::endl;
             std::cout << ad << std::endl;
         }
