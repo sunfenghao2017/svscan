@@ -122,7 +122,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
     int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "Beg clustering SRs for SV type:" << svt << std::endl;
+        std::cout << "debug_Beg_clustering_SRs_for_SV_type:" << svt << std::endl;
     }
     // Components assigned marker
     std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
@@ -452,7 +452,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
             if(!bpRefined){
                 if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "bpRefined failed SV:\n" << svs[svid] << std::endl;
+                    std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
                 }
                 svs[svid].mConsensus = "";
                 svs[svid].mSVRef = "";
@@ -581,7 +581,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
             if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
             if(!bpRefined){
                 if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "bpRefined failed SV:\n" << svs[svid] << std::endl;
+                    std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
                 }
                 svs[svid].mConsensus = "";
                 svs[svid].mSVRef = "";

@@ -1,0 +1,7 @@
+debug_svRefID : svRefID connected 
+debug_Beg_clustering_SRs_for_SV_type: sr clustering debug
+debug_SRSV_Cluster_result: clustered info of srs
+debug_DP_SV_Cluster_result: clustered info of dps
+debug_bpRefined_failed_SV: bp refined sv events
+debug_DP_SVS_found: dp sv found
+debug_SR_SVS_found: sr sv found
