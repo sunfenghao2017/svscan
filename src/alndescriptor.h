@@ -15,7 +15,7 @@ struct AlignDescriptor{
     double mPercID = 0;          ///< alignment identity percents of this alignment skipping leading tailing and this continuous gap
     int32_t mMinGapNeeded = 15;  ///< minimal gap length needed for an valid alignment
     int32_t mMaxCoordOffset = 5; ///< maximum coordinate offset allowed for gapped seq
-    double mMinPercID = 0.95;    ///< minimal alignment identity percents needed for an valid alignment
+    double mMinPercID = 0.90;    ///< minimal alignment identity percents needed for an valid alignment
 
     /** Constructor */
     AlignDescriptor() = default;
