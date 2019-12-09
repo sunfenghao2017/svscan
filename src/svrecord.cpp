@@ -144,6 +144,10 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     // Check breakpoint
     AlignDescriptor ad;
     if(!findSplit(alnResult, ad)){
+        if(opt->debug & DEBUG_FCALL){
+            std::cout << *alnResult << std::endl;
+            std::cout << ad << std::endl;
+        }
         delete alnResult;
         return false;
     }
