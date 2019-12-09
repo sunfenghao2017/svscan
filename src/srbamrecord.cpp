@@ -451,6 +451,9 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             }
             if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
             if(!bpRefined){
+                if(mOpt->debug & DEBUG_FCALL){
+                    std::cout << "bpRefined failed SV:\n" << svs[svid] << std::endl;
+                }
                 svs[svid].mConsensus = "";
                 svs[svid].mSVRef = "";
                 svs[svid].mSRSupport = 0;
@@ -577,6 +580,9 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
             }
             if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
             if(!bpRefined){
+                if(mOpt->debug & DEBUG_FCALL){
+                    std::cout << "bpRefined failed SV:\n" << svs[svid] << std::endl;
+                }
                 svs[svid].mConsensus = "";
                 svs[svid].mSVRef = "";
                 svs[svid].mSRSupport = 0;
