@@ -84,10 +84,10 @@ class SRBamRecord{
          * @return true if this SRBamRecord is less than other
          */
         inline bool operator<(const SRBamRecord& other) const {
-            return mChr1 < other.mChr1 ||
-               (mChr1 == other.mChr1 && mPos1 < other.mPos1) ||
-               (mChr1 == other.mChr1 && mPos1 == other.mPos1 && mChr2 < other.mChr2) ||
-               (mChr1 == other.mChr1 && mPos1 == other.mPos1 && mChr2 == other.mChr2 && mPos2 < other.mPos2);
+            return (mChr1 < other.mChr1) ||
+                   (mChr1 == other.mChr1 && mChr2 < other.mChr2) || 
+                   (mChr1 == other.mChr1 && mChr2 == other.mChr2 && mPos1 < other.mPos1) ||
+                   (mChr1 == other.mChr1 && mChr2 == other.mChr2 && mPos1 == other.mPos1 && mPos2 < other.mPos2);
         }
 };
 
@@ -138,7 +138,7 @@ class SRBamRecordSet{
             for(uint32_t i = 0; i < srs.mSRs.size(); ++i){
                 os << "SVT: " << i << "\n";
                 for(uint32_t j = 0; j < srs.mSRs[i].size(); ++j){
-                    os << "===== " << j + 1 << " =====\n";
+                    os << "===== " << j << " =====\n";
                     os << srs.mSRs[i][j];
                 }
                 os << "\n";
@@ -155,7 +155,7 @@ class SRBamRecordSet{
             for(uint32_t i = 0; i < srs->mSRs.size(); ++i){
                 os << "SVT: " << i << "\n";
                 for(uint32_t j = 0; j < srs->mSRs[i].size(); ++j){
-                    os << "===== " << j + 1 << " =====\n";
+                    os << "===== " << j << " =====\n";
                     os << srs->mSRs[i][j];
                 }
                 os << "\n";

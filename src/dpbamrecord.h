@@ -58,7 +58,7 @@ class DPBamRecord{
          * @return reference of ostream object
          */
         inline friend std::ostream& operator<<(std::ostream& os, const DPBamRecord& dpr){
-            os << "=======================================\n";
+            os << "===============================================================\n";
             os << "SVT: " << dpr.mSVT << "\n";
             os << "Current Read Tid: " << dpr.mCurTid << "\n";
             os << "Current Read Mapping Pos: " << dpr.mCurPos << "\n";
@@ -67,7 +67,8 @@ class DPBamRecord{
             os << "Mate Read Mapping Pos: " << dpr.mMatePos << "\n";
             os << "Mate Read Reference Consumed: " << dpr.mMateAlen << "\n";
             os << "Min Mapping Quality of Pair: " << dpr.mMapQual << "\n";
-            os << "=======================================\n";
+            os << "ID of Structural Variant this DP contributed to: " << dpr.mSVID << "\n";
+            os << "===============================================================\n";
             return os;
         }
 
@@ -79,14 +80,10 @@ class DPBamRecord{
          * @return true if this DPBamRecord object < other
          */
         inline bool operator<(const DPBamRecord& other) const {
-            if(mCurTid == mMateTid){
-                return std::min(mCurPos, mMatePos) < std::min(other.mCurPos, other.mMatePos) ||
-                       (std::min(mCurPos, mMatePos) == std::min(other.mCurPos, other.mMatePos) && 
-                        std::max(mCurPos, mMatePos) < std::max(other.mCurPos, other.mMatePos));
-            }else{
-                return (mCurPos < other.mCurPos) || 
-                       (mCurPos == other.mCurPos && mMatePos < other.mMatePos);
-            }
+            return (mCurTid < other.mCurTid) ||
+                   (mCurTid == other.mCurTid && mMateTid < other.mMateTid) ||
+                   (mCurTid == other.mCurTid && mMateTid == other.mMateTid && mCurPos < other.mCurPos) ||
+                   (mCurTid == other.mCurTid && mMateTid == other.mMateTid && mCurPos == other.mCurPos && mMatePos < other.mMatePos);
         }
 
         /** return minimal coordinate of an DP\n

@@ -124,98 +124,93 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "Beg clustering SRs for SV type:" << svt << std::endl;
     }
-    for(auto& refIdx : mOpt->svRefID){
+    // Components assigned marker
+    std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
+    int32_t compNum = 0;
+    Cluster compEdge; // component clusters
+    // Construct graphs
+    size_t lastConnectedNodesEnd = 0;
+    size_t lastConnectedNodesBeg = 0;
+    for(uint32_t i = 0; i < srs.size(); ++i){
         if(mOpt->debug & DEBUG_FCALL){
-            std::cout << "Beg clustering SRs wich chr1 ID: " << refIdx << std::endl;
+            std::cout << "index of srs: " << i << std::endl;
+            std::cout << "lastConnectedNodesEnd: " << lastConnectedNodesEnd << std::endl;
+            std::cout << "lastConnectedNodesBeg: " << lastConnectedNodesBeg << std::endl;
         }
-        // Components assigned marker
-        std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
-        int32_t compNum = 0;
-        Cluster compEdge; // component clusters
-        // Construct graphs
-        size_t lastConnectedNodesEnd = 0;
-        size_t lastConnectedNodesBeg = 0;
-        for(uint32_t i = 0; i < srs.size(); ++i){
+        // Safe to clean the graph ?
+        if(i > lastConnectedNodesEnd){
             if(mOpt->debug & DEBUG_FCALL){
-                std::cout << "index of srs: " << i << std::endl;
-                std::cout << "lastConnectedNodesEnd: " << lastConnectedNodesEnd << std::endl;
-                std::cout << "lastConnectedNodesBeg: " << lastConnectedNodesBeg << std::endl;
+                std::cout << "clean the last graph now" << std::endl;
             }
-            if(srs[i].mChr1 < refIdx) continue;
-            if(srs[i].mChr1 > refIdx) break;
-            // Safe to clean the graph ?
-            if(i > lastConnectedNodesEnd){
-                if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "clean the last graph now" << std::endl;
-                }
-                // Clean edge lists
-                if(!compEdge.empty()){
-                    searchCliques(compEdge, srs, svs, svt);
-                    lastConnectedNodesBeg = lastConnectedNodesEnd;
-                    compEdge.clear();
-                }
+            // Clean edge lists
+            if(!compEdge.empty()){
+                searchCliques(compEdge, srs, svs, svt);
+                lastConnectedNodesBeg = lastConnectedNodesEnd;
+                compEdge.clear();
+            }else{
+                lastConnectedNodesBeg = i;
             }
-            // Search possible connectable node
-            for(uint32_t j = i + 1; j < srs.size(); ++j){
-                if(srs[j].mChr1 != refIdx) continue; // same chr1
-                if(srs[j].mPos1 - srs[i].mPos1 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
-                if(srs[j].mChr2 != srs[i].mChr2) break; // same chr2
-                if(srs[j].mPos2 - srs[i].mPos2 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
-                // Update last connected node
-                if(j > lastConnectedNodesEnd) lastConnectedNodesEnd = j;
-                // Assign components
-                int32_t compIndex = 0;
-                if(!comp[i]){
-                    if(!comp[j]){// Neither vertex has component assigned
-                        compIndex = ++compNum;
-                        comp[i] = compIndex;
-                        comp[j] = compIndex;
-                        compEdge.insert(std::make_pair(compIndex, std::vector<EdgeRecord>()));
-                    }else{// Only one vertex has component assigned
-                        compIndex = comp[j];
-                        comp[i] = compIndex;
-                    }
-                }else{
-                    if(!comp[j]){// Only one vertex has component assigned
+        }
+        // Search possible connectable node
+        for(uint32_t j = i + 1; j < srs.size(); ++j){
+            if(srs[j].mChr1 != srs[i].mChr1) break; // same chr1
+            if(srs[j].mChr2 != srs[i].mChr2) break; // same chr2
+            if(srs[j].mPos1 - srs[i].mPos1 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
+            if(std::abs(srs[j].mPos2 - srs[i].mPos2) > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
+            // Update last connected node
+            if(j > lastConnectedNodesEnd) lastConnectedNodesEnd = j;
+            // Assign components
+            int32_t compIndex = 0;
+            if(!comp[i]){
+                if(!comp[j]){// Neither vertex has component assigned
+                    compIndex = ++compNum;
+                    comp[i] = compIndex;
+                    comp[j] = compIndex;
+                    compEdge.insert(std::make_pair(compIndex, std::vector<EdgeRecord>()));
+                }else{// Only one vertex has component assigned
+                    compIndex = comp[j];
+                    comp[i] = compIndex;
+                }
+            }else{
+                if(!comp[j]){// Only one vertex has component assigned
+                    compIndex = comp[i];
+                    comp[j] = compIndex;
+                }else{// Both vertices have components assigned, then merge these components
+                    if(comp[i] == comp[j]) compIndex = comp[i];
+                    else{// Merge components
                         compIndex = comp[i];
-                        comp[j] = compIndex;
-                    }else{// Both vertices have components assigned, then merge these components
-                        if(comp[i] == comp[j]) compIndex = comp[i];
-                        else{// Merge components
-                            compIndex = comp[i];
-                            int32_t otherIndex = comp[j];
-                            if(otherIndex < compIndex){
-                                compIndex = comp[j];
-                                otherIndex = comp[i];
-                            }
-                            // Re-label other index
-                            for(uint32_t k = lastConnectedNodesBeg; k <= lastConnectedNodesEnd; ++k){
-                                if(otherIndex == comp[k]){
-                                    comp[k] = compIndex;
-                                }
-                            }
-                            // Merge edge list
-                            auto compIdxIter = compEdge.find(compIndex);
-                            auto otherIdxIter = compEdge.find(otherIndex);
-                            compIdxIter->second.insert(compIdxIter->second.end(), otherIdxIter->second.begin(), otherIdxIter->second.end());
-                            compEdge.erase(otherIdxIter);
+                        int32_t otherIndex = comp[j];
+                        if(otherIndex < compIndex){
+                            compIndex = comp[j];
+                            otherIndex = comp[i];
                         }
+                        // Re-label other index
+                        for(uint32_t k = lastConnectedNodesBeg; k <= lastConnectedNodesEnd; ++k){
+                            if(otherIndex == comp[k]){
+                                comp[k] = compIndex;
+                            }
+                        }
+                        // Merge edge list
+                        auto compIdxIter = compEdge.find(compIndex);
+                        auto otherIdxIter = compEdge.find(otherIndex);
+                        compIdxIter->second.insert(compIdxIter->second.end(), otherIdxIter->second.begin(), otherIdxIter->second.end());
+                        compEdge.erase(otherIdxIter);
                     }
                 }
-                // Append new edge
-                auto compEdgeIter = compEdge.find(compIndex);
-                if(compEdgeIter->second.size() < mOpt->filterOpt->mGraphPruning){
-                    // Breakpoint distance
-                    int32_t weight = std::abs(srs[j].mPos2 - srs[i].mPos2) + std::abs(srs[j].mPos1 - srs[i].mPos1);
-                    compEdgeIter->second.push_back(EdgeRecord(i, j, weight));
-                }
+            }
+            // Append new edge
+            auto compEdgeIter = compEdge.find(compIndex);
+            if(compEdgeIter->second.size() < mOpt->filterOpt->mGraphPruning){
+                // Breakpoint distance
+                int32_t weight = std::abs(srs[j].mPos2 - srs[i].mPos2) + std::abs(srs[j].mPos1 - srs[i].mPos1);
+                compEdgeIter->second.push_back(EdgeRecord(i, j, weight));
             }
         }
-        // Search cliques
-        if(!compEdge.empty()){
-            searchCliques(compEdge, srs, svs, svt);
-            compEdge.clear();
-        }
+    }
+    // Search cliques
+    if(!compEdge.empty()){
+        searchCliques(compEdge, srs, svs, svt);
+        compEdge.clear();
     }
     // singleton sr should also be taken into consideration
     if(mOpt->filterOpt->mMinSeedSR < 2){

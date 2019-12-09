@@ -175,14 +175,19 @@ void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet &svs, int32_t 
             if(!compEdge.empty()){
                 searchCliques(compEdge, dps, svs, svt);
                 compEdge.clear();
+                lastConnectedNodesBeg = lastConnectedNodesEnd;
+            }else{
+                lastConnectedNodesBeg = i;
             }
         }
         // Try to expand components
         int32_t mincrd = dps[i].minCoord();
         int32_t maxcrd = dps[i].maxCoord();
         for(uint32_t j = i + 1; j < dps.size(); ++j){
+            // Check that chr agree
+            if(dps[i].mCurTid != dps[j].mCurTid) break;
             // Check that mate chr agree
-            if(dps[i].mCurTid != dps[j].mCurTid) continue;
+            if(dps[i].mMateTid != dps[j].mMateTid) break;
             // Check two DP leftmost mapping position falling in reasonable range
             if(std::abs(dps[j].minCoord() + dps[j].mCurAlen - mincrd) > mOpt->libInfo->mVarisize) break;
             // Check two DP rightmost mapping position falling in reasonable range
