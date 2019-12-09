@@ -21,6 +21,8 @@ struct BamRec{
     std::string mcigar;  ///< mate cigar
     std::string sa;      ///< sa
     std::string seq;     ///< seq
+    std::string lseq;    ///< leading seq
+    std::string tseq;    ///< tailing seq
     std::string barcode; ///< barcode
     std::string qname;   ///< read name
     std::string sname;   ///< sample name
@@ -31,6 +33,8 @@ struct BamRec{
         sa = '-';
         mcigar = "-";
         barcode = "-";
+        lseq = "-";
+        tseq = "-";
     }
 
     /** destructor */
@@ -42,14 +46,14 @@ struct BamRec{
         oss << svid << "\t";
         oss << chr << "\t" << pos << "\t" << strand << "\t";
         oss << mchr << "\t" << mpos << "\t" << mstrand << "\t";
-        oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << seq << "\t";
+        oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << lseq << "\t" << tseq << "\t";
         oss << barcode << "\t" << qname << "\n";
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tseq\tbarcode\tqname\n";
+        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\n";
     }
 
     /** compare two BamRec */

@@ -41,6 +41,18 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.sa = bamutil::getStrTag(b, "SA");
     br.barcode = bamutil::getStrTag(b, "BC");
     br.seq = bamutil::getSeq(b);
+    std::pair<int32_t, int32_t> scl = bamutil::getSoftClipLength(b);
+    if(scl.first + scl.second == 0) br.lseq = br.seq;
+    else if((scl.first > 0) ^ (scl.second > 0)){
+        if(scl.first){
+            br.lseq = br.seq.substr(0, scl.first);
+            br.tseq = br.seq.substr(scl.first);
+        }
+        if(scl.second){
+            br.lseq = br.seq.substr(0, br.seq.length() - scl.second);
+            br.tseq = br.seq.substr(br.seq.length() - scl.second);
+        }
+    }
     br.svid = id;
     br.qname = bamutil::getQName(b);
     if(b->core.flag & BAM_FREVERSE) br.strand = '-';
