@@ -61,11 +61,11 @@ struct FusionRecord{
      * @return reference of ostream
      */
     inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
-        os << fsr.fusegene << "\t" << fsr.fusepattern << "\t";
-        os << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
+        os << fsr.fusegene << "\t" << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
+        os << fsr.indb << "\t" << fsr.getStatus() << "\t";
         os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.junctionposition1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
         os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.junctionposition2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
-        os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.indb << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
+        os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask;
@@ -83,15 +83,25 @@ struct FusionRecord{
      * @return headline
      */
     static std::string gethead(bool rnamode = false){
-        std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
-        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
-        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
-        header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
+        std::string header = "FusionGene\tFusionReads\tTotalReads\tFusionRate\t"; //[0-3]
+        header.append("inDB\tstatus\t"); //[4-5]
+        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[6-10]
+        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[11-15]
+        header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[16-19]
         header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-29]
-        if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n"); //[30-33]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-30]
+        if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
         else header.append("\texon1\texon2\n");
         return header;
+    }
+
+    /** get status of fusion event */
+    std::string getStatus() const {
+        std::string sts;
+        if(fsmask & FUSION_FMIRRORINDB) sts.append("M");
+        if(!(fsmask & FUSION_FNORMALCATDIRECT)) sts.append("D");
+        if(sts.empty()) sts.append("Y");
+        return sts;
     }
 };
 
