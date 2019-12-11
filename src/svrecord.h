@@ -125,7 +125,8 @@ class SVRecord{
             ss << "Identity percentage of consensus split read against reference outside of inner longest gap: " << mSRAlignQuality << "\n";
             ss << "Median mapping quality of all split read alignment record which support this SV: " << mSRMapQuality << "\n";
             ss << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << mPEMapQuality << "\n";
-            ss << std::boolalpha << "Consensus split read split aligned against reference got a refined breakpoint: " << mPrecise << "\n";
+            ss << "Consensus split read split aligned against reference got a refined breakpoint: " << std::boolalpha << mPrecise << "\n";
+            ss << "Merged by other SV event: " << std::boolalpha << mMerged << "\n";
             ss << "Allele of this SV event: " << mAlleles << "\n";
             ss << "Consensus sequence of split reads supporting this SV: " << mConsensus << "\n";
             ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";
@@ -147,10 +148,14 @@ class SVRecord{
          * @return true if this < other
          */
         inline bool operator<(const SVRecord& other) const {
-            return mChr1 < other.mChr1 || (mChr1 == other.mChr1 && mSVStart < other.mSVStart) ||
-                   (mChr1 == other.mChr1 && mSVStart == other.mSVStart && mSVEnd < other.mSVEnd) ||
-                   (mChr1 == other.mChr1 && mSVStart == other.mSVStart && mSVEnd == other.mSVEnd && mPESupport > other.mPESupport);
-        }
+            return (mSVT < other.mSVT) ||
+                   (mSVT == other.mSVT && mChr1 < other.mChr1) || 
+                   (mSVT == other.mSVT && mChr1 == other.mChr1 && mChr2 < other.mChr2) ||
+                   (mSVT == other.mSVT && mChr1 == other.mChr1 && mChr2 == other.mChr2 && mSVStart < other.mSVStart) ||
+                   (mSVT == other.mSVT && mChr1 == other.mChr1 && mChr2 == other.mChr2 && mSVStart == other.mSVStart && mSVEnd < other.mSVEnd) || 
+                   (mSVT == other.mSVT && mChr1 == other.mChr1 && mChr2 == other.mChr2 && mSVStart == other.mSVStart && mSVEnd == other.mSVEnd && mSRSupport < other.mSRSupport) ||
+                   (mSVT == other.mSVT && mChr1 == other.mChr1 && mChr2 == other.mChr2 && mSVStart == other.mSVStart && mSVEnd == other.mSVEnd && mSRSupport == other.mSRSupport && mPESupport < other.mPESupport);
+        } 
 
         /** align consensus SR seq to constructed SV ref seq to refine breakpoint coordinate
          * @param opt pointer to Options object

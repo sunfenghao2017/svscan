@@ -205,6 +205,9 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         maxCI = std::max(maxCI, std::max(std::abs(sr[i].mCiEndLow), std::abs(sr[i].mCiEndHigh)));
     }
     maxCI = std::max(opt->filterOpt->mMaxReadSep, maxCI);
+    if(opt->debug & DEBUG_FCALL){
+        std::cout << "debug_maxCI_used_in_merge_SRSVS: " << maxCI << std::endl;
+    }
     int32_t totSV = sr.size();
     for(int32_t i = 0; i < totSV; ++i){
         if(sr[i].mMerged) continue;
@@ -218,7 +221,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
         for(int32_t j = i - 1; j >= 0; --j){
             if(sr[j].mMerged) continue;
-            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
+            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) break;
             if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI) break;
             // Test whether breakpoints within SR condidence interval
             if(sr[i].mSVStart >= sr[j].mSVStart - maxCI && sr[i].mSVStart <= sr[j].mSVStart + maxCI &&
@@ -228,7 +231,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
         for(int32_t j = i + 1; j < totSV; ++j){
             if(sr[j].mMerged) continue;
-            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) continue;
+            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) break;
             if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI) break;
             // Test whether breakpoints within SR condidence interval
             if(sr[i].mSVStart >= sr[j].mSVStart - maxCI && sr[i].mSVStart <= sr[j].mSVStart + maxCI &&
@@ -287,7 +290,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
         if(dp[i].mMerged) continue;
         for(int32_t j = i - 1; j >= chridx[dp[i].mChr1].first; --j){
             if(dp[j].mMerged) continue;
-            if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr2 != dp[j].mChr2) continue;
+            if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr1 != dp[j].mChr1 || dp[i].mChr2 != dp[j].mChr2) break;
             if(std::abs(dp[j].mSVStart - dp[i].mSVStart) > opt->libInfo->mMaxNormalISize) break;
             // Test whether breakpoints within SR condidence interval
             if((std::abs(dp[i].mSVStart - dp[j].mSVStart) < opt->libInfo->mMaxNormalISize) &&
@@ -297,7 +300,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
         }
         for(int32_t j = i + 1; j <= chridx[dp[i].mChr1].second; ++j){
             if(dp[j].mMerged) continue;
-            if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr2 != dp[j].mChr2) continue;
+            if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr1 != dp[j].mChr1 || dp[i].mChr2 != dp[j].mChr2) break;
             if(std::abs(dp[j].mSVStart - dp[i].mSVStart) > opt->libInfo->mMaxNormalISize) break;
             // Test whether breakpoints within SR condidence interval
             if((std::abs(dp[i].mSVStart - dp[j].mSVStart) < opt->libInfo->mMaxNormalISize) &&
