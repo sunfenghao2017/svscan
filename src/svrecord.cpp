@@ -209,7 +209,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
     }
     for(uint32_t i = 0; i < alnret.size(); ++i){
-        if(sr[i].mRealnRet) sr[i].mMerged = true;
+        if(sr[i].mRealnRet < 0 || sr[i].mRealnRet > 4) sr[i].mMerged = true;
     }
     if(opt->debug & DEBUG_FREAN){
         std::cout << "debug_Realign_failed_info:" << std::endl;
