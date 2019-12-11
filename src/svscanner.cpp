@@ -165,15 +165,6 @@ void SVScanner::scanDPandSR(){
         std::cout << dprSet << std::endl;
     }
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
-    // sort all svs
-    std::sort(mDPSVs.begin(), mDPSVs.end());
-    for(uint32_t i = 0; i < mDPSVs.size(); ++i){
-        mDPSVs[i].mID = i;
-    }
-    std::sort(mSRSVs.begin(), mSRSVs.end());
-    for(uint32_t i = 0; i < mSRSVs.size(); ++i){
-        mSRSVs[i].mID = i;
-    }
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SVS_found: " << std::endl;
         std::cout << mDPSVs << std::endl;

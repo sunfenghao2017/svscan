@@ -197,6 +197,18 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
 }
 
 void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
+    // refine bp using BWT
+    RealnFilter* rf = new RealnFilter(opt->alnref);
+    for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
+        if(sriter->mMerged) continue;
+        if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd)){
+            sriter->mPassRealn = false;
+        }
+    }
+    delete rf;
+    // sort 
+    std::sort(sr.begin(), sr.end());
+    for(uint32_t i = 0; i < sr.size(); ++i) sr[i].mID = i;
     util::loginfo("Beg merge SR supported SVs");
     int32_t maxCI = 0;
     for(uint32_t i = 0; i < sr.size(); ++i){
@@ -229,22 +241,29 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             }
         }
         for(int32_t j = i + 1; j < totSV; ++j){
-            if(sr[j].mMerged) continue;
-            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) break;
-            if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI) break;
+            if(i == 2955){
+                std::cout << sr[i] << std::endl;
+                std::cout << sr[j] << std::endl;
+            }
+            if(sr[j].mMerged){
+                if(i == 2955 && j == 2956) std::cout << "skip because 2966 merged!!!" << std::endl;
+                continue;
+            }
+            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2){
+                if(i == 2955 && j == 2956) std::cout << "not compatible ones to merge!!!" << std::endl;
+                break;
+            }
+            if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI){
+                if(i == 2955 && j == 2956) std::cout << "maxCI broke: " << maxCI << std::endl;
+                break;
+            }
             // Test whether breakpoints within SR condidence interval
             if(sr[i].mSVStart >= sr[j].mSVStart - maxCI && sr[i].mSVStart <= sr[j].mSVStart + maxCI &&
                sr[i].mSVEnd >= sr[j].mSVEnd - maxCI && sr[i].mSVEnd <= sr[j].mSVEnd + maxCI){
+                if(i == 2955 && j == 2956) std::cout << "Wow we should merge: " << std::endl;
                 if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) sr[i].mMerged = true;
+                else if(i == 2955 && j == 2956) std::cout << "Bug we did not merge: " << std::endl;
             }
-        }
-    }
-    // refine bp using BWT
-    RealnFilter* rf = new RealnFilter(opt->alnref);
-    for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
-        if(sriter->mMerged) continue;
-        if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd)){
-            sriter->mPassRealn = false;
         }
     }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
@@ -253,7 +272,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         std::cout << "debug_Merged_SR_SV_IDs:";
         for(uint32_t i = 0; i < sr.size(); ++i){
             if(sr[i].mMerged){
-                std::cout << "\t";
+                std::cout << i << "\t";
             }
         }
         std::cout << std::endl;
@@ -263,6 +282,9 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
 }
 
 void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
+    // sort
+    std::sort(dp.begin(), dp.end());
+    for(uint32_t i = 0; i < dp.size(); ++i) dp[i].mID = i;
     // filter invalid dp svs firstly
     samFile* fp = sam_open(opt->bamfile.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
