@@ -295,6 +295,16 @@ class SVRecord{
         }
 };
 
+/** class to provide another way to sort SVs */
+struct SortSVs{
+    inline bool operator()(const SVRecord& sv1, const SVRecord& sv2){
+        return (sv1.mChr1 < sv2.mChr1) ||
+               (sv1.mChr1 == sv2.mChr1 && sv1.mSVStart < sv2.mSVStart) ||
+               (sv1.mChr1 == sv2.mChr1 && sv1.mSVStart == sv2.mSVStart && sv1.mSVEnd < sv2.mSVEnd) || 
+               (sv1.mChr1 == sv2.mChr1 && sv1.mSVStart == sv2.mSVStart && sv1.mSVEnd == sv2.mSVEnd && sv1.mSRSupport < sv2.mSRSupport);
+    }
+};
+
 /** type to store a list of structural variant record */
 typedef std::vector<SVRecord> SVSet; ///< list of SV
 

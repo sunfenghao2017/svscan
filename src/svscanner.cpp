@@ -232,6 +232,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End writing Fusions to TSV file");
     if(!mOpt->bcfOut.empty()){
         util::loginfo("Beg writing SVs to BCF file");
+        std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVs());
         covStat->reportSVBCF(mergedSVs);
         util::loginfo("End writing SVs to BCF file");
     }
