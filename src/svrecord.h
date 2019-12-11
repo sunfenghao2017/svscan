@@ -86,7 +86,8 @@ class SVRecord{
             os << "Identity percentage of consensus split read against reference outside of inner longest gap: " << sv.mSRAlignQuality << "\n";
             os << "Median mapping quality of all split read alignment record which support this SV: " << sv.mSRMapQuality << "\n";
             os << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << sv.mPEMapQuality << "\n";
-            os << std::boolalpha << "Consensus split read split aligned against reference got a refined breakpoint: " << sv.mPrecise << "\n";
+            os << "Consensus split read split aligned against reference got a refined breakpoint: " << std::boolalpha << sv.mPrecise << "\n";
+            os << "Merged by other SV event: " << std::boolalpha << sv.mMerged << "\n";
             os << "Allele of this SV event: " << sv.mAlleles << "\n";
             os << "Consensus sequence of split reads supporting this SV: " << sv.mConsensus << "\n";
             os << "Constructed reference sequence of this SV: " << sv.mSVRef << "\n";
