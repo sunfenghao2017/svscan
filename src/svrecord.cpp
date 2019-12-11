@@ -198,7 +198,6 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
 
 void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     util::loginfo("Beg merge SR supported SVs");
-    std::sort(sr.begin(), sr.end());
     int32_t maxCI = 0;
     for(uint32_t i = 0; i < sr.size(); ++i){
         maxCI = std::max(maxCI, std::max(std::abs(sr[i].mCiPosLow), std::abs(sr[i].mCiPosHigh)));
@@ -278,7 +277,6 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     bam_hdr_destroy(h);
     // then do merge
     util::loginfo("Beg merge DP supported SVs");
-    std::sort(dp.begin(), dp.end());
     // index dpsvs
     std::vector<std::pair<int32_t, int32_t>> chridx(opt->contigNum, {-1, -1});
     for(int32_t i = 0; i < (int32_t)dp.size(); ++i){

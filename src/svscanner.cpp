@@ -165,6 +165,9 @@ void SVScanner::scanDPandSR(){
         std::cout << dprSet << std::endl;
     }
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
+    // sort all svs
+    std::sort(mDPSVs.begin(), mDPSVs.end());
+    std::sort(mSRSVs.begin(), mSRSVs.end());
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SVS_found: " << std::endl;
         std::cout << mDPSVs << std::endl;
@@ -175,6 +178,10 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg merging SVs from SRs and DPs");
     SVSet mergedSVs;
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
+    if(mOpt->debug & DEBUG_FCALL){
+        std::cout << "debug_ALL_SVS_found: " << std::endl;
+        std::cout << mergedSVs << std::endl;
+    }
     util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs.size()));
     util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
