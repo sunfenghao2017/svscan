@@ -197,16 +197,18 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
 }
 
 void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
-    // refine bp using BWT
-    RealnFilter* rf = new RealnFilter(opt->alnref);
-    for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
-        if(sriter->mSVT == 4) continue;
-        if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd, sriter->mGapCoord[0])){
-            sriter->mPassRealn = false;
-            sriter->mMerged = true;
+    // repeat region filter and bp refining
+    std::vector<std::future<bool>> alnret(sr.size());
+    for(uint32_t i = 0; i < sr.size(); ++i){
+        if(sr[i].mSVT == 4) continue;
+        alnret[i] = opt->pool->enqueue(&RealnFilter::validCCSeq, opt->realnf, std::ref(sr[i].mConsensus), std::ref(sr[i].mNameChr1), std::ref(sr[i].mSVStart), std::ref(sr[i].mNameChr2), std::ref(sr[i].mSVEnd), sr[i].mGapCoord[0]);
+    }
+    for(uint32_t i = 0; i < alnret.size(); ++i){
+        if(sr[i].mSVT != 4){
+            sr[i].mPassRealn = alnret[i].get();
+            sr[i].mMerged = true;
         }
     }
-    delete rf;
     // sort 
     std::sort(sr.begin(), sr.end());
     for(uint32_t i = 0; i < sr.size(); ++i) sr[i].mID = i;

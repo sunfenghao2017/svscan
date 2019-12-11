@@ -15,6 +15,7 @@ Options::Options(){
     passOpt = new PassOptions();
     fuseOpt = new FusionOptions();
     libInfo = NULL;
+    realnf = new RealnFilter();
     contigNum = 0;
     rnamode = false;
     debug = false;
@@ -24,6 +25,7 @@ Options::~Options(){
     if(filterOpt) delete filterOpt;
     if(softEnv) delete softEnv;
     if(libInfo) delete libInfo;
+    if(realnf) delete realnf;
     if(pool) delete pool;
     if(overlapRegs) delete overlapRegs;
     if(bamheader) bam_hdr_destroy(bamheader);

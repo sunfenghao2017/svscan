@@ -1,9 +1,10 @@
 #ifndef SVSCANNER_H
 #define SVSCANNER_H
 
-#include "annotator.h"
+#include "realnfilter.h"
 #include "dpbamrecord.h"
 #include "srbamrecord.h"
+#include "annotator.h"
 #include "svrecord.h"
 #include "options.h"
 #include "bamtotb.h"

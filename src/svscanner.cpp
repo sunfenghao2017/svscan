@@ -106,10 +106,11 @@ void SVScanner::scanDPandSR(){
     sam_close(fp);
     hts_idx_destroy(idx);
     // Parallel processing each contig
-    std::vector<std::future<void>> scanret(ctgRdStat.size());
+    std::vector<std::future<void>> scanret(ctgRdStat.size() + 1);
+    scanret[0] = mOpt->pool->enqueue(&RealnFilter::init, mOpt->realnf, mOpt->alnref);
     for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
         int32_t refidx = ctgRdStat[i].mTid;
-        scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, refidx, jct[refidx], dps[refidx]);
+        scanret[i + 1] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, refidx, jct[refidx], dps[refidx]);
     }
     for(auto& e: scanret) e.get();
     // Merge and clean

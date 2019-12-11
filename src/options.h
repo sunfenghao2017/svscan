@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdint>
 #include <sstream>
+#include "realnfilter.h"
 #include <htslib/sam.h>
 #include "fusionopt.h"
 #include "ThreadPool.h"
@@ -196,6 +197,7 @@ class Options{
         MSAOpt* msaOpt;               ///< MSA options
         Software* softEnv;            ///< softare environment option
         bam_hdr_t* bamheader;         ///< bam header
+        RealnFilter* realnf;          ///< realign filter
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
         DEBUG_TYPE debug;             ///< debug mode
