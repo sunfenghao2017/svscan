@@ -198,6 +198,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
 
 void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     // repeat region filter and bp refining
+    util::loginfo("Beg online BWA realign");
     std::vector<std::future<int>> alnret(sr.size());
     for(uint32_t i = 0; i < sr.size(); ++i){
         if(sr[i].mSVT == 4) continue;
@@ -211,6 +212,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     for(uint32_t i = 0; i < alnret.size(); ++i){
         if(sr[i].mRealnRet < 0 || sr[i].mRealnRet > 4) sr[i].mMerged = true;
     }
+    util::loginfo("End online BWA ralign");
     if(opt->debug & DEBUG_FREAN){
         std::cout << "debug_Realign_failed_info:" << std::endl;
         for(uint32_t i = 0; i < sr.size(); ++i){
