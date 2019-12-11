@@ -180,11 +180,18 @@ void SVScanner::scanDPandSR(){
     getDPSVRef(mergedSVs, mOpt);
     std::sort(mergedSVs.begin(), mergedSVs.end());
     util::loginfo("End fetching reference of SV supported by DP only");
-    // Get Allele info of SVs and updatev SVsupporting contigs
+    // Get Allele info of SVs and updatev SVsupporting contigs as well as svsize
     mOpt->svRefID.clear();
     for(uint32_t i = 0; i < mergedSVs.size(); ++i){
         mergedSVs[i].addAlleles();
         mergedSVs[i].mID = i;
+        if(mergedSVs[i].mSVT >= 5){
+            mergedSVs[i].mSize = -1;
+        }else if(mergedSVs[i].mSVT == 4){
+            mergedSVs[i].mSize = mergedSVs[i].mConsensus.size();
+        }else{
+            mergedSVs[i].mSize = mergedSVs[i].mSVEnd - mergedSVs[i].mSVStart;
+        }
         mOpt->svRefID.insert(mergedSVs[i].mChr1);
         mOpt->svRefID.insert(mergedSVs[i].mChr2);
     }
