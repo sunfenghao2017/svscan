@@ -311,6 +311,14 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.insseq = vstr[15];                                               // insSeq
             fgr.svid = std::atoi(vstr[18].c_str());                              // svID
             fgr.svint = std::atoi(vstr[19].c_str());                             // svInt
+            fgr.fsHits = std::atoi(vstr[24].c_str());                            // fsHits;
+            if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){
+                if(fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
+                else fgr.fsmask &= (~FUSION_FREALNPASSED);
+            }else{
+                if(fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
+                  else fgr.fsmask &= (~FUSION_FREALNPASSED);
+            }
             if(fgr.fsmask & FUSION_DROP_MASK){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{
@@ -331,10 +339,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }
             if(fgr.fsmask & FUSION_FCALLFROMRNASEQ){
-                fgr.ts1name = vstr[24];                                            // ts1Name
-                fgr.ts1pos = std::atoi(vstr[25].c_str());                          // ts1Pos
-                fgr.ts2name = vstr[26];                                            // ts2Name
-                fgr.ts2pos = std::atoi(vstr[27].c_str());                          // ts2Pos
+                fgr.ts1name = vstr[25];                                            // ts1Name
+                fgr.ts1pos = std::atoi(vstr[26].c_str());                          // ts1Pos
+                fgr.ts2name = vstr[27];                                            // ts2Name
+                fgr.ts2pos = std::atoi(vstr[28].c_str());                          // ts2Pos
             }
             if(debug){
                 std::cout << fgr << std::endl;

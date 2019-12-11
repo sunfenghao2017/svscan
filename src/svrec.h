@@ -27,6 +27,7 @@ struct SVRec{
     int32_t seqBp;
     int32_t id;
     int32_t svInt;
+    int32_t fsHits;
     std::string bp1Gene;
     std::string bp2Gene;
     std::string fuseGene;
@@ -51,7 +52,7 @@ struct SVRec{
         os << svr.srRefCount << "\t" << svr.dpRefCount << "\t" << svr.af << "\t";
         os << svr.insBp << "\t" << svr.insSeq << "\t" << svr.svSeq << "\t" << svr.seqBp << "\t";
         os << svr.id << "\t" << svr.svInt << "\t";
-        os << svr.bp1Gene << "\t" << svr.bp2Gene << "\t" << svr.fuseGene << "\t" << svr.fsMask;
+        os << svr.bp1Gene << "\t" << svr.bp2Gene << "\t" << svr.fuseGene << "\t" << svr.fsMask << "\t" << svr.fsHits;
         if(svr.rnamode){
             os << "\t" << svr.trs1Name << "\t" << svr.trs1Pos << "\t" << svr.trs2Name << "\t" << svr.trs2Pos;
         }
@@ -68,9 +69,9 @@ struct SVRec{
         oss << "srRefCount\tdpRefCount\tAF\t"; // [11,13]
         oss << "insBp\tinsSeq\tsvSeq\tseqBp\t";// [14,17]
         oss << "ID\tsvtInt\t"; // [18,19]
-        oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask"; // [20,23]
+        oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [20,24]
         if(rnamode){
-            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[24,27]
+            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[25,28]
         }else{
             oss << "\n";
         }

@@ -60,9 +60,10 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         else svr.bp1Gene = gl[i].getTrs1();
         if(gl[i].mGene2.empty()) svr.bp2Gene = "-";
         else svr.bp2Gene = gl[i].getTrs2();
-        // fuseGene fsMask
+        // fuseGene fsMask fsHits
         svr.fuseGene = gl[i].getFuseGene();
         svr.fsMask = gl[i].getFsMask();
+        svr.fsHits = svs[i].mRealnRet;
         if(mOpt->rnamode){
             // ts1Name ts1Pos ts2Name ts2Pos
             svr.trs1Name = svs[i].mNameChr1;
@@ -136,7 +137,6 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(mOpt->rnamode) gl[i].mFuseGene[j].status |= FUSION_FCALLFROMRNASEQ; // mask rna/dna calling
-            if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet < 4) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
             if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
                 if(mOpt->fuseOpt->matchHotDirec(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
@@ -217,6 +217,13 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
                    svutil::simpleSeq(svs[i].mConsensus.substr(svs[i].mGapCoord[1]))){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWCOMPLEX;
+                }
+                if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){
+                    if(svs[i].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+                    else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
+                }else{
+                    if(svs[i].mRealnRet <= mOpt->fuseOpt->mUsualFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+                    else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
                 }
             }
             float af = 0.0;
@@ -452,6 +459,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     fsr.svid = svr.mID;                                       // svID
     fsr.svint = svr.mSVT;                                     // svtInt
     fsr.fsmask = gi.mFuseGene[i].status;                      // fsMask
+    fsr.fsHits = svr.mRealnRet;                               // fsHits
     if(mOpt->rnamode){
         fsr.ts1name = svr.mNameChr1;                          // ts1Name
         fsr.ts1pos = svr.mSVStart;                            // ts1Pos
