@@ -200,6 +200,10 @@ void SVScanner::scanDPandSR(){
         mOpt->svRefID.insert(mergedSVs[i].mChr1);
         mOpt->svRefID.insert(mergedSVs[i].mChr2);
     }
+    if(mOpt->debug & DEBUG_FFINA){
+        std::cout << "debug_final_merged_svs: " << std::endl;
+        std::cout << mergedSVs << std::endl;
+    }
     // open bamout for write
     if(!mOpt->bamout.empty()){
         samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");

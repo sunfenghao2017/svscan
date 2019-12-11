@@ -22,6 +22,7 @@
 #define DEBUG_FANNG 0x4  ///< gene anno debug mask
 #define DEBUG_FOUTF 0x8  ///< output debug mask
 #define DEBUG_FREAN 0x10 ///< realign debug mask
+#define DEBUG_FFINA 0x20 ///< check final mask
 
 typedef uint32_t DEBUG_TYPE; ///< debug type
 
