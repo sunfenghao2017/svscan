@@ -241,28 +241,13 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             }
         }
         for(int32_t j = i + 1; j < totSV; ++j){
-            if(i == 2955){
-                std::cout << sr[i] << std::endl;
-                std::cout << sr[j] << std::endl;
-            }
-            if(sr[j].mMerged){
-                if(i == 2955 && j == 2956) std::cout << "skip because 2966 merged!!!" << std::endl;
-                continue;
-            }
-            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2){
-                if(i == 2955 && j == 2956) std::cout << "not compatible ones to merge!!!" << std::endl;
-                break;
-            }
-            if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI){
-                if(i == 2955 && j == 2956) std::cout << "maxCI broke: " << maxCI << std::endl;
-                break;
-            }
+            if(sr[j].mMerged) continue;
+            if(sr[i].mSVT != sr[j].mSVT || sr[i].mChr1 != sr[j].mChr1 || sr[i].mChr2 != sr[j].mChr2) break;
+            if(std::abs(sr[j].mSVStart - sr[i].mSVStart) > maxCI) break;
             // Test whether breakpoints within SR condidence interval
             if(sr[i].mSVStart >= sr[j].mSVStart - maxCI && sr[i].mSVStart <= sr[j].mSVStart + maxCI &&
                sr[i].mSVEnd >= sr[j].mSVEnd - maxCI && sr[i].mSVEnd <= sr[j].mSVEnd + maxCI){
-                if(i == 2955 && j == 2956) std::cout << "Wow we should merge: " << std::endl;
                 if(sr[i].mSRSupport < sr[j].mSRSupport || (i < j && sr[i].mSRSupport == sr[j].mSRSupport)) sr[i].mMerged = true;
-                else if(i == 2955 && j == 2956) std::cout << "Bug we did not merge: " << std::endl;
             }
         }
     }
