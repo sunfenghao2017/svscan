@@ -46,7 +46,7 @@ class RealnFilter{
     }
 
     /** realignment test return -1 if whole seq match continuous, -2 if bp not match, positive value if match more than 2 pos */
-    int validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq);
+    int32_t validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq);
 };
 
 #endif

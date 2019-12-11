@@ -18,10 +18,10 @@ bool BpPair::agree(const BpPair& other){
     return true;
 }
 
-int RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq){
+int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
-    bool retval = 0;
+    int32_t retval = 0;
     // first run, test repeat region
     int32_t mpcnt = 0;
     for(auto& e: alnret){
