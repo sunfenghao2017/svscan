@@ -214,11 +214,13 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     }
     util::loginfo("End online BWA ralign");
     if(opt->debug & DEBUG_FREAN){
-        std::cout << "debug_Realign_failed_info:" << std::endl;
+        std::cout << "alnret return value: ";
+        for(uint32_t i = 0; i < alnret.size(); ++i){
+            std::cout << "\t" << alnret[i].get();
+        }
+        std::cout << "\ndebug_Realign_failed_info:" << std::endl;
         for(uint32_t i = 0; i < sr.size(); ++i){
-            if(sr[i].mRealnRet){
-                std::cout << sr[i] << std::endl;
-            }
+            std::cout << sr[i] << std::endl;
         }
     }
     // sort 
