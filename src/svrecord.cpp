@@ -263,7 +263,6 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         std::cout << std::endl;
     }
     sr.clear();
-    delete rf;
 }
 
 void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
