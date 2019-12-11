@@ -253,7 +253,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         std::cout << "debug_Merged_SR_SV_IDs:";
         for(uint32_t i = 0; i < sr.size(); ++i){
             if(sr[i].mMerged){
-                std::cout << "\t" << i;
+                std::cout << "\t";
             }
         }
         std::cout << std::endl;
