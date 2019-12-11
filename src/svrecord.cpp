@@ -200,9 +200,10 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     // refine bp using BWT
     RealnFilter* rf = new RealnFilter(opt->alnref);
     for(auto sriter = sr.begin(); sriter != sr.end(); ++sriter){
-        if(sriter->mMerged) continue;
-        if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd)){
+        if(sriter->mSVT == 4) continue;
+        if(!rf->validCCSeq(sriter->mConsensus, sriter->mNameChr1, sriter->mSVStart, sriter->mNameChr2, sriter->mSVEnd, sriter->mGapCoord[0])){
             sriter->mPassRealn = false;
+            sriter->mMerged = true;
         }
     }
     delete rf;
