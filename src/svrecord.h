@@ -52,7 +52,7 @@ class SVRecord{
         std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
         bool mMerged = false;        ///< this SV has been merged if true
         bool mFromOneSR = false;     ///< this SV comes from one seed SR
-        bool mPassRealn = true;      ///< this SV has passed realignment by online bwa
+        int mRealnRet = 0;           ///< return value from realignment test
 
     public:
         /** SVRecord constructor */
@@ -88,6 +88,7 @@ class SVRecord{
             os << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << sv.mPEMapQuality << "\n";
             os << "Consensus split read split aligned against reference got a refined breakpoint: " << std::boolalpha << sv.mPrecise << "\n";
             os << "Merged by other SV event: " << std::boolalpha << sv.mMerged << "\n";
+            os << "Consensu sequence realign return value: " << sv.mRealnRet << "\n";
             os << "Allele of this SV event: " << sv.mAlleles << "\n";
             os << "Consensus sequence of split reads supporting this SV: " << sv.mConsensus << "\n";
             os << "Constructed reference sequence of this SV: " << sv.mSVRef << "\n";
@@ -128,6 +129,7 @@ class SVRecord{
             ss << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << mPEMapQuality << "\n";
             ss << "Consensus split read split aligned against reference got a refined breakpoint: " << std::boolalpha << mPrecise << "\n";
             ss << "Merged by other SV event: " << std::boolalpha << mMerged << "\n";
+            ss << "Consensu sequence realign return value: " << mRealnRet << "\n";
             ss << "Allele of this SV event: " << mAlleles << "\n";
             ss << "Consensus sequence of split reads supporting this SV: " << mConsensus << "\n";
             ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";

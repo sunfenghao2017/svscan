@@ -18,10 +18,10 @@ bool BpPair::agree(const BpPair& other){
     return true;
 }
 
-bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq){
+int RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
-    bool validCC = true;
+    bool retval = 0;
     // first run, test repeat region
     int32_t mpcnt = 0;
     for(auto& e: alnret){
@@ -31,15 +31,19 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
          int32_t slen = clip.first + clip.second;
          int32_t mlen = e->core.l_qseq - slen;
          if(slen == 0){
-             validCC = false;
+             retval = -1;
              break;
          }
          if(std::abs(mlen - fseq) < 10 || std::abs(slen - fseq) < 10) ++mpcnt;
     }
-    if(mpcnt > 4) validCC = false;
-    if(!validCC){
+    if(retval){
         for(auto& e: alnret) bam_destroy1(e);
-        return validCC;
+        return retval;
+    }
+    if(mpcnt > 4){
+        retval = mpcnt;
+        for(auto& e: alnret) bam_destroy1(e);
+        return retval;
     }
     // second run, test bp pos and fix bp
     std::vector<bam1_t*> palnret;
@@ -96,8 +100,12 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
     }
     nbp.adjustpt();
     for(auto& e: palnret) bam_destroy1(e);
-    validCC = obp.agree(nbp);
-    if(validCC){
+    if(obp.agree(nbp)){
+        retval = 0;
+    }else{
+        retval = -2;
+    }
+    if(!retval){
         if(obp.swapped){
             pos2 = nbp.pos1;
             pos1 = nbp.pos2;
@@ -106,5 +114,5 @@ bool RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, in
             pos1 = nbp.pos1;
         }
     }
-    return validCC;
+    return retval;
 }
