@@ -225,6 +225,8 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     if(svs[i].mRealnRet <= mOpt->fuseOpt->mUsualFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
                     else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
                 }
+            }else{
+                gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
             }
             float af = 0.0;
             int32_t srv = std::max((int32_t)mJctCnts[i].getAltDep(), svs[i].mSRSupport);
