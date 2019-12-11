@@ -313,10 +313,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.svint = std::atoi(vstr[19].c_str());                             // svInt
             fgr.fsHits = std::atoi(vstr[24].c_str());                            // fsHits;
             if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){
-                if(fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
+                if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
                 else fgr.fsmask &= (~FUSION_FREALNPASSED);
             }else{
-                if(fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
+                if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
                   else fgr.fsmask &= (~FUSION_FREALNPASSED);
             }
             if(fgr.fsmask & FUSION_DROP_MASK){

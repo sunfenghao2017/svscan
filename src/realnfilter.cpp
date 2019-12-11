@@ -31,7 +31,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
          int32_t slen = clip.first + clip.second;
          int32_t mlen = e->core.l_qseq - slen;
          if(slen == 0){
-             retval = -1;
+             retval = -1; // full match
              break;
          }
          if(std::abs(mlen - fseq) < 10 || std::abs(slen - fseq) < 10) ++mpcnt;
@@ -58,7 +58,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     }
     if(palnret.size() != 2){
         for(auto& e: palnret) bam_destroy1(e);
-        if(palnret.size() == 1) return 0;// one sc
+        if(palnret.size() == 1) return 0;// one psc
         else return -2; // more than two psc
     }
     // valid scs
@@ -101,9 +101,9 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     nbp.adjustpt();
     for(auto& e: palnret) bam_destroy1(e);
     if(obp.agree(nbp)){
-        retval = 0;
+        retval = 0; // nice bp
     }else{
-        retval = -2;
+        retval = -3; // diagree bp
     }
     if(!retval){
         if(obp.swapped){

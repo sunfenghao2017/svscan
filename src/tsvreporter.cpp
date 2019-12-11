@@ -219,10 +219,10 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWCOMPLEX;
                 }
                 if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){
-                    if(svs[i].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+                    if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
                     else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
                 }else{
-                    if(svs[i].mRealnRet <= mOpt->fuseOpt->mUsualFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+                    if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mUsualFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
                     else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
                 }
             }else{
