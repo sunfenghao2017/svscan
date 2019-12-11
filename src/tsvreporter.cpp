@@ -136,7 +136,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(mOpt->rnamode) gl[i].mFuseGene[j].status |= FUSION_FCALLFROMRNASEQ; // mask rna/dna calling
-            if(!svs[i].mRealnRet) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+            if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet < 4) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
             if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
                 if(mOpt->fuseOpt->matchHotDirec(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
