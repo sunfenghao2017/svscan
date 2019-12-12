@@ -80,7 +80,7 @@ class BamToTable{
         std::string sstsv;          ///< secondary fusion result tsv
         std::vector<int32_t> usrid; ///< fusion id list
         std::string bamtb;          ///< bam output table
-        int32_t svidf = 29;         ///< svid column index in tsv
+        int32_t svidf = 28;         ///< svid column index in tsv
 
     /** BamToTable constructor */
     BamToTable(){
