@@ -64,14 +64,13 @@ struct FusionRecord{
      */
     inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
         os << fsr.fusegene << "\t" << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
-        os << fsr.indb << "\t" << fsr.getStatus() << "\t";
+        os << fsr.indb << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
         os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.junctionposition1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
         os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.junctionposition2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t";
-        os <<  fsr.fsmask << "\t" << fsr.fsHits << "\t" << fsr.distance;
+        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos << "\t" << fsr.cigar;
         }else{
@@ -87,12 +86,12 @@ struct FusionRecord{
      */
     static std::string gethead(bool rnamode = false){
         std::string header = "FusionGene\tFusionReads\tTotalReads\tFusionRate\t"; //[0-3]
-        header.append("inDB\tstatus\t"); //[4-5]
-        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[6-10]
-        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[11-15]
-        header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[16-19]
-        header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits\tfpDist"); //[26-32]
+        header.append("inDB\tstatus\tfpDist\t"); //[4-6]
+        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[7-11]
+        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[12-16]
+        header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[17-20]
+        header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[21-26]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[27-32]
         if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
         else header.append("\texon1\texon2\n");
         return header;
