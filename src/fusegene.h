@@ -262,7 +262,7 @@ struct FuseGene{
         oss << "hfrom1:  " << std::boolalpha << hfrom1 << "\n";
         oss << "tfrom1:  " << std::boolalpha << tfrom1 << "\n";
         oss << "cigar:   " << cigar << "\n";
-        oss << "status:  " << status;
+        oss << "status:  " << status << "\n";
         return oss.str();
     }
 };

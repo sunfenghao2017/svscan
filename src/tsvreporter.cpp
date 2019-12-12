@@ -88,7 +88,6 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }
     }
-    RealnFilter realnFilter(mOpt->alnref);
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
         for(uint32_t i = 0; i < gl.size(); ++i){
@@ -235,6 +234,28 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
             }else{
                 gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+            }
+            std::string gene1, gene2;
+            int32_t exon1, exon2;
+            if(gl[i].mFuseGene[j].hfrom1){
+                gene1 = gl[i].mGene1[gl[i].mFuseGene[i].hidx].gene;
+                gene2 = gl[i].mGene2[gl[i].mFuseGene[i].tidx].gene;
+                exon1 = gl[i].mGene1[gl[i].mFuseGene[i].hidx].exon;
+                exon2 = gl[i].mGene2[gl[i].mFuseGene[i].tidx].exon;
+            }else{
+                gene1 = gl[i].mGene2[gl[i].mFuseGene[i].hidx].gene;
+                gene2 = gl[i].mGene1[gl[i].mFuseGene[i].tidx].gene;
+                exon1 = gl[i].mGene2[gl[i].mFuseGene[i].hidx].exon;
+                exon2 = gl[i].mGene1[gl[i].mFuseGene[i].tidx].exon;
+            }
+            if(mOpt->fuseOpt->mFsRptList.empty()){
+                gl[i].mFuseGene[j].status |= FUSION_FINREPORTRNG;
+            }else{
+                if(mOpt->fuseOpt->inFsRptRange(gene1, gene2, exon1, exon2, "ee")){
+                    gl[i].mFuseGene[j].status |= FUSION_FINREPORTRNG;
+                }else{
+                    gl[i].mFuseGene[j].status &= (~FUSION_FINREPORTRNG);
+                }
             }
             float af = 0.0;
             int32_t srv = std::max((int32_t)mJctCnts[i].getAltDep(), svs[i].mSRSupport);
@@ -480,18 +501,5 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
             std::swap(fsr.ts1pos, fsr.ts2pos);
         }
         fsr.cigar = gi.mFuseGene[i].cigar;                    // fsCigar
-    }
-    // mask FUSION_FINREPORTRNG now
-    if(mOpt->fuseOpt->mFsRptList.empty()){
-        fsr.fsmask |= FUSION_FINREPORTRNG;
-    }else{
-        if(mOpt->debug & DEBUG_FOUTF){
-            std::cout << fsr.gene1 << "->" << fsr.gene2 << "(" << fsr.exon1 << "," << fsr.exon2 << ")" << std::endl;
-        }
-        if(mOpt->fuseOpt->inFsRptRange(fsr.gene1, fsr.gene2, fsr.exon1, fsr.exon2, "ee")){
-            fsr.fsmask |= FUSION_FINREPORTRNG;
-        }else{
-            fsr.fsmask &= (~FUSION_FINREPORTRNG);
-        }
     }
 }
