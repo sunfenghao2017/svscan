@@ -33,9 +33,9 @@ struct SVRec{
     std::string fuseGene;
     std::string fsMask;
     std::string trs1Name;
-    std::string trs1Pos;
+    int32_t trs1Pos;
     std::string trs2Name;
-    std::string trs2Pos;
+    int32_t trs2Pos;
     bool rnamode;
 
     SVRec(){
