@@ -9,6 +9,7 @@ void SVDNADBOpt::prepDB(){
     std::ofstream ofc(bedCDS); // cds bed region
     std::ofstream ofu(bedUnits); // unit bed region
     std::ofstream ofr(ref2gene); // ref2gene tsv
+    std::ofstream ofg(geneRng); // gene range file
     kstring_t str = {0, 0, 0};
     bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> vstr;
@@ -18,6 +19,9 @@ void SVDNADBOpt::prepDB(){
     std::stringstream coss; // cds bed region record buffer
     std::stringstream uoss; // unit bed region buffer
     std::stringstream ross; // ref2gene buffer
+    std::set<std::string> validchrs; // valid chrs
+    for(int i = 1; i < 23; ++i) validchrs.insert("chr" + std::to_string(i));
+    validchrs.insert({"chrX", "chrY", "chrM"});
     // chr start end strand feature count trsname tgenename trsversion
     while(bgzf_getline(ifp, '\n', &str) > 0){
         aoss.str(""); coss.str(""); uoss.str(""); ross.str("");
@@ -112,6 +116,7 @@ void SVDNADBOpt::prepDB(){
         ofc << coss.str();
         ofu << uoss.str();
         ofr << ross.str();
+        if(msMK == "Y" && validchrs.find(chr) != validchrs.end()) ofg << gene << "\t" << chr << "\t" << trsStart << "\t" << trsEnd << "\t" << strand << "\n";
         assert(bgzf_write(ofp, recs.c_str(), recs.size()) >= 0);
     }
     bgzf_close(ofp);
@@ -119,4 +124,5 @@ void SVDNADBOpt::prepDB(){
     ofc.close();
     ofu.close();
     ofr.close();
+    ofg.close();
 }

@@ -68,6 +68,7 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--blacklist", fuserptOpt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--samegenel", fuserptOpt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--fsrptlist", fuserptOpt->fuseOpt->mFsRptList, "report range list")->check(CLI::ExistingFile);
+    pfsrpt->add_option("--fusionrpt", fuserptOpt->fuseOpt->mOutFile, "primary fusion report file path", true)->check(CLI::ExistingFile);
     // dna annodb
     SVDNADBOpt* annDBOpt = new SVDNADBOpt();
     CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");
@@ -77,6 +78,7 @@ int main(int argc, char** argv){
     panndb->add_option("-r,--r2g", annDBOpt->ref2gene, "output file path of refseq2gene tsv", true);
     panndb->add_option("-c,--cdsbed", annDBOpt->bedCDS, "output file path of cds region", true);
     panndb->add_option("-u,--unitbed", annDBOpt->bedUnits, "output file path of exon/utr units", true);
+    panndb->add_option("-g,--generng", annDBOpt->geneRng, "output file path of gene cnctrs coordinates", true);
     // rna annodb
     SVRNADBOpt* rnaDBOpt = new SVRNADBOpt();
     CLI::App* prnadb = app.add_subcommand("rnadb", "prepare RNA sv annotation database for svscan");

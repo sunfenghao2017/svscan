@@ -19,6 +19,7 @@ struct SVDNADBOpt{
     std::string ref2gene;   ///< refseq accession number to gene name
     std::string bedCDS;     ///< cds bed region file of each transcript
     std::string bedUnits;   ///< exon/utr region file of each transcript
+    std::string geneRng;    ///< gene canonical transcript coordinate range
     Software* softEnv;      ///< software env
     
     SVDNADBOpt(){
@@ -29,6 +30,7 @@ struct SVDNADBOpt{
         ref2gene = "ref2gene.tsv";
         bedCDS = "ref.cds.bed";
         bedUnits = "ref.unit.bed";
+        geneRng = "gene.coord.tsv";
     }
 
     ~SVDNADBOpt(){

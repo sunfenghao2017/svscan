@@ -312,6 +312,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.svid = std::atoi(vstr[18].c_str());                              // svID
             fgr.svint = std::atoi(vstr[19].c_str());                             // svInt
             fgr.fsHits = std::atoi(vstr[24].c_str());                            // fsHits;
+            fgr.distance = fuseOpt->geneNear(fgr.gene1, fgr.chr1, fgr.junctionposition1, fgr.gene2, fgr.chr2); // fpDist
             // mask FUSION_FINREPORTRNG now
             if(fuseOpt->mFsRptList.empty()){
                 fgr.fsmask |= FUSION_FINREPORTRNG;

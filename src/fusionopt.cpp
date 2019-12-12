@@ -216,3 +216,51 @@ bool FusionOptions::inFsRptRange(std::string hgene, std::string tgene,  int32_t 
     }
     return false;
 }
+
+void FusionOptions::initGeneCrdRange(){
+    if(mGeneCrdList.empty()) return;
+    std::ifstream fr(mGeneCrdList);
+    std::string line;
+    std::vector<std::string> vstr;
+    while(std::getline(fr, line)){
+        util::split(line, vstr, "\t");
+        GeneRange gr;
+        gr.mGene = vstr[0];
+        gr.mChr = vstr[1];
+        gr.mStart = std::atoi(vstr[2].c_str());
+        gr.mEnd = std::atoi(vstr[3].c_str());
+        mGeneRangeVec.push_back(gr);
+    }
+    std::sort(mGeneRangeVec.begin(), mGeneRangeVec.end());
+}
+
+int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, int32_t pos1, const std::string& g2, const std::string& chr2){
+    if(chr1 != chr2) return -1;
+    if(mGeneRangeVec.empty()) return -1;
+    GeneRange gr1;
+    gr1.mChr = chr1;
+    gr1.mStart = pos1;
+    gr1.mEnd = pos1 + 1;
+    auto iter = std::lower_bound(mGeneRangeVec.begin(), mGeneRangeVec.end(), gr1);
+    while(iter != mGeneRangeVec.begin() && iter->mGene != g1){
+        --iter;
+    }
+    if(iter->mGene != g1) return -1;
+    gr1.mStart = iter->mStart;
+    gr1.mEnd = iter->mEnd;
+    if(iter != mGeneRangeVec.end()){
+        ++iter;
+        if(iter->mGene == g2){
+            return iter->mStart - gr1.mEnd;
+        }else{
+            --iter;
+        }
+    }
+    if(iter != mGeneRangeVec.begin()){
+        --iter;
+        if(iter->mGene == g2){
+            return gr1.mStart - iter->mEnd;
+        }
+    }
+    return -1;
+}

@@ -65,7 +65,8 @@ int main(int argc, char** argv){
     app.add_option("--samegenel", opt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--extraanno", opt->fuseOpt->mExtraAnnoList, "extra annoation gene list")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fsrptlist", opt->fuseOpt->mFsRptList, "report range list")->check(CLI::ExistingFile)->group("Fusion Options");
-    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
+    app.add_option("--genecrdlist", opt->fuseOpt->mGeneCrdList, "gene coord list")->check(CLI::ExistingFile)->group("Fusion Options");
+    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
     // parse arguments
     CLI_PARSE(app, argc, argv);

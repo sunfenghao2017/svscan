@@ -502,4 +502,5 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
         }
         fsr.cigar = gi.mFuseGene[i].cigar;                    // fsCigar
     }
+    fsr.distance = mOpt->fuseOpt->geneNear(fsr.gene1, fsr.chr1, fsr.junctionposition1, fsr.gene2, fsr.chr2); // distance
 }

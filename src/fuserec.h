@@ -46,6 +46,7 @@ struct FusionRecord{
     std::string ts2name;        ///< transcript2 name(RNA only)
     int32_t ts2pos;             ///< transcript2 breakpoint(RNA only)
     std::string cigar;          ///< cigar string of bp(RNA only)
+    int32_t distance;           ///< distance of two gene
     int32_t fsHits;             ///< fusion seq hits int mask
 
     /** construct an FusionRecord */
@@ -69,7 +70,8 @@ struct FusionRecord{
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits;
+        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t";
+        os <<  fsr.fsmask << "\t" << fsr.fsHits << "\t" << fsr.distance;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos << "\t" << fsr.cigar;
         }else{
@@ -90,7 +92,7 @@ struct FusionRecord{
         header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[11-15]
         header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[16-19]
         header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[26-31]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits\tfpDist"); //[26-32]
         if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
         else header.append("\texon1\texon2\n");
         return header;

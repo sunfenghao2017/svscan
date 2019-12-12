@@ -12,6 +12,22 @@
 #include "svutil.h"
 #include "util.h"
 
+struct GeneRange{
+    std::string mGene;
+    std::string mChr;
+    int32_t mStart;
+    int32_t mEnd;
+
+    bool operator<(const GeneRange& other) const {
+        return (mChr < other.mChr) || 
+               (mChr == other.mChr && mStart < other.mStart) ||
+               (mChr == other.mChr && mStart == other.mStart && mEnd < other.mEnd);
+    }
+    
+};
+
+typedef std::vector<GeneRange> GeneRangeVector;
+
 /** class to store a fusion gene fusion range */
 struct FusionRange{
     std::string mHgene;                               ///< hgene
@@ -135,7 +151,8 @@ struct FusionOptions{
     std::string mBgBCF;                ///< background BCF file
     std::string mWhiteList;            ///< fusion event which will keep always if found
     std::string mBlackList;            ///< fusion event which will drop always if found
-    std::string mFsRptList;           ///< if provided, report fusions in this list only
+    std::string mFsRptList;            ///< if provided, report fusions in this list only
+    std::string mGeneCrdList;          ///< gene coordinate range list
     std::string mSameGeneSVList;       ///< fusion event in same gene to be reported
     std::string mExtraAnnoList;        ///< fusion gene which should be annotated seperately
     std::string mInfile;               ///< input file of sver sv tsv format result file
@@ -151,6 +168,7 @@ struct FusionOptions{
     std::set<std::string> mBlackGenes; ///< to store black gene which should excluded by all fusion events
     DetectRangeMaps mDetectRngMap;     ///< detect range of sv event in the same gene
     FusionReportRange mFusionRptMap;   ///< report fusion event only in this range
+    GeneRangeVector mGeneRangeVec;     ///< gene coordinates vector
     bool mInitialized = false;         ///< FusionOptions is initialized if true
 
     /** FusionOptions constructor */
@@ -174,6 +192,19 @@ struct FusionOptions{
 
     /** initialize filter options */
     void init();
+
+    /** initialize gene coordinate range list */
+    void initGeneCrdRange();
+
+    /** test whether two gene is near each other
+     * @param g1 gene1 name
+     * @param chr1 gene1 chr
+     * @param pos1 one pos of gene1
+     * @param g2 geng2 name
+     * @param chr2 gene2 chr
+     * @return positive distance of two near gene, -1 if two gene not near
+     */
+    int32_t geneNear(const std::string& g1, const std::string& chr1, int32_t pos1, const std::string& g2, const std::string& chr2);
 
     /** initialize fusion report range */
     void initFusionRptRange();
