@@ -84,6 +84,9 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
         }
         fr.close();
     }
+    for(auto& e: usrid){
+        svids.insert(e);
+    }
 }
 
 void BamToTable::b2t(){

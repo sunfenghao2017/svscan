@@ -75,11 +75,12 @@ typedef std::vector<BamRec> BamRecVector;
 /** class to extract sv supporting bam to table */
 class BamToTable{
     public:
-        std::string svbam;  ///< sv supporting bam
-        std::string fstsv;  ///< primary fusion result tsv
-        std::string sstsv;  ///< secondary fusion result tsv
-        std::string bamtb;  ///< bam output table
-        int32_t svidf = 28; ///< svid column index in tsv
+        std::string svbam;          ///< sv supporting bam
+        std::string fstsv;          ///< primary fusion result tsv
+        std::string sstsv;          ///< secondary fusion result tsv
+        std::vector<int32_t> usrid; ///< fusion id list
+        std::string bamtb;          ///< bam output table
+        int32_t svidf = 29;         ///< svid column index in tsv
 
     /** BamToTable constructor */
     BamToTable(){
