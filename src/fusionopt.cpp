@@ -236,6 +236,7 @@ void FusionOptions::initGeneCrdRange(){
 
 int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, int32_t pos1, const std::string& g2, const std::string& chr2){
     if(chr1 != chr2) return -1;
+    if(g1 == g2) return 0;
     if(mGeneRangeVec.empty()) return -1;
     GeneRange gr1;
     gr1.mChr = chr1;
