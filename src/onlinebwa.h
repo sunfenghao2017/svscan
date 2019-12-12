@@ -303,7 +303,6 @@ class OnlineBWA{
             if(!mIndex){
                 return;
             }
-            result.clear();
             mem_alnreg_v ar = mem_align1(mMemOpt, mIndex->bwt, mIndex->bns, mIndex->pac, seq.length(), seq.data());
             std::vector<mem_aln_t> a;
             for(size_t i = 0; i < ar.n; ++i){
