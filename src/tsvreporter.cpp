@@ -335,7 +335,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE);
+    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE | FUSION_FINREPORTRNG);
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;
@@ -472,5 +472,15 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
             std::swap(fsr.ts1pos, fsr.ts2pos);
         }
         fsr.cigar = gi.mFuseGene[i].cigar;                    // fsCigar
+    }
+    // mask FUSION_FINREPORTRNG now
+    if(mOpt->fuseOpt->mFsRptList.empty()){
+        fsr.fsmask |= FUSION_FINREPORTRNG;
+    }else{
+        if(mOpt->fuseOpt->inFsRptRange(fsr.gene1, fsr.gene2, fsr.exon1, fsr.exon2, "ee")){
+            fsr.fsmask |= FUSION_FINREPORTRNG;
+        }else{
+            fsr.fsmask &= (~FUSION_FINREPORTRNG);
+        }
     }
 }

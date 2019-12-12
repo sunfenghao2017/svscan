@@ -12,6 +12,60 @@
 #include "svutil.h"
 #include "util.h"
 
+/** class to store a fusion gene fusion range */
+struct FusionRange{
+    std::string mHgene;                               ///< hgene
+    std::string mTgene;                               ///< tgene
+    std::vector<std::pair<int32_t, int32_t>> mExPair;  ///< hgene exon and tgene exon pairs
+    std::vector<std::pair<int32_t, int32_t>> mInPair;  ///< hgene intron and tgene intron pairs
+    std::vector<std::pair<int32_t, int32_t>> mExInts; ///< hgene exon and tgene intron pairs
+    std::vector<std::pair<int32_t, int32_t>> mIntExs; ///< hgene intron and tgene exon pairs
+
+    /** add pair */
+    inline void addp(int32_t h, int32_t t, std::string uu){
+        if(uu == "ee"){
+            mExPair.push_back({h, t});
+        }else if(uu == "ei"){
+            mExInts.push_back({h, t});
+        }else if(uu == "ii"){
+            mInPair.push_back({h, t});
+        }else if(uu == "ie"){
+            mIntExs.push_back({h, t});
+        }
+    }
+    
+    /** return true if exon exon fusion got */
+    inline bool eegot(int32_t h, int32_t t){
+        return uugot(mExPair, h, t);
+    }
+    
+    /** return true if exon intron fusion got */
+    inline bool eigot(int32_t h, int32_t t){
+        return uugot(mExInts, h, t);
+    }
+
+    /** return true if intron intron fusion got */
+    inline bool iigot(int32_t h, int32_t t){
+        return uugot(mInPair, h, t);
+    }
+
+    /** return true if intron exon fusion got */
+    inline bool iegot(int32_t h, int32_t t){
+        return uugot(mIntExs, h, t);
+    } 
+
+    /** magic func */
+    inline bool uugot(const std::vector<std::pair<int32_t, int32_t>>& plist, int32_t h, int32_t t){
+        for(uint32_t i = 0; i < plist.size(); ++i){
+            if(plist[i].first == h && plist[i].second == t) return true;
+        }
+        return false;
+    }
+};
+
+/** type to store a series of fusion pair ranges */
+typedef std::map<std::string, FusionRange> FusionReportRange;
+
 /** class to store detect range of one gene */
 struct DetectRange{
     std::string mGene;           /// < gene name
@@ -61,6 +115,7 @@ struct FusionOptions{
     std::string mBgBCF;                ///< background BCF file
     std::string mWhiteList;            ///< fusion event which will keep always if found
     std::string mBlackList;            ///< fusion event which will drop always if found
+    std::string mFsRptList;           ///< if provided, report fusions in this list only
     std::string mSameGeneSVList;       ///< fusion event in same gene to be reported
     std::string mExtraAnnoList;        ///< fusion gene which should be annotated seperately
     std::string mInfile;               ///< input file of sver sv tsv format result file
@@ -75,6 +130,7 @@ struct FusionOptions{
     std::set<std::string> mWhiteGenes; ///< to store hot gene in whitelist
     std::set<std::string> mBlackGenes; ///< to store black gene which should excluded by all fusion events
     DetectRangeMaps mDetectRngMap;     ///< detect range of sv event in the same gene
+    FusionReportRange mFusionRptMap;   ///< report fusion event only in this range
     bool mInitialized = false;         ///< FusionOptions is initialized if true
 
     /** FusionOptions constructor */
@@ -98,6 +154,18 @@ struct FusionOptions{
 
     /** initialize filter options */
     void init();
+
+    /** initialize fusion report range */
+    void initFusionRptRange();
+
+    /** test whether an fusion event is in report range
+     * @param hg hgene name
+     * @param tg tgene name
+     * @param hu hgene unit number
+     * @param tu tgene unit number
+     * @param uu unit type 
+     */
+    bool inFsRptRange(std::string hgene, std::string tgene,  int32_t hu, int32_t tu, std::string uu = "ee");
 
     /** test whether an fusion event match hot gene common fusion direction
      * @param hgene head gene

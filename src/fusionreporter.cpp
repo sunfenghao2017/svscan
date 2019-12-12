@@ -110,7 +110,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
                                      FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
-    TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
+    TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FINREPORTRNG);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
     TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE);
     // supplementary fusion additional conditions
@@ -312,6 +312,16 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.svid = std::atoi(vstr[18].c_str());                              // svID
             fgr.svint = std::atoi(vstr[19].c_str());                             // svInt
             fgr.fsHits = std::atoi(vstr[24].c_str());                            // fsHits;
+            // mask FUSION_FINREPORTRNG now
+            if(fuseOpt->mFsRptList.empty()){
+                fgr.fsmask |= FUSION_FINREPORTRNG;
+            }else{
+                if(fuseOpt->inFsRptRange(fgr.gene1, fgr.gene2, fgr.exon1, fgr.exon2, "ee")){
+                    fgr.fsmask |= FUSION_FINREPORTRNG;
+                }else{
+                    fgr.fsmask &= (~FUSION_FINREPORTRNG);
+                }
+            }
             if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){
                 if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
                 else fgr.fsmask &= (~FUSION_FREALNPASSED);

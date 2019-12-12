@@ -186,6 +186,7 @@
 #define FUSION_FMIRRORINDB              0x80000              ///< this fusion event's mirror event is in public db
 #define FUSION_FHTFLSWAPPED             0x100000             ///< this fusion event's h/t gene swapped against bp1/2 gene
 #define FUSION_FREALNPASSED             0x200000             ///< this fusion event has passed consensus sequence realignment
+#define FUSION_FINREPORTRNG             0x400000             ///< this fusion event is in predefined report range
 
 /** fusion flag type */
 typedef uint32_t TFUSION_FLAG;

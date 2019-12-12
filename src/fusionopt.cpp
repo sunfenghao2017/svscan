@@ -90,6 +90,7 @@ void FusionOptions::init(){
     if(!mBlackList.empty()) parseBlackList();
     if(!mSameGeneSVList.empty()) parseSameGeneEventList();
     if(!mExtraAnnoList.empty()) mExtraAnnotator.init(mExtraAnnoList);
+    if(!mFsRptList.empty()) initFusionRptRange();
     mInitialized = true;
 }
 
@@ -169,4 +170,49 @@ bool FusionOptions::validSV(int32_t svt, const std::string& chr1, const std::str
         }
     }
     return true;
+}
+
+void FusionOptions::initFusionRptRange(){
+    if(mFsRptList.empty()) return;
+    std::ifstream fr(mFsRptList);
+    std::string line;
+    std::vector<std::string> vstr;
+    while(std::getline(fr, line)){
+        util::split(line, vstr, "\t");
+        std::string fsn = vstr[0] + "->" + vstr[2];
+        std::string uu = std::string(1, vstr[1][0]) + vstr[3][0];
+        int32_t hu = std::atoi(vstr[1].substr(1).c_str());
+        int32_t tu = std::atoi(vstr[3].substr(1).c_str());
+        auto iter = mFusionRptMap.find(fsn);
+        if(iter == mFusionRptMap.end()){
+            FusionRange fsr;
+            fsr.mHgene = vstr[0];
+            fsr.mTgene = vstr[2];
+            fsr.addp(hu, tu, uu);
+            mFusionRptMap[fsn] = fsr;
+        }else{
+            iter->second.addp(hu, tu, uu);
+        }
+    }
+    fr.close();
+}
+
+bool FusionOptions::inFsRptRange(std::string hgene, std::string tgene,  int32_t hu, int32_t tu, std::string uu){
+    if(!mInitialized) init();
+    std::string fgname = hgene + "->" + tgene;
+    auto iter = mFusionRptMap.find(fgname);
+    if(iter == mFusionRptMap.end()){
+        return false;
+    }else{
+        if(uu == "ee"){
+            return iter->second.eegot(hu, tu);
+        }else if(uu == "ei"){
+            return iter->second.eigot(hu, tu);
+        }else if(uu == "ii"){
+            return iter->second.iigot(hu, tu);
+        }else if(uu == "ie"){
+            return iter->second.iegot(hu, tu);
+        }
+    }
+    return false;
 }
