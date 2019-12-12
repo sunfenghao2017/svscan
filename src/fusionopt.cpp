@@ -91,6 +91,7 @@ void FusionOptions::init(){
     if(!mSameGeneSVList.empty()) parseSameGeneEventList();
     if(!mExtraAnnoList.empty()) mExtraAnnotator.init(mExtraAnnoList);
     if(!mFsRptList.empty()) initFusionRptRange();
+    if(!mGeneCrdList.empty()) initGeneCrdRange();
     mInitialized = true;
 }
 
@@ -238,6 +239,7 @@ int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, 
     if(chr1 != chr2) return -1;
     if(g1 == g2) return 0;
     if(mGeneRangeVec.empty()) return -1;
+    if(!mInitialized) init();
     GeneRange gr1;
     gr1.mChr = chr1;
     gr1.mStart = pos1;
