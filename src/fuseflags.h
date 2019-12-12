@@ -29,6 +29,7 @@ struct FuseFlags{
         flagmap[FUSION_FMIRRORINDB] = "fusion event's mirror event is in public db";
         flagmap[FUSION_FHTFLSWAPPED] = "fusion event's h/t gene swapped against bp1/2 gene";
         flagmap[FUSION_FREALNPASSED] = "fusion event has passed consensus sequence realignment";
+        flagmap[FUSION_FINREPORTRNG] = "fusion event is in predefined report range";
     }
 
     ~FuseFlags(){}
