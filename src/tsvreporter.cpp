@@ -238,15 +238,15 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             std::string gene1, gene2;
             int32_t exon1, exon2;
             if(gl[i].mFuseGene[j].hfrom1){
-                gene1 = gl[i].mGene1[gl[i].mFuseGene[i].hidx].gene;
-                gene2 = gl[i].mGene2[gl[i].mFuseGene[i].tidx].gene;
-                exon1 = gl[i].mGene1[gl[i].mFuseGene[i].hidx].exon;
-                exon2 = gl[i].mGene2[gl[i].mFuseGene[i].tidx].exon;
+                gene1 = gl[i].mGene1[gl[i].mFuseGene[j].hidx].gene;
+                gene2 = gl[i].mGene2[gl[i].mFuseGene[j].tidx].gene;
+                exon1 = gl[i].mGene1[gl[i].mFuseGene[j].hidx].exon;
+                exon2 = gl[i].mGene2[gl[i].mFuseGene[j].tidx].exon;
             }else{
-                gene1 = gl[i].mGene2[gl[i].mFuseGene[i].hidx].gene;
-                gene2 = gl[i].mGene1[gl[i].mFuseGene[i].tidx].gene;
-                exon1 = gl[i].mGene2[gl[i].mFuseGene[i].hidx].exon;
-                exon2 = gl[i].mGene1[gl[i].mFuseGene[i].tidx].exon;
+                gene1 = gl[i].mGene2[gl[i].mFuseGene[j].hidx].gene;
+                gene2 = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
+                exon1 = gl[i].mGene2[gl[i].mFuseGene[j].hidx].exon;
+                exon2 = gl[i].mGene1[gl[i].mFuseGene[j].tidx].exon;
             }
             if(mOpt->fuseOpt->mFsRptList.empty()){
                 gl[i].mFuseGene[j].status |= FUSION_FINREPORTRNG;
