@@ -80,6 +80,14 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
+    if(mOpt->debug & DEBUG_FOUTF){
+        if(!mOpt->fuseOpt->mFsRptList.empty()){
+            for(auto iter = mOpt->fuseOpt->mFusionRptMap.begin(); iter != mOpt->fuseOpt->mFusionRptMap.end(); ++iter){
+                std::cout << iter->first << std::endl;
+                std::cout << iter->second << std::endl;
+            }
+        }
+    }
     RealnFilter realnFilter(mOpt->alnref);
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
@@ -477,6 +485,9 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     if(mOpt->fuseOpt->mFsRptList.empty()){
         fsr.fsmask |= FUSION_FINREPORTRNG;
     }else{
+        if(mOpt->debug & DEBUG_FOUTF){
+            std::cout << fsr.gene1 << "->" << fsr.gene2 << "(" << fsr.exon1 << "," << fsr.exon2 << ")" << std::endl;
+        }
         if(mOpt->fuseOpt->inFsRptRange(fsr.gene1, fsr.gene2, fsr.exon1, fsr.exon2, "ee")){
             fsr.fsmask |= FUSION_FINREPORTRNG;
         }else{

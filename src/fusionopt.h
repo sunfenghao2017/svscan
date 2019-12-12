@@ -16,11 +16,31 @@
 struct FusionRange{
     std::string mHgene;                               ///< hgene
     std::string mTgene;                               ///< tgene
-    std::vector<std::pair<int32_t, int32_t>> mExPair;  ///< hgene exon and tgene exon pairs
-    std::vector<std::pair<int32_t, int32_t>> mInPair;  ///< hgene intron and tgene intron pairs
+    std::vector<std::pair<int32_t, int32_t>> mExPair; ///< hgene exon and tgene exon pairs
+    std::vector<std::pair<int32_t, int32_t>> mInPair; ///< hgene intron and tgene intron pairs
     std::vector<std::pair<int32_t, int32_t>> mExInts; ///< hgene exon and tgene intron pairs
     std::vector<std::pair<int32_t, int32_t>> mIntExs; ///< hgene intron and tgene exon pairs
 
+    static void showPairs(std::ostream& os, const std::vector<std::pair<int32_t, int32_t>>& p){
+        for(uint32_t i = 0; i < p.size(); ++i){
+            os << "(" << p[i].first << ", " << p[i].second << ")\n";
+        }
+    }
+
+    inline friend std::ostream& operator<<(std::ostream& os, const FusionRange& fr){
+        os << "Hgene: " << fr.mHgene << "\n";
+        os << "Tgene: " << fr.mTgene << "\n";
+        os << "ExonPair: " << "\n";
+        showPairs(os, fr.mExPair);
+        os << "IntronPair: " << "\n";
+        showPairs(os, fr.mInPair);
+        os << "ExInPair: " << "\n";
+        showPairs(os, fr.mExInts);
+        os << "InExPair: " << "\n";
+        showPairs(os, fr.mIntExs);
+        return os;
+        return os;
+    }
     /** add pair */
     inline void addp(int32_t h, int32_t t, std::string uu){
         if(uu == "ee"){
