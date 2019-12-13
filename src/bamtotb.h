@@ -100,6 +100,6 @@ class BamToTable{
     void getsvid(std::set<int32_t>& svids);
 
     /** output line buffers to a sheet */
-    static void lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt = NULL);
+    static int lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt = NULL);
 };
 #endif

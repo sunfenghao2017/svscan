@@ -1,6 +1,6 @@
 #include "bamtotb.h"
 
-void BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt){
+int BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt){
     int row = 0, col = 0;
     std::vector<size_t> vclen;
     std::vector<std::string> vline;
@@ -29,6 +29,7 @@ void BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_f
          ++row;
      }
      for(size_t i = 0; i < vclen.size(); ++i) worksheet_set_column(sheet, i, i, vclen[i], fmt);
+     return row;
 }
 
 void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
@@ -119,7 +120,8 @@ void BamToTable::b2t(){
         oss << brecs[i].toStr();
     }
     lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
-    lines2sheet(rsheet, oss.str(), format);
+    int ttl = lines2sheet(rsheet, oss.str(), format);
+    worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
     workbook_close(workbook);
     sam_close(fp);
     bam_hdr_destroy(h);
