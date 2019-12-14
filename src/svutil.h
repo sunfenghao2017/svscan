@@ -607,6 +607,7 @@ namespace svutil{
         }
         if(j < 0) j = 0;
         if(j > t - 1) j = t - 1;
+        trec.strand = r2dl[j].gstrand;
         trec.chr = r2dl[j].gchr;
         trec.drop = false;
         trec.exon = j + 1;
@@ -617,18 +618,20 @@ namespace svutil{
             trec.pos = r2dl[j].gend;
             trec.eoffset = 0;
             trec.ioffset = r2dl[j].tend - r2dl[j].tbeg;
+            if(trec.strand == "-") trec.pos = r2dl[j].gbeg;
         }
         if(ad > 0){
             trec.pos = r2dl[j].gbeg;
             trec.eoffset = r2dl[j].tend - r2dl[j].tbeg;
             trec.ioffset = 0;
+            if(trec.strand == "-") trec.pos = r2dl[j].gend;
         }
         if(ad == 0){
             trec.pos = r2dl[j].gbeg + (bp - r2dl[j].tbeg);
+            if(trec.strand == "-") trec.pos = r2dl[j].gend - (bp - r2dl[j].tbeg);
             trec.ioffset = bp - r2dl[j].tbeg;
             trec.eoffset = r2dl[j].tend - bp;
         }
-        trec.strand = r2dl[j].gstrand;
         trec.unit = r2dl[j].uname;
         trec.version = r2dl[j].tversion;
     } 
