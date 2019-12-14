@@ -15,12 +15,12 @@ struct FusionRecord{
     float fuserate;             ///< rate of fusionreads in totalreads
     std::string gene1;          ///< hgene
     std::string chr1;           ///< chr on which hgene situated
-    int32_t junctionposition1;  ///< junction position of hgene on chr1
+    int32_t jctpos1;            ///< junction position of hgene on chr1
     std::string strand1;        ///< strand hgene situated on chr1
     std::string transcript1;    ///< transcript of hgene
     std::string gene2;          ///< tgene
     std::string chr2;           ///< chr on which tgene situated
-    int32_t junctionposition2;  ///< junction position of tgene on chr2
+    int32_t jctpos2;            ///< junction position of tgene on chr2
     std::string strand2;        ///< strand tgene situated on chr2
     std::string transcript2;    ///< transcript of tgene
     std::string fusionsequence; ///< fusion concensus sequence
@@ -48,15 +48,36 @@ struct FusionRecord{
     std::string cigar;          ///< cigar string of bp(RNA only)
     int32_t distance;           ///< distance of two gene
     int32_t fsHits;             ///< fusion seq hits int mask
+    bool report;                ///< this fusion will be reported if true
 
     /** construct an FusionRecord */
     FusionRecord(){
         fsmask = 0;
+        report = false;
     }
 
     /** destroy an FusionRecord */
     ~FusionRecord(){}
 
+    /** operator to compare two FusionRecord */
+    inline bool operator<(const FusionRecord& other) const {
+        return (svint < other.svint) ||
+               (svint == other.svint && chr1 < other.chr1) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 < other.chr2) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 < other.gene1) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 < other.gene2) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 == other.gene2 && exon1 < other.exon1) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 == other.gene2 && exon1 == other.exon1 && exon2 < other.exon2) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 == other.gene2 && exon1 == other.exon1 && exon2 == other.exon2 && srrescued < other.srrescued) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 == other.gene2 && exon1 == other.exon1 && exon2 == other.exon2 && srrescued == other.srrescued && dprescued < other.dprescued) ||
+               (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 == other.gene2 && exon1 == other.exon1 && exon2 == other.exon2 && srrescued == other.srrescued && dprescued == other.dprescued && fuserate < other.fuserate);
+
+    }
+
+    /** test whether two FusionRecord is the same fusion */
+    inline bool samefs(const FusionRecord& other){
+        return (svint == other.svint && chr1 == other.chr1 && chr2 == other.chr2 && gene1 == other.gene1 && gene2 == other.gene2 && exon1 == other.exon1 && exon2 == other.exon2);
+    } 
     /** output an FusionRecord to ostream
      * @param os reference of ostream
      * @param fsr reference of FusionRecord
@@ -65,8 +86,8 @@ struct FusionRecord{
     inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
         os << fsr.fusegene << "\t" << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
         os << fsr.indb << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
-        os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.junctionposition1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
-        os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.junctionposition2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
+        os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.jctpos1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
+        os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.jctpos2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";

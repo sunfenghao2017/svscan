@@ -82,6 +82,14 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
 
 void FusionReporter::report(){
     sv2fsl(fuseList);
+    std::sort(fuseList.begin(), fuseList.end());
+    // mark report
+    uint32_t l = 0;
+    for(uint32_t i = 1; i < fuseList.size(); ++i){
+        if(!fuseList[i].samefs(fuseList[l])) fuseList[l].report = true;
+        l = i;
+    }
+    if(!fuseList.empty()) fuseList[fuseList.size() - 1].report = true;
     // output valid fusions
     std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
@@ -89,11 +97,13 @@ void FusionReporter::report(){
     fw << header;
     fs << header;
     for(auto& e: fuseList){
-        if(e.fsmask & FUSION_FPRIMARY){
-            fw << e;
-        }
-        if(e.fsmask & FUSION_FSUPPLEMENTARY){
-            fs << e;
+        if(e.report){
+            if(e.fsmask & FUSION_FPRIMARY){
+                fw << e;
+            }
+            if(e.fsmask & FUSION_FSUPPLEMENTARY){
+                fs << e;
+            }
         }
     }
     fw.close();
@@ -275,26 +285,26 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             fgr.fuserate = af;                                                   // FusionRate
             if(fgl[i].hfrom1){
-                fgr.junctionposition1 = start;                                   // JunctionPosition1
+                fgr.jctpos1 = start;                                             // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;                         // Strand1;
                 fgr.transcript1 = trsl1[fgl[i].hidx].getTrsWithVer();            // Transcript2
                 fgr.exon1 = trsl1[fgl[i].hidx].exon;                             // exon1
             }else{
-                fgr.junctionposition1 = end;                                     // JunctionPosition1
+                fgr.jctpos1 = end;                                               // JunctionPosition1
                 fgr.strand1 = trsl2[fgl[i].hidx].strand;                         // Strand1;
                 fgr.transcript1 = trsl2[fgl[i].hidx].getTrsWithVer();            // Transcript1
                 fgr.exon1 = trsl2[fgl[i].hidx].exon;                             // exon1
             }
             if(fgl[i].tfrom1){
-                fgr.junctionposition2 = start;                                   // JunctionPosition2
+                fgr.jctpos2 = start;                                             // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;                         // Strand2
                 fgr.transcript2 = trsl1[fgl[i].tidx].getTrsWithVer();            // Transcript2
                 fgr.exon2 = trsl1[fgl[i].tidx].exon;                             // exon2
             }else{
-                fgr.junctionposition2 = end;                                     // JunctionPosition2
+                fgr.jctpos2 = end;                                               // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;                         // Strand2
                 fgr.transcript2 = trsl2[fgl[i].tidx].getTrsWithVer();            // Transcript2
-                fgr.exon2 = trsl2[fgl[i].tidx].exon;                             // exon2 
+                fgr.exon2 = trsl2[fgl[i].tidx].exon;                             // exon2
             }
             fgr.fusionsequence = vstr[16];                                       // FusionSequence
             fgr.fseqbp = std::atoi(vstr[17].c_str());                            // fseqBp
@@ -312,7 +322,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.svid = std::atoi(vstr[18].c_str());                              // svID
             fgr.svint = std::atoi(vstr[19].c_str());                             // svInt
             fgr.fsHits = std::atoi(vstr[24].c_str());                            // fsHits;
-            fgr.distance = fuseOpt->geneNear(fgr.gene1, fgr.chr1, fgr.junctionposition1, fgr.gene2, fgr.chr2); // fpDist
+            fgr.distance = fuseOpt->geneNear(fgr.gene1, fgr.chr1, fgr.jctpos1, fgr.gene2, fgr.chr2); // fpDist
             // mask FUSION_FINREPORTRNG now
             if(fuseOpt->mFsRptList.empty()){
                 fgr.fsmask |= FUSION_FINREPORTRNG;

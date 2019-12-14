@@ -379,19 +379,15 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
 }
 
 void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
-    // output valid fusions
-    std::string header = FusionRecord::gethead(mOpt->rnamode);
-    std::ofstream fw(mOpt->fuseOpt->mOutFile);
-    std::ofstream fs(mOpt->fuseOpt->mSupFile);
-    fw << header;
-    fs << header;
+    // get valid fusion list
+    FusionRecordList frl;
     for(uint32_t i = 0; i < gl.size(); ++i){
         bool reported = false;
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_FPRIMARY){
                 FusionRecord fsr;
                 toFuseRec(fsr, svs[i], gl[i], j);
-                fw << fsr;
+                frl.push_back(fsr);
                 reported = true;
             }
         }
@@ -400,8 +396,37 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
                 if(gl[i].mFuseGene[j].status & FUSION_FSUPPLEMENTARY){
                     FusionRecord fsr;
                     toFuseRec(fsr, svs[i], gl[i], j);
-                    fs << fsr;
+                    frl.push_back(fsr);
                 }
+            }
+        }
+    }
+    std::sort(frl.begin(), frl.end());
+    // mark report 
+    uint32_t l = 0;
+    for(uint32_t i = 1; i < frl.size(); ++i){
+        if(!frl[i].samefs(frl[l])) frl[l].report = true;
+        l = i;
+    }
+    if(!frl.empty()) frl[frl.size() - 1].report = true;
+    if(mOpt->debug & DEBUG_FOUTF){
+        std::cout << "debug_sorted_fs_event:" << std::endl;
+        for(uint32_t i = 0; i < frl.size(); ++i){
+            std::cout << std::boolalpha << frl[i].report << "\t" <<  frl[i] << std::endl;
+        }
+    }
+    // output valid fusions
+    std::string header = FusionRecord::gethead(mOpt->rnamode);
+    std::ofstream fw(mOpt->fuseOpt->mOutFile);
+    std::ofstream fs(mOpt->fuseOpt->mSupFile);
+    fw << header;
+    fs << header;
+    for(uint32_t i = 0; i < frl.size(); ++i){
+        if(frl[i].report){
+            if(frl[i].fsmask & FUSION_FPRIMARY){
+                fw << frl[i];
+            }else if(frl[i].fsmask & FUSION_FSUPPLEMENTARY){
+                fs << frl[i];
             }
         }
     }
@@ -437,14 +462,14 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     if(gi.mFuseGene[i].hfrom1){
         fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;
         fsr.chr1 = gi.mGene1[gi.mFuseGene[i].hidx].chr;
-        fsr.junctionposition1 = gi.mGene1[gi.mFuseGene[i].hidx].pos;
+        fsr.jctpos1 = gi.mGene1[gi.mFuseGene[i].hidx].pos;
         fsr.strand1 = gi.mGene1[gi.mFuseGene[i].hidx].strand;
         fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].getTrs();
         fsr.exon1 = gi.mGene1[gi.mFuseGene[i].hidx].exon;
     }else{
         fsr.gene1 = gi.mGene2[gi.mFuseGene[i].hidx].gene;
         fsr.chr1 = gi.mGene2[gi.mFuseGene[i].hidx].chr;
-        fsr.junctionposition1 = gi.mGene2[gi.mFuseGene[i].hidx].pos;
+        fsr.jctpos1 = gi.mGene2[gi.mFuseGene[i].hidx].pos;
         fsr.strand1 = gi.mGene2[gi.mFuseGene[i].hidx].strand;
         fsr.transcript1 = gi.mGene2[gi.mFuseGene[i].hidx].getTrs();
         fsr.exon1 = gi.mGene2[gi.mFuseGene[i].hidx].exon;
@@ -453,14 +478,14 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     if(gi.mFuseGene[i].tfrom1){
         fsr.gene2 = gi.mGene1[gi.mFuseGene[i].tidx].gene;
         fsr.chr2 = gi.mGene1[gi.mFuseGene[i].tidx].chr;
-        fsr.junctionposition2 = gi.mGene1[gi.mFuseGene[i].tidx].pos;
+        fsr.jctpos2 = gi.mGene1[gi.mFuseGene[i].tidx].pos;
         fsr.strand2 = gi.mGene1[gi.mFuseGene[i].tidx].strand;
         fsr.transcript2 = gi.mGene1[gi.mFuseGene[i].tidx].getTrs();
         fsr.exon2 = gi.mGene1[gi.mFuseGene[i].tidx].exon;
     }else{
         fsr.gene2 = gi.mGene2[gi.mFuseGene[i].tidx].gene;
         fsr.chr2 = gi.mGene2[gi.mFuseGene[i].tidx].chr;
-        fsr.junctionposition2 = gi.mGene2[gi.mFuseGene[i].tidx].pos;
+        fsr.jctpos2 = gi.mGene2[gi.mFuseGene[i].tidx].pos;
         fsr.strand2 = gi.mGene2[gi.mFuseGene[i].tidx].strand;
         fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].getTrs();
         fsr.exon2 = gi.mGene2[gi.mFuseGene[i].tidx].exon;
@@ -502,5 +527,5 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
         }
         fsr.cigar = gi.mFuseGene[i].cigar;                    // fsCigar
     }
-    fsr.distance = mOpt->fuseOpt->geneNear(fsr.gene1, fsr.chr1, fsr.junctionposition1, fsr.gene2, fsr.chr2); // distance
+    fsr.distance = mOpt->fuseOpt->geneNear(fsr.gene1, fsr.chr1, fsr.jctpos1, fsr.gene2, fsr.chr2); // distance
 }
