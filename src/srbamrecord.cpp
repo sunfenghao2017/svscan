@@ -395,9 +395,9 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         SRBamRecord::adjustOrientation(srseq, bpPoint, svt);
         if(!siseq.empty()) SRBamRecord::adjustOrientation(siseq, bpPoint, svt);
         // At most n split-reads used to to one SV event analysis
-        if((int32_t)seqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
-            if(svt >= 5){
-                mLock.lock();
+        if(svt >= 5){
+            mLock.lock();
+            if((int32_t)mTraSeqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
                 if(!srseq.empty()){
                     mTraSeqStore[svid].insert(srseq);
                     mTraQualStore[svid].push_back(b->core.qual);
@@ -405,8 +405,10 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 if(!siseq.empty()){
                     mTriSeqStore[svid].insert(siseq);
                 }
-                mLock.unlock();
-            }else{
+            }
+            mLock.unlock();
+        }else{
+            if((int32_t)seqStore[svid].size() < mOpt->filterOpt->mMaxReadPerSV){
                 if(!srseq.empty()){
                     seqStore[svid].insert(srseq);
                     qualStore[svid].push_back(b->core.qual);
