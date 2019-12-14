@@ -114,7 +114,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                         fg.tgene = exgs[k].gene;
                         fg.tidx = g1osize + k;
                     }
-                    extfl.push_back(fg);
+                    if(mOpt->fuseOpt->mExtraAnnotator.matchp(fg.hgene, fg.tgene)) extfl.push_back(fg);
                 }
                 for(uint32_t k = 0; k < exge.size(); ++k){
                     FuseGene fg = gl[i].mFuseGene[j];
@@ -125,7 +125,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                         fg.tgene = exge[k].gene;
                         fg.tidx = g2osize + k;
                     }
-                    extfl.push_back(fg);
+                    if(mOpt->fuseOpt->mExtraAnnotator.matchp(fg.hgene, fg.tgene)) extfl.push_back(fg);
                 }
             }
             for(uint32_t k = 0; k < extfl.size(); ++k){

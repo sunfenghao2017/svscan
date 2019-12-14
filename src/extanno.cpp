@@ -13,6 +13,11 @@ void ExtraAnno::init(const std::string& bedf){
         tr.chr = vstr[0];
         tr.gene = vstr[3];
         tr.name = vstr[4];
+        if(vstr[5] != "*"){
+            std::vector<std::string> vpg;
+            util::split(vstr[5], vpg, ",");
+            validp[vstr[3]] = {vpg.begin(), vpg.end()};
+        }
         trecs.push_back(tr);
         ++index;
     }
@@ -28,4 +33,20 @@ TrsRecList ExtraAnno::anno(const std::string& chr, int32_t beg, int32_t end){
     }
     free(b);
     return trl;
+}
+
+bool ExtraAnno::matchp(const std::string& g1, const std::string& g2){
+    auto itg1 = validp.find(g1);
+    if(itg1 != validp.end()){
+        auto itg3 = itg1->second.find(g2);
+        if(itg3 == itg1->second.end()) return false; // not valid
+        else return true;
+    }
+    auto itg2 = validp.find(g2);
+    if(itg2 != validp.end()){
+        auto itg3 = itg2->second.find(g1);
+        if(itg3 == itg2->second.end()) return false; // not valid
+        else return true;
+    }
+    return true;
 }
