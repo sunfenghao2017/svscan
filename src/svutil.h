@@ -589,17 +589,19 @@ namespace svutil{
      */
     inline void getPropTrs(std::vector<Rna2DnaUnit>& r2dl, int32_t bp, int32_t svt, bool svstart, TrsRec& trec){
         int32_t i = 0, t = r2dl.size();
-        int32_t off = 0;
+        int32_t off = 0, ad = 0;
         for(; i < t; ++i){
             if(r2dl[i].incpos(bp)){
-                off = r2dl[i].catthis(bp, svt, svstart);
+                std::pair<int32_t, int32_t> rp = r2dl[i].catthis(bp, svt, svstart);
+                off = rp.first;
+                ad = rp.second;
                 break;
             }
         }
         int32_t j = 0;
-        if(off < 0) j = i - 1;
-        if(off > 0) j = i + 1;
-        if(off == 0) j = i;
+        if(ad < 0) j = i - 1;
+        if(ad > 0) j = i + 1;
+        if(ad == 0) j = i;
         if(j > 0 && j < t - 1){
             trec.insl = std::abs(off);
         }else{
@@ -613,17 +615,17 @@ namespace svutil{
         trec.gene = r2dl[j].gname;
         trec.name = r2dl[j].tname;
         trec.number = std::to_string(r2dl[j].ucount);
-        if(off < 0){
+        if(ad < 0){
             trec.pos = r2dl[j].gend;
             trec.eoffset = 0;
             trec.ioffset = r2dl[j].tend - r2dl[j].tbeg;
         }
-        if(off > 0){
+        if(ad > 0){
             trec.pos = r2dl[j].gbeg;
             trec.eoffset = r2dl[j].tend - r2dl[j].tbeg;
             trec.ioffset = 0;
         }
-        if(off == 0){
+        if(ad == 0){
             trec.pos = r2dl[j].gbeg + (bp - r2dl[j].tbeg);
             trec.ioffset = bp - r2dl[j].tbeg;
             trec.eoffset = r2dl[j].tend - bp;
