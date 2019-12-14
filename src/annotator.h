@@ -85,8 +85,10 @@ class Annotator{
          * @param pos pos of bp
          * @param fp file pointer of dna annotation db file
          * @param tbx index pointer of dna annotation db file
+         * @param isbp1 this is the starting position of sv if true
+         * @param svt sv type of this sv event
          */
-        static void getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx);
+        static void getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx, bool isbp1, int32_t svt);
 };
 
 #endif

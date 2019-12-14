@@ -14,9 +14,10 @@ struct TrsRec{
     std::string primary; ///< Y if it's a canonical transcript
     bool drop;           ///< drop from report if true
     int32_t pos;         ///< position on genome
-    int32_t eoffset;     ///< offset to end of unit  
-    int32_t ioffset;     ///< offset to beg of unit
     int32_t exon;        ///< exon number catenated
+    int32_t insl;        ///< insertion length
+    int32_t eoffset;     ///< offset to end of unit
+    int32_t ioffset;     ///< offset to beg of unit
     std::string chr;     ///< used only in RNA sv
 
     /** TrsRec constructor */

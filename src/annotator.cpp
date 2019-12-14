@@ -313,49 +313,33 @@ void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
     hts_close(fp);
 }
 
-void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx){
-    std::stringstream regs;
-    regs << chr << ":" << pos << "-" << pos + 1;
-    hts_itr_t* itr = tbx_itr_querys(tbx, regs.str().c_str());
+void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos, htsFile* fp, tbx_t* tbx, bool isbp1, int32_t svt){
+    hts_itr_t* itr= tbx_itr_querys(tbx, chr.c_str());
     kstring_t rec = {0, 0, 0};
     std::vector<std::string> vstr;
-    std::set<std::string> trsGotIE; // gene got intron/exon spanning this bp
-    TrsRecList trsList;
+    // first run get all exon units of this transcript
+    std::vector<Rna2DnaUnit> r2dl;
     while(tbx_itr_next(fp, tbx, itr, &rec) >= 0){
         util::split(rec.s, vstr, "\t");
-        TrsRec tr;
-        tr.strand = vstr[9];
-        tr.version = vstr[10];
-        tr.unit = vstr[3];
-        tr.number = vstr[4];
-        tr.name = vstr[0];
-        tr.gene = vstr[5];
-        tr.chr = vstr[6];
-        tr.drop = false;
-        tr.pos = svutil::trpos2gnpos(pos, std::atoi(vstr[1].c_str()), std::atoi(vstr[2].c_str()), std::atoi(vstr[7].c_str()),  vstr[9][0]);
-        if(tr.strand[0] == '+'){
-            tr.eoffset = std::atoi(vstr[8].c_str()) - tr.pos;
-            tr.ioffset = tr.pos - std::atoi(vstr[7].c_str());
-        }else{
-            tr.eoffset = tr.pos - std::atoi(vstr[7].c_str());
-            tr.ioffset = std::atoi(vstr[8].c_str()) - tr.pos;
-        }
-        trsList.push_back(tr);
-        if(!util::startsWith(tr.unit, "utr")) trsGotIE.insert(tr.name);
+        if(util::startsWith(vstr[3], "utr")) continue;
+        Rna2DnaUnit r2du;
+        r2du.tname = vstr[0];
+        r2du.tbeg = std::atoi(vstr[1].c_str());
+        r2du.tend = std::atoi(vstr[2].c_str());
+        r2du.uname = vstr[3];
+        r2du.ucount = std::atoi(vstr[4].c_str());
+        r2du.gname = vstr[5];
+        r2du.gchr = vstr[6];
+        r2du.gbeg = std::atoi(vstr[7].c_str());
+        r2du.gend = std::atoi(vstr[8].c_str());
+        r2du.gstrand = vstr[9][0];
+        r2du.tversion = vstr[10];
+        r2dl.push_back(r2du);
     }
-    // get clean transcript list spanning this breakpoint
-    for(auto& tr: trsList){
-        // if utr and exon/intron of one trnascript spanning this breakpoint simultaneously, keep exon and intron only
-        if(trsGotIE.find(tr.name) != trsGotIE.end()){
-            if(util::startsWith(tr.unit, "utr")){
-                tr.drop = true;
-            }
-        }
-    }
-    // output valid transcript
-    for(auto& tr: trsList){
-        if(!tr.drop) trl.push_back(tr);
-    }
+    std::sort(r2dl.begin(), r2dl.end());
+    TrsRec tr;
+    svutil::getPropTrs(r2dl, pos, isbp1, svt, tr);
+    trl.push_back(tr);
     // cleanup
     if(itr) hts_itr_destroy(itr);
     if(rec.s) free(rec.s);
@@ -379,17 +363,16 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascript at breakpoint 1
-        getRNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
+        getRNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx, true, svs[i].mSVT);
         gl[i].mChr1 = gl[i].mGene1[0].chr;
         gl[i].mPos1 = gl[i].mGene1[0].pos;
         // get trascript at breakpoint 2
-        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx);
+        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx, false, svs[i].mSVT);
         gl[i].mChr2 = gl[i].mGene2[0].chr;
         gl[i].mPos2 = gl[i].mGene2[0].pos;
         // annotate fusion gene
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
-                svutil::getexon(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i].mSVT);
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
                 if(fsg.status & FUSION_FHTFLSWAPPED){
                     // remember h/t gene sources
@@ -398,7 +381,7 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
                     fsg.tfrom1 = true;
                     fsg.tidx = g1;
                     // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1]
-                    fsg.cigar = svutil::bp2cigar(gl[i].mGene2[g2], gl[i].mGene1[g1], svs[i].mSVT);
+                    fsg.cigar = svutil::bp2cigar(gl[i].mGene2[g2], gl[i].mGene1[g1]);
                 }else{
                     // remember h/t gene sources
                     fsg.hfrom1 = true;
@@ -406,7 +389,7 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
                     fsg.tfrom1 = false;
                     fsg.tidx = g2;
                     // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2]
-                    fsg.cigar = svutil::bp2cigar(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i].mSVT);
+                    fsg.cigar = svutil::bp2cigar(gl[i].mGene1[g1], gl[i].mGene2[g2]);
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }

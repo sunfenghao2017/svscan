@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "util.h"
 #include "trsrec.h"
+#include "rna2dna.h"
 #include "fusegene.h"
 #include <htslib/vcf.h>
 #include <htslib/sam.h>
@@ -488,64 +489,13 @@ namespace svutil{
     /** get cigar string representation of breakpoint
      * @param htrs 5' part transcript 
      * @param ttrs 3' part transcript
-     * @param svt SV type
      * @return cigar string representation of breakpoint
      */
-    inline std::string bp2cigar(const TrsRec& htrs, const TrsRec& ttrs, int32_t svt){
-        std::stringstream css;
-        switch(svt){
-            case 5: // 5->5 catenation
-                if(htrs.ioffset < 10){
-                    css << "E" << std::atoi(htrs.number.c_str()) - 1 << "T,I" << htrs.ioffset;
-                }else if(htrs.eoffset < 10){
-                    css << "E" << htrs.number << "T,D" << htrs.eoffset;
-                }else{
-                    css << "E" << std::atoi(htrs.number.c_str()) << "H,M" << htrs.ioffset;
-                }
-                if(ttrs.ioffset < 10){
-                    css << "I" << ttrs.ioffset << "," << "E" << std::atoi(ttrs.number.c_str()) - 1 << "T";
-                }else if(ttrs.eoffset < 10){
-                    css << "D" << ttrs.eoffset << "," << "E" << ttrs.number << "T";
-                }else{
-                    css << "M" << ttrs.ioffset << "," << "E" << ttrs.number << "H";
-                }
-                break;
-            case 6: // 3->3 catenation
-                if(htrs.ioffset < 10){
-                    css << "E" << htrs.number << "H,D" << htrs.ioffset;
-                }else if(htrs.eoffset < 10){
-                    css << "E" << std::atoi(htrs.number.c_str()) + 1 << "H,I" << htrs.eoffset;
-                }else{
-                    css << "E" << htrs.number << "T,M" << htrs.eoffset;
-                }
-                if(ttrs.ioffset < 10){
-                    css << "D" << ttrs.ioffset << "," << "E" << ttrs.number << "H";
-                }else if(ttrs.eoffset < 10){
-                    css << "I" << ttrs.eoffset << "," << "E" << std::atoi(ttrs.number.c_str()) + 1 << "H";
-                }else{
-                    css << "M" << ttrs.eoffset << "," << "E" << ttrs.number << "T";
-                }
-                break;
-            case 7: case 8: // 5->3 catenation
-                if(htrs.ioffset < 10){
-                    css << "E" << std::atoi(htrs.number.c_str()) - 1 << "T,I" << htrs.ioffset;
-                }else if(htrs.eoffset < 10){
-                    css << "E" << htrs.number << "T,D" << htrs.eoffset;
-                }else{
-                    css << "E" << htrs.number << "H,M" << htrs.ioffset;
-                }
-                if(ttrs.ioffset < 10){
-                    css << "D" << ttrs.ioffset << "," << "E" << ttrs.number << "H";
-                }else if(ttrs.eoffset < 10){
-                    css << "I" << ttrs.eoffset << "," << "E" << std::atoi(ttrs.number.c_str()) + 1 << "H";
-                }else{
-                    css << "M" << ttrs.ioffset << "," << "E" << ttrs.number << "T";
-                }
-                break;
-             default:
-                break;
-        }
-        return css.str();
+    inline std::string bp2cigar(const TrsRec& htrs, const TrsRec& ttrs){
+        std::ostringstream oss;
+        oss << htrs.insl << "I";
+        oss << ttrs.insl << "I";
+        return oss.str();
     }
 
     /** get exon partipated into sv event
@@ -629,6 +579,59 @@ namespace svutil{
         if(htrs.exon == -1) htrs.exon= std::atoi(htrs.number.c_str());
         if(ttrs.exon == -1) ttrs.exon = std::atoi(ttrs.number.c_str());
     }
+
+    /** get proper transcript unit of one bp of sv event
+     * @param r2dl Rna2DnaUnit list of one transcript
+     * @param bp breakpoint position on transcript
+     * @param svt svtype
+     * @param svstart if true bp is the bp1 of sv
+     * @param trec TrsRec store
+     */
+    inline void getPropTrs(std::vector<Rna2DnaUnit>& r2dl, int32_t bp, int32_t svt, bool svstart, TrsRec& trec){
+        int32_t i = 0, t = r2dl.size();
+        int32_t off = 0;
+        for(; i < t; ++i){
+            if(r2dl[i].incpos(bp)){
+                off = r2dl[i].catthis(bp, svt, svstart);
+                break;
+            }
+        }
+        int32_t j = 0;
+        if(off < 0) j = i - 1;
+        if(off > 0) j = i + 1;
+        if(off == 0) j = i;
+        if(j > 0 && j < t - 1){
+            trec.insl = std::abs(off);
+        }else{
+            trec.insl = 0;
+        }
+        if(j < 0) j = 0;
+        if(j > t - 1) j = t - 1;
+        trec.chr = r2dl[j].gchr;
+        trec.drop = false;
+        trec.exon = j + 1;
+        trec.gene = r2dl[j].gname;
+        trec.name = r2dl[j].tname;
+        trec.number = std::to_string(r2dl[j].ucount);
+        if(off < 0){
+            trec.pos = r2dl[j].gend;
+            trec.eoffset = 0;
+            trec.ioffset = r2dl[j].tend - r2dl[j].tbeg;
+        }
+        if(off > 0){
+            trec.pos = r2dl[j].gbeg;
+            trec.eoffset = r2dl[j].tend - r2dl[j].tbeg;
+            trec.ioffset = 0;
+        }
+        if(off == 0){
+            trec.pos = r2dl[j].gbeg + (bp - r2dl[j].tbeg);
+            trec.ioffset = bp - r2dl[j].tbeg;
+            trec.eoffset = r2dl[j].tend - bp;
+        }
+        trec.strand = r2dl[j].gstrand;
+        trec.unit = r2dl[j].uname;
+        trec.version = r2dl[j].tversion;
+    } 
 }
 
 #endif
