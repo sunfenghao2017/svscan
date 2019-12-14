@@ -589,19 +589,17 @@ namespace svutil{
      */
     inline void getPropTrs(std::vector<Rna2DnaUnit>& r2dl, int32_t bp, int32_t svt, bool svstart, TrsRec& trec){
         int32_t i = 0, t = r2dl.size();
+        std::pair<int32_t, int32_t> rp;
         int32_t off = 0, ad = 0;
         for(; i < t; ++i){
             if(r2dl[i].incpos(bp)){
-                std::pair<int32_t, int32_t> rp = r2dl[i].catthis(bp, svt, svstart);
+                rp = r2dl[i].catthis(bp, svt, svstart);
                 off = rp.first;
                 ad = rp.second;
                 break;
             }
         }
-        int32_t j = 0;
-        if(ad < 0) j = i - 1;
-        if(ad > 0) j = i + 1;
-        if(ad == 0) j = i;
+        int32_t j = i + ad;
         if(j > 0 && j < t - 1){
             trec.insl = std::abs(off);
         }else{

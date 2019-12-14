@@ -338,7 +338,7 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
     }
     std::sort(r2dl.begin(), r2dl.end());
     TrsRec tr;
-    svutil::getPropTrs(r2dl, pos, isbp1, svt, tr);
+    svutil::getPropTrs(r2dl, pos, svt, isbp1, tr);
     trl.push_back(tr);
     // cleanup
     if(itr) hts_itr_destroy(itr);
