@@ -559,6 +559,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
 }
 
 void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx){
+    util::loginfo("Beg processing: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
     for(int32_t cidx = begIdx; cidx < endIdx; ++cidx){
         int32_t svid = crsidx[cidx];
         bool bpRefined = false;
@@ -595,4 +596,5 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
             }
         }
     }
+    util::loginfo("End processing: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
 }
