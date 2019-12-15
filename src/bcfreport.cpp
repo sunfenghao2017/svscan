@@ -74,7 +74,7 @@ void Stats::reportSVBCF(const SVSet& svs){
     bcf_hdr_append(hdr, scwd.c_str());
     // Add Samples
     bcf_hdr_add_sample(hdr, "SAMPLE");
-    bcf_hdr_write(fp, hdr);
+    assert(bcf_hdr_write(fp, hdr) >= 0);
     // Add Records
     if(svs.empty()){// if empty set, just return
         sam_close(samfp);
@@ -203,7 +203,7 @@ void Stats::reportSVBCF(const SVSet& svs){
             bcf_update_format_int32(hdr, rec, "HP1RV", hp1rvcount, bcf_hdr_nsamples(hdr));
             bcf_update_format_int32(hdr, rec, "HP2RV", hp2rvcount, bcf_hdr_nsamples(hdr));
         }
-        bcf_write(fp, hdr, rec);
+        assert(bcf_write(fp, hdr, rec) >= 0);
         bcf_clear(rec);
     }
     // Close BCF file

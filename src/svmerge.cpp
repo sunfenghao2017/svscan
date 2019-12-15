@@ -255,7 +255,7 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
         bcf_hdr_append(hdrOut, ctgstr.c_str());
     }
     bcf_hdr_add_sample(hdrOut, NULL);
-    bcf_hdr_write(fp, hdrOut);
+    assert(bcf_hdr_write(fp, hdrOut) >= 0);
     // duplicate filter
     int32_t numseq = imap.size();
     std::vector<std::set<std::pair<int32_t, int32_t>>> gis(numseq);
@@ -428,7 +428,7 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
                             bcf_update_info_string(hdrOut, rout, "CONSENSUS", cs.c_str());
                         }
                         // write record
-                        bcf_write(fp, hdrOut, rout);
+                        assert(bcf_write(fp, hdrOut, rout) >= 0);
                         bcf_clear1(rout);
                     }
                 }
@@ -489,7 +489,7 @@ void VCFMerger::mergeBCFs(std::vector<std::string>& ifiles){
     // open output bcf file
     htsFile* fp = bcf_open(outfile.c_str(), "wb");
     bcf_hdr_t* hdrOut = bcf_hdr_dup(hdr[0]);
-    bcf_hdr_write(fp, hdrOut);
+    assert(bcf_hdr_write(fp, hdrOut) >= 0);
     // merge files
     while(allEOF < ifiles.size()){
         // find next sorted record(by tid and pos)
@@ -500,7 +500,7 @@ void VCFMerger::mergeBCFs(std::vector<std::string>& ifiles){
             }
         }
         // write record
-        bcf_write(fp, hdrOut, rec[idx]);
+        assert(bcf_write(fp, hdrOut, rec[idx]) >= 0);
         // fetch next record
         if(bcf_read(ifp[idx], hdr[idx], rec[idx])){
             ++allEOF;

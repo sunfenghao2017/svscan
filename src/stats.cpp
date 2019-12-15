@@ -96,8 +96,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         if(!cr_isoverlap(ctgCgr, 
                          h->target_name[b->core.tid], 
-                         std::max(0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
-                         std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[b->core.tid]))){
+                         std::max(0ll, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
+                         std::min((int32_t)(b->core.pos + mOpt->libInfo->mMaxNormalISize), (int32_t)h->target_len[b->core.tid]))){
            continue;
         }
         // Count aligned basepair (small InDels)
@@ -135,7 +135,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
-            int32_t rbegin = std::max(0, b->core.pos - leadingSC);
+            int32_t rbegin = std::max(0ll, b->core.pos - leadingSC);
             int32_t rend = std::min(rbegin + b->core.l_qseq, (int32_t)h->target_len[refIdx]);
             for(int32_t k = rbegin; k < rend; ++k){
                 if(bpOccupied.find(k) != bpOccupied.end()){
@@ -386,10 +386,10 @@ notvalidsr:
                 // Spanning a breakpoint?
                 bool spanvalid = false;
                 int32_t pbegin = b->core.pos;
-                int32_t pend = std::min(b->core.pos + mOpt->libInfo->mMaxNormalISize, (int32_t)h->target_len[refIdx]);
+                int32_t pend = std::min((int32_t)(b->core.pos + mOpt->libInfo->mMaxNormalISize), (int32_t)h->target_len[refIdx]);
                 if(b->core.flag & BAM_FREVERSE){
-                    pbegin = std::max(0, b->core.pos + b->core.l_qseq - mOpt->libInfo->mMaxNormalISize);
-                    pend = std::min(b->core.pos + b->core.l_qseq, (int32_t)h->target_len[refIdx]);
+                    pbegin = std::max(0ll, b->core.pos + b->core.l_qseq - mOpt->libInfo->mMaxNormalISize);
+                    pend = std::min((int32_t)(b->core.pos + b->core.l_qseq), (int32_t)h->target_len[refIdx]);
                 }
                 for(int32_t i = pbegin; i < pend; ++i){
                     if(spanBp.find(i) != spanBp.end()){
