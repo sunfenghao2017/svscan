@@ -47,18 +47,25 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     }
     // second run, test bp pos and fix bp
     std::vector<bam1_t*> palnret;
+    std::vector<int32_t> clplens;
     for(auto& e: alnret){
         if(e->core.flag & (BAM_FSECONDARY | BAM_FUNMAP)){
             bam_destroy1(e);
         }else{
             std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-            if((clip.first > 0) ^ (clip.second > 0)) palnret.push_back(e);
+            if((clip.first > 0) ^ (clip.second > 0)){
+                palnret.push_back(e);
+                clplens.push_back(clip.first + clip.second);
+            }
             else bam_destroy1(e);
         }
     }
     if(palnret.size() != 2){
         for(auto& e: palnret) bam_destroy1(e);
-        if(palnret.size() == 1) return 0;// one psc
+        if(palnret.size() == 1){
+            if(clplens[0] < 30) return 0;// one psc
+            else return -2; // less than two psc
+        }
         else return -2; // more than two psc
     }
     // valid scs
