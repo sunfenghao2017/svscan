@@ -265,7 +265,7 @@ void Options::writeEmptFile(){
     bcf_hdr_append(hdr, scwd.c_str());
     // Add Samples
     bcf_hdr_add_sample(hdr, "SAMPLE");
-    bcf_hdr_write(fp, hdr);
+    assert(bcf_hdr_write(fp, hdr) >= 0);
     // Add Records
     sam_close(samfp);
     bam_hdr_destroy(bamhdr);
