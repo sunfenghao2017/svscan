@@ -209,6 +209,10 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             sr[i].mRealnRet = alnret[i].get();
         }
     }
+    /* keep the record, not drop here
+    for(uint32_t i = 0; i < sr.size(); ++i){
+        if(sr[i].mRealnRet < 0 || sr[i].mRealnRet > 4) sr[i].mMerged = true;
+    }*/
     util::loginfo("End online BWA ralign");
     if(opt->debug & DEBUG_FREAN){
         std::cout << "\ndebug_realign_failed_sv_info:" << std::endl;

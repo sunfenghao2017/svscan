@@ -49,7 +49,7 @@ class RealnFilter{
      * return integer more than 4 if perfect secondary pairs > 2 
      * return 0 if nice perfect match or just one primary sc
      * return -1 if whole seq match continuous
-     * return -2 if more than two primary sc match or only one sc mathch with >=30 bp sc
+     * return -2 if two primary sc match
      * return -3 if bp not match
      */
     int32_t validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq);
