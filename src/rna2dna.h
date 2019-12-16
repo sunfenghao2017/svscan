@@ -58,7 +58,7 @@ struct Rna2DnaUnit{
      * @param start if true bp is bp1
      * @return 0 if this unit is proper, positive if next one is proper, negative if previous if proper, return value is inslen value
      */
-    std::pair<int32_t, int32_t> catthis(const int32_t& bp, int32_t svt, bool start, int moff = 30){
+    std::pair<int32_t, int32_t> catthis(const int32_t& bp, int32_t svt, bool start, int moff = 10){
         if(svt >= 5) svt -= 5;
         switch(svt){
             case 0: // 5t5 catenation
