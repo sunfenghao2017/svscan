@@ -115,6 +115,10 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     if(!cr_is_sorted(crsv)) cr_sort(crsv);
     cr_merge_pre_index(crsv);
+    if(mOpt->debug & DEBUG_FANNC){
+        std::cout << "debug_annc_cgrange_of_svs: " << std::endl;
+        cr_iter_usual(crsv, stdout);
+    }
     std::vector<cgranges_t*> svregs(mOpt->contigNum, NULL);
     for(uint32_t i = 0; i < svregs.size(); ++i) svregs[i] = cr_init();
     for(int64_t i = 0; i < crsv->n_r; ++i){
@@ -125,10 +129,22 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
     util::loginfo("End construct SVs cgranges_t");
+    if(mOpt->debug & DEBUG_FANNC){
+        std::cout << "debug_sv_cgrantest_constructed: " << std::endl;
+        for(uint32_t i = 0; i < svregs.size(); ++i){
+            cr_iter_indexed(svregs[i], stdout);
+        }
+    }
     util::loginfo("Beg split SVs cgranges_t");
     std::vector<RegItemCnt> ctgRng;
     cgrsplit(crsv, ctgRng, mOpt->batchsvn);
     std::sort(ctgRng.begin(), ctgRng.end());
+    if(mOpt->debug & DEBUG_FANNC){
+        std::cout << "debug_ctg_rng_list: " << std::endl;
+        for(uint32_t i = 0; i < ctgRng.size(); ++i){
+            std::cout << ctgRng[i] << std::endl;
+        }
+    }
     cr_destroy(crsv);
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT

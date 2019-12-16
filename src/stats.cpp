@@ -124,6 +124,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         }
         if(leadingHC || tailingHC) continue; // skip reads with any hardclipings
         if(leadingSC && tailingSC) continue; // skip reads with both leading and tailing softclips
+        bool assigned = false;
         uint8_t* sa = bam_aux_get(b, "SA");
         std::string sastr;
         if(sa){ // skip reads with cliped part in repeat regions
@@ -158,6 +159,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     itbp = ltbp;
                 }
                 for(; itbp != bpRegs[refIdx].end() && rend >= itbp->mBpPos; ++itbp){
+                    if(assigned) break;
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
@@ -290,6 +292,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 }
 notvalidsr:
                                 if(validRSR){
+                                    assigned = true;
                                     if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                                     if(itbp->mSVT != 4) onlySupportIns = false;
                                     if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
@@ -329,6 +332,7 @@ notvalidsr:
                 }
             }
         }
+        if(assigned) continue; // do not assign one read to more than two svs or the same sv twice
         // Read-count and spanning annotation
         if(!(b->core.flag & BAM_FPAIRED)) continue;
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair

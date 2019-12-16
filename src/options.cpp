@@ -3,7 +3,7 @@
 Options::Options(){
     madCutoff = 9;
     nthread = 8;
-    batchsvn = 10000;
+    batchsvn = 1000;
     tsvOut = "sv.tsv";
     pool = NULL;
     fbamout = NULL;
@@ -67,7 +67,10 @@ void Options::update(int argc, char** argv){
         }
     }
     // adjust sr score
-    if(rnamode) filterOpt->mMinSRResScore = 0.99;
+    if(rnamode){
+        filterOpt->mMinSRResScore = 0.99;
+        batchsvn = 500;
+    }
     // update contigNum
     contigNum = libInfo->mContigNum;
     // construct threadpool
