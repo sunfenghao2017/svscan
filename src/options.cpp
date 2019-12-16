@@ -126,7 +126,7 @@ LibraryInfo* Options::getLibInfo(const std::string& bam){
     libInfo->mMaxISizeCutoff = std::max(libInfo->mMedian + (madCutoff * libInfo->mMad), 2 * libInfo->mReadLen);
     libInfo->mMaxISizeCutoff = std::max(libInfo->mMaxISizeCutoff, 600);
     libInfo->mContigNum = h->n_targets;
-    libInfo->mMaxNormalISize = std::max(libInfo->mMaxNormalISize, libInfo->mMaxISizeCutoff);
+    if(libInfo->mMaxNormalISize == 0) libInfo->mMaxNormalISize = 3 * libInfo->mReadLen;
     libInfo->mVarisize = std::max(libInfo->mReadLen, libInfo->mMaxNormalISize);
     sam_close(fp);
     bam_destroy1(b);
