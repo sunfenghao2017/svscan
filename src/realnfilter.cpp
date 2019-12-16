@@ -58,7 +58,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     }
     if(palnret.size() != 2){
         for(auto& e: palnret) bam_destroy1(e);
-        if(palnret.size() == 1) return 0;// one psc
+        if(palnret.size() <= 1) return 0;// at most one psc
         else return -2; // more than two psc
     }
     // valid scs
