@@ -81,7 +81,7 @@ void VCFMerger::getIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t insvt
             if(filterForPass && bcf_has_filter(hdr, rec, const_cast<char*>("PASS")) != 1) continue;
             // convert svt back to integer
             int32_t recsvt = -1;
-            if(bcf_get_info_string(hdr, rec, "SVTYPE", &svt, &nsvt) > 0 && bcf_get_info_string(hdr, rec, "CT", &ct, &nct) > 0){
+            if(bcf_get_info_string(hdr, rec, "SVTYPE", &svt, &nsvt) > 0 && bcf_get_info_string(hdr, rec, "CATT", &ct, &nct) > 0){
                 recsvt = svutil::str2svt(ct, svt);
             }
             // skip other sv types
@@ -91,7 +91,7 @@ void VCFMerger::getIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t insvt
             // sv start and end
             int32_t svStart = rec->pos;
             int32_t svEnd = svStart + 1;
-            if(bcf_get_info_int32(hdr, rec, "END", &svend, &nsvend) > 0) svEnd = *svend;
+            if(bcf_get_info_int32(hdr, rec, "SVEND", &svend, &nsvend) > 0) svEnd = *svend;
             // sv size/check
             if(std::strcmp(svt, "BND") != 0){
                 if(std::strcmp(svt, "INS") == 0){
@@ -148,8 +148,8 @@ void VCFMerger::getIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t insvt
             // get sv support and mapq
             int32_t peSupport = 0, srSupport = 0;
             int32_t peMapQual = 0, srMapQual = 0;
-            if(bcf_get_info_int32(hdr, rec, "PE", &pe, &npe) > 0) peSupport = *pe;
-            if(bcf_get_info_int32(hdr, rec, "SR", &sr, &nsr) > 0) srSupport = *sr;
+            if(bcf_get_info_int32(hdr, rec, "PECNT", &pe, &npe) > 0) peSupport = *pe;
+            if(bcf_get_info_int32(hdr, rec, "SRCNT", &sr, &nsr) > 0) srSupport = *sr;
             if(bcf_get_info_int32(hdr, rec, "PEMAPQ", &pemapq, &npemapq) > 0) peMapQual = *pemapq;
             if(bcf_get_info_int32(hdr, rec, "SRMAPQ", &srmapq, &nsrmapq) > 0) srMapQual = *srmapq;
             // quality score for the sv
@@ -233,15 +233,15 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
     bcf_hdr_append(hdrOut, "##FILTER=<ID=LowQual,Description=\"Poor quality and insufficient number of PEs and SRs.\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"PE confidence interval around END\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"PE confidence interval around POS\">");
-    bcf_hdr_append(hdrOut, "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome for END coordinate in case of a translocation\">");
-    bcf_hdr_append(hdrOut, "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant\">");
-    bcf_hdr_append(hdrOut, "##INFO=<ID=PE,Number=1,Type=Integer,Description=\"Paired-end support of the structural variant\">");
+    bcf_hdr_append(hdrOut, "##INFO=<ID=CHREND,Number=1,Type=String,Description=\"Chromosome for END coordinate in case of a translocation\">");
+    bcf_hdr_append(hdrOut, "##INFO=<ID=SVEND,Number=1,Type=Integer,Description=\"End position of the structural variant\">");
+    bcf_hdr_append(hdrOut, "##INFO=<ID=PECNT,Number=1,Type=Integer,Description=\"Paired-end support of the structural variant\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=PEMAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of paired-ends\">");
-    bcf_hdr_append(hdrOut, "##INFO=<ID=SR,Number=1,Type=Integer,Description=\"Split-read support\">");
+    bcf_hdr_append(hdrOut, "##INFO=<ID=SRCNT,Number=1,Type=Integer,Description=\"Split-read support\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=SRMAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of split-reads\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=SRALNQ,Number=1,Type=Float,Description=\"Split-read consensus alignment quality\">");
-    bcf_hdr_append(hdrOut, "##INFO=<ID=CONSENSUS,Number=1,Type=String,Description=\"Split-read consensus sequence\">");
-    bcf_hdr_append(hdrOut, "##INFO=<ID=CT,Number=1,Type=String,Description=\"Paired-end signature induced connection type\">");
+    bcf_hdr_append(hdrOut, "##INFO=<ID=CONSENSUSSEQ,Number=1,Type=String,Description=\"Split-read consensus sequence\">");
+    bcf_hdr_append(hdrOut, "##INFO=<ID=CATT,Number=1,Type=String,Description=\"Paired-end signature induced connection type\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=PRECISE,Number=0,Type=Flag,Description=\"Precise structural variation\">");
     bcf_hdr_append(hdrOut, "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">");
@@ -319,7 +319,7 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
         // get SV type
         int32_t recsvt = -1;
         if(bcf_get_info_string(hdr[idx], rec[idx], "SVTYPE", &svt, &nsvt) > 0 &&
-           bcf_get_info_string(hdr[idx], rec[idx], "CT", &ct, &nct) > 0){
+           bcf_get_info_string(hdr[idx], rec[idx], "CATT", &ct, &nct) > 0){
             recsvt = svutil::str2svt(ct, svt);
         }
         if(recsvt == svtin){
@@ -337,20 +337,20 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
                 int32_t tid = cmap[chr1Name];
                 int32_t svStart = rec[idx]->pos;
                 int32_t svEnd = svStart + 1;
-                if(bcf_get_info_int32(hdr[idx], rec[idx], "END", &svend, &nsvend) > 0) svEnd = *svend;
+                if(bcf_get_info_int32(hdr[idx], rec[idx], "SVEND", &svend, &nsvend) > 0) svEnd = *svend;
                 int32_t inslenVal = 0;
                 if(bcf_get_info_int32(hdr[idx], rec[idx], "INSLEN", &inslen, &ninslen) > 0) inslenVal = *inslen;
                 // Parse INFO fields
                 if(std::strcmp(svt, "BND") == 0 || (std::strcmp(svt, "INS") == 0 && inslenVal >= minsize) ||
                    (std::strcmp(svt, "INS") != 0 && std::strcmp(svt, "BND") != 0 && svEnd - svStart > minsize && svEnd - svStart < maxsize)){
-                    int32_t peSupport = 0, srSupport = 0; // PE SR
+                    int32_t peSupport = 0, srSupport = 0; // PECNT SRCNT
                     int32_t peMapQual = 0, srMapQual = 0; // PEMAPQ SRMAPQ
-                    if(bcf_get_info_int32(hdr[idx], rec[idx], "PE", &pe, &npe) > 0) peSupport = *pe;
-                    if(bcf_get_info_int32(hdr[idx], rec[idx], "SR", &sr, &nsr) > 0) srSupport = *sr;
+                    if(bcf_get_info_int32(hdr[idx], rec[idx], "PECNT", &pe, &npe) > 0) peSupport = *pe;
+                    if(bcf_get_info_int32(hdr[idx], rec[idx], "SRCNT", &sr, &nsr) > 0) srSupport = *sr;
                     if(bcf_get_info_int32(hdr[idx], rec[idx], "PEMAPQ", &pemapq, &npemapq) > 0) peMapQual = *pemapq;
                     if(bcf_get_info_int32(hdr[idx], rec[idx], "SRMAPQ", &srmapq, &nsrmapq) > 0) srMapQual = *srmapq;
-                    std::string chr2Name = chr1Name; // CHR2
-                    if(bcf_get_info_string(hdr[idx], rec[idx], "CHR2", &chr2, &nchr2) > 0) chr2Name = chr2;
+                    std::string chr2Name = chr1Name; // CHREND
+                    if(bcf_get_info_string(hdr[idx], rec[idx], "CHREND", &chr2, &nchr2) > 0) chr2Name = chr2;
                     // get quality for this SV
                     int32_t svScore = 3 * srSupport * srMapQual + peSupport * peMapQual;
                     if(bcf_hdr_id2int(hdr[idx], BCF_DT_ID, "SCORE") >= 0){
@@ -390,7 +390,7 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
                         if(bcf_get_info_float(hdr[idx], rec[idx], "SRALNQ", &sralnq, &nsralnq) > 0) srAlnQual = *sralnq;
                         std::string cs;
                         if(precise){
-                            bcf_get_info_string(hdr[idx], rec[idx], "CONSENSUS", &cons, & ncons);
+                            bcf_get_info_string(hdr[idx], rec[idx], "CONSENSUSSEQ", &cons, & ncons);
                             cs = cons;
                         }
                         // create new record
@@ -410,22 +410,22 @@ void VCFMerger::writeIntervals(ContigIntervals& ci, ContigMap& cmap, int32_t svt
                         if(precise) bcf_update_info_flag(hdrOut, rout, "PRECISE", NULL, 1);
                         else bcf_update_info_flag(hdrOut, rout, "IMPRECISE", NULL, 1);
                         bcf_update_info_string(hdrOut, rout, "SVTYPE", svutil::addID(svtin).c_str());
-                        bcf_update_info_string(hdrOut, rout, "CHR2", chr2Name.c_str());
-                        bcf_update_info_int32(hdrOut, rout, "END", &svEnd, 1);
-                        bcf_update_info_int32(hdrOut, rout, "PE", &peSupport, 1);
+                        bcf_update_info_string(hdrOut, rout, "CHREND", chr2Name.c_str());
+                        bcf_update_info_int32(hdrOut, rout, "SVEND", &svEnd, 1);
+                        bcf_update_info_int32(hdrOut, rout, "PECNT", &peSupport, 1);
                         int32_t tmpi = peMapQual;
                         bcf_update_info_int32(hdrOut, rout, "EAMAPQ", &tmpi, 1);
-                        bcf_update_info_string(hdrOut, rout, "CT", svutil::addOrientation(svtin).c_str());
+                        bcf_update_info_string(hdrOut, rout, "CATT", svutil::addOrientation(svtin).c_str());
                         bcf_update_info_int32(hdrOut, rout, "CIPOS", cipos, 2);
                         bcf_update_info_int32(hdrOut, rout, "CIEND", ciend, 2);
                         if(precise){
                             bcf_update_info_int32(hdrOut, rout, "INSLEN", &inslenVal, 1);
                             bcf_update_info_int32(hdrOut, rout, "HOMLEN", &homlenVal, 1);
-                            bcf_update_info_int32(hdrOut, rout, "SR", &srSupport, 1);
+                            bcf_update_info_int32(hdrOut, rout, "SRCNT", &srSupport, 1);
                             tmpi = srMapQual;
                             bcf_update_info_int32(hdrOut, rout, "SRMAPQ", &tmpi, 1);
                             bcf_update_info_float(hdrOut, rout, "SRALNQ", &srAlnQual, 1);
-                            bcf_update_info_string(hdrOut, rout, "CONSENSUS", cs.c_str());
+                            bcf_update_info_string(hdrOut, rout, "CONSENSUSSEQ", cs.c_str());
                         }
                         // write record
                         assert(bcf_write(fp, hdrOut, rout) >= 0);

@@ -35,13 +35,13 @@ void SVFilter::getBgSVs(){
     while(bcf_read(fp, hdr, rec) >= 0){
         bcf_unpack(rec, BCF_UN_INFO);
         bcf_get_info_string(hdr, rec, "SVTYPE", &svt, &nsvt);
-        bcf_get_info_string(hdr, rec, "CT", &ct, &nct);
+        bcf_get_info_string(hdr, rec, "CATT", &ct, &nct);
         int32_t recsvt = svutil::str2svt(ct, svt);
         int32_t svStart = rec->pos;
         int32_t svEnd = svStart + 1;
-        if(bcf_get_info_int32(hdr, rec, "END", &svend, &nsvend) > 0) svEnd = *svend;
+        if(bcf_get_info_int32(hdr, rec, "SVEND", &svend, &nsvend) > 0) svEnd = *svend;
         const char* chr1Name = bcf_hdr_id2name(hdr, rec->rid);
-        bcf_get_info_string(hdr, rec, "CHR2", &chr2, &nchr2);
+        bcf_get_info_string(hdr, rec, "CHREND", &chr2, &nchr2);
         bgSVs[recsvt].push_back({chr1Name, chr2, svStart, svEnd});
     }
     if(svt) free(svt);

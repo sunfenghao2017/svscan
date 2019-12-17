@@ -20,15 +20,15 @@ void Stats::reportSVBCF(const SVSet& svs){
     bcf_hdr_append(hdr, "##FILTER=<ID=LowQual,Description=\"Poor quality and insufficient number of PEs and SRs.\">");
     bcf_hdr_append(hdr, "##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"PE confidence interval around END\">");
     bcf_hdr_append(hdr, "##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"PE confidence interval around POS\">");
-    bcf_hdr_append(hdr, "##INFO=<ID=CHR2,Number=1,Type=String,Description=\"Chromosome for END coordinate in case of a translocation\">");
-    bcf_hdr_append(hdr, "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant\">");
-    bcf_hdr_append(hdr, "##INFO=<ID=PE,Number=1,Type=Integer,Description=\"Paired-end support of the structural variant\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CHREND,Number=1,Type=String,Description=\"Chromosome for END coordinate in case of a translocation\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=SVEND,Number=1,Type=Integer,Description=\"End position of the structural variant\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=PECNT,Number=1,Type=Integer,Description=\"Paired-end support of the structural variant\">");
     bcf_hdr_append(hdr, "##INFO=<ID=PEMAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of paired-ends\">");
-    bcf_hdr_append(hdr, "##INFO=<ID=SR,Number=1,Type=Integer,Description=\"Split-read support\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=SRCNT,Number=1,Type=Integer,Description=\"Split-read support\">");
     bcf_hdr_append(hdr, "##INFO=<ID=SRMAPQ,Number=1,Type=Integer,Description=\"Median mapping quality of split-reads\">");
     bcf_hdr_append(hdr, "##INFO=<ID=SRALNQ,Number=1,Type=Float,Description=\"Split-read consensus alignment quality\">");
-    bcf_hdr_append(hdr, "##INFO=<ID=CONSENSUS,Number=1,Type=String,Description=\"Split-read consensus sequence\">");
-    bcf_hdr_append(hdr, "##INFO=<ID=CT,Number=1,Type=String,Description=\"Paired-end signature induced connection type\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CONSENSUSSEQ,Number=1,Type=String,Description=\"Split-read consensus sequence\">");
+    bcf_hdr_append(hdr, "##INFO=<ID=CATT,Number=1,Type=String,Description=\"Paired-end signature induced connection type\">");
     bcf_hdr_append(hdr, "##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description=\"Imprecise structural variation\">");
     bcf_hdr_append(hdr, "##INFO=<ID=PRECISE,Number=0,Type=Flag,Description=\"Precise structural variation\">");
     bcf_hdr_append(hdr, "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">");
@@ -130,12 +130,12 @@ void Stats::reportSVBCF(const SVSet& svs){
         if(itsv->mPrecise) bcf_update_info_flag(hdr, rec, "PRECISE", NULL, 1);
         else bcf_update_info_flag(hdr, rec, "IMPRECISE", NULL, 1);
         bcf_update_info_string(hdr, rec, "SVTYPE", svutil::addID(itsv->mSVT).c_str());
-        bcf_update_info_string(hdr, rec, "CHR2", bamhdr->target_name[itsv->mChr2]);
-        bcf_update_info_int32(hdr, rec, "END", &itsv->mSVEnd, 1);
-        bcf_update_info_int32(hdr, rec, "PE", &itsv->mPESupport, 1);
+        bcf_update_info_string(hdr, rec, "CHREND", bamhdr->target_name[itsv->mChr2]);
+        bcf_update_info_int32(hdr, rec, "SVEND", &itsv->mSVEnd, 1);
+        bcf_update_info_int32(hdr, rec, "PECNT", &itsv->mPESupport, 1);
         tmpi = itsv->mPEMapQuality;
         bcf_update_info_int32(hdr, rec, "PEMAPQ", &tmpi, 1);
-        bcf_update_info_string(hdr, rec, "CT", svutil::addOrientation(itsv->mSVT).c_str());
+        bcf_update_info_string(hdr, rec, "CATT", svutil::addOrientation(itsv->mSVT).c_str());
         int32_t tmpai[2];
         tmpai[0] = itsv->mCiPosLow;
         tmpai[1] = itsv->mCiPosHigh;
@@ -145,13 +145,13 @@ void Stats::reportSVBCF(const SVSet& svs){
         bcf_update_info_int32(hdr, rec, "CIEND", tmpai, 2);
         // Precise SV specific tags
         if(itsv->mPrecise){
-            bcf_update_info_int32(hdr, rec, "SR", &itsv->mSRSupport, 1);
+            bcf_update_info_int32(hdr, rec, "SRCNT", &itsv->mSRSupport, 1);
             tmpi = itsv->mSRMapQuality;
             bcf_update_info_int32(hdr, rec, "SRMAPQ", &tmpi, 1);
             bcf_update_info_float(hdr, rec, "SRALNQ", &itsv->mSRAlignQuality, 1);
             bcf_update_info_int32(hdr, rec, "INSLEN", &itsv->mAlnInsLen, 1);
             bcf_update_info_int32(hdr, rec, "HOMLEN", &itsv->mHomLen, 1);
-            bcf_update_info_string(hdr, rec, "CONSENSUS", itsv->mConsensus.c_str());
+            bcf_update_info_string(hdr, rec, "CONSENSUSSEQ", itsv->mConsensus.c_str());
         }
         // Compute GLs
         if(itsv->mPrecise){
