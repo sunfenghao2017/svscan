@@ -348,7 +348,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
             }
         }
-        if(assigned) continue; // do not assign one read to more than two svs or the same sv twice
         // Read-count and spanning annotation
         if(!(b->core.flag & BAM_FPAIRED)) continue;
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
@@ -481,7 +480,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             if(hapv == 1) ++mSpnCnts[ixmx].mAlth1;
                             else ++mSpnCnts[ixmx].mAlth2;
                         }
-                        if(mOpt->fbamout){
+                        if((!assigned) && mOpt->fbamout){
                             bam_aux_update_int(b, "ZF", ixmx);
                             assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                             sptids.insert(ixmx);
