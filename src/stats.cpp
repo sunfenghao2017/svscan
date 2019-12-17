@@ -338,6 +338,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     }
                     if(mOpt->fbamout){
                         bam_aux_update_int(b, "ZF", ixmx);
+                        bam_aux_update_int(b, "ST", 0);
                         assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                         sptids.insert(ixmx);
                     }
@@ -482,6 +483,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         }
                         if((!assigned) && mOpt->fbamout){
                             bam_aux_update_int(b, "ZF", ixmx);
+                            bam_aux_update_int(b, "ST", 1);
                             assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                             sptids.insert(ixmx);
                         }

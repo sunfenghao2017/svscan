@@ -25,7 +25,7 @@ namespace bamutil{
         return bam_get_qname(b);
     }
     
-    /** get string tag sequence of an alignment record\n
+    /** get string tag sequence of an alignment record
      * @param b pointer to bam1_t struct
      * @param tag tag name used in bam record
      */
@@ -33,6 +33,17 @@ namespace bamutil{
         uint8_t* dataBC = bam_aux_get(b, tag.c_str());
         if(!dataBC) return "";
         return bam_aux2Z(dataBC);
+    }
+
+
+    /** get int tag sequence of an alignment record
+     * @param b pointer to bam1_t struct
+     * @param tag tag name used in bam record
+     */
+    inline int getIntTag(const bam1_t* b, const std::string& tag){
+        uint8_t* dataBC = bam_aux_get(b, tag.c_str());
+        if(!dataBC) return -1;
+        return bam_aux2i(dataBC);
     }
 
     /** copy an string tag from one alignment record to another

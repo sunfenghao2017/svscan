@@ -27,6 +27,8 @@ struct BamRec{
     std::string qname;   ///< read name
     std::string sname;   ///< sample name
     int32_t svid;        ///< sv id
+    bool read1;          ///< read1 if true
+    int32_t svrt;        ///< sv read type
     
     /** constructor */
     BamRec(){
@@ -47,13 +49,13 @@ struct BamRec{
         oss << chr << "\t" << pos << "\t" << strand << "\t";
         oss << mchr << "\t" << mpos << "\t" << mstrand << "\t";
         oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << lseq << "\t" << tseq << "\t";
-        oss << barcode << "\t" << qname << "\n";
+        oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt;
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\n";
+        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt";
     }
 
     /** compare two BamRec */
