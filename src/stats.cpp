@@ -147,7 +147,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             if(bpvalid){
                 bool onlySupportIns = true;
                 std::vector<int32_t> supportInsID;
-                std::vector<int32_t> supportSrsID;
+                std::map<int32_t, bool> supportSrsID;
                 // get sequence
                 std::string readOri;
                 std::string readSeq;
@@ -160,7 +160,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     itbp = ltbp;
                 }
                 for(; itbp != bpRegs[refIdx].end() && rend >= itbp->mBpPos; ++itbp){
-                    if(assigned) break;
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
                         if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
@@ -292,7 +291,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     assigned = true;
                                     if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                                     if(itbp->mSVT != 4) onlySupportIns = false;
-                                    if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID.push_back(itbp->mID);
+                                    if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = itbp->mIsSVEnd;
                                 }
                             }
                         }
@@ -307,22 +306,27 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     }
                 }
                 if(supportSrsID.size()){
-                    int32_t ixmx = supportSrsID[0];
+                    auto iit = supportSrsID.begin();
+                    int32_t ixmx = iit->first;
+                    bool ixend = iit->second;
                     // first run
-                    for(uint32_t xxid = 1; xxid < supportSrsID.size(); ++xxid){
-                        if(svs[supportSrsID[xxid]].mSRSupport > svs[ixmx].mSRSupport){
-                            ixmx = supportSrsID[xxid];
+                    for(; iit != supportSrsID.end(); ++iit){
+                        if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
+                            ixmx = iit->first;
+                            ixend = iit->second;
                         }
                     }
                     // second run
-                    for(uint32_t xxid = 0; xxid < supportSrsID.size(); ++xxid){
-                        if(svs[supportSrsID[xxid]].mPESupport > svs[ixmx].mPESupport){
-                            ixmx = supportSrsID[xxid];
+                    iit = supportSrsID.begin();
+                    for(; iit != supportSrsID.end(); ++iit){
+                        if(svs[iit->first].mPESupport > svs[ixmx].mPESupport){
+                            ixmx = iit->first;
+                            ixend = iit->second;
                         }
                     }
                     // output
                     mOpt->logMtx.lock();
-                    if(itbp->mIsSVEnd) ++mJctCnts[ixmx].mAltCntEnd;
+                    if(ixend) ++mJctCnts[ixmx].mAltCntEnd;
                     else ++mJctCnts[ixmx].mAltCntBeg;
                     if(mOpt->writebcf) mJctCnts[ixmx].mAltQual.push_back(b->core.qual);
                     uint8_t* hpptr = bam_aux_get(b, "HP");
@@ -414,7 +418,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     }
                 }
                 if(spanvalid){
-                    std::vector<int32_t> supportSpnID;
+                    std::map<int32_t, bool> supportSpnID;
                     if(lspap != pbegin){
                         itspna = std::lower_bound(spPts[refIdx].begin(), spPts[refIdx].end(), SpanPoint(pbegin));
                         lspap = pbegin;
@@ -442,42 +446,45 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 }
                             }
                             if(validDPE){
-                                supportSpnID.push_back(itspna->mID);
+                                supportSpnID[itspna->mID] = itspna->mIsSVEnd;
                             }
                         }
                     }
                     if(supportSpnID.size()){
-                        int32_t ixmx = supportSpnID[0];
+                        auto iit = supportSpnID.begin();
+                        int32_t ixmx = iit->first;
+                        bool ixend = iit->second;
                         // first run
-                        for(uint32_t xxid = 1; xxid < supportSpnID.size(); ++xxid){
-                            if(svs[supportSpnID[xxid]].mSRSupport > svs[ixmx].mSRSupport){
-                                ixmx = supportSpnID[xxid];
+                        for(; iit != supportSpnID.end(); ++iit){
+                            if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
+                                ixmx = iit->first;
+                                ixend = iit->second;
                             }
                         }
                         // second run
-                        for(uint32_t xxid = 0; xxid < supportSpnID.size(); ++xxid){
-                            if(svs[supportSpnID[xxid]].mSRSupport == svs[ixmx].mSRSupport &&
-                               svs[supportSpnID[xxid]].mPESupport > svs[ixmx].mPESupport){
-                                ixmx = xxid;
+                        iit = supportSpnID.begin();
+                        for(; iit != supportSpnID.end(); ++iit){
+                            if(svs[iit->first].mPESupport > svs[ixmx].mPESupport){
+                                ixmx = iit->first;
+                                ixend = iit->second;
                             }
                         }
-                        // output 
+                        // output
                         mOpt->logMtx.lock();
-                        if(itspna->mIsSVEnd) ++mSpnCnts[ixmx].mAltCntEnd;
+                        if(ixend) ++mSpnCnts[ixmx].mAltCntEnd;
                         else ++mSpnCnts[ixmx].mAltCntBeg;
                         if(mOpt->writebcf) mSpnCnts[ixmx].mAltQual.push_back(b->core.qual);
                         uint8_t* hpptr = bam_aux_get(b, "HP");
                         if(hpptr){
                             mOpt->libInfo->mIsHaploTagged = true;
-                            int hap = bam_aux2i(hpptr);
-                            if(hap == 1) ++mSpnCnts[ixmx].mAlth1;
+                            int hapv = bam_aux2i(hpptr);
+                            if(hapv == 1) ++mSpnCnts[ixmx].mAlth1;
                             else ++mSpnCnts[ixmx].mAlth2;
                         }
                         if(mOpt->fbamout){
-                            if(sptids.find(ixmx) == sptids.end()){
-                                bam_aux_update_int(b, "ZF", ixmx);
-                                assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                            }
+                            bam_aux_update_int(b, "ZF", ixmx);
+                            assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                            sptids.insert(ixmx);
                         }
                         mOpt->logMtx.unlock();
                     }
