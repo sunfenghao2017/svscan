@@ -198,7 +198,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
 
 void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     // repeat region filter and bp refining
-    util::loginfo("Beg online BWA realign");
+    util::loginfo("Beg online BWA realignment");
     std::vector<std::future<int>> alnret(sr.size());
     for(uint32_t i = 0; i < sr.size(); ++i){
         if(sr[i].mSVT == 4) continue;
@@ -209,11 +209,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             sr[i].mRealnRet = alnret[i].get();
         }
     }
-    /* keep the record, not drop here
-    for(uint32_t i = 0; i < sr.size(); ++i){
-        if(sr[i].mRealnRet < 0 || sr[i].mRealnRet > 4) sr[i].mMerged = true;
-    }*/
-    util::loginfo("End online BWA ralign");
+    util::loginfo("End online BWA realignment");
     if(opt->debug & DEBUG_FREAN){
         std::cout << "\ndebug_realign_failed_sv_info:" << std::endl;
         for(uint32_t i = 0; i < sr.size(); ++i){
@@ -225,7 +221,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     // sort 
     std::sort(sr.begin(), sr.end());
     for(uint32_t i = 0; i < sr.size(); ++i) sr[i].mID = i;
-    util::loginfo("Beg merge SR supported SVs");
+    util::loginfo("Beg merging SR supported SVs, raw " + std::to_string(sr.size()));
     int32_t maxCI = 0;
     for(uint32_t i = 0; i < sr.size(); ++i){
         maxCI = std::max(maxCI, std::max(std::abs(sr[i].mCiPosLow), std::abs(sr[i].mCiPosHigh)));
@@ -268,7 +264,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
     }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
-    util::loginfo(std::to_string(sr.size()) + " SR supported SVs merged into " + std::to_string(msr.size()) + " ones");
+    util::loginfo("End merging SR supported SVs, got " + std::to_string(msr.size()));
     if(opt->debug & DEBUG_FCALL){
         std::cout << "debug_Merged_SR_SV_IDs:";
         for(uint32_t i = 0; i < sr.size(); ++i){
@@ -298,7 +294,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     sam_close(fp);
     bam_hdr_destroy(h);
     // then do merge
-    util::loginfo("Beg merge DP supported SVs");
+    util::loginfo("Beg merging DP supported SVs, raw " + std::to_string(dp.size()));
     // index dpsvs
     std::vector<std::pair<int32_t, int32_t>> chridx(opt->contigNum, {-1, -1});
     for(int32_t i = 0; i < (int32_t)dp.size(); ++i){
@@ -330,7 +326,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
         }
     }
     std::copy_if(dp.begin(), dp.end(), std::back_inserter(mdp), [&](const SVRecord& sv){return !sv.mMerged;});
-    util::loginfo(std::to_string(dp.size()) + " DP supported SVs merged into " + std::to_string(mdp.size()) + " ones");
+    util::loginfo("End merging DP supported SVs, got " + std::to_string(mdp.size()));
     if(opt->debug & DEBUG_FCALL){
         std::cout << "debug_Merged_DP_SV_IDs:";
         for(uint32_t i = 0; i < dp.size(); ++i){

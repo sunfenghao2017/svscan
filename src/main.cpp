@@ -79,6 +79,8 @@ int main(int argc, char** argv){
     util::loginfo("Options updated");
     // print command line arguments
     util::loginfo("CMD: " + opt->softEnv->cmd);
+    util::loginfo("CWD: " + opt->softEnv->cwd);
+    util::loginfo("VER: " + opt->softEnv->ver);
     // output library basic information
     util::loginfo("Library basic information:\n" + opt->libInfo->toStr());
     // calling SV

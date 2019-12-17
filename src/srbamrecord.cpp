@@ -120,7 +120,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
     int32_t origSize = svs.size();
-    util::loginfo("Beg clustering SRs for SV type:" + std::to_string(svt));
+    util::loginfo("Beg clustering SRs for SV type " + std::to_string(svt) + ", all " + std::to_string(srs.size()) + " SRs ");
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_Beg_clustering_SRs_for_SV_type:" << svt << std::endl;
     }
@@ -234,9 +234,9 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
             }
         }
     }
-    util::loginfo("End clustering SRs for SV type:" + std::to_string(svt) + ", got: " + std::to_string(svs.size() - origSize) + " SV candidates.");
+    util::loginfo("End clustering SRs for SV type " + std::to_string(svt) + ", got " + std::to_string(svs.size() - origSize) + " SV candidates.");
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "End clustering SRs for SV type:" << svt << std::endl;
+        std::cout << "End clustering SRs for SV type " << svt << std::endl;
     }
 }
 
@@ -560,7 +560,7 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
 }
 
 void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx){
-    util::loginfo("Beg processing: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
+    util::loginfo("Beg processing vpidx: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
     for(int32_t cidx = begIdx; cidx < endIdx; ++cidx){
         int32_t svid = crsidx[cidx];
         bool bpRefined = false;
@@ -596,5 +596,5 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
             }
         }
     }
-    util::loginfo("End processing: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
+    util::loginfo("End processing vpidx: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
 }

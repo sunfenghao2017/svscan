@@ -23,7 +23,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
         return; // Skip contig without any mapped reads
     }
     // Iterate all read alignments on this contig and valid regions
-    util::loginfo("Contig: " + std::string(h->target_name[tid]) + " starts SR and DP scanning", mOpt->logMtx);
+    util::loginfo("Beg SR/DP scanning on Contig: " + std::string(h->target_name[tid]), mOpt->logMtx);
     for(auto regit = mScanRegs[tid].begin(); regit != mScanRegs[tid].end(); ++regit){
         hts_itr_t* itr = sam_itr_queryi(idx, tid, regit->first, regit->second);
         while(sam_itr_next(fp, itr, b) >= 0){
@@ -71,7 +71,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
         }
         hts_itr_destroy(itr);
     }
-    util::loginfo("Contig: " + std::string(h->target_name[tid]) + " finished SR and DP scanning", mOpt->logMtx);
+    util::loginfo("End SR/DP scanning on Contig: " + std::string(h->target_name[tid]), mOpt->logMtx);
     sam_close(fp);
     hts_idx_destroy(idx);
     bam_hdr_destroy(h);
@@ -234,6 +234,10 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg writing Fusions to TSV file");
     covStat->reportFusionTSV(mergedSVs, gl);
     util::loginfo("End writing Fusions to TSV file");
+    if(mOpt->debug & DEBUG_FFINA){
+        std::cout << "debug_final_merged_svs: " << std::endl;
+        std::cout << mergedSVs << std::endl;
+    }
     if(!mOpt->bcfOut.empty()){
         util::loginfo("Beg writing SVs to BCF file");
         std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVs());

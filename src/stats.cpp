@@ -96,7 +96,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
         if(!cr_isoverlap(ctgCgr, 
                          h->target_name[b->core.tid], 
-                         std::max((hts_pos_t)0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
+                         std::max((BIGD_TYPE)0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
                          std::min((int32_t)(b->core.pos + mOpt->libInfo->mMaxNormalISize), (int32_t)h->target_len[b->core.tid]))){
            continue;
         }
@@ -136,7 +136,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
-            int32_t rbegin = std::max((hts_pos_t)0, b->core.pos - leadingSC);
+            int32_t rbegin = std::max((BIGD_TYPE)0, b->core.pos - leadingSC);
             int32_t rend = std::min(rbegin + b->core.l_qseq, (int32_t)h->target_len[refIdx]);
             for(int32_t k = rbegin; k < rend; ++k){
                 if(bpOccupied.find(k) != bpOccupied.end()){
@@ -147,6 +147,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             if(bpvalid){
                 bool onlySupportIns = true;
                 std::vector<int32_t> supportInsID;
+                std::vector<int32_t> supportSrsID;
                 // get sequence
                 std::string readOri;
                 std::string readSeq;
@@ -235,85 +236,63 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     int32_t catt = itbp->mSVT;
                                     if(itbp->mSVT >= 5) catt -= 5;
                                     if(catt <= 1){
-                                        if(safwd == orifwd){
-                                            validRSR = false;
-                                            goto notvalidsr;
-                                        }
+                                        if(safwd == orifwd) validRSR = false;
                                     }
                                     if(catt >= 2){
-                                        if(safwd != orifwd){
-                                            validRSR = false;
-                                            goto notvalidsr;
-                                        }
+                                        if(safwd != orifwd) validRSR = false;
                                     }
-                                    char* scg = const_cast<char*>(vstr[3].c_str());
-                                    int32_t sscl = 0, sscr = 0;
-                                    int32_t stotlen = 0;
-                                    while(*scg && *scg != '*'){
-                                        long num = 0;
-                                        if(std::isdigit((int)*scg)){
-                                            num = std::strtol(scg, &scg, 10);
-                                            stotlen += num;
+                                    if(validRSR){
+                                        char* scg = const_cast<char*>(vstr[3].c_str());
+                                        int32_t sscl = 0, sscr = 0;
+                                        int32_t stotlen = 0;
+                                        while(validRSR && *scg && *scg != '*'){
+                                            long num = 0;
+                                            if(std::isdigit((int)*scg)){
+                                                num = std::strtol(scg, &scg, 10);
+                                                stotlen += num;
+                                            }
+                                            switch(*scg){
+                                                case 'S':
+                                                    if(stotlen == num) sscl = num;
+                                                    else sscr = num;
+                                                    break;
+                                                case 'H':
+                                                    validRSR = false;
+                                                    break;
+                                                case 'M': case '=': case 'X': case 'D': case 'N':
+                                                    erpos += num;
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                            ++scg;
                                         }
-                                        switch(*scg){
-                                            case 'S':
-                                                if(stotlen == num) sscl = num;
-                                                else sscr = num;
-                                                break;
-                                            case 'H':
-                                                goto notvalidsr;
-                                            case 'M': case '=': case 'X': case 'D': case 'N':
-                                                erpos += num;
-                                                break;
-                                            default:
-                                                break;
-                                        }
-                                        ++scg;
-                                    }
-                                    if((sscl > 0) ^ (sscr > 0)){
-                                        int32_t bppos = irpos;
-                                        if(sscr) bppos = erpos;
-                                        if(itbp->mIsSVEnd){
-                                            if(bppos < svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosLow ||
-                                               bppos > svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosHigh ||
-                                               svs[itbp->mID].mChr1 != stid){
-                                                validRSR = false;
+                                        if(validRSR && ((sscl > 0) ^ (sscr > 0))){
+                                            int32_t bppos = irpos;
+                                            if(sscr) bppos = erpos;
+                                            if(itbp->mIsSVEnd){
+                                                if(bppos < svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosLow ||
+                                                   bppos > svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosHigh ||
+                                                   svs[itbp->mID].mChr1 != stid){
+                                                    validRSR = false;
+                                                }
+                                            }else{
+                                                if(bppos < svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndLow ||
+                                                   bppos > svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndHigh ||
+                                                   svs[itbp->mID].mChr2 != stid){
+                                                    validRSR = false;
+                                                }
                                             }
                                         }else{
-                                            if(bppos < svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndLow ||
-                                               bppos > svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndHigh ||
-                                               svs[itbp->mID].mChr2 != stid){
-                                                validRSR = false;
-                                            }
+                                            validRSR = false;
                                         }
-                                    }else{
-                                        validRSR = false;
                                     }
                                 }
-notvalidsr:
                                 if(validRSR){
                                     assigned = true;
                                     if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                                     if(itbp->mSVT != 4) onlySupportIns = false;
-                                    if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
-                                        mOpt->logMtx.lock();
-                                        if(itbp->mIsSVEnd) ++mJctCnts[itbp->mID].mAltCntEnd;
-                                        else ++mJctCnts[itbp->mID].mAltCntBeg;
-                                        if(mOpt->writebcf) mJctCnts[itbp->mID].mAltQual.push_back(b->core.qual);
-                                        uint8_t* hpptr = bam_aux_get(b, "HP");
-                                        if(hpptr){
-                                            mOpt->libInfo->mIsHaploTagged = true;
-                                            int hapv = bam_aux2i(hpptr);
-                                            if(hapv == 1) ++mJctCnts[itbp->mID].mAlth1;
-                                            else ++mJctCnts[itbp->mID].mAlth2;
-                                        }
-                                        if(mOpt->fbamout){
-                                            bam_aux_update_int(b, "ZF", itbp->mID);
-                                            assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                                            sptids.insert(itbp->mID);
-                                        }
-                                        mOpt->logMtx.unlock();
-                                    }
+                                    if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID.push_back(itbp->mID);
                                 }
                             }
                         }
@@ -326,6 +305,31 @@ notvalidsr:
                         delete refResult;
                         refResult = NULL;
                     }
+                }
+                if(supportSrsID.size()){
+                    int32_t ixmx = supportSrsID[0];
+                    for(uint32_t xxid = 1; xxid < supportSrsID.size(); ++xxid){
+                        if(svs[supportSrsID[xxid]].mSRSupport > svs[ixmx].mSRSupport){
+                            ixmx = supportSrsID[xxid];
+                        }
+                    }
+                    mOpt->logMtx.lock();
+                    if(itbp->mIsSVEnd) ++mJctCnts[ixmx].mAltCntEnd;
+                    else ++mJctCnts[ixmx].mAltCntBeg;
+                    if(mOpt->writebcf) mJctCnts[ixmx].mAltQual.push_back(b->core.qual);
+                    uint8_t* hpptr = bam_aux_get(b, "HP");
+                    if(hpptr){
+                        mOpt->libInfo->mIsHaploTagged = true;
+                        int hapv = bam_aux2i(hpptr);
+                        if(hapv == 1) ++mJctCnts[ixmx].mAlth1;
+                        else ++mJctCnts[ixmx].mAlth2;
+                    }
+                    if(mOpt->fbamout){
+                        bam_aux_update_int(b, "ZF", ixmx);
+                        assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                        sptids.insert(ixmx);
+                    }
+                    mOpt->logMtx.unlock();
                 }
                 if(supportInsID.size() > 0 && (!onlySupportIns)){
                     for(auto& insid : supportInsID) ++mJctCnts[insid].mFPIns;
@@ -392,7 +396,7 @@ notvalidsr:
                 int32_t pbegin = b->core.pos;
                 int32_t pend = std::min((int32_t)(b->core.pos + mOpt->libInfo->mMaxNormalISize), (int32_t)h->target_len[refIdx]);
                 if(b->core.flag & BAM_FREVERSE){
-                    pbegin = std::max((hts_pos_t)0, b->core.pos + b->core.l_qseq - mOpt->libInfo->mMaxNormalISize);
+                    pbegin = std::max((BIGD_TYPE)0, b->core.pos + b->core.l_qseq - mOpt->libInfo->mMaxNormalISize);
                     pend = std::min((int32_t)(b->core.pos + b->core.l_qseq), (int32_t)h->target_len[refIdx]);
                 }
                 for(int32_t i = pbegin; i < pend; ++i){
@@ -402,6 +406,7 @@ notvalidsr:
                     }
                 }
                 if(spanvalid){
+                    std::vector<int32_t> supportSpnID;
                     if(lspap != pbegin){
                         itspna = std::lower_bound(spPts[refIdx].begin(), spPts[refIdx].end(), SpanPoint(pbegin));
                         lspap = pbegin;
@@ -429,26 +434,35 @@ notvalidsr:
                                 }
                             }
                             if(validDPE){
-                                mOpt->logMtx.lock();
-                                if(itspna->mIsSVEnd) ++mSpnCnts[itspna->mID].mAltCntEnd;
-                                else ++mSpnCnts[itspna->mID].mAltCntBeg;
-                                if(mOpt->writebcf) mSpnCnts[itspna->mID].mAltQual.push_back(b->core.qual);
-                                uint8_t* hpptr = bam_aux_get(b, "HP");
-                                if(hpptr){
-                                    mOpt->libInfo->mIsHaploTagged = true;
-                                    int hap = bam_aux2i(hpptr);
-                                    if(hap == 1) ++mSpnCnts[itspna->mID].mAlth1;
-                                    else ++mSpnCnts[itspna->mID].mAlth2;
-                                }
-                                if(mOpt->fbamout){
-                                    if(sptids.find(itspna->mID) == sptids.end()){
-                                        bam_aux_update_int(b, "ZF", itspna->mID);
-                                        assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                                    }
-                                }
-                                mOpt->logMtx.unlock();
+                                supportSpnID.push_back(itspna->mID);
                             }
                         }
+                    }
+                    if(supportSpnID.size()){
+                        int32_t ixmx = supportSpnID[0];
+                        for(uint32_t xxid = 1; xxid < supportSpnID.size(); ++xxid){
+                            if(svs[supportSpnID[xxid]].mSRSupport > svs[ixmx].mSRSupport){
+                                ixmx = supportSpnID[xxid];
+                            }
+                        }
+                        mOpt->logMtx.lock();
+                        if(itspna->mIsSVEnd) ++mSpnCnts[ixmx].mAltCntEnd;
+                        else ++mSpnCnts[ixmx].mAltCntBeg;
+                        if(mOpt->writebcf) mSpnCnts[ixmx].mAltQual.push_back(b->core.qual);
+                        uint8_t* hpptr = bam_aux_get(b, "HP");
+                        if(hpptr){
+                            mOpt->libInfo->mIsHaploTagged = true;
+                            int hap = bam_aux2i(hpptr);
+                            if(hap == 1) ++mSpnCnts[ixmx].mAlth1;
+                            else ++mSpnCnts[ixmx].mAlth2;
+                        }
+                        if(mOpt->fbamout){
+                            if(sptids.find(ixmx) == sptids.end()){
+                                bam_aux_update_int(b, "ZF", ixmx);
+                                assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                            }
+                        }
+                        mOpt->logMtx.unlock();
                     }
                 }
             }

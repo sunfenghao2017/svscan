@@ -17,6 +17,8 @@
 #include "util.h"
 #include "bed.h"
 
+typedef int32_t BIGD_TYPE; ///< big data type
+
 #define DEBUG_FCALL 0x1  ///< calling debug mask
 #define DEBUG_FANNC 0x2  ///< coverage anno debug mask
 #define DEBUG_FANNG 0x4  ///< gene anno debug mask
