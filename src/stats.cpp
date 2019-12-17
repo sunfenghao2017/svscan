@@ -308,11 +308,19 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
                 if(supportSrsID.size()){
                     int32_t ixmx = supportSrsID[0];
+                    // first run
                     for(uint32_t xxid = 1; xxid < supportSrsID.size(); ++xxid){
                         if(svs[supportSrsID[xxid]].mSRSupport > svs[ixmx].mSRSupport){
                             ixmx = supportSrsID[xxid];
                         }
                     }
+                    // second run
+                    for(uint32_t xxid = 0; xxid < supportSrsID.size(); ++xxid){
+                        if(svs[supportSrsID[xxid]].mPESupport > svs[ixmx].mPESupport){
+                            ixmx = supportSrsID[xxid];
+                        }
+                    }
+                    // output
                     mOpt->logMtx.lock();
                     if(itbp->mIsSVEnd) ++mJctCnts[ixmx].mAltCntEnd;
                     else ++mJctCnts[ixmx].mAltCntBeg;
@@ -440,11 +448,20 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     }
                     if(supportSpnID.size()){
                         int32_t ixmx = supportSpnID[0];
+                        // first run
                         for(uint32_t xxid = 1; xxid < supportSpnID.size(); ++xxid){
                             if(svs[supportSpnID[xxid]].mSRSupport > svs[ixmx].mSRSupport){
                                 ixmx = supportSpnID[xxid];
                             }
                         }
+                        // second run
+                        for(uint32_t xxid = 0; xxid < supportSpnID.size(); ++xxid){
+                            if(svs[supportSpnID[xxid]].mSRSupport == svs[ixmx].mSRSupport &&
+                               svs[supportSpnID[xxid]].mPESupport > svs[ixmx].mPESupport){
+                                ixmx = xxid;
+                            }
+                        }
+                        // output 
                         mOpt->logMtx.lock();
                         if(itspna->mIsSVEnd) ++mSpnCnts[ixmx].mAltCntEnd;
                         else ++mSpnCnts[ixmx].mAltCntBeg;
