@@ -31,23 +31,11 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.srRefCount = mJctCnts[i].getRefDep();
         svr.dpRefCount = mSpnCnts[i].getRefDep();
         // AF
-        if(svs[i].mPrecise){
-            if(svr.srCount == 0 || (svr.srCount + svr.srRefCount == 0)){
-                if(svr.dpRescued + svr.dpRefCount){
-                    svr.af = ((double)svr.dpRescued)/(svr.dpRescued + svr.dpRefCount);
-                }else{
-                    svr.af = 0;
-                }
-            }else{
-                svr.af = ((double)svr.srRescued)/(svr.srRescued + svr.srRefCount);
-            }
-        }else{
-            if(svr.dpRescued + svr.dpRefCount){
-                svr.af = ((double)svr.dpRescued)/(svr.dpRescued + svr.dpRefCount);
-            }else{
-                svr.af = 0;
-            }
-        }
+        double sraf = 0, dpaf = 0;
+        if(svr.srCount + svr.srRefCount) sraf = ((double)svr.srRescued)/(double)(svr.srRescued + svr.srRefCount);
+        if(svr.dpCount + svr.dpRefCount) dpaf = ((double)svr.dpRescued)/(double)(svr.dpRescued + svr.dpRefCount);
+        if(sraf > dpaf) svr.af = sraf;
+        else svr.af = dpaf;
         // insBp insSeq
         svr.insBp = svs[i].mBpInsSeq.length();
         svr.insSeq = (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq);
@@ -269,27 +257,17 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gl[i].mFuseGene[j].status &= (~FUSION_FINREPORTRNG);
                 }
             }
-            float af = 0.0;
+            float af = 0, sraf = 0, dpaf = 0;
             int32_t srv = mJctCnts[i].getAltDep();
             int32_t srr = mJctCnts[i].getRefDep();
             int32_t dpv = mSpnCnts[i].getAltDep();
             int32_t dpr = mSpnCnts[i].getRefDep();
-            if(svs[i].mPrecise){
-                if(srv == 0 || (srv + srr == 0)){
-                    if(dpv + dpr){
-                        af = (double)(dpv)/(double)(dpv + dpr);
-                    }else{
-                        af = 0;
-                    }
-                }else{
-                    af = (double)(srv)/(double)(srv + srr);
-                }
+            if(srv + srr) sraf = (double)(srv)/(double)(srv + srr);
+            if(dpv + dpr) dpaf = (double)(dpv)/(double)(dpv + dpr);
+            if(sraf > dpaf){
+                af = sraf;
             }else{
-                if(dpv + dpr){
-                    af = (double)(dpv)/(double)(dpv + dpr);
-                }else{
-                    af = 0;
-                }
+                af = dpaf;
             }
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
                 if(svs[i].mPrecise){
@@ -463,43 +441,29 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
-    float af = 0.0;
+    float af = 0, sraf = 0, dpaf = 0;
     int32_t srv = mJctCnts[svr.mID].getAltDep();
     int32_t srr = mJctCnts[svr.mID].getRefDep();
     int32_t dpv = mSpnCnts[svr.mID].getAltDep();
     int32_t dpr = mSpnCnts[svr.mID].getRefDep();
-    if(svr.mSRSupport){
-        if(srv == 0 || (srv + srr == 0)){
-            if(dpv + dpr){
-                af = (double)(dpv)/(double)(dpv + dpr);
-            }else{
-                af = 0;
-            }
-        }else{
-            af = (double)(srv)/(double)(srv + srr);
-        }
+    if(srv + srr) sraf = (double)(srv)/(double)(srv + srr);
+    if(dpv + dpr) dpaf = (double)(dpv)/(double)(dpv + dpr);
+    if(sraf > dpaf){
+        af = sraf;
+        fsr.fusionreads = srv;
+        fsr.totalreads = srv + srr;
     }else{
-        if(dpv + dpr){
-            af = (double)(dpv)/(double)(dpv + dpr);
-        }else{
-            af = 0;
-        }
+        af = dpaf;
+        fsr.fusionreads = dpv;
+        fsr.totalreads = dpv + dpr;
     }
+    fsr.fuserate = af;
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;
     else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].hidx].strand;
     if(gi.mFuseGene[i].tfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].tidx].strand;
     else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].tidx].strand;
-    if(svr.mPrecise){// FusionReads TotalReads FusionRate
-        fsr.fusionreads = srv;
-        fsr.totalreads = srv + srr;
-        fsr.fuserate = af;
-    }else{
-        fsr.fusionreads = dpv;
-        fsr.totalreads = dpr + dpv;
-        fsr.fuserate = af;
-    }
     // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
     if(gi.mFuseGene[i].hfrom1){
         fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;

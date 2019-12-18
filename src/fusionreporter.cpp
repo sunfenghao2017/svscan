@@ -276,7 +276,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].tidx].strand);
-            if(srv){                                                             // FusionReads TotalReads
+            float sraf = 0, dpaf = 0;
+            if(srr + srv) sraf = (double)(srv)/(double)(srv + srr);
+            if(dpr + dpv) dpaf = (double)(dpv)/(double)(dpv + dpr);
+            if(sraf > dpaf){                                                     // FusionReads TotalReads
                 fgr.fusionreads = srv;
                 fgr.totalreads = srr + srv;
             }else{
