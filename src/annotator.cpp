@@ -438,12 +438,13 @@ void Annotator::refineCovAnno(Stats* sts){
                     sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
                 }
                 drec.insert(iter->first);
-            }else{
-                if((iter->second.mR1SRT == 0) && (iter->second.mR1SRT == 0)){
-                    sts->mJctCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
-                    sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
-                }
             }
+           // }else{
+           //     if((iter->second.mR1SRT == 0) && (iter->second.mR1SRT == 0)){
+           //         sts->mJctCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
+           //         sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+           //     }
+           // }
         }
     }
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");

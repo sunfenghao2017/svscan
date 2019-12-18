@@ -282,9 +282,11 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             if(srv){                                                     // FusionReads TotalReads
                 fgr.fusionreads = srv;
                 fgr.totalreads = srr + srv;
+                af = sraf;
             }else{
                 fgr.fusionreads = dpv;
                 fgr.totalreads = dpr + dpv;
+                af = dpaf;
             }
             fgr.fuserate = af;                                                   // FusionRate
             if(fgl[i].hfrom1){
