@@ -218,7 +218,12 @@ void SVScanner::scanDPandSR(){
     Annotator* covAnn = new Annotator(mOpt);
     Stats* covStat = covAnn->covAnnotate(mergedSVs);
     util::loginfo("End annotating SV coverage");
-    if(!mOpt->bamout.empty()) sam_close(mOpt->fbamout);
+    if(!mOpt->bamout.empty()){
+        sam_close(mOpt->fbamout);
+        util::loginfo("Beg refining SV coverage");
+        covAnn->refineCovAnno(covStat);
+        util::loginfo("End refining SV coverage");
+    }
     GeneInfoList gl;
     util::loginfo("Beg annotating SV gene information");
     if(mOpt->rnamode){

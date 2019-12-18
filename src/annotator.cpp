@@ -414,3 +414,38 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
     if(tbx) tbx_destroy(tbx);
     hts_close(fp);
 }
+
+void Annotator::refineCovAnno(Stats* sts){
+    if(mOpt->bamout.empty()) return;
+    ReadSupportStatMap rssm;
+    getReadSupportStatus(mOpt->bamout, rssm);
+    std::set<std::string> drec;
+    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+        if(iter->second.mR1MapQ && iter->second.mR2MapQ && (iter->second.mR1SVID != iter->second.mR2SVID)){
+            if(iter->second.mR1SRT){
+                sts->mSpnCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
+                sts->mSpnCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+            }else{
+                sts->mJctCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
+                sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+            }
+            drec.insert(iter->first);
+        }
+    }
+    samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
+    bam_hdr_t* h = sam_hdr_read(ifp);
+    bam1_t* b = bam_init1();
+    std::string tmpBam = mOpt->bamout + ".tmp.bam";
+    samFile* ofp = sam_open(tmpBam.c_str(), "wb");
+    assert(sam_hdr_write(ofp, h) >= 0);
+    while(sam_read1(ifp, h, b) >= 0){
+        if(drec.find(bam_get_qname(b)) == drec.end()){
+            assert(sam_write1(ofp, h, b) >= 0);
+        }
+    }
+    rename(tmpBam.c_str(), mOpt->bamout.c_str());
+    sam_close(ifp);
+    sam_close(ofp);
+    bam_hdr_destroy(h);
+    bam_destroy1(b);
+}

@@ -32,11 +32,21 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.dpRefCount = mSpnCnts[i].getRefDep();
         // AF
         if(svs[i].mPrecise){
-            int32_t srv = std::max(mJctCnts[i].getAltDep(), svs[i].mSRSupport);
-            svr.af = (double)(srv)/(mJctCnts[i].getRefDep() + srv);
+            if(svr.srCount == 0 || (svr.srCount + svr.srRefCount == 0)){
+                if(svr.dpRescued + svr.dpRefCount){
+                    svr.af = ((double)svr.dpRescued)/(svr.dpRescued + svr.dpRefCount);
+                }else{
+                    svr.af = 0;
+                }
+            }else{
+                svr.af = ((double)svr.srRescued)/(svr.srRescued + svr.srRefCount);
+            }
         }else{
-            int32_t dpv = std::max(mSpnCnts[i].getAltDep(), svs[i].mPESupport);
-            svr.af = (double)(dpv)/(mSpnCnts[i].getRefDep() + dpv);
+            if(svr.dpRescued + svr.dpRefCount){
+                svr.af = ((double)svr.dpRescued)/(svr.dpRescued + svr.dpRefCount);
+            }else{
+                svr.af = 0;
+            }
         }
         // insBp insSeq
         svr.insBp = svs[i].mBpInsSeq.length();
@@ -260,12 +270,27 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }
             }
             float af = 0.0;
-            int32_t srv = std::max((int32_t)mJctCnts[i].getAltDep(), svs[i].mSRSupport);
+            int32_t srv = mJctCnts[i].getAltDep();
             int32_t srr = mJctCnts[i].getRefDep();
-            int32_t dpv = std::max((int32_t)mSpnCnts[i].getAltDep(), svs[i].mPESupport);
+            int32_t dpv = mSpnCnts[i].getAltDep();
             int32_t dpr = mSpnCnts[i].getRefDep();
-            if(svs[i].mPrecise) af = (double)(srv)/(double)(srv + srr);
-            else af = (double)(dpv)/(double)(dpv + dpr);
+            if(svs[i].mPrecise){
+                if(srv == 0 || (srv + srr == 0)){
+                    if(dpv + dpr){
+                        af = (double)(dpv)/(double)(dpv + dpr);
+                    }else{
+                        af = 0;
+                    }
+                }else{
+                    af = (double)(srv)/(double)(srv + srr);
+                }
+            }else{
+                if(dpv + dpr){
+                    af = (double)(dpv)/(double)(dpv + dpr);
+                }else{
+                    af = 0;
+                }
+            }
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
                 if(svs[i].mPrecise){
                     if(srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport && dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
@@ -439,12 +464,27 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
     float af = 0.0;
-    int32_t srv = std::max((int32_t)mJctCnts[svr.mID].getAltDep(), svr.mSRSupport);
+    int32_t srv = mJctCnts[svr.mID].getAltDep();
     int32_t srr = mJctCnts[svr.mID].getRefDep();
-    int32_t dpv = std::max((int32_t)mSpnCnts[svr.mID].getAltDep(), svr.mPESupport);
+    int32_t dpv = mSpnCnts[svr.mID].getAltDep();
     int32_t dpr = mSpnCnts[svr.mID].getRefDep();
-    if(svr.mPrecise) af = (double)(srv)/(double)(srv + srr);
-    else af = (double)(dpv)/(double)(dpv + dpr);
+    if(svr.mSRSupport){
+        if(srv == 0 || (srv + srr == 0)){
+            if(dpv + dpr){
+                af = (double)(dpv)/(double)(dpv + dpr);
+            }else{
+                af = 0;
+            }
+        }else{
+            af = (double)(srv)/(double)(srv + srr);
+        }
+    }else{
+        if(dpv + dpr){
+            af = (double)(dpv)/(double)(dpv + dpr);
+        }else{
+            af = 0;
+        }
+    }
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;

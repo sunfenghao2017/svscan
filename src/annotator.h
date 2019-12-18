@@ -3,6 +3,7 @@
 
 #include "util.h"
 #include "stats.h"
+#include "resbamstat.h"
 #include <htslib/tbx.h>
 #include <htslib/kstring.h>
 
@@ -22,6 +23,9 @@ class Annotator{
         
         /** destructor of Annotator */
         ~Annotator(){}
+
+        /** refine coverage stat */
+        void refineCovAnno(Stats* sts);
 
         /** annotate SV coverage
          * @param svs reference of SVRecords
