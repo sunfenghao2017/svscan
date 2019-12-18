@@ -424,27 +424,21 @@ void Annotator::refineCovAnno(Stats* sts){
         if(iter->second.mR1MapQ && iter->second.mR2MapQ){
             if((iter->second.mR1SVID != iter->second.mR2SVID)){
                 if(iter->second.mR1SRT){
-                    sts->mSpnCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
+                    sts->mSpnCnts[iter->second.mR1SVID].mAltCnt -= 1;
                     sts->mSpnCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
                 }else{
-                    sts->mJctCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
+                    sts->mJctCnts[iter->second.mR1SVID].mAltCnt-= 1;
                     sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
                 }
                 if(iter->second.mR2SRT){
-                    sts->mSpnCnts[iter->second.mR2SVID].mAltCntBeg -= 1;
+                    sts->mSpnCnts[iter->second.mR2SVID].mAltCnt -= 1;
                     sts->mSpnCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
                 }else{
-                    sts->mJctCnts[iter->second.mR2SVID].mAltCntBeg -= 1;
+                    sts->mJctCnts[iter->second.mR2SVID].mAltCnt -= 1;
                     sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
                 }
                 drec.insert(iter->first);
             }
-           // }else{
-           //     if((iter->second.mR1SRT == 0) && (iter->second.mR1SRT == 0)){
-           //         sts->mJctCnts[iter->second.mR1SVID].mAltCntBeg -= 1;
-           //         sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
-           //     }
-           // }
         }
     }
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");

@@ -40,20 +40,8 @@ void Stats::reportSVBCF(const SVSet& svs){
     bcf_hdr_append(hdr, "##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Per-sample genotype filter\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=DR,Number=1,Type=Integer,Description=\"# high-quality reference pairs\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=DV,Number=1,Type=Integer,Description=\"# high-quality variant pairs\">");
-    if(mOpt->libInfo->mIsHaploTagged){
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP1DR,Number=1,Type=Integer,Description=\"# high-quality reference pairs on haplotype 1\">");
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP2DR,Number=1,Type=Integer,Description=\"# high-quality reference pairs on haplotype 2\">");
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP1DV,Number=1,Type=Integer,Description=\"# high-quality variant pairs on haplotype 1\">");
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP2DV,Number=1,Type=Integer,Description=\"# high-quality variant pairs on haplotype 2\">");
-    }
     bcf_hdr_append(hdr, "##FORMAT=<ID=RR,Number=1,Type=Integer,Description=\"# high-quality reference junction reads\">");
     bcf_hdr_append(hdr, "##FORMAT=<ID=RV,Number=1,Type=Integer,Description=\"# high-quality variant junction reads\">");
-    if(mOpt->libInfo->mIsHaploTagged){
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP1RR,Number=1,Type=Integer,Description=\"# high-quality reference junction reads on haplotype 1\">");
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP2RR,Number=1,Type=Integer,Description=\"# high-quality reference junction reads on haplotype 2\">");
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP1RV,Number=1,Type=Integer,Description=\"# high-quality variant junction reads on haplotype 1\">");
-        bcf_hdr_append(hdr, "##FORMAT=<ID=HP2RV,Number=1,Type=Integer,Description=\"# high-quality variant junction reads on haplotype 2\">");
-    }
     // Add reference
     std::string refloc = "##reference=" + mOpt->alnref;
     bcf_hdr_append(hdr, refloc.c_str());
@@ -89,10 +77,6 @@ void Stats::reportSVBCF(const SVSet& svs){
     float* gls = (float*)std::calloc(bcf_hdr_nsamples(hdr) * 3, sizeof(float));
     int* drcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     int* dvcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
-    int* hp1drcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
-    int* hp2drcount = (int*) std::calloc(bcf_hdr_nsamples(hdr),sizeof(int));
-    int* hp1dvcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
-    int* hp2dvcount = (int*) std::calloc(bcf_hdr_nsamples(hdr),sizeof(int));
     int* rrcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     int* rvcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
     int* hp1rrcount = (int*) std::calloc(bcf_hdr_nsamples(hdr), sizeof(int));
@@ -179,30 +163,10 @@ void Stats::reportSVBCF(const SVSet& svs){
         dvcount[0] = mSpnCnts[itsv->mID].getAltDep();
         bcf_update_format_int32(hdr, rec, "DR", drcount, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "DV", dvcount, bcf_hdr_nsamples(hdr));
-        if(mOpt->libInfo->mIsHaploTagged){
-            hp1drcount[0] = mSpnCnts[itsv->mID].mRefh1;
-            hp2drcount[0] = mSpnCnts[itsv->mID].mRefh2;
-            hp1dvcount[0] = mSpnCnts[itsv->mID].mAlth1;
-            hp2dvcount[0] = mSpnCnts[itsv->mID].mAlth2;
-            bcf_update_format_int32(hdr, rec, "HP1DR", hp1drcount, bcf_hdr_nsamples(hdr));
-            bcf_update_format_int32(hdr, rec, "HP2DR", hp2drcount, bcf_hdr_nsamples(hdr));
-            bcf_update_format_int32(hdr, rec, "HP1DV", hp1dvcount, bcf_hdr_nsamples(hdr));
-            bcf_update_format_int32(hdr, rec, "HP2DV", hp2dvcount, bcf_hdr_nsamples(hdr));
-        }
         rrcount[0] = mJctCnts[itsv->mID].getRefDep();
         rvcount[0] = mJctCnts[itsv->mID].getAltDep();
         bcf_update_format_int32(hdr, rec, "RR", rrcount, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "RV", rvcount, bcf_hdr_nsamples(hdr));
-        if(mOpt->libInfo->mIsHaploTagged){
-            hp1rrcount[0] = mJctCnts[itsv->mID].mRefh1;
-            hp2rrcount[0] = mJctCnts[itsv->mID].mRefh2;
-            hp1rvcount[0] = mJctCnts[itsv->mID].mAlth1;
-            hp2rvcount[0] = mJctCnts[itsv->mID].mAlth2;
-            bcf_update_format_int32(hdr, rec, "HP1RR", hp1rrcount, bcf_hdr_nsamples(hdr));
-            bcf_update_format_int32(hdr, rec, "HP2RR", hp2rrcount, bcf_hdr_nsamples(hdr));
-            bcf_update_format_int32(hdr, rec, "HP1RV", hp1rvcount, bcf_hdr_nsamples(hdr));
-            bcf_update_format_int32(hdr, rec, "HP2RV", hp2rvcount, bcf_hdr_nsamples(hdr));
-        }
         assert(bcf_write(fp, hdr, rec) >= 0);
         bcf_clear(rec);
     }
@@ -220,10 +184,6 @@ void Stats::reportSVBCF(const SVSet& svs){
     free(gls);
     free(drcount);
     free(dvcount);
-    free(hp1drcount);
-    free(hp2drcount);
-    free(hp1dvcount);
-    free(hp2dvcount);
     free(rrcount);
     free(rvcount);
     free(hp1rrcount);

@@ -32,12 +32,8 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     for(int32_t j = 0; j < n; ++j){
         for(uint32_t i = 0; i < sts.size(); ++i){
             // SC
-            ret->mJctCnts[j].mAlth1 += sts[i]->mJctCnts[j].mAlth1;
-            ret->mJctCnts[j].mAlth2 += sts[i]->mJctCnts[j].mAlth2;
-            ret->mJctCnts[j].mRefh1 += sts[i]->mJctCnts[j].mRefh1;
             ret->mJctCnts[j].mFPIns += sts[i]->mJctCnts[j].mFPIns;
-            ret->mJctCnts[j].mAltCntBeg += sts[i]->mJctCnts[j].mAltCntBeg;
-            ret->mJctCnts[j].mAltCntEnd += sts[i]->mJctCnts[j].mAltCntEnd;
+            ret->mJctCnts[j].mAltCnt += sts[i]->mJctCnts[j].mAltCnt;
             ret->mJctCnts[j].mRefCntBeg += sts[i]->mJctCnts[j].mRefCntBeg;
             ret->mJctCnts[j].mRefCntEnd += sts[i]->mJctCnts[j].mRefCntEnd;
             for(auto iter = sts[i]->mJctCnts[j].mAltQual.begin(); iter != sts[i]->mJctCnts[j].mAltQual.end(); ++iter){
@@ -65,11 +61,7 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
                 }
             }
             // DP
-            ret->mSpnCnts[j].mAlth1 += sts[i]->mSpnCnts[j].mAlth1;
-            ret->mSpnCnts[j].mAlth2 += sts[i]->mSpnCnts[j].mAlth2;
-            ret->mSpnCnts[j].mRefh1 += sts[i]->mSpnCnts[j].mRefh1;
-            ret->mSpnCnts[j].mAltCntBeg += sts[i]->mSpnCnts[j].mAltCntBeg;
-            ret->mSpnCnts[j].mAltCntEnd += sts[i]->mSpnCnts[j].mAltCntEnd;
+            ret->mSpnCnts[j].mAltCnt += sts[i]->mSpnCnts[j].mAltCnt;
             ret->mSpnCnts[j].mRefCntBeg += sts[i]->mSpnCnts[j].mRefCntBeg;
             ret->mSpnCnts[j].mRefCntEnd += sts[i]->mSpnCnts[j].mRefCntEnd;
             for(auto iter = sts[i]->mSpnCnts[j].mAltQual.begin(); iter != sts[i]->mSpnCnts[j].mAltQual.end(); ++iter){
@@ -228,13 +220,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         }
                                     }
                                 }
-                                uint8_t* hpptr = bam_aux_get(b, "HP");
-                                if(hpptr){
-                                    mOpt->libInfo->mIsHaploTagged = true;
-                                    int hapv = bam_aux2i(hpptr);
-                                    if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
-                                    else ++mJctCnts[itbp->mID].mRefh2; 
-                                }
                                 mOpt->logMtx.unlock();
                             }
                             continue;
@@ -282,13 +267,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                                 qiter->second += 1;
                                             }
                                         }
-                                    }
-                                    uint8_t* hpptr = bam_aux_get(b, "HP");
-                                    if(hpptr){
-                                        mOpt->libInfo->mIsHaploTagged = true;
-                                        int hapv = bam_aux2i(hpptr);
-                                        if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
-                                        else ++mJctCnts[itbp->mID].mRefh2; 
                                     }
                                     mOpt->logMtx.unlock();
                                 }
@@ -396,8 +374,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     }
                     // output
                     mOpt->logMtx.lock();
-                    if(ixend) ++mJctCnts[ixmx].mAltCntEnd;
-                    else ++mJctCnts[ixmx].mAltCntBeg;
+                    ++mJctCnts[ixmx].mAltCnt;
                     if(mOpt->writebcf){
                         auto qiter = mJctCnts[ixmx].mAltQual.find(b->core.qual);
                         if(qiter == mJctCnts[ixmx].mAltQual.end()){
@@ -405,13 +382,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         }else{
                             qiter->second += 1;
                         }
-                    }
-                    uint8_t* hpptr = bam_aux_get(b, "HP");
-                    if(hpptr){
-                        mOpt->libInfo->mIsHaploTagged = true;
-                        int hapv = bam_aux2i(hpptr);
-                        if(hapv == 1) ++mJctCnts[ixmx].mAlth1;
-                        else ++mJctCnts[ixmx].mAlth2;
                     }
                     if(mOpt->fbamout){
                         bam_aux_update_int(b, "ZF", ixmx);
@@ -477,13 +447,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     qiter->second += 1;
                                 }
                             }
-                        }
-                        uint8_t* hpptr = bam_aux_get(b, "HP");
-                        if(hpptr){
-                            mOpt->libInfo->mIsHaploTagged = true;
-                            int hap = bam_aux2i(hpptr);
-                            if(hap == 1) ++mSpnCnts[itspnr->mID].mRefh1;
-                            else ++mSpnCnts[itspnr->mID].mRefh2;
                         }
                         mOpt->logMtx.unlock();
                     }
@@ -562,8 +525,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         }
                         // output
                         mOpt->logMtx.lock();
-                        if(ixend) ++mSpnCnts[ixmx].mAltCntEnd;
-                        else ++mSpnCnts[ixmx].mAltCntBeg;
+                        ++mSpnCnts[ixmx].mAltCnt;
                         if(mOpt->writebcf){
                             auto qiter = mSpnCnts[ixmx].mAltQual.find(b->core.qual);
                             if(qiter == mSpnCnts[ixmx].mAltQual.end()){
@@ -571,13 +533,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }else{
                                 qiter->second += 1;
                             }
-                        }
-                        uint8_t* hpptr = bam_aux_get(b, "HP");
-                        if(hpptr){
-                            mOpt->libInfo->mIsHaploTagged = true;
-                            int hapv = bam_aux2i(hpptr);
-                            if(hapv == 1) ++mSpnCnts[ixmx].mAlth1;
-                            else ++mSpnCnts[ixmx].mAlth2;
                         }
                         if((!assigned) && mOpt->fbamout){
                             bam_aux_update_int(b, "ZF", ixmx);

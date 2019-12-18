@@ -42,7 +42,6 @@ struct LibraryInfo{
     int32_t mMaxNormalISize = 0;  ///< normal maximum isize (median + 5 * mad)
     int32_t mMaxISizeCutoff = 0;  ///< max(0, median + cutoff * mad, 2 * readlen, 500)
     int32_t mAbnormalPairs = 0;   ///< abnormal discordant pairs count
-    bool mIsHaploTagged = false;  ///< bam has HP tag if true
     int32_t mContigNum = 0;       ///< maximum contig number in library
     int32_t mVarisize = 0;        ///< std::max(mMaxNormalISize, mReadLen), mMaxDPVarSize equqls this value
     
@@ -65,7 +64,6 @@ struct LibraryInfo{
         ss << "Maximum Normal ISize: " << mMaxNormalISize << "\n";
         ss << "Maximum ISize cutoff: " << mMaxISizeCutoff << "\n";
         ss << "Abnormal DP read: " << mAbnormalPairs << "\n";
-        ss << "Library Haplotype Tagged: " << std::boolalpha << mIsHaploTagged << "\n";
         ss << "Contig/Chrosome Number: " << mContigNum << "\n";
         ss << "Maximum Varsize : " << mVarisize;
         return ss.str();
@@ -84,8 +82,6 @@ struct LibraryInfo{
         os << "Minimum ISize cutoff: " << libinfo.mMinISizeCutoff << "\n";
         os << "Maximum Normal ISize: " << libinfo.mMaxNormalISize << "\n";
         os << "Maximum ISize cutoff: " << libinfo.mMaxISizeCutoff << "\n";
-        os << "Abnormal DP read: " << libinfo.mAbnormalPairs << "\n";
-        os << "Library Haplotype Tagged: " << std::boolalpha << libinfo.mIsHaploTagged << "\n";
         os << "Contig/Chrosome Number: " << libinfo.mContigNum << "\n";
         os << "Maximum Varsize : " << libinfo.mVarisize << "\n";
         return os;
