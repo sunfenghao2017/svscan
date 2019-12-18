@@ -210,17 +210,17 @@ struct CovRecord{
 
 /** Paired-end read which spanning SV breakpoint Stat object */
 struct SpanningCount{
-    int32_t mRefh1 = 0;               ///< count HP tag with value 1 supporting reference reads
-    int32_t mRefh2 = 0;               ///< count HP tag with value not 1 supporting reference reads
-    int32_t mAlth1 = 0;               ///< count HP tag with value 1 supporting SV reads
-    int32_t mAlth2 = 0;               ///< count HP tag with value not 1 supporting SV reads
-    int32_t mRefCntBeg = 0;           ///< number of reads which are more likely to be reference on sv starting pos
-    int32_t mRefCntEnd = 0;           ///< number of reads which are more likely to be reference on sv ending pos
-    int32_t mAltCntBeg = 0;           ///< number of reads which are more likely to be SV supporting on sv starting pos
-    int32_t mAltCntEnd = 0;           ///< number of reads which are more likely to be SV supporting on sv ending pos
-    std::vector<uint8_t> mRefQualBeg; ///< mapQ of reads which are more likely to be reference on sv starting pos
-    std::vector<uint8_t> mRefQualEnd; ///< mapQ of reads which are more likely to be reference on sv ending pos
-    std::vector<uint8_t> mAltQual;    ///< mapQ of reads which are more likely to be SV supporting
+    int32_t mRefh1 = 0;                     ///< count HP tag with value 1 supporting reference reads
+    int32_t mRefh2 = 0;                     ///< count HP tag with value not 1 supporting reference reads
+    int32_t mAlth1 = 0;                     ///< count HP tag with value 1 supporting SV reads
+    int32_t mAlth2 = 0;                     ///< count HP tag with value not 1 supporting SV reads
+    int32_t mRefCntBeg = 0;                 ///< number of reads which are more likely to be reference on sv starting pos
+    int32_t mRefCntEnd = 0;                 ///< number of reads which are more likely to be reference on sv ending pos
+    int32_t mAltCntBeg = 0;                 ///< number of reads which are more likely to be SV supporting on sv starting pos
+    int32_t mAltCntEnd = 0;                 ///< number of reads which are more likely to be SV supporting on sv ending pos
+    std::map<uint8_t, int32_t> mRefQualBeg; ///< mapQ of reads which are more likely to be reference on sv starting pos
+    std::map<uint8_t, int32_t> mRefQualEnd; ///< mapQ of reads which are more likely to be reference on sv ending pos
+    std::map<uint8_t, int32_t> mAltQual;    ///< mapQ of reads which are more likely to be SV supporting
 
 
     
@@ -267,18 +267,18 @@ struct SpanningCount{
 
 /** Single read which spanning SV breakpoint Stat object*/
 struct JunctionCount{
-    int32_t mRefh1 = 0;               ///< count HP tag with value 1 supporting reference reads
-    int32_t mRefh2 = 0;               ///< count HP tag with value not 1 supporting reference reads
-    int32_t mAlth1 = 0;               ///< count HP tag with value 1 supporting SV reads
-    int32_t mAlth2 = 0;               ///< count HP tag with value not 1 supporting SV reads
-    int32_t mFPIns = 0;               ///< false positive insertion supporting number
-    int32_t mRefCntBeg = 0;           ///< number of reads which are more likely to be reference on sv starting pos
-    int32_t mRefCntEnd = 0;           ///< number of reads which are more likely to be reference on sv ending pos
-    int32_t mAltCntBeg = 0;           ///< number of reads which are more likely to be SV supporting on sv starting pos
-    int32_t mAltCntEnd = 0;           ///< number of reads which are more likely to be SV supporting on sv ending pos
-    std::vector<uint8_t> mRefQualBeg; ///< mapQ of reads which are more likely to be reference on sv starting pos
-    std::vector<uint8_t> mRefQualEnd; ///< mapQ of reads which are more likely to be reference on sv ending pos
-    std::vector<uint8_t> mAltQual;    ///< mapQ of reads which are more likely to be SV supporting
+    int32_t mRefh1 = 0;                     ///< count HP tag with value 1 supporting reference reads
+    int32_t mRefh2 = 0;                     ///< count HP tag with value not 1 supporting reference reads
+    int32_t mAlth1 = 0;                     ///< count HP tag with value 1 supporting SV reads
+    int32_t mAlth2 = 0;                     ///< count HP tag with value not 1 supporting SV reads
+    int32_t mFPIns = 0;                     ///< false positive insertion supporting number
+    int32_t mRefCntBeg = 0;                 ///< number of reads which are more likely to be reference on sv starting pos
+    int32_t mRefCntEnd = 0;                 ///< number of reads which are more likely to be reference on sv ending pos
+    int32_t mAltCntBeg = 0;                 ///< number of reads which are more likely to be SV supporting on sv starting pos
+    int32_t mAltCntEnd = 0;                 ///< number of reads which are more likely to be SV supporting on sv ending pos
+    std::map<uint8_t, int32_t> mRefQualBeg; ///< mapQ of reads which are more likely to be reference on sv starting pos
+    std::map<uint8_t, int32_t> mRefQualEnd; ///< mapQ of reads which are more likely to be reference on sv ending pos
+    std::map<uint8_t, int32_t> mAltQual;    ///< mapQ of reads which are more likely to be SV supporting
     
     /** constructor */
     JunctionCount(){}

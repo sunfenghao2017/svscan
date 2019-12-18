@@ -40,9 +40,30 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mJctCnts[j].mAltCntEnd += sts[i]->mJctCnts[j].mAltCntEnd;
             ret->mJctCnts[j].mRefCntBeg += sts[i]->mJctCnts[j].mRefCntBeg;
             ret->mJctCnts[j].mRefCntEnd += sts[i]->mJctCnts[j].mRefCntEnd;
-            ret->mJctCnts[j].mAltQual.insert(ret->mJctCnts[j].mAltQual.end(), sts[i]->mJctCnts[j].mAltQual.begin(), sts[i]->mJctCnts[j].mAltQual.end());
-            ret->mJctCnts[j].mRefQualBeg.insert(ret->mJctCnts[j].mRefQualBeg.end(), sts[i]->mJctCnts[j].mRefQualBeg.begin(), sts[i]->mJctCnts[j].mRefQualBeg.end());
-            ret->mJctCnts[j].mRefQualEnd.insert(ret->mJctCnts[j].mRefQualEnd.end(), sts[i]->mJctCnts[j].mRefQualEnd.begin(), sts[i]->mJctCnts[j].mRefQualEnd.end());
+            for(auto iter = sts[i]->mJctCnts[j].mAltQual.begin(); iter != sts[i]->mJctCnts[j].mAltQual.end(); ++iter){
+                auto jter = ret->mJctCnts[j].mAltQual.find(iter->first);
+                if(jter == ret->mJctCnts[j].mAltQual.end()){
+                    ret->mJctCnts[j].mAltQual[iter->first] = iter->second;
+                }else{
+                    jter->second += iter->second;
+                }
+            }
+            for(auto iter = sts[i]->mJctCnts[j].mRefQualBeg.begin(); iter != sts[i]->mJctCnts[j].mRefQualBeg.end(); ++iter){
+                auto jter = ret->mJctCnts[j].mRefQualBeg.find(iter->first);
+                if(jter == ret->mJctCnts[j].mRefQualBeg.end()){
+                    ret->mJctCnts[j].mRefQualBeg[iter->first] = iter->second;
+                }else{
+                    jter->second += iter->second;
+                }
+            }
+            for(auto iter = sts[i]->mJctCnts[j].mRefQualEnd.begin(); iter != sts[i]->mJctCnts[j].mRefQualEnd.end(); ++iter){
+                auto jter = ret->mJctCnts[j].mRefQualEnd.find(iter->first);
+                if(jter == ret->mJctCnts[j].mRefQualEnd.end()){
+                    ret->mJctCnts[j].mRefQualEnd[iter->first] = iter->second;
+                }else{
+                    jter->second += iter->second;
+                }
+            }
             // DP
             ret->mSpnCnts[j].mAlth1 += sts[i]->mSpnCnts[j].mAlth1;
             ret->mSpnCnts[j].mAlth2 += sts[i]->mSpnCnts[j].mAlth2;
@@ -51,9 +72,30 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
             ret->mSpnCnts[j].mAltCntEnd += sts[i]->mSpnCnts[j].mAltCntEnd;
             ret->mSpnCnts[j].mRefCntBeg += sts[i]->mSpnCnts[j].mRefCntBeg;
             ret->mSpnCnts[j].mRefCntEnd += sts[i]->mSpnCnts[j].mRefCntEnd;
-            ret->mSpnCnts[j].mAltQual.insert(ret->mSpnCnts[j].mAltQual.end(), sts[i]->mSpnCnts[j].mAltQual.begin(), sts[i]->mSpnCnts[j].mAltQual.end());
-            ret->mSpnCnts[j].mRefQualBeg.insert(ret->mSpnCnts[j].mRefQualBeg.end(), sts[i]->mSpnCnts[j].mRefQualBeg.begin(), sts[i]->mSpnCnts[j].mRefQualBeg.end());
-            ret->mSpnCnts[j].mRefQualEnd.insert(ret->mSpnCnts[j].mRefQualEnd.end(), sts[i]->mSpnCnts[j].mRefQualEnd.begin(), sts[i]->mSpnCnts[j].mRefQualEnd.end());
+            for(auto iter = sts[i]->mSpnCnts[j].mAltQual.begin(); iter != sts[i]->mSpnCnts[j].mAltQual.end(); ++iter){
+                auto jter = ret->mSpnCnts[j].mAltQual.find(iter->first);
+                if(jter == ret->mSpnCnts[j].mAltQual.end()){
+                    ret->mSpnCnts[j].mAltQual[iter->first] = iter->second;
+                }else{
+                    jter->second += iter->second;
+                }
+            }
+            for(auto iter = sts[i]->mSpnCnts[j].mRefQualBeg.begin(); iter != sts[i]->mSpnCnts[j].mRefQualBeg.end(); ++iter){
+                auto jter = ret->mSpnCnts[j].mRefQualBeg.find(iter->first);
+                if(jter == ret->mSpnCnts[j].mRefQualBeg.end()){
+                    ret->mSpnCnts[j].mRefQualBeg[iter->first] = iter->second;
+                }else{
+                    jter->second += iter->second;
+                }
+            }
+            for(auto iter = sts[i]->mSpnCnts[j].mRefQualEnd.begin(); iter != sts[i]->mSpnCnts[j].mRefQualEnd.end(); ++iter){
+                auto jter = ret->mSpnCnts[j].mRefQualEnd.find(iter->first);
+                if(jter == ret->mSpnCnts[j].mRefQualEnd.end()){
+                    ret->mSpnCnts[j].mRefQualEnd[iter->first] = iter->second;
+                }else{
+                    jter->second += iter->second;
+                }
+            }
         }
     }
     return ret;
@@ -167,10 +209,24 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 mOpt->logMtx.lock();
                                 if(itbp->mIsSVEnd){
                                     ++mJctCnts[itbp->mID].mRefCntEnd;
-                                    if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
+                                    if(mOpt->writebcf){
+                                        auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
+                                        if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
+                                            mJctCnts[itbp->mID].mRefQualEnd[b->core.qual] = 1;
+                                        }else{
+                                            qiter->second += 1;
+                                        }
+                                    }
                                 }else{
                                     ++mJctCnts[itbp->mID].mRefCntBeg;
-                                    if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
+                                    if(mOpt->writebcf){
+                                        auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
+                                        if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
+                                            mJctCnts[itbp->mID].mRefQualEnd[b->core.qual] = 1;
+                                        }else{
+                                            qiter->second += 1;
+                                        }
+                                    }
                                 }
                                 uint8_t* hpptr = bam_aux_get(b, "HP");
                                 if(hpptr){
@@ -208,17 +264,31 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     mOpt->logMtx.lock();
                                     if(itbp->mIsSVEnd){
                                         ++mJctCnts[itbp->mID].mRefCntEnd;
-                                        if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualEnd.push_back(b->core.qual);
+                                        if(mOpt->writebcf){
+                                            auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
+                                            if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
+                                                mJctCnts[itbp->mID].mRefQualEnd[b->core.qual] = 1;
+                                            }else{
+                                                qiter->second += 1;
+                                            }
+                                        }
                                     }else{
                                         ++mJctCnts[itbp->mID].mRefCntBeg;
-                                        if(mOpt->writebcf) mJctCnts[itbp->mID].mRefQualBeg.push_back(b->core.qual);
+                                        if(mOpt->writebcf){
+                                            auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
+                                            if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
+                                                mJctCnts[itbp->mID].mRefQualEnd[b->core.qual] = 1;
+                                            }else{
+                                                qiter->second += 1;
+                                            }
+                                        }
                                     }
                                     uint8_t* hpptr = bam_aux_get(b, "HP");
                                     if(hpptr){
                                         mOpt->libInfo->mIsHaploTagged = true;
                                         int hapv = bam_aux2i(hpptr);
                                         if(hapv == 1) ++mJctCnts[itbp->mID].mRefh1;
-                                        else ++mJctCnts[itbp->mID].mRefh2;
+                                        else ++mJctCnts[itbp->mID].mRefh2; 
                                     }
                                     mOpt->logMtx.unlock();
                                 }
@@ -328,7 +398,14 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     mOpt->logMtx.lock();
                     if(ixend) ++mJctCnts[ixmx].mAltCntEnd;
                     else ++mJctCnts[ixmx].mAltCntBeg;
-                    if(mOpt->writebcf) mJctCnts[ixmx].mAltQual.push_back(b->core.qual);
+                    if(mOpt->writebcf){
+                        auto qiter = mJctCnts[ixmx].mAltQual.find(b->core.qual);
+                        if(qiter == mJctCnts[ixmx].mAltQual.end()){
+                            mJctCnts[ixmx].mAltQual[b->core.qual] = 1;
+                        }else{
+                            qiter->second += 1;
+                        }
+                    }
                     uint8_t* hpptr = bam_aux_get(b, "HP");
                     if(hpptr){
                         mOpt->libInfo->mIsHaploTagged = true;
@@ -382,10 +459,24 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         mOpt->logMtx.lock();
                         if(itspnr->mIsSVEnd){
                             ++mSpnCnts[itspnr->mID].mRefCntEnd;
-                            if(mOpt->writebcf) mSpnCnts[itspnr->mID].mRefQualEnd.push_back(b->core.qual);
+                            if(mOpt->writebcf){
+                                auto qiter = mSpnCnts[itspnr->mID].mRefQualEnd.find(b->core.qual);
+                                if(qiter == mSpnCnts[itspnr->mID].mRefQualEnd.end()){
+                                    mSpnCnts[itspnr->mID].mRefQualEnd[b->core.qual] = 1;
+                                }else{
+                                    qiter->second += 1;
+                                }
+                            }
                         }else{
                             ++mSpnCnts[itspnr->mID].mRefCntBeg;
-                            if(mOpt->writebcf) mSpnCnts[itspnr->mID].mRefQualBeg.push_back(b->core.qual);
+                            if(mOpt->writebcf){
+                                auto qiter = mSpnCnts[itspnr->mID].mRefQualBeg.find(b->core.qual);
+                                if(qiter == mSpnCnts[itspnr->mID].mRefQualBeg.end()){
+                                    mSpnCnts[itspnr->mID].mRefQualBeg[b->core.qual] = 1;
+                                }else{
+                                    qiter->second += 1;
+                                }
+                            }
                         }
                         uint8_t* hpptr = bam_aux_get(b, "HP");
                         if(hpptr){
@@ -473,7 +564,14 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         mOpt->logMtx.lock();
                         if(ixend) ++mSpnCnts[ixmx].mAltCntEnd;
                         else ++mSpnCnts[ixmx].mAltCntBeg;
-                        if(mOpt->writebcf) mSpnCnts[ixmx].mAltQual.push_back(b->core.qual);
+                        if(mOpt->writebcf){
+                            auto qiter = mSpnCnts[ixmx].mAltQual.find(b->core.qual);
+                            if(qiter == mSpnCnts[ixmx].mAltQual.end()){
+                                mSpnCnts[ixmx].mAltQual[b->core.qual] = 1;
+                            }else{
+                                qiter->second += 1;
+                            }
+                        }
                         uint8_t* hpptr = bam_aux_get(b, "HP");
                         if(hpptr){
                             mOpt->libInfo->mIsHaploTagged = true;

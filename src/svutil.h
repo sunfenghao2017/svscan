@@ -213,7 +213,7 @@ namespace svutil{
      * @param gts genotypes of each alleles at the site
      * @param gqval genotype quality of each alleles at the site
      */
-    inline void computeGL(const std::vector<uint8_t>& mapqRef, const std::vector<uint8_t>& mapqAlt, float* gls, int32_t* gts, int32_t* gqval){
+    inline void computeGL(const std::map<uint8_t, int32_t>& mapqRef, const std::map<uint8_t, int32_t>& mapqAlt, float* gls, int32_t* gts, int32_t* gqval){
         if(mapqRef.empty() || mapqAlt.empty()){
             gqval[0] = 0;
             gts[0] = bcf_gt_missing;
@@ -226,14 +226,16 @@ namespace svutil{
         const double minGL = -1000;
         double gl[3] = {0}; // gl[0] = log10(p(ALT|ReadsObserved)), gl[2] = log10(p(REF|ReadsObserved)), gl[1] = log10(p(RandomALT/REF| ReadsObserved))
         // Compute genotype likelihoods
-        int32_t depth = mapqRef.size() + mapqAlt.size();
-        for(uint32_t i = 0; i < mapqRef.size(); ++i){
-            gl[0] += (double)mapqRef[i]/(-10); // log10(p(ALT|RefRead))
-            gl[2] += std::log10(1 - std::pow(10, (double)mapqRef[i]/(-10))); // log10(p(REF|RefRead))
+        int32_t depth = 0;
+        for(auto iter = mapqRef.begin(); iter != mapqRef.end(); ++iter){
+            depth += iter->second;
+            gl[0] += iter->second * (double)iter->first/(-10); // log10(p(ALT|RefRead))
+            gl[2] += iter->second * std::log10(1 - std::pow(10, (double)iter->first/(-10))); // log10(p(REF|RefRead))
         }
-        for(uint32_t i = 0; i < mapqAlt.size(); ++i){
-            gl[0] += std::log10(1 - std::pow(10, (double)mapqAlt[i]/(-10))); // log10(p(ALT|AltRead))
-            gl[2] += (double)mapqAlt[i]/(-10);// log10(p(REF|AltRead))
+        for(auto iter = mapqAlt.begin(); iter != mapqAlt.end(); ++iter){
+            depth += iter->second;
+            gl[0] += iter->second * std::log10(1 - std::pow(10, (double)iter->first/(-10))); // log10(p(ALT|AltRead))
+            gl[2] += iter->second * (double)iter->first/(-10);// log10(p(REF|AltRead))
         }
         gl[1] += -(double)(depth) * std::log10(2.0);// log10(p(Random ALT/REF of each read));
         // Get largest genotype likelihood
