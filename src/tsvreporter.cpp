@@ -222,9 +222,11 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             if(svs[i].mPrecise){
                 gl[i].mFuseGene[j].status |= FUSION_FPRECISE;
                 if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
-                   svutil::simpleSeq(svs[i].mConsensus.substr(svs[i].mGapCoord[1]))){
+                   svutil::simpleSeq(svs[i].mConsensus.substr(svs[i].mGapCoord[1])) ||
+                   svutil::tandemRepSeq(svs[i].mConsensus, TandemRepeatThresholdMap)){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWCOMPLEX;
                 }
+
                 if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){
                     if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
                     else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);

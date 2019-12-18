@@ -470,6 +470,55 @@ namespace svutil{
         }
         return false;
     }
+    
+    /** count tandem repeat seqs in a string 
+     * @param seq whole seq
+     * @param rps repeat unit
+     * @param prc result storing pos versus number of repeat unit
+     * @param mrp max repeat time to fetch, if encountered, quit soon
+     * @return true if found one rps with mrp times repeation
+     */
+    inline bool trpcnt(const std::string& seq, const std::string& rps, std::map<int32_t, int32_t>& prc, int32_t mrp){
+        int32_t cnt = 0;
+        std::string::size_type iter = seq.find(rps);
+        if(iter == std::string::npos){
+            return cnt >= mrp;
+        }else{
+            std::string::size_type lbeg = iter;
+            std::string::size_type lpos = iter;
+            while(iter != std::string::npos){
+                ++cnt;
+                iter = seq.find(rps, iter + rps.size());
+                if(iter != std::string::npos){
+                    if(iter - lpos > rps.size()){
+                        prc[lbeg] = cnt;
+                        if(cnt >= mrp) return true;
+                        cnt = 0;
+                        lbeg = iter;
+                    }
+                }else{
+                    prc[lbeg] = cnt;
+                    if(cnt >= mrp) return true;
+                    break;
+                }
+                lpos = iter;
+            }
+        }
+        return false;
+    }
+    /** test a sequence contains tandem repeat of specific length
+     * @param seq sequence to be tested
+     * @return true if a sequence contains tamdem repeat of specific length
+     */
+    inline bool tandemRepSeq(const std::string& seq, const std::map<std::string, int32_t>& rps){
+        for(auto rpiter = rps.begin(); rpiter != rps.end(); ++rpiter){
+            std::map<int32_t, int32_t> prc;
+            if(trpcnt(seq, rpiter->first, prc, rpiter->second)){
+                return true;
+            }
+        }
+        return false;
+    }
 
     /** convert transcript coordinate into genome coordinate
      * @param tpos transcript position

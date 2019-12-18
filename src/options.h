@@ -17,6 +17,9 @@
 #include "util.h"
 #include "bed.h"
 
+/** max tandem repeats allowed in an fusion sequence */
+const std::map<std::string, int32_t> TandemRepeatThresholdMap = {{"GT", 16}, {"TG", 16}, {"AC", 16}, {"CA", 16}};
+
 typedef int32_t BIGD_TYPE; ///< big data type
 
 #define DEBUG_FCALL 0x1  ///< calling debug mask
@@ -122,7 +125,7 @@ struct SVFilter{
     uint32_t mMinSeedDP = 3;           ///< minimum discordant pair of reads used to compute SV
     float mMinDelRatio = 0.8;          ///< minimum deletion ratio of an exon to report 
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
-    float mMinSRResScore = 1;          ///< minimal alignment score for SR rescued
+    float mMinSRResScore = 0.99;       ///< minimal alignment score for SR rescued
 
     /** SVFilter constructor */
     SVFilter(){}

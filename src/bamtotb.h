@@ -49,13 +49,13 @@ struct BamRec{
         oss << chr << "\t" << pos << "\t" << strand << "\t";
         oss << mchr << "\t" << mpos << "\t" << mstrand << "\t";
         oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << lseq << "\t" << tseq << "\t";
-        oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt;
+        oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt << "\n";
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt";
+        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
     }
 
     /** compare two BamRec */
