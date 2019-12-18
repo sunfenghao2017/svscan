@@ -32,9 +32,9 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.dpRefCount = mSpnCnts[i].getRefDep();
         // AF
         double sraf = 0, dpaf = 0;
-        if(svr.srCount + svr.srRefCount) sraf = ((double)svr.srRescued)/(double)(svr.srRescued + svr.srRefCount);
-        if(svr.dpCount + svr.dpRefCount) dpaf = ((double)svr.dpRescued)/(double)(svr.dpRescued + svr.dpRefCount);
-        if(sraf > dpaf) svr.af = sraf;
+        if(svr.srRescued + svr.srRefCount) sraf = ((double)svr.srRescued)/(double)(svr.srRescued + svr.srRefCount);
+        if(svr.dpRescued + svr.dpRefCount) dpaf = ((double)svr.dpRescued)/(double)(svr.dpRescued + svr.dpRefCount);
+        if(svr.srRescued) svr.af = sraf;
         else svr.af = dpaf;
         // insBp insSeq
         svr.insBp = svs[i].mBpInsSeq.length();
@@ -264,11 +264,8 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             int32_t dpr = mSpnCnts[i].getRefDep();
             if(srv + srr) sraf = (double)(srv)/(double)(srv + srr);
             if(dpv + dpr) dpaf = (double)(dpv)/(double)(dpv + dpr);
-            if(sraf > dpaf){
-                af = sraf;
-            }else{
-                af = dpaf;
-            }
+            if(srv) af = sraf;
+            else af = dpaf;
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
                 if(svs[i].mPrecise){
                     if(srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport && dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
@@ -448,7 +445,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     int32_t dpr = mSpnCnts[svr.mID].getRefDep();
     if(srv + srr) sraf = (double)(srv)/(double)(srv + srr);
     if(dpv + dpr) dpaf = (double)(dpv)/(double)(dpv + dpr);
-    if(sraf > dpaf){
+    if(srv){
         af = sraf;
         fsr.fusionreads = srv;
         fsr.totalreads = srv + srr;

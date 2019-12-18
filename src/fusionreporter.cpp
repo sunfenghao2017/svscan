@@ -160,8 +160,8 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         int32_t end = std::atoi(vstr[6].c_str());
         int32_t srs = std::atoi(vstr[7].c_str());
         int32_t dps = std::atoi(vstr[8].c_str());
-        int32_t srv = std::atoi(vstr[7].c_str());
-        int32_t dpv = std::atoi(vstr[8].c_str());
+        int32_t srv = std::atoi(vstr[9].c_str());
+        int32_t dpv = std::atoi(vstr[10].c_str());
         int32_t srr = std::atoi(vstr[11].c_str());
         int32_t dpr = std::atoi(vstr[12].c_str());
         float af = std::atof(vstr[13].c_str());
@@ -279,7 +279,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             float sraf = 0, dpaf = 0;
             if(srr + srv) sraf = (double)(srv)/(double)(srv + srr);
             if(dpr + dpv) dpaf = (double)(dpv)/(double)(dpv + dpr);
-            if(sraf > dpaf){                                                     // FusionReads TotalReads
+            if(srv){                                                     // FusionReads TotalReads
                 fgr.fusionreads = srv;
                 fgr.totalreads = srr + srv;
             }else{
