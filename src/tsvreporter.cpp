@@ -22,20 +22,21 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.bp1Pos = gl[i].mPos1;
         svr.bp2Chr = gl[i].mChr2;
         svr.bp2Pos = gl[i].mPos2;
-        // srCount dpCount srRescued dpRescued
+        // srCount dpCount srRescued dpRescued molRescued
         svr.srCount = svs[i].mSRSupport;
         svr.dpCount = svs[i].mPESupport;
         svr.srRescued = mJctCnts[i].getAltDep();
         svr.dpRescued = mSpnCnts[i].getAltDep();
+        svr.molRescued = mTotalAltCnts[i];
         // srRefCount dpRefCount
         svr.srRefCount = mJctCnts[i].getRefDep();
         svr.dpRefCount = mSpnCnts[i].getRefDep();
         // AF
-        double sraf = 0, dpaf = 0;
-        if(svr.srRescued + svr.srRefCount) sraf = ((double)svr.srRescued)/(double)(svr.srRescued + svr.srRefCount);
-        if(svr.dpRescued + svr.dpRefCount) dpaf = ((double)svr.dpRescued)/(double)(svr.dpRescued + svr.dpRefCount);
-        if(svr.srRescued) svr.af = sraf;
-        else svr.af = dpaf;
+        if(svr.molRescued + std::max(svr.srRefCount, svr.dpRefCount)){
+            svr.af = (double)(svr.molRescued)/(double)(svr.molRescued + std::max(svr.srRefCount, svr.dpRefCount));
+        }else{
+            svr.af = 0;
+        }
         // insBp insSeq
         svr.insBp = svs[i].mBpInsSeq.length();
         svr.insSeq = (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq);
@@ -257,42 +258,20 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gl[i].mFuseGene[j].status &= (~FUSION_FINREPORTRNG);
                 }
             }
-            float af = 0, sraf = 0, dpaf = 0;
-            int32_t srv = mJctCnts[i].getAltDep();
-            int32_t srr = mJctCnts[i].getRefDep();
-            int32_t dpv = mSpnCnts[i].getAltDep();
-            int32_t dpr = mSpnCnts[i].getRefDep();
-            if(srv + srr) sraf = (double)(srv)/(double)(srv + srr);
-            if(dpv + dpr) dpaf = (double)(dpv)/(double)(dpv + dpr);
-            if(srv) af = sraf;
-            else af = dpaf;
+            int32_t ttd = std::max(mJctCnts[i].getRefDep(), mSpnCnts[i].getRefDep());
+            float af = (double)(mTotalAltCnts[i])/(double)(ttd);
             if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
-                if(svs[i].mPrecise){
-                    if(srv < mOpt->fuseOpt->mWhiteFilter.mMinSupport && dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                    if(svs[i].mSRSupport < mOpt->fuseOpt->mWhiteFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mWhiteFilter.mMinDPSeed){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                }else{
-                    if(dpv < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                    if(svs[i].mPESupport < mOpt->fuseOpt->mWhiteFilter.mMinDPSeed){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
+                if(mTotalAltCnts[i] < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
+                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                }
+                if(svs[i].mSRSupport < mOpt->fuseOpt->mWhiteFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mWhiteFilter.mMinDPSeed){
+                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                 }
                 if(af < mOpt->fuseOpt->mWhiteFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
                 }
-                if(svs[i].mPrecise){
-                    if((srv + srr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth && (dpv + dpr) < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
-                    }
-                }else{
-                    if((dpr + dpv) < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
-                    }
+                if(ttd < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
+                    gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                 }
                 if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                     if(svs[i].mSize < mOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize){
@@ -300,24 +279,16 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     }
                 }
             }else if(gl[i].mFuseGene[j].status & FUSION_FHOTGENE){// fusion in whitelist
-                if(svs[i].mPrecise){
-                    if(srv < mOpt->fuseOpt->mUsualFilter.mMinSupport && dpv < mOpt->fuseOpt->mUsualFilter.mMinSupport){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                    if(svs[i].mSRSupport < mOpt->fuseOpt->mUsualFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                }else{
+                if(mTotalAltCnts[i] < mOpt->fuseOpt->mUsualFilter.mMinSupport){
+                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                }
+                if(svs[i].mSRSupport < mOpt->fuseOpt->mUsualFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                 }
                 if(af < mOpt->fuseOpt->mUsualFilter.mMinVAF){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
                 }
-                if(svs[i].mPrecise){
-                    if((srv + srr) < mOpt->fuseOpt->mUsualFilter.mMinDepth && (dpv + dpr) < mOpt->fuseOpt->mUsualFilter.mMinDepth){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
-                    }
-                }else{
+                if(ttd < mOpt->fuseOpt->mUsualFilter.mMinDepth){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
                 }
                 if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
@@ -438,23 +409,9 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
-    float af = 0, sraf = 0, dpaf = 0;
-    int32_t srv = mJctCnts[svr.mID].getAltDep();
-    int32_t srr = mJctCnts[svr.mID].getRefDep();
-    int32_t dpv = mSpnCnts[svr.mID].getAltDep();
-    int32_t dpr = mSpnCnts[svr.mID].getRefDep();
-    if(srv + srr) sraf = (double)(srv)/(double)(srv + srr);
-    if(dpv + dpr) dpaf = (double)(dpv)/(double)(dpv + dpr);
-    if(srv){
-        af = sraf;
-        fsr.fusionreads = srv;
-        fsr.totalreads = srv + srr;
-    }else{
-        af = dpaf;
-        fsr.fusionreads = dpv;
-        fsr.totalreads = dpv + dpr;
-    }
-    fsr.fuserate = af;
+    fsr.fusionreads = mTotalAltCnts[svr.mID];
+    fsr.totalreads = std::max(mJctCnts[svr.mID].getRefDep(), mSpnCnts[svr.mID].getRefDep()) + fsr.fusionreads;
+    fsr.fuserate = (double)(fsr.fusionreads)/(double)(fsr.totalreads);
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;
@@ -508,7 +465,7 @@ void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i)
     else fsr.svsize = svr.mSize;
     fsr.srcount = svr.mSRSupport;                             // srCount
     fsr.dpcount = svr.mPESupport;                             // dpCount
-    fsr.srrescued =  srv;                                     // srRescued
+    fsr.srrescued =  mJctCnts[svr.mID].getAltDep();           // srRescued
     fsr.dprescued = mSpnCnts[svr.mID].getAltDep();            // dpRescued
     fsr.srrefcount = mJctCnts[svr.mID].getRefDep();           // srRefCount
     fsr.dprefcount = mSpnCnts[svr.mID].getRefDep();           // dpRefCount

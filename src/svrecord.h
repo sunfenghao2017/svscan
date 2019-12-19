@@ -44,9 +44,7 @@ class SVRecord{
         std::string mNameChr1 = "";  ///< name of chr on 5' end of SV | larger chr
         std::string mNameChr2 = "";  ///< name of chr on 3' end of SV | little chr
         std::string mProbeBegC = ""; ///< an consensus sequence segment spanning the SV starting position
-        std::string mProbeBegR = ""; ///< an reference sequence segment spanning the SV starting position
         std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
-        std::string mProbeEndR = ""; ///< an reference sequence segment spanning the SV ending position
         std::string mInsSeq = "";    ///< insertion sequence of insertion event
         std::string mTraChr1Seq = "";///< larger chr reference sequence of translocation 
         std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
@@ -94,8 +92,6 @@ class SVRecord{
             os << "Constructed reference sequence of this SV: " << sv.mSVRef << "\n";
             os << "Consensus sequence segment spanning the SV starting position: " << sv.mProbeBegC << "\n";
             os << "Consensus sequence segment spanning the SV ending position: " << sv.mProbeEndC << "\n";
-            os << "Reference sequence segment spanning the SV starting position: " << sv.mProbeBegR << "\n";
-            os << "Reference sequence segment spanning the SV ending position: " << sv.mProbeEndR << "\n";
             os << "Translocation chr1Seq: " << sv.mTraChr1Seq << "\n";
             os << "Translocation chr2Seq: " << sv.mTraChr2Seq << "\n";
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
@@ -135,8 +131,6 @@ class SVRecord{
             ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";
             ss << "Consensus sequence segment spanning the SV starting pssition: " << mProbeBegC << "\n";
             ss << "Consensus sequence segment spanning the SV ending pssition: " << mProbeEndC << "\n";
-            ss << "Reference sequence segment spanning the SV starting pssition: " << mProbeBegR << "\n";
-            ss << "Reference sequence segment spanning the SV ending pssition: " << mProbeEndR << "\n";
             ss << "Translocation chr1Seq: " << mTraChr1Seq << "\n";
             ss << "Translocation chr2Seq: " << mTraChr2Seq << "\n";
             if(mSVT == 4) ss << "Inserted sequence: " << mInsSeq << "\n";
@@ -268,31 +262,6 @@ class SVRecord{
                 mSVRef = mTraChr2Seq + mTraChr1Seq;
             }else{
                 mSVRef = mTraChr1Seq + mTraChr2Seq;
-            }
-        }
-
-        /** add reference probes of translocation SV */
-        inline void addRefProbe(const Options* opt){
-            if(mSVT == 8){
-                int32_t beg = std::max(0, mGapCoord[3] - opt->filterOpt->mMinFlankSize);
-                int32_t len = std::min((int32_t)mSVRef.length() - beg, 2 * opt->filterOpt->mMinFlankSize);
-                mProbeBegR = mSVRef.substr(beg, len);
-                beg = std::max(0, mGapCoord[2] - opt->filterOpt->mMinFlankSize);
-                len = std::min((int32_t)mTraChr2Seq.length(), 2 * opt->filterOpt->mMinFlankSize);
-                mProbeEndR = mSVRef.substr(beg, len);
-            }else{
-                int32_t beg = std::max(0, mGapCoord[2] - opt->filterOpt->mMinFlankSize);
-                int32_t len = std::min((int32_t)mTraChr1Seq.length() - beg, 2 * opt->filterOpt->mMinFlankSize);
-                mProbeBegR = mSVRef.substr(beg, len);
-                beg = std::max(0, mGapCoord[3] - opt->filterOpt->mMinFlankSize);
-                len = std::min((int32_t)mSVRef.length(), 2 * opt->filterOpt->mMinFlankSize);
-                mProbeEndR = mSVRef.substr(beg, len);
-            }
-            if(mSVT == 6){
-                util::reverseComplement(mProbeBegR);
-            }
-            if(mSVT == 5){
-                util::reverseComplement(mProbeEndR);
             }
         }
 };

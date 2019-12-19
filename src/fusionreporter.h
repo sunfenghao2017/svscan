@@ -6,6 +6,7 @@
 #include "fuserec.h"
 #include "svutil.h"
 #include "trsrec.h"
+#include "svrec.h"
 
 struct FusionReporter{
     FusionOptions* fuseOpt;    ///< fusion report options

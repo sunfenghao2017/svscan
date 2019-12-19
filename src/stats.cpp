@@ -171,6 +171,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         }
         std::set<int32_t> sptids;
         int32_t svt = DPBamRecord::getSVType(b, mOpt);
+        int32_t sst = DPBamRecord::getSVType(b);
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
@@ -200,7 +201,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 for(; itbp != bpRegs[refIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
-                        if(!(leadingSC + tailingSC) && svt == -1){// REF Type, no realignment needed
+                        if(!(leadingSC + tailingSC) && b->core.tid == b->core.mtid && sst >= 2){// REF Type, no realignment needed
                             bool add2ref = true;
                             if((b->core.mpos + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos) &&
                                (b->core.mpos + b->core.l_qseq >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize)){
@@ -210,7 +211,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             if(add2ref && b->core.qual >= mOpt->filterOpt->mMinGenoQual){
                                 mOpt->logMtx.lock();
                                 if(itbp->mIsSVEnd){
-                                    ++mJctCnts[itbp->mID].mRefCntEnd;
+                                    mJctCnts[itbp->mID].mRefCntEnd  += 1;
                                     if(mOpt->writebcf){
                                         auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
                                         if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
@@ -220,7 +221,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         }
                                     }
                                 }else{
-                                    ++mJctCnts[itbp->mID].mRefCntBeg;
+                                    mJctCnts[itbp->mID].mRefCntBeg += 1;
                                     if(mOpt->writebcf){
                                         auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
                                         if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
@@ -327,12 +328,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 if(supportSrsID.size()){
                     auto iit = supportSrsID.begin();
                     int32_t ixmx = iit->first;
-                    bool ixend = iit->second;
                     // first run
                     for(; iit != supportSrsID.end(); ++iit){
                         if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
                             ixmx = iit->first;
-                            ixend = iit->second;
                         }
                     }
                     // second run
@@ -340,13 +339,12 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     for(; iit != supportSrsID.end(); ++iit){
                         if(svs[iit->first].mPESupport > svs[ixmx].mPESupport){
                             ixmx = iit->first;
-                            ixend = iit->second;
                         }
                     }
                     // output
                     mOpt->logMtx.lock();
-                    ++mJctCnts[ixmx].mAltCnt;
-                    ++mTotalAltCnts[ixmx];
+                    mJctCnts[ixmx].mAltCnt += 1;
+                    mTotalAltCnts[ixmx] += 1;
                     if(mOpt->writebcf){
                         auto qiter = mJctCnts[ixmx].mAltQual.find(b->core.qual);
                         if(qiter == mJctCnts[ixmx].mAltQual.end()){
@@ -375,7 +373,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             // Spanning counting
             int32_t outerISize = b->core.pos + b->core.l_qseq - b->core.mpos;
             // Normal spanning pair
-            if(svt == 2 && outerISize >= mOpt->libInfo->mMinNormalISize &&
+            if(sst == 2 && outerISize >= mOpt->libInfo->mMinNormalISize &&
                outerISize <= mOpt->libInfo->mMaxNormalISize && b->core.mtid == b->core.tid){
                 // Take 80% of the outersize as the spanned interval
                 int32_t spanlen = 0.8 * outerISize;
@@ -425,7 +423,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
             }
             // Abnormal spanning coverage
-            if((svt != 2 || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) || (b->core.tid != b->core.mtid)){
+            if((sst != 2 || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) || (b->core.tid != b->core.mtid)){
                 // Get SV type
                 if(svt == -1) continue;
                 // Spanning a breakpoint?
@@ -478,12 +476,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     if(supportSpnID.size()){
                         auto iit = supportSpnID.begin();
                         int32_t ixmx = iit->first;
-                        bool ixend = iit->second;
                         // first run
                         for(; iit != supportSpnID.end(); ++iit){
                             if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
                                 ixmx = iit->first;
-                                ixend = iit->second;
                             }
                         }
                         // second run
@@ -491,13 +487,12 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         for(; iit != supportSpnID.end(); ++iit){
                             if(svs[iit->first].mPESupport > svs[ixmx].mPESupport){
                                 ixmx = iit->first;
-                                ixend = iit->second;
                             }
                         }
                         // output
                         mOpt->logMtx.lock();
-                        ++mSpnCnts[ixmx].mAltCnt;
-                        if(!assigned) ++mTotalAltCnts[ixmx];
+                        mSpnCnts[ixmx].mAltCnt += 1;
+                        if(!assigned) mTotalAltCnts[ixmx] += 1;
                         if(mOpt->writebcf){
                             auto qiter = mSpnCnts[ixmx].mAltQual.find(b->core.qual);
                             if(qiter == mSpnCnts[ixmx].mAltQual.end()){

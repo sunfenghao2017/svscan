@@ -438,6 +438,8 @@ void Annotator::refineCovAnno(Stats* sts){
                     sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
                 }
                 drec.insert(iter->first);
+                sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
+                sts->mTotalAltCnts[iter->second.mR2SVID] -= 1;
             }else{
                 sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
             }
