@@ -54,7 +54,7 @@ void Stats::reportSVBCF(const SVSet& svs){
     std::string dateStr = "##fileDate=" + util::currentTime();
     bcf_hdr_append(hdr, dateStr.c_str());
     // Add software information
-    std::string sinf = "##softwoare=sver v" + mOpt->softEnv->ver;
+    std::string sinf = "##softwoare=svscan v" + mOpt->softEnv->ver;
     std::string scmd = "##command=" + mOpt->softEnv->cmd;
     std::string scwd = "##cwd=" + mOpt->softEnv->cwd;
     bcf_hdr_append(hdr, sinf.c_str());

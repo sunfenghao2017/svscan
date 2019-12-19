@@ -427,7 +427,7 @@ void Annotator::refineCovAnno(Stats* sts){
                     sts->mSpnCnts[iter->second.mR1SVID].mAltCnt -= 1;
                     sts->mSpnCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
                 }else{
-                    sts->mJctCnts[iter->second.mR1SVID].mAltCnt-= 1;
+                    sts->mJctCnts[iter->second.mR1SVID].mAltCnt -= 1;
                     sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
                 }
                 if(iter->second.mR2SRT){
@@ -438,6 +438,8 @@ void Annotator::refineCovAnno(Stats* sts){
                     sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
                 }
                 drec.insert(iter->first);
+            }else{
+                sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
             }
         }
     }

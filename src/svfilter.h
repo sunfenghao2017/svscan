@@ -23,7 +23,7 @@ struct SVFilter{
     float minaf = 0.05;            ///< min VAF for an valid SV
     int32_t maxBpOffset = 10;       ///< max breakpoint offset of an SV against background SV to be excluded
     std::string mBgBCF;              ///< background BCF file
-    std::string infile;             ///< input file of sver sv tsv format result file
+    std::string infile;             ///< input file of svscan sv tsv format result file
     std::string outfile = "svf.tsv"; ///< output file of reported SV
     SVList bgSVs;                   ///< to store background SVs
     bool initialized = false;       ///< SVFilter is initialized if true

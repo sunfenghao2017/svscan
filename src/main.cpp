@@ -21,7 +21,7 @@ int main(int argc, char** argv){
     app.add_option("-c,--creg", opt->creg, "file of region sv must capture")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
-    app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->required(false)->group("General Options");
+    app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->required(true)->group("General Options");
     app.add_option("-e,--b2excel", opt->bam2tb, "output ss/fs event supportint bam records excel", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");

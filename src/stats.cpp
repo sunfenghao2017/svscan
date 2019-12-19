@@ -8,6 +8,7 @@ Stats::Stats(Options* opt, int32_t n){
 void Stats::init(int n){
     mJctCnts.resize(n, JunctionCount());
     mSpnCnts.resize(n, SpanningCount());
+    mTotalAltCnts.resize(n, 0);
 }
 
 uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual){
@@ -31,6 +32,8 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     if(sts.size() == 0) return ret;
     for(int32_t j = 0; j < n; ++j){
         for(uint32_t i = 0; i < sts.size(); ++i){
+            // Total
+            ret->mTotalAltCnts[j] += sts[i]->mTotalAltCnts[j];
             // SC
             ret->mJctCnts[j].mFPIns += sts[i]->mJctCnts[j].mFPIns;
             ret->mJctCnts[j].mAltCnt += sts[i]->mJctCnts[j].mAltCnt;
@@ -167,6 +170,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             if(sastr.find_first_of("SH") != sastr.find_last_of("SH")) continue;
         }
         std::set<int32_t> sptids;
+        int32_t svt = DPBamRecord::getSVType(b, mOpt);
         // Check read length for junction annotation
         if(b->core.l_qseq > 2 * mOpt->filterOpt->mMinFlankSize){
             bool bpvalid = false;
@@ -196,8 +200,14 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 for(; itbp != bpRegs[refIdx].end() && rend >= itbp->mBpPos; ++itbp){
                     // Read spans breakpoint, if this read mapping range contains itbp->mBpPos ± mMinFlankSize
                     if(rbegin + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos && rend >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize){
-                        if(!(leadingSC + tailingSC)){// REF Type, no realignment needed
-                            if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
+                        if(!(leadingSC + tailingSC) && svt == -1){// REF Type, no realignment needed
+                            bool add2ref = true;
+                            if((b->core.mpos + mOpt->filterOpt->mMinFlankSize <= itbp->mBpPos) &&
+                               (b->core.mpos + b->core.l_qseq >= itbp->mBpPos + mOpt->filterOpt->mMinFlankSize)){
+                                if(b->core.flag & BAM_FREAD2) add2ref = true;
+                                else add2ref = false;
+                            }
+                            if(add2ref && b->core.qual >= mOpt->filterOpt->mMinGenoQual){
                                 mOpt->logMtx.lock();
                                 if(itbp->mIsSVEnd){
                                     ++mJctCnts[itbp->mID].mRefCntEnd;
@@ -226,7 +236,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         }
                         // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
-                        std::string refProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndR : svs[itbp->mID].mProbeBegR;
                         if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
                         readSeq = readOri;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
@@ -236,121 +245,83 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         int alnScore = altAligner->needle(altResult);
                         int matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
-                        // Compute alignment to reference haplotype
-                        Aligner* refAligner = new Aligner(refProbe, readOri, &alnCfg);
-                        Matrix2D<char>* refResult = new Matrix2D<char>();
-                        alnScore = refAligner->needle(refResult);
-                        matchThreshold = mOpt->filterOpt->mFlankQuality * refProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * refProbe.size() * alnCfg.mMisMatch;
-                        double scoreRef = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
-                        if(scoreRef > mOpt->filterOpt->mMinSRResScore || scoreAlt > mOpt->filterOpt->mMinSRResScore){
-                            if(scoreRef > scoreAlt){
-                                if(b->core.qual >= mOpt->filterOpt->mMinGenoQual){
-                                    mOpt->logMtx.lock();
-                                    if(itbp->mIsSVEnd){
-                                        ++mJctCnts[itbp->mID].mRefCntEnd;
-                                        if(mOpt->writebcf){
-                                            auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
-                                            if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
-                                                mJctCnts[itbp->mID].mRefQualEnd[b->core.qual] = 1;
-                                            }else{
-                                                qiter->second += 1;
+                        if(scoreAlt > mOpt->filterOpt->mMinSRResScore){
+                            bool validRSR = true;
+                            if(sa){
+                                std::vector<std::string> vstr;
+                                util::split(sastr, vstr, ",");
+                                int32_t stid = bam_name2id(h, vstr[0].c_str());
+                                int32_t irpos = std::atoi(vstr[1].c_str());
+                                int32_t erpos = irpos;
+                                bool safwd = (vstr[2][0] == '+');
+                                bool orifwd = !(b->core.flag & BAM_FREVERSE);
+                                int32_t catt = itbp->mSVT;
+                                if(itbp->mSVT >= 5) catt -= 5;
+                                if(catt <= 1){
+                                    if(safwd == orifwd) validRSR = false;
+                                }
+                                if(catt >= 2){
+                                    if(safwd != orifwd) validRSR = false;
+                                }
+                                if(validRSR){
+                                    char* scg = const_cast<char*>(vstr[3].c_str());
+                                    int32_t sscl = 0, sscr = 0;
+                                    int32_t stotlen = 0;
+                                    while(validRSR && *scg && *scg != '*'){
+                                        long num = 0;
+                                        if(std::isdigit((int)*scg)){
+                                            num = std::strtol(scg, &scg, 10);
+                                            stotlen += num;
+                                        }
+                                        switch(*scg){
+                                            case 'S':
+                                                if(stotlen == num) sscl = num;
+                                                else sscr = num;
+                                                break;
+                                            case 'H':
+                                                validRSR = false;
+                                                break;
+                                            case 'M': case '=': case 'X': case 'D': case 'N':
+                                                erpos += num;
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                        ++scg;
+                                    }
+                                    if(validRSR && ((sscl > 0) ^ (sscr > 0))){
+                                        int32_t bppos = irpos;
+                                        if(sscr) bppos = erpos;
+                                        if(itbp->mIsSVEnd){
+                                            if(bppos < svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosLow ||
+                                               bppos > svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosHigh ||
+                                               svs[itbp->mID].mChr1 != stid){
+                                                validRSR = false;
+                                            }
+                                        }else{
+                                            if(bppos < svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndLow ||
+                                               bppos > svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndHigh ||
+                                               svs[itbp->mID].mChr2 != stid){
+                                                validRSR = false;
                                             }
                                         }
                                     }else{
-                                        ++mJctCnts[itbp->mID].mRefCntBeg;
-                                        if(mOpt->writebcf){
-                                            auto qiter = mJctCnts[itbp->mID].mRefQualEnd.find(b->core.qual);
-                                            if(qiter == mJctCnts[itbp->mID].mRefQualEnd.end()){
-                                                mJctCnts[itbp->mID].mRefQualEnd[b->core.qual] = 1;
-                                            }else{
-                                                qiter->second += 1;
-                                            }
-                                        }
-                                    }
-                                    mOpt->logMtx.unlock();
-                                }
-                            }else{
-                                bool validRSR = true;
-                                if(sa){
-                                    std::vector<std::string> vstr;
-                                    util::split(sastr, vstr, ",");
-                                    int32_t stid = bam_name2id(h, vstr[0].c_str());
-                                    int32_t irpos = std::atoi(vstr[1].c_str());
-                                    int32_t erpos = irpos;
-                                    bool safwd = (vstr[2][0] == '+');
-                                    bool orifwd = !(b->core.flag & BAM_FREVERSE);
-                                    int32_t catt = itbp->mSVT;
-                                    if(itbp->mSVT >= 5) catt -= 5;
-                                    if(catt <= 1){
-                                        if(safwd == orifwd) validRSR = false;
-                                    }
-                                    if(catt >= 2){
-                                        if(safwd != orifwd) validRSR = false;
-                                    }
-                                    if(validRSR){
-                                        char* scg = const_cast<char*>(vstr[3].c_str());
-                                        int32_t sscl = 0, sscr = 0;
-                                        int32_t stotlen = 0;
-                                        while(validRSR && *scg && *scg != '*'){
-                                            long num = 0;
-                                            if(std::isdigit((int)*scg)){
-                                                num = std::strtol(scg, &scg, 10);
-                                                stotlen += num;
-                                            }
-                                            switch(*scg){
-                                                case 'S':
-                                                    if(stotlen == num) sscl = num;
-                                                    else sscr = num;
-                                                    break;
-                                                case 'H':
-                                                    validRSR = false;
-                                                    break;
-                                                case 'M': case '=': case 'X': case 'D': case 'N':
-                                                    erpos += num;
-                                                    break;
-                                                default:
-                                                    break;
-                                            }
-                                            ++scg;
-                                        }
-                                        if(validRSR && ((sscl > 0) ^ (sscr > 0))){
-                                            int32_t bppos = irpos;
-                                            if(sscr) bppos = erpos;
-                                            if(itbp->mIsSVEnd){
-                                                if(bppos < svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosLow ||
-                                                   bppos > svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosHigh ||
-                                                   svs[itbp->mID].mChr1 != stid){
-                                                    validRSR = false;
-                                                }
-                                            }else{
-                                                if(bppos < svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndLow ||
-                                                   bppos > svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndHigh ||
-                                                   svs[itbp->mID].mChr2 != stid){
-                                                    validRSR = false;
-                                                }
-                                            }
-                                        }else{
-                                            validRSR = false;
-                                        }
+                                        validRSR = false;
                                     }
                                 }
-                                if(validRSR){
-                                    assigned = true;
-                                    if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
-                                    if(itbp->mSVT != 4) onlySupportIns = false;
-                                    if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = itbp->mIsSVEnd;
-                                }
+                            }
+                            if(validRSR){
+                                assigned = true;
+                                if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
+                                if(itbp->mSVT != 4) onlySupportIns = false;
+                                if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = itbp->mIsSVEnd;
                             }
                         }
                         delete altAligner;
                         altAligner = NULL;
                         delete altResult;
                         altResult = NULL;
-                        delete refAligner;
-                        refAligner = NULL;
-                        delete refResult;
-                        refResult = NULL;
                     }
                 }
                 if(supportSrsID.size()){
@@ -375,6 +346,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     // output
                     mOpt->logMtx.lock();
                     ++mJctCnts[ixmx].mAltCnt;
+                    ++mTotalAltCnts[ixmx];
                     if(mOpt->writebcf){
                         auto qiter = mJctCnts[ixmx].mAltQual.find(b->core.qual);
                         if(qiter == mJctCnts[ixmx].mAltQual.end()){
@@ -403,7 +375,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             // Spanning counting
             int32_t outerISize = b->core.pos + b->core.l_qseq - b->core.mpos;
             // Normal spanning pair
-            if((DPBamRecord::getSVType(b) == 2) && outerISize >= mOpt->libInfo->mMinNormalISize &&
+            if(svt == 2 && outerISize >= mOpt->libInfo->mMinNormalISize &&
                outerISize <= mOpt->libInfo->mMaxNormalISize && b->core.mtid == b->core.tid){
                 // Take 80% of the outersize as the spanned interval
                 int32_t spanlen = 0.8 * outerISize;
@@ -453,9 +425,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
             }
             // Abnormal spanning coverage
-            if(((DPBamRecord::getSVType(b) != 2) || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) || (b->core.tid != b->core.mtid)){
+            if((svt != 2 || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) || (b->core.tid != b->core.mtid)){
                 // Get SV type
-                int32_t svt =  DPBamRecord::getSVType(b, mOpt);
                 if(svt == -1) continue;
                 // Spanning a breakpoint?
                 bool spanvalid = false;
@@ -526,6 +497,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         // output
                         mOpt->logMtx.lock();
                         ++mSpnCnts[ixmx].mAltCnt;
+                        if(!assigned) ++mTotalAltCnts[ixmx];
                         if(mOpt->writebcf){
                             auto qiter = mSpnCnts[ixmx].mAltQual.find(b->core.qual);
                             if(qiter == mSpnCnts[ixmx].mAltQual.end()){

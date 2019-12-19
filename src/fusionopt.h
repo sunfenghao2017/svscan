@@ -155,7 +155,7 @@ struct FusionOptions{
     std::string mGeneCrdList;          ///< gene coordinate range list
     std::string mSameGeneSVList;       ///< fusion event in same gene to be reported
     std::string mExtraAnnoList;        ///< fusion gene which should be annotated seperately
-    std::string mInfile;               ///< input file of sver sv tsv format result file
+    std::string mInfile;               ///< input file of svscan sv tsv format result file
     std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
     std::string mSupFile = "ss.tsv";   ///< output file of supplementary fusions
     std::string mSVModFile;            ///< output sv tsv file with fsmask updated

@@ -425,6 +425,7 @@ typedef std::vector<std::vector<SpanPoint>> ContigSpanPoints;
 class Stats{
     public:
         Options* mOpt;                                     ///< pointer to Options
+        std::vector<int32_t> mTotalAltCnts;                ///< total molecule(pair of read counted as one) supporting SV 
         std::vector<JunctionCount> mJctCnts;               ///< Single read spanning SV breakpoint stats
         std::vector<SpanningCount> mSpnCnts;               ///< Paired-end read spanning SV breakpoint stats
 
