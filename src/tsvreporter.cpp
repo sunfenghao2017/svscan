@@ -279,10 +279,14 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                     }
                 }
             }else if(gl[i].mFuseGene[j].status & FUSION_FHOTGENE){// fusion in whitelist
-                if(mTotalAltCnts[i] < mOpt->fuseOpt->mUsualFilter.mMinSupport){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                }
-                if(svs[i].mSRSupport < mOpt->fuseOpt->mUsualFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
+                if(svs[i].mPrecise){
+                    if(mTotalAltCnts[i] < mOpt->fuseOpt->mUsualFilter.mMinSupport){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                    if(svs[i].mSRSupport < mOpt->fuseOpt->mUsualFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
+                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
+                    }
+                }else{
                     gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
                 }
                 if(af < mOpt->fuseOpt->mUsualFilter.mMinVAF){

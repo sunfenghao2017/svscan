@@ -226,15 +226,19 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     fgr.fsmask &= (~FUSION_FLOWDEPTH);
                 }
             }else if(fgr.fsmask & FUSION_FHOTGENE){// fusion not in public database
-                if(svr.molRescued < fuseOpt->mUsualFilter.mMinSupport){
-                    fgr.fsmask |= FUSION_FLOWSUPPORT;
-                }else{
-                    fgr.fsmask &= (~FUSION_FLOWSUPPORT);
-                }
-                if(!(fgr.fsmask |= FUSION_FLOWSUPPORT)){
-                    if(fgr.srcount < fuseOpt->mUsualFilter.mMinSRSeed && fgr.dpcount < fuseOpt->mUsualFilter.mMinDPSeed){
+                if(svr.srCount){
+                    if(svr.molRescued < fuseOpt->mUsualFilter.mMinSupport){
                         fgr.fsmask |= FUSION_FLOWSUPPORT;
+                    }else{
+                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
                     }
+                    if(!(fgr.fsmask |= FUSION_FLOWSUPPORT)){
+                        if(fgr.srcount < fuseOpt->mUsualFilter.mMinSRSeed && fgr.dpcount < fuseOpt->mUsualFilter.mMinDPSeed){
+                            fgr.fsmask |= FUSION_FLOWSUPPORT;
+                        }
+                    }
+                }else{
+                    fgr.fsmask |= FUSION_FLOWSUPPORT;
                 }
                 if(svr.af < fuseOpt->mUsualFilter.mMinVAF){
                     fgr.fsmask |= FUSION_FLOWAF;
