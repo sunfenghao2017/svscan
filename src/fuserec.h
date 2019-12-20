@@ -185,6 +185,7 @@ struct FusionRecord{
                 fsmask |= FUSION_FINREPORTRNG;
             }
         }
+        if(distance < 0) fsmask |= FUSION_FFBG;
     }
 };
 
