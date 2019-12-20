@@ -166,8 +166,25 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         std::string sastr;
         if(sa){ // skip reads with cliped part in repeat regions
             sastr = bam_aux2Z(sa);
-            if(sastr.find_first_of(";") != sastr.find_last_of(";")) continue;
-            if(sastr.find_first_of("SH") != sastr.find_last_of("SH")) continue;
+            std::vector<std::string> cvs;
+            std::vector<std::string> vstr;
+            util::split(sastr, cvs, ";");
+            if(cvs.size() == 1) sastr = cvs[0];
+            else{
+                std::vector<int32_t> mvidx;
+                for(uint32_t cvidx = 0; cvidx < cvs.size(); ++cvidx){
+                    util::split(cvs[cvidx], vstr, ",");
+                    if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                        mvidx.push_back(cvidx);
+                    }
+                }
+                if(mvidx.size() == 1){
+                    sastr = cvs[mvidx[0]];
+                }else{
+                    sastr = "";
+                }
+            }
+            if(sastr.empty()) continue;
         }
         std::set<int32_t> sptids;
         int32_t svt = DPBamRecord::getSVType(b, mOpt);

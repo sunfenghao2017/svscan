@@ -53,8 +53,28 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     uint8_t* sa = bam_aux_get(b, "SA");
     if(sa){
         std::string sastr = bam_aux2Z(sa);
-        if(sastr.find_first_of(";") != sastr.find_last_of(";")) return inserted;
+        // get optimal SA
+        std::vector<std::string> cvs;
         std::vector<std::string> vstr;
+        util::split(sastr, cvs, ";");
+        if(cvs.size() == 1) sastr = cvs[0];
+        else{
+            std::vector<int32_t> mvidx;
+            for(uint32_t cvidx = 0; cvidx < cvs.size(); ++cvidx){
+                util::split(cvs[cvidx], vstr, ",");
+                if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                    mvidx.push_back(cvidx);
+                }
+            }
+            if(mvidx.size() == 1){
+                sastr = cvs[mvidx[0]];
+            }else{
+                sastr = "";
+            }
+        }
+        if(sastr.empty()){
+            return inserted;
+        }
         util::split(sastr, vstr, ",");
         int32_t tid = bam_name2id(h, vstr[0].c_str());
         refpos = std::atoi(vstr[1].c_str());
