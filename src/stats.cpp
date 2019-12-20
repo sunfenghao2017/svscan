@@ -169,10 +169,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             std::vector<std::string> cvs;
             std::vector<std::string> vstr;
             util::split(sastr, cvs, ";");
-            if(cvs.size() == 1) sastr = cvs[0];
+            if(cvs[1].empty()) sastr = cvs[0];
             else{
                 std::vector<int32_t> mvidx;
-                for(uint32_t cvidx = 0; cvidx < cvs.size(); ++cvidx){
+                for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
                     util::split(cvs[cvidx], vstr, ",");
                     if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
                         mvidx.push_back(cvidx);
