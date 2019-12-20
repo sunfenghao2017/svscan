@@ -165,6 +165,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.cigar = fgl[i].cigar;
             fgr.gene1 = fgl[i].hgene;
             fgr.gene2 = fgl[i].tgene;
+            fgr.fusegene = fgr.gene1 + "->" + fgr.gene2;
             if(svt == 4){
                 fgl[i].hfrom1 = true;
                 fgl[i].tfrom1 = false;
