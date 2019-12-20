@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include "svutil.h"
+#include "fusionopt.h"
 
 /** class to store an fusion record */
 struct FusionRecord{
@@ -125,6 +126,65 @@ struct FusionRecord{
         if(!(fsmask & FUSION_FNORMALCATDIRECT)) sts.append("D");
         if(sts.empty()) sts.append("Y");
         return sts;
+    }
+
+    /** update seed/rescue/depth/.. determined fusion mask */
+    inline void maskFusion(FusionOptions* fsopt){
+        fsmask &= (~(FUSION_FLOWSUPPORT | FUSION_FLOWAF | FUSION_FLOWDEPTH | FUSION_FINREPORTRNG)); //clear some mask
+        if(fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){ // fusion/mirror in public db
+            if(fusionreads < fsopt->mWhiteFilter.mMinSupport){ // total molecule support
+                fsmask |= FUSION_FLOWSUPPORT;
+            }
+            if(srcount < fsopt->mWhiteFilter.mMinSRSeed && dpcount < fsopt->mWhiteFilter.mMinDPSeed){ // seed 
+                fsmask |= FUSION_FLOWSUPPORT;
+            }
+            if(srrescued < fsopt->mWhiteFilter.mMinSRSupport && dprescued < fsopt->mWhiteFilter.mMinDPSupport){ // rescue
+                fsmask |= FUSION_FLOWSUPPORT;
+            }
+            if(fuserate < fsopt->mWhiteFilter.mMinVAF){ // vaf
+                fsmask |= FUSION_FLOWAF;
+            }
+            if(totalreads < fsopt->mWhiteFilter.mMinDepth){ // depth
+                fsmask |= FUSION_FLOWDEPTH;
+            }
+            if(svint != 4 && fsmask & FUSION_FINSAMEGENE){ // size
+                if(svsize < fsopt->mWhiteFilter.mMinIntraGeneSVSize){
+                    fsmask |= FUSION_FTOOSMALLSIZE;
+                }
+            }
+        }else if(fsmask & FUSION_FHOTGENE){ // fusion only with gene in target region
+            if(fsmask & FUSION_FPRECISE){
+                if(fusionreads < fsopt->mUsualFilter.mMinSupport){
+                    fsmask |= FUSION_FLOWSUPPORT;
+                }
+                if(srcount < fsopt->mUsualFilter.mMinSRSeed){
+                    fsmask |= FUSION_FLOWSUPPORT;
+                }
+                if(srrescued < fsopt->mUsualFilter.mMinSRSupport){
+                    fsmask |= FUSION_FLOWSUPPORT;
+                }
+                if(fuserate < fsopt->mUsualFilter.mMinVAF){
+                    fsmask |= FUSION_FLOWAF;
+                }
+                if(totalreads < fsopt->mUsualFilter.mMinDepth){
+                    fsmask |= FUSION_FLOWDEPTH;
+                }
+            }else{
+                fsmask |= FUSION_FLOWSUPPORT;
+            }
+            if(svint != 4 && fsmask & FUSION_FINSAMEGENE){
+                if(svsize < fsopt->mUsualFilter.mMinIntraGeneSVSize){
+                    fsmask |= FUSION_FTOOSMALLSIZE;
+                }
+            }
+        }
+        if(fsopt->mFsRptList.empty()){
+            fsmask |= FUSION_FINREPORTRNG;
+        }else{
+            if(fsopt->inFsRptRange(gene1, gene2, exon1, exon2, "ee")){
+                fsmask |= FUSION_FINREPORTRNG;
+            }
+        }
     }
 };
 

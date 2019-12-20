@@ -203,54 +203,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 for(int32_t excnt = minExon; excnt <= maxExon; ++excnt) exonl.push_back(excnt);
                 if(!fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask |= FUSION_FTOOSMALLSIZE;
             }
-            int32_t totalreads = svr.molRescued + std::max(svr.dpRescued, svr.srRescued);
-            if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
-                if(svr.molRescued < fuseOpt->mWhiteFilter.mMinSupport){
-                    fgr.fsmask |= FUSION_FLOWSUPPORT;
-                }else{
-                    fgr.fsmask &= (~FUSION_FLOWSUPPORT);
-                }
-                if(!(fgr.fsmask |= FUSION_FLOWSUPPORT)){
-                    if(fgr.srcount < fuseOpt->mWhiteFilter.mMinSRSeed && fgr.dpcount < fuseOpt->mWhiteFilter.mMinDPSeed){
-                        fgr.fsmask |= FUSION_FLOWSUPPORT;
-                    }
-                }
-                if(svr.af < fuseOpt->mWhiteFilter.mMinVAF){
-                    fgr.fsmask |= FUSION_FLOWAF;
-                }else{
-                    fgr.fsmask &= (~FUSION_FLOWAF);
-                }
-                if(totalreads < fuseOpt->mWhiteFilter.mMinDepth){ 
-                    fgr.fsmask |= FUSION_FLOWDEPTH;
-                }else{
-                    fgr.fsmask &= (~FUSION_FLOWDEPTH);
-                }
-            }else if(fgr.fsmask & FUSION_FHOTGENE){// fusion not in public database
-                if(svr.srCount){
-                    if(svr.molRescued < fuseOpt->mUsualFilter.mMinSupport){
-                        fgr.fsmask |= FUSION_FLOWSUPPORT;
-                    }else{
-                        fgr.fsmask &= (~FUSION_FLOWSUPPORT);
-                    }
-                    if(!(fgr.fsmask |= FUSION_FLOWSUPPORT)){
-                        if(fgr.srcount < fuseOpt->mUsualFilter.mMinSRSeed && fgr.dpcount < fuseOpt->mUsualFilter.mMinDPSeed){
-                            fgr.fsmask |= FUSION_FLOWSUPPORT;
-                        }
-                    }
-                }else{
-                    fgr.fsmask |= FUSION_FLOWSUPPORT;
-                }
-                if(svr.af < fuseOpt->mUsualFilter.mMinVAF){
-                    fgr.fsmask |= FUSION_FLOWAF;
-                }else{
-                    fgr.fsmask &= (~FUSION_FLOWAF);
-                }
-                if(totalreads < fuseOpt->mUsualFilter.mMinDepth){ 
-                    fgr.fsmask |= FUSION_FLOWDEPTH;
-                }else{
-                    fgr.fsmask &= (~FUSION_FLOWDEPTH);
-                }
-            }
+            int32_t totalreads = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
@@ -298,15 +251,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.fsHits = svr.fsHits;                                  // fsHits;
             fgr.distance = fuseOpt->geneNear(fgr.gene1, fgr.chr1, fgr.jctpos1, fgr.gene2, fgr.chr2); // fpDist
             // mask FUSION_FINREPORTRNG now
-            if(fuseOpt->mFsRptList.empty()){
-                fgr.fsmask |= FUSION_FINREPORTRNG;
-            }else{
-                if(fuseOpt->inFsRptRange(fgr.gene1, fgr.gene2, fgr.exon1, fgr.exon2, "ee")){
-                    fgr.fsmask |= FUSION_FINREPORTRNG;
-                }else{
-                    fgr.fsmask &= (~FUSION_FINREPORTRNG);
-                }
-            }
+            fgr.maskFusion(fuseOpt);
             if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){
                 if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
                 else fgr.fsmask &= (~FUSION_FREALNPASSED);

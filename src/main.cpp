@@ -50,8 +50,12 @@ int main(int argc, char** argv){
     app.add_option("--usualminsrs", opt->fuseOpt->mUsualFilter.mMinSRSeed, "min sr seeds for an valid fusion break point not in whitelist", true)->group("Fusion Options");
     app.add_option("--whitemindps", opt->fuseOpt->mWhiteFilter.mMinDPSeed, "min dp seeds for an valid fusion break point in whitelist", true)->group("Fusion Options");
     app.add_option("--usualmindps", opt->fuseOpt->mUsualFilter.mMinDPSeed, "min dp seeds for an valid fusion break point not in whitelist", true)->group("Fusion Options");
-    app.add_option("--whiteminttr", opt->fuseOpt->mWhiteFilter.mMinSupport, "min total reads for an valid fusion in whitelist", true)->group("Fusion Options");
-    app.add_option("--usualminttr", opt->fuseOpt->mUsualFilter.mMinSupport, "min total reads for an valid fusion not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whiteminsrr", opt->fuseOpt->mWhiteFilter.mMinSRSupport, "min sr reads for an valid fusion break point in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualminsrr", opt->fuseOpt->mUsualFilter.mMinSRSupport, "min sr reads for an valid fusion break point not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whitemindpr", opt->fuseOpt->mWhiteFilter.mMinDPSupport, "min dp reads for an valid fusion break point in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualmindpr", opt->fuseOpt->mUsualFilter.mMinDPSupport, "min dp reads for an valid fusion break point not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whiteminttr", opt->fuseOpt->mWhiteFilter.mMinSupport, "min molecules for an valid fusion in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualminttr", opt->fuseOpt->mUsualFilter.mMinSupport, "min molecules for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminaf", opt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true)->group("Fusion Options");
     app.add_option("--usualminaf", opt->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminigs", opt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion in whitelist", true)->group("Fusion Options");

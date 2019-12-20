@@ -77,7 +77,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
     fw.close();
 }
 
-void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
+void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
     if(mOpt->debug & DEBUG_FOUTF){
         if(!mOpt->fuseOpt->mFsRptList.empty()){
@@ -237,69 +237,12 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
             }
             std::string gene1, gene2;
-            int32_t exon1, exon2;
             if(gl[i].mFuseGene[j].hfrom1){
                 gene1 = gl[i].mGene1[gl[i].mFuseGene[j].hidx].gene;
                 gene2 = gl[i].mGene2[gl[i].mFuseGene[j].tidx].gene;
-                exon1 = gl[i].mGene1[gl[i].mFuseGene[j].hidx].exon;
-                exon2 = gl[i].mGene2[gl[i].mFuseGene[j].tidx].exon;
             }else{
                 gene1 = gl[i].mGene2[gl[i].mFuseGene[j].hidx].gene;
                 gene2 = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
-                exon1 = gl[i].mGene2[gl[i].mFuseGene[j].hidx].exon;
-                exon2 = gl[i].mGene1[gl[i].mFuseGene[j].tidx].exon;
-            }
-            if(mOpt->fuseOpt->mFsRptList.empty()){
-                gl[i].mFuseGene[j].status |= FUSION_FINREPORTRNG;
-            }else{
-                if(mOpt->fuseOpt->inFsRptRange(gene1, gene2, exon1, exon2, "ee")){
-                    gl[i].mFuseGene[j].status |= FUSION_FINREPORTRNG;
-                }else{
-                    gl[i].mFuseGene[j].status &= (~FUSION_FINREPORTRNG);
-                }
-            }
-            int32_t ttd = std::max(mJctCnts[i].getRefDep(), mSpnCnts[i].getRefDep());
-            float af = (double)(mTotalAltCnts[i])/(double)(ttd);
-            if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){// fusion in public database
-                if(mTotalAltCnts[i] < mOpt->fuseOpt->mWhiteFilter.mMinSupport){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                }
-                if(svs[i].mSRSupport < mOpt->fuseOpt->mWhiteFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mWhiteFilter.mMinDPSeed){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                }
-                if(af < mOpt->fuseOpt->mWhiteFilter.mMinVAF){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
-                }
-                if(ttd < mOpt->fuseOpt->mWhiteFilter.mMinDepth){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
-                }
-                if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
-                    if(svs[i].mSize < mOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize){
-                        gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
-                    }
-                }
-            }else if(gl[i].mFuseGene[j].status & FUSION_FHOTGENE){// fusion in whitelist
-                if(svs[i].mPrecise){
-                    if(mTotalAltCnts[i] < mOpt->fuseOpt->mUsualFilter.mMinSupport){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                    if(svs[i].mSRSupport < mOpt->fuseOpt->mUsualFilter.mMinSRSeed && svs[i].mPESupport < mOpt->fuseOpt->mUsualFilter.mMinDPSeed){
-                        gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                    }
-                }else{
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWSUPPORT;
-                }
-                if(af < mOpt->fuseOpt->mUsualFilter.mMinVAF){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWAF;
-                }
-                if(ttd < mOpt->fuseOpt->mUsualFilter.mMinDepth){
-                    gl[i].mFuseGene[j].status |= FUSION_FLOWDEPTH;
-                }
-                if((svs[i].mSVT != 4) && gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
-                    if(svs[i].mSize < mOpt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize){
-                        gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
-                    }
-                }
             }
         }   
     }
@@ -335,6 +278,15 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }
     }
+    // construct fusionrecord
+    for(uint32_t i = 0; i < gl.size(); ++i){
+        for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+            FusionRecord fsr;
+            toFuseRec(fsr, svs[i], gl[i], j);
+            fsr.maskFusion(mOpt->fuseOpt);
+            gl[i].mFuseGene[j].status |= fsr.fsmask;
+        }
+    }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
     TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
                                      FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
@@ -355,7 +307,7 @@ void Stats::maskFuseRec(const SVSet& svs, GeneInfoList& gl){
     }
 }
 
-void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
+void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     // get valid fusion list
     FusionRecordList frl;
     for(uint32_t i = 0; i < gl.size(); ++i){
@@ -411,7 +363,7 @@ void Stats::reportFusionTSV(SVSet& svs, GeneInfoList& gl){
     fs.close();
 }
 
-void Stats::toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i){
+void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
     fsr.fusionreads = mTotalAltCnts[svr.mID];
     fsr.totalreads = std::max(mJctCnts[svr.mID].getRefDep(), mSpnCnts[svr.mID].getRefDep()) + fsr.fusionreads;

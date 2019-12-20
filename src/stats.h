@@ -503,7 +503,7 @@ class Stats{
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportFusionTSV(SVSet& svs, GeneInfoList& gl);
+        void reportFusionTSV(const SVSet& svs, GeneInfoList& gl);
         
         /** convert an sv event to fusion record
          * @param fsr reference of FusionRecord
@@ -511,13 +511,13 @@ class Stats{
          * @param gi reference of GeneInfo
          * @param i which fusion will  be converted(-1 to all)
          */
-        void toFuseRec(FusionRecord& fsr, SVRecord& svr, GeneInfo& gi, int32_t i);
+        void toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i);
 
         /** mask fusion event status 
          * @param svs reference of SVSet
          * @param gl reference of GeneInfoList
          */
-        void maskFuseRec(const SVSet& svs, GeneInfoList& gl);
+        void makeFuseRec(const SVSet& svs, GeneInfoList& gl);
 
         /** get alignment quality of sequence against an read
          * @param alnResult align result(sequence vertical, read horizontal)

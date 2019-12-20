@@ -231,7 +231,7 @@ void SVScanner::scanDPandSR(){
     }else{
         covAnn->geneAnnoDNA(mergedSVs, gl);
     }
-    covStat->maskFuseRec(mergedSVs, gl);
+    covStat->makeFuseRec(mergedSVs, gl);
     util::loginfo("End annotating SV gene information");
     util::loginfo("Beg writing SVs to TSV file");
     covStat->reportSVTSV(mergedSVs, gl);

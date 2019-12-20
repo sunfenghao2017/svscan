@@ -121,14 +121,14 @@ typedef std::map<std::string, std::set<std::string>> FusePairs;
 /** filter options for fusion event */
 struct FilterOptions{
     int32_t mMinIntraGeneSVSize = 2000; ///< min intra-gene SV size for a valid fusion
-    int32_t mMinDepth = 2;              ///< min depth covering breakpoint needed
-    int32_t mMinSRSupport = 2;          ///< min SR support for a valid fusion
-    int32_t mMinDPSupport = 2;          ///< min DP support for a valid fusion
-    int32_t mMinSUSupport = 2;          ///< min SU support for a valid fusion
-    int32_t mMinSupport = 2;            ///< min supporting reads needed for a valid fusion
-    int32_t mMinSRSeed = 2;             ///< min SR seed for a valid fusion
-    int32_t mMinDPSeed = 2;             ///< min DP seed for a valid fusion
-    int32_t mMinSUSeed = 2;             ///< min SU seed for a valid fusion
+    int32_t mMinDepth = 10;             ///< min depth covering breakpoint needed
+    int32_t mMinSRSupport = 3;          ///< min SR support for a valid fusion
+    int32_t mMinDPSupport = 5;          ///< min DP support for a valid fusion
+    int32_t mMinSUSupport = 5;          ///< min SU support for a valid fusion
+    int32_t mMinSupport = 3;            ///< min supporting reads needed for a valid fusion
+    int32_t mMinSRSeed = 3;             ///< min SR seed for a valid fusion
+    int32_t mMinDPSeed = 5;             ///< min DP seed for a valid fusion
+    int32_t mMinSUSeed = 5;             ///< min SU seed for a valid fusion
     int32_t mMaxRepHit = 4;             ///< max hit of two part of fusion seq
     float mMinVAF = 0;                  ///< min VAF needed for a valid fusion
 
