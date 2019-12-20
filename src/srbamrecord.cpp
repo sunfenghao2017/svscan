@@ -6,31 +6,8 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     if(!jctMap->mSorted) jctMap->sortJunctions();
     int svtIdx = 0;
     int32_t rst = -1;
-    bool hasSA = false;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){
-        // find insertion candidates which have no supplementary alignments
-        hasSA = false;
-        for(uint32_t i = 0; i < iter->second.size(); ++i){
-            if(iter->second[i].mRstart < 0){
-                hasSA = true;
-                break;
-            }
-        }
-        if(!hasSA){// may be insertion candidates or other sv supporting reads..TODO...
-           // for(uint32_t i = 0; i < iter->second.size(); ++i){
-           //     svtIdx = 4;
-           //     mSRs[svtIdx].push_back(SRBamRecord(iter->second[i].mRefidx,
-           //                                        iter->second[i].mRefpos,
-           //                                        iter->second[i].mRefidx,
-           //                                        iter->second[i].mRefpos,
-           //                                        rst,
-           //                                        std::abs(iter->second[i].mSeqpos - iter->second[i].mSeqpos),
-           //                                        iter->first));
-
-           // }
-            continue;
-        }
-        for(uint32_t i = 0; i < iter->second.size(); ++i){
+        for(uint32_t i = 0; i < iter->second.size(); i += 2){
             for(uint32_t j = i + 1; j < iter->second.size(); ++j){
                 if(iter->second[i].mRstart > 0 && iter->second[j].mRstart > 0) continue;
                 if(iter->second[i].mSCLen && iter->second[j].mSCLen && 

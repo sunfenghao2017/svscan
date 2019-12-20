@@ -2,6 +2,9 @@
 #include "bamutil.h"
 
 bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
+    // check whether SA available
+    uint8_t* sa = bam_aux_get(b, "SA");
+    if(!sa) return false;
     // parse non-supplementary alignment record first
     bool inserted = false;
     bool fw = !(b->core.flag & BAM_FREVERSE);
@@ -50,7 +53,6 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
         }else if(opint == BAM_CREF_SKIP) refpos += oplen;
     }
     // parse supplenmentary alignment record then
-    uint8_t* sa = bam_aux_get(b, "SA");
     if(sa){
         std::string sastr = bam_aux2Z(sa);
         // get optimal SA
