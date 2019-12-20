@@ -25,11 +25,10 @@ int main(int argc, char** argv){
     app.add_option("-e,--b2excel", opt->bam2tb, "output ss/fs event supportint bam records excel", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");
-    app.add_option("--batchsvn", opt->batchsvn, "number of svs to annotate coverage in one thread", true)->check(CLI::Range(1000, 1000000))->group("General Options");
+    app.add_option("-d,--debug", opt->debug, "debug mask,1:call,2:cann,4:gann,8:out,16:realn,32:finsv", true)->group("General Options");
     CLI::Option* prna = app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data")->group("General Options");
     app.add_option("--genome", opt->genome, "genome file corresponding to the rna transcriptome")->needs(prna)->group("General Options");
     app.add_option("--ganno", opt->gannodb, "genome file annotation database")->needs(prna)->group("General Options");
-    app.add_option("-d,--debug", opt->debug, "debug mask,1:call,2:cann,4:gann,8:out,16:realn,32:finsv", true)->group("General Options");
     // Control options
     app.add_option("--min_ref_sep", opt->filterOpt->mMinRefSep, "min sv length to compute", true)->group("Threshold Options");
     app.add_option("--max_read_sep", opt->filterOpt->mMaxReadSep, "max read split mapping pos allowed to compute sv", true)->group("Threshold Options");
