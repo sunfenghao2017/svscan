@@ -185,7 +185,8 @@ struct FusionRecord{
                 fsmask |= FUSION_FINREPORTRNG;
             }
         }
-        if(distance < 0) fsmask |= FUSION_FFBG;
+        if(distance < 0) fsmask |= FUSION_FFBG; // overlap gene leading fusion treat as background
+        if((fsmask & FUSION_FPRECISE) && srrescued == 0) fsmask |= FUSION_FLOWSUPPORT; // rescue failed fusion drop
     }
 };
 
