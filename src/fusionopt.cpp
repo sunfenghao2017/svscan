@@ -254,7 +254,9 @@ int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, 
     if(iter != mGeneRangeVec.end()){
         ++iter;
         if(iter->mGene == g2){
-            return iter->mStart - gr1.mEnd;
+            int32_t idst = iter->mStart - gr1.mEnd;
+            if(idst == 0) return 1;
+            else return idst; 
         }else{
             --iter;
         }
@@ -262,7 +264,9 @@ int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, 
     if(iter != mGeneRangeVec.begin()){
         --iter;
         if(iter->mGene == g2){
-            return gr1.mStart - iter->mEnd;
+            int32_t idst = gr1.mStart - iter->mEnd;
+            if(idst == 0) return 1;
+            else return idst;
         }
     }
     return 0;

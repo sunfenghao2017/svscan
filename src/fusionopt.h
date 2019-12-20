@@ -202,7 +202,7 @@ struct FusionOptions{
      * @param pos1 one pos of gene1
      * @param g2 geng2 name
      * @param chr2 gene2 chr
-     * @return positive distance of two near gene, -1 if two gene not near
+     * @return positive distance of two near gene, negative if overlap, 0 if same gene or not near, positive if near(1 may be h->t)
      */
     int32_t geneNear(const std::string& g1, const std::string& chr1, int32_t pos1, const std::string& g2, const std::string& chr2);
 
