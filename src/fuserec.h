@@ -157,10 +157,10 @@ struct FusionRecord{
                 if(fusionreads < fsopt->mUsualFilter.mMinSupport){
                     fsmask |= FUSION_FLOWSUPPORT;
                 }
-                if(srcount < fsopt->mUsualFilter.mMinSRSeed){
+                if(srcount < fsopt->mUsualFilter.mMinSRSeed && dpcount < fsopt->mUsualFilter.mMinDPSeed){
                     fsmask |= FUSION_FLOWSUPPORT;
                 }
-                if(srrescued < fsopt->mUsualFilter.mMinSRSupport){
+                if(srrescued < fsopt->mUsualFilter.mMinSRSupport && dprescued < fsopt->mUsualFilter.mMinDPSupport){
                     fsmask |= FUSION_FLOWSUPPORT;
                 }
                 if(fuserate < fsopt->mUsualFilter.mMinVAF){
