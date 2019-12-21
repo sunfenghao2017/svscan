@@ -93,9 +93,9 @@ class JunctionMap{
         /** insert an read to JunctionMap if it is junction read
          * @param b pointer to bam1_t struct
          * @param h pointer to bam_hdr_t struct
-         * @return true if b is an junction read and inserted successfuly
+         * @return clip status of b (2: with head/tail sclip, 1: head or tail sclip, 0: no clip, -1: with hard clip, -2: no SA)
          */
-        bool insertJunction(const bam1_t* b, bam_hdr_t* h);
+        int insertJunction(const bam1_t* b, bam_hdr_t* h);
         
         /** operator to output an JunctionMap object to ostream
          * @param os reference of ostream object

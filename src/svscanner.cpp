@@ -30,11 +30,8 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
             if(b->core.flag & BAM_SRSKIP_MASK) continue;// skip invalid reads
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
             if(!inValidReg(b, h)) continue; // skip reads which do not overlap with creg, neither does its mate
-            int lhc = 0, rhc = 0;
-            std::pair<int, int> sclens = bamutil::getClipLength(b, lhc, rhc);
-            if(lhc || rhc) continue; // skip reads wich any hard clips
-            if(sclens.first && sclens.second) continue; // skip reads with heading and leading clips
-            if(sclens.first + sclens.second) jctMap->insertJunction(b, h); // only one softclip read can be SR candidates
+            int instat = jctMap->insertJunction(b, h); // only one softclip read can be SR candidates
+            if(instat == -1 || instat > 2) continue; // skip hardclip ones and read with head/tail sc
             if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
             if(mScanRegs[b->core.mtid].empty()) continue;// skip invalid regions

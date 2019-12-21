@@ -58,16 +58,20 @@ class SVScanner{
             }
             uint8_t* sa = bam_aux_get(b, "SA");
             if(sa){
+                std::string ss = bam_aux2Z(sa);
+                std::vector<std::string> vsas;
+                util::split(ss, vsas, ";");
                 std::vector<std::string> vstr;
-                util::split(bam_aux2Z(sa), vstr, ",");
-                int32_t refpos = std::atoi(vstr[1].c_str());
-                if(mOpt->overlapRegs->overlap(vstr[0].c_str(), refpos - b->core.l_qseq, refpos + b->core.l_qseq)){
-                    return true;
+                for(uint32_t i = 0; i < vsas.size() - 1; ++i){
+                    util::split(vsas[i], vstr, ",");
+                    int32_t refpos = std::atoi(vstr[1].c_str());
+                    if(mOpt->overlapRegs->overlap(vstr[0].c_str(), refpos - b->core.l_qseq, refpos + b->core.l_qseq)){
+                        return true;
+                    }
                 }
             }
             return false;
         }
-
 };
 
 #endif

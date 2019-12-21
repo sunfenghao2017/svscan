@@ -1,10 +1,10 @@
 #include "junction.h"
 #include "bamutil.h"
 
-bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
+int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     // check whether SA available
     uint8_t* sa = bam_aux_get(b, "SA");
-    if(!sa) return false;
+    if(!sa) return -2;
     // parse non-supplementary alignment record first
     std::vector<Junction> jcvec;
     bool fw = !(b->core.flag & BAM_FREVERSE);
@@ -13,6 +13,7 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     int32_t readStart = refpos;
     uint32_t* cigar = bam_get_cigar(b);
     int32_t seqlen = bamutil::getSeqLen(b);
+    int clpst = 0;
     for(uint32_t i = 0; i < b->core.n_cigar; ++i){
         int opint = bam_cigar_op(cigar[i]);
         int oplen = bam_cigar_oplen(cigar[i]);
@@ -36,9 +37,12 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             if(oplen > mOpt->filterOpt->minClipLen){
                 jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch));
             }
+        }else if(opint == BAM_CHARD_CLIP){
+            return -1;
         }else if(opint == BAM_CREF_SKIP) refpos += oplen;
     }
-    if(jcvec.size() != 1) return false;
+    clpst = jcvec.size();
+    if(clpst != 1) return clpst;
     // parse supplenmentary alignment record then
     if(sa){
         std::string sastr = bam_aux2Z(sa);
@@ -106,8 +110,6 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
         }else{
             std::copy(jcvec.begin(), jcvec.end(), std::back_inserter(iter->second));
         }
-        return true;
-    }else{
-        return false;
     }
+    return clpst;
 }
