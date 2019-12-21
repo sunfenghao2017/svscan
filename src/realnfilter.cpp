@@ -48,6 +48,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     // second run, test bp pos and fix bp
     std::vector<bam1_t*> palnret;
     std::vector<int32_t> sclens;
+    std::vector<int32_t> malens;
     for(auto& e: alnret){
         if(e->core.flag & (BAM_FSECONDARY | BAM_FUNMAP)){
             bam_destroy1(e);
@@ -56,6 +57,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
             if((clip.first > 0) ^ (clip.second > 0)){
                 palnret.push_back(e);
                 sclens.push_back(clip.first + clip.second);
+                malens.push_back(e->core.l_qseq - (clip.first + clip.second));
             }else bam_destroy1(e);
         }
     }
@@ -65,7 +67,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         else return -2; // more than two psc
     }
     // check the two part is likely a pair
-    if(std::abs(sclens[0] - sclens[1] - inslen) > 10){
+    if(std::abs(sclens[0] - malens[1] - inslen) > 10){
         return 0; // not likely to be a pair, do not continue
     }
     // valid scs

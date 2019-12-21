@@ -354,7 +354,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         }
         std::string srseq = ""; // read sequence excluding insertiong after clip pos
         std::string siseq = ""; // inserted sequence after clip pos
-        svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep);
+        svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep / 2);
         // Adjust orientation
         bool bpPoint = false;
         if(svt >= 5 && b->core.tid == svs[svid].mChr2) bpPoint = true;
