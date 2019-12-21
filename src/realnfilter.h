@@ -52,7 +52,7 @@ class RealnFilter{
      * return -2 if two primary sc match
      * return -3 if bp not match
      */
-    int32_t validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq);
+    int32_t validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq, int32_t inslen);
 };
 
 #endif

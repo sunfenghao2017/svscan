@@ -194,7 +194,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     std::vector<std::future<int>> alnret(sr.size());
     for(uint32_t i = 0; i < sr.size(); ++i){
         if(sr[i].mSVT == 4) continue;
-        alnret[i] = opt->pool->enqueue(&RealnFilter::validCCSeq, opt->realnf, std::ref(sr[i].mConsensus), std::ref(sr[i].mNameChr1), std::ref(sr[i].mSVStart), std::ref(sr[i].mNameChr2), std::ref(sr[i].mSVEnd), sr[i].mGapCoord[0]);
+        alnret[i] = opt->pool->enqueue(&RealnFilter::validCCSeq, opt->realnf, std::ref(sr[i].mConsensus), std::ref(sr[i].mNameChr1), std::ref(sr[i].mSVStart), std::ref(sr[i].mNameChr2), std::ref(sr[i].mSVEnd), sr[i].mGapCoord[0], sr[i].mBpInsSeq.size());
     }
     for(uint32_t i = 0; i < alnret.size(); ++i){
         if(sr[i].mSVT != 4){

@@ -18,7 +18,7 @@ bool BpPair::agree(const BpPair& other){
     return true;
 }
 
-int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq){
+int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq, int32_t inslen){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
     int32_t retval = 0;
@@ -47,15 +47,15 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     }
     // second run, test bp pos and fix bp
     std::vector<bam1_t*> palnret;
+    std::vector<int32_t> sclens;
     for(auto& e: alnret){
         if(e->core.flag & (BAM_FSECONDARY | BAM_FUNMAP)){
             bam_destroy1(e);
         }else{
             std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-            if(((clip.first > 0) ^ (clip.second > 0)) && 
-               (std::abs((clip.first + clip.second) - fseq) < 10 || 
-                std::abs(e->core.l_qseq - (clip.first + clip.second) - fseq) < 10)){
+            if((clip.first > 0) ^ (clip.second > 0)){
                 palnret.push_back(e);
+                sclens.push_back(clip.first + clip.second);
             }else bam_destroy1(e);
         }
     }
@@ -63,6 +63,10 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         for(auto& e: palnret) bam_destroy1(e);
         if(palnret.size() <= 1) return 0;// at most one psc
         else return -2; // more than two psc
+    }
+    // check the two part is likely a pair
+    if(std::abs(sclens[0] - sclens[1] - inslen) > 10){
+        return 0; // not likely to be a pair, do not continue
     }
     // valid scs
     BpPair obp;
