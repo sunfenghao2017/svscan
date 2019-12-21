@@ -5,88 +5,87 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     util::loginfo("Beg classifing SRs into various SV candidates");
     int svtIdx = 0;
     int32_t rst = -1;
+    uint32_t j = 0;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){
         for(uint32_t i = 0; i < iter->second.size(); i += 2){
-            for(uint32_t j = i + 1; j < iter->second.size(); ++j){
-                if(iter->second[i].mRstart > 0 && iter->second[j].mRstart > 0) continue;
-                if(iter->second[i].mSCLen && iter->second[j].mSCLen && 
-                   (iter->second[j].mSCLen < iter->second[i].mSeqmatch - mOpt->filterOpt->mMaxReadSep ||
-                   iter->second[i].mSCLen < iter->second[j].mSeqmatch - mOpt->filterOpt->mMaxReadSep)){
-                    continue;
+            j = i + 1;
+            if(iter->second[i].mSCLen && iter->second[j].mSCLen && 
+               (iter->second[j].mSCLen < iter->second[i].mSeqmatch - mOpt->filterOpt->mMaxReadSep ||
+               iter->second[i].mSCLen < iter->second[j].mSeqmatch - mOpt->filterOpt->mMaxReadSep)){
+                continue;
+            }
+            // get read starting mapping position
+            rst = iter->second[i].mRstart;
+            if(rst == -1) rst = iter->second[j].mRstart;
+            // check possible translocation split read
+            if(iter->second[j].mRefidx != iter->second[i].mRefidx){
+                int32_t littleChrIdx = i;
+                int32_t largerChrIdx = j;
+                if(iter->second[j].mRefidx < iter->second[i].mRefidx){
+                    littleChrIdx = j;
+                    largerChrIdx = i;
                 }
-                // get read starting mapping position
-                rst = iter->second[i].mRstart;
-                if(rst == -1) rst = iter->second[j].mRstart;
-                // check possible translocation split read
-                if(iter->second[j].mRefidx != iter->second[i].mRefidx){
-                    int32_t littleChrIdx = i;
-                    int32_t largerChrIdx = j;
-                    if(iter->second[j].mRefidx < iter->second[i].mRefidx){
-                        littleChrIdx = j;
-                        largerChrIdx = i;
-                    }
-                    svtIdx = 0;
-                    if(iter->second[littleChrIdx].mForward == iter->second[largerChrIdx].mForward){
-                        // Same direction, opposing soft-clips
-                        if(iter->second[littleChrIdx].mSCleft != iter->second[largerChrIdx].mSCleft){
-                            if(iter->second[littleChrIdx].mSCleft){
-                                svtIdx = 7; // littleChr on 3' part
-                            }else{
-                                svtIdx = 8; // littleChr on 5' part
-                            }
+                svtIdx = 0;
+                if(iter->second[littleChrIdx].mForward == iter->second[largerChrIdx].mForward){
+                    // Same direction, opposing soft-clips
+                    if(iter->second[littleChrIdx].mSCleft != iter->second[largerChrIdx].mSCleft){
+                        if(iter->second[littleChrIdx].mSCleft){
+                            svtIdx = 7; // littleChr on 3' part
+                        }else{
+                            svtIdx = 8; // littleChr on 5' part
                         }
-                    }else{
-                        //opposing direction, same doft-clips
-                        if(iter->second[littleChrIdx].mSCleft == iter->second[largerChrIdx].mSCleft){
-                            if(iter->second[littleChrIdx].mSCleft){
-                                svtIdx = 6; // 3to3 connection
-                            }else{
-                                svtIdx = 5; // 5to5 connection
-                            }
-                        }
-                    }
-                    if(svtIdx && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
-                        mSRs[svtIdx].push_back(SRBamRecord(iter->second[largerChrIdx].mRefidx,
-                                                        iter->second[largerChrIdx].mRefpos,
-                                                        iter->second[littleChrIdx].mRefidx,
-                                                        iter->second[littleChrIdx].mRefpos,
-                                                        rst,
-                                                        std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
-                                                        iter->first));
                     }
                 }else{
-                    svtIdx = -1;
-                    int32_t leftPart = i;
-                    int32_t rightPart = j;
-                    if(iter->second[j].mRefpos <= iter->second[i].mRefpos){
-                        leftPart = j;
-                        rightPart = i;
+                    //opposing direction, same doft-clips
+                    if(iter->second[littleChrIdx].mSCleft == iter->second[largerChrIdx].mSCleft){
+                        if(iter->second[littleChrIdx].mSCleft){
+                            svtIdx = 6; // 3to3 connection
+                        }else{
+                            svtIdx = 5; // 5to5 connection
+                        }
                     }
-                    if(iter->second[j].mForward == iter->second[i].mForward && // same direction
-                       iter->second[j].mSCleft != iter->second[i].mSCleft  &&  // opposing soft-clips
-                       std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) < mOpt->filterOpt->mMaxReadSep){// breakpoint close
-                        if(iter->second[leftPart].mSCleft) std::swap(leftPart, rightPart);
-                        svtIdx = 4; 
-                    }else if(iter->second[j].mForward == iter->second[i].mForward && // same direction
-                             iter->second[j].mSCleft != iter->second[i].mSCleft && // opposing soft-clips
-                             std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint faraway
-                        if(iter->second[leftPart].mSCleft) svtIdx = 3; // left part leading soft-clip, duplication
-                        else svtIdx = 2; // left part tailing soft-clip, deletion
-                    }else if(iter->second[j].mForward != iter->second[i].mForward && // opposing direction
-                             iter->second[j].mSCleft == iter->second[i].mSCleft && // same soft-clips
-                             std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint farway
-                        if(iter->second[rightPart].mSCleft) svtIdx = 1; // 3to3 right spanning inversion breakpoint
-                        else svtIdx = 0; // 5to5 left spanning inversion breakpoint
-                    }
-                    if(svtIdx != -1 && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
-                        mSRs[svtIdx].push_back(SRBamRecord(iter->second[leftPart].mRefidx,
-                                                           iter->second[leftPart].mRefpos,
-                                                           iter->second[rightPart].mRefidx,
-                                                           iter->second[rightPart].mRefpos,
-                                                           rst,
-                                                           std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
-                                                           iter->first));
-                    }
+                }
+                if(svtIdx && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
+                    mSRs[svtIdx].push_back(SRBamRecord(iter->second[largerChrIdx].mRefidx,
+                                                    iter->second[largerChrIdx].mRefpos,
+                                                    iter->second[littleChrIdx].mRefidx,
+                                                    iter->second[littleChrIdx].mRefpos,
+                                                    rst,
+                                                    std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
+                                                    iter->first));
+                }
+            }else{
+                svtIdx = -1;
+                int32_t leftPart = i;
+                int32_t rightPart = j;
+                if(iter->second[j].mRefpos <= iter->second[i].mRefpos){
+                    leftPart = j;
+                    rightPart = i;
+                }
+                if(iter->second[j].mForward == iter->second[i].mForward && // same direction
+                   iter->second[j].mSCleft != iter->second[i].mSCleft  &&  // opposing soft-clips
+                   std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) < mOpt->filterOpt->mMaxReadSep){// breakpoint close
+                    if(iter->second[leftPart].mSCleft) std::swap(leftPart, rightPart);
+                    svtIdx = 4; 
+                }else if(iter->second[j].mForward == iter->second[i].mForward && // same direction
+                         iter->second[j].mSCleft != iter->second[i].mSCleft && // opposing soft-clips
+                         std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint faraway
+                    if(iter->second[leftPart].mSCleft) svtIdx = 3; // left part leading soft-clip, duplication
+                    else svtIdx = 2; // left part tailing soft-clip, deletion
+                }else if(iter->second[j].mForward != iter->second[i].mForward && // opposing direction
+                         iter->second[j].mSCleft == iter->second[i].mSCleft && // same soft-clips
+                         std::abs(iter->second[j].mRefpos - iter->second[i].mRefpos) >= mOpt->filterOpt->mMinRefSep){// breakpoint farway
+                    if(iter->second[rightPart].mSCleft) svtIdx = 1; // 3to3 right spanning inversion breakpoint
+                    else svtIdx = 0; // 5to5 left spanning inversion breakpoint
+                }
+                if(svtIdx != -1 && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
+                    mSRs[svtIdx].push_back(SRBamRecord(iter->second[leftPart].mRefidx,
+                                                       iter->second[leftPart].mRefpos,
+                                                       iter->second[rightPart].mRefidx,
+                                                       iter->second[rightPart].mRefpos,
+                                                       rst,
+                                                       std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
+                                                       iter->first));
                 }
             }
         }
