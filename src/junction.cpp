@@ -126,10 +126,3 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     }
     return inserted;
 }
-
-void JunctionMap::sortJunctions(){
-    for(auto iter = mJunctionReads.begin(); iter != mJunctionReads.end(); ++iter){
-        std::sort(iter->second.begin(), iter->second.end());
-    }
-    mSorted = true;
-}

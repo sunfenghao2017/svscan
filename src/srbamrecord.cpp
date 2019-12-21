@@ -3,7 +3,6 @@
 
 void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     util::loginfo("Beg classifing SRs into various SV candidates");
-    if(!jctMap->mSorted) jctMap->sortJunctions();
     int svtIdx = 0;
     int32_t rst = -1;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){

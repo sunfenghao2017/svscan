@@ -77,7 +77,6 @@ class JunctionMap{
     public:
         Options* mOpt;                                          ///< pointer to Options
         std::map<size_t, std::vector<Junction>> mJunctionReads; ///< key:hash value of read name, value: junction read part list
-        bool mSorted;                                           ///< Junction records in mJunctionReads are all sorted if true
 
     public:
         /** JunctionMap constructor
@@ -85,7 +84,6 @@ class JunctionMap{
          */
         JunctionMap(Options* opt){
             mOpt = opt;
-            mSorted = false;
         }
 
         /** JunctionMap destructor */
@@ -98,9 +96,6 @@ class JunctionMap{
          * @return true if b is an junction read and inserted successfuly
          */
         bool insertJunction(const bam1_t* b, bam_hdr_t* h);
-
-        /** sort all Junction records in mJunctionReads */
-        void sortJunctions();
         
         /** operator to output an JunctionMap object to ostream
          * @param os reference of ostream object
