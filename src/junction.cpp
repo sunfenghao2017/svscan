@@ -6,9 +6,8 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     uint8_t* sa = bam_aux_get(b, "SA");
     if(!sa) return false;
     // parse non-supplementary alignment record first
-    bool inserted = false;
+    std::vector<Junction> jcvec;
     bool fw = !(b->core.flag & BAM_FREVERSE);
-    size_t seed = svutil::hashString(bam_get_qname(b));
     int32_t refpos = b->core.pos;
     int32_t seqpos = 0, readpos = 0, seqmatch = 0;
     int32_t readStart = refpos;
@@ -21,22 +20,10 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             refpos += oplen;
             seqpos += oplen;
         }else if(opint == BAM_CDEL){
-            readpos = (seqpos <= seqlen && !fw) ? seqlen - seqpos : seqpos;
-            if(oplen > mOpt->filterOpt->mMinRefSep){
-                mJunctionReads[seed].push_back(Junction(fw, false, 0, b->core.tid, readStart, refpos, readpos, 0));
-                refpos += oplen;
-                mJunctionReads[seed].push_back(Junction(fw, true, 0, b->core.tid, readStart, refpos, readpos, 0));
-                inserted = true;
-            }else refpos += oplen;
+            refpos += oplen;
         }else if(opint == BAM_CINS){
-            readpos = (seqpos <= seqlen && !fw) ? seqlen - seqpos : seqpos;
-            if(oplen > mOpt->filterOpt->mMinRefSep){
-                mJunctionReads[seed].push_back(Junction(fw, false, 0, b->core.tid, readStart, refpos, readpos, 0));
-                mJunctionReads[seed].push_back(Junction(fw, true, 0, b->core.tid, readStart, refpos, readpos + oplen, 0));
-                inserted = true;
-            }
             seqpos += oplen;
-        }else if(opint == BAM_CSOFT_CLIP || opint == BAM_CHARD_CLIP){
+        }else if(opint == BAM_CSOFT_CLIP){
             int32_t lastSeqPos = seqpos;
             bool scleft = false;
             if(seqpos == 0){
@@ -47,11 +34,11 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
             seqmatch = seqlen - oplen;
             if(oplen > mOpt->filterOpt->minClipLen){
-                mJunctionReads[seed].push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch));
-                inserted = true;
+                jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch));
             }
         }else if(opint == BAM_CREF_SKIP) refpos += oplen;
     }
+    if(jcvec.size() != 1) return false;
     // parse supplenmentary alignment record then
     if(sa){
         std::string sastr = bam_aux2Z(sa);
@@ -75,7 +62,7 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             }
         }
         if(sastr.empty()){
-            return inserted;
+            return false;
         }
         util::split(sastr, vstr, ",");
         int32_t tid = bam_name2id(h, vstr[0].c_str());
@@ -92,22 +79,10 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
                 refpos += oplen;
                 seqpos += oplen;
             }else if(opchr == 'D'){
-                readpos = (seqpos <= seqlen && !fw) ? seqlen - seqpos : seqpos;
-                if(oplen > mOpt->filterOpt->mMinRefSep){
-                    mJunctionReads[seed].push_back(Junction(fw, false, 0, tid, readStart, refpos, readpos, 0));
-                    refpos += oplen;
-                    mJunctionReads[seed].push_back(Junction(fw, true, 0, tid, readStart, refpos, readpos, 0));
-                    inserted = true;
-                }else refpos += oplen;
+                refpos += oplen;
             }else if(opchr == 'I'){
-                readpos = (seqpos <= seqlen && !fw) ? seqlen - seqpos : seqpos;
-                if(oplen > mOpt->filterOpt->mMinRefSep){
-                    mJunctionReads[seed].push_back(Junction(fw, false, 0, tid, readStart, refpos, readpos, 0));
-                    mJunctionReads[seed].push_back(Junction(fw, true, 0, tid, readStart, refpos, readpos + oplen, 0));
-                    inserted = true;
-                }
                 seqpos += oplen;
-            }else if(opchr == 'S' || opchr == 'H'){
+            }else if(opchr == 'S'){
                 int32_t lastSeqPos = seqpos;
                 bool scleft = false;
                 if(seqpos == 0){
@@ -118,11 +93,21 @@ bool JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
                 readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
                 seqmatch = seqlen - oplen;
                 if(oplen > mOpt->filterOpt->minClipLen){
-                    mJunctionReads[seed].push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch));
-                    inserted = true;
+                    jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch));
                 }
             }else if(opchr == BAM_CREF_SKIP) refpos += oplen;
         }
     }
-    return inserted;
+    if(jcvec.size() == 2){
+        size_t seed = svutil::hashString(bam_get_qname(b));
+        auto iter = mJunctionReads.find(seed);
+        if(iter == mJunctionReads.end()){
+            mJunctionReads[seed] = jcvec;
+        }else{
+            std::copy(jcvec.begin(), jcvec.end(), std::back_inserter(iter->second));
+        }
+        return true;
+    }else{
+        return false;
+    }
 }
