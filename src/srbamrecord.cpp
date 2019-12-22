@@ -6,6 +6,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     int svtIdx = 0;
     int32_t rst = -1;
     uint32_t j = 0;
+    int32_t inslen = 0;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){
         for(uint32_t i = 0; i < iter->second.size(); i += 2){
             j = i + 1;
@@ -13,6 +14,11 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                (iter->second[j].mSCLen < iter->second[i].mSeqmatch - mOpt->filterOpt->mMaxReadSep ||
                iter->second[i].mSCLen < iter->second[j].mSeqmatch - mOpt->filterOpt->mMaxReadSep)){
                 continue;
+            }
+            if(iter->second[i].mSCLen > iter->second[j].mSeqmatch){
+                inslen = iter->second[i].mSCLen - iter->second[j].mSeqmatch;
+            }else{
+                inslen = 0;
             }
             // get read starting mapping position
             rst = iter->second[i].mRstart;
@@ -51,7 +57,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                                                     iter->second[littleChrIdx].mRefidx,
                                                     iter->second[littleChrIdx].mRefpos,
                                                     rst,
-                                                    std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
+                                                    inslen,
                                                     iter->first));
                 }
             }else{
@@ -84,7 +90,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                                                        iter->second[rightPart].mRefidx,
                                                        iter->second[rightPart].mRefpos,
                                                        rst,
-                                                       std::abs(iter->second[j].mSeqpos - iter->second[i].mSeqpos),
+                                                       inslen,
                                                        iter->first));
                 }
             }
