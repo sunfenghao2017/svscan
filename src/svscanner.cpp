@@ -102,12 +102,13 @@ void SVScanner::scanDPandSR(){
     std::sort(ctgRdStat.begin(), ctgRdStat.end());
     sam_close(fp);
     hts_idx_destroy(idx);
+    // Asyncall load ref index into memory
+    std::future<void> refInxLoad = std::async(std::launch::async, &RealnFilter::init, mOpt->realnf, mOpt->alnref);
     // Parallel processing each contig
-    std::vector<std::future<void>> scanret(ctgRdStat.size() + 1);
-    scanret[0] = mOpt->pool->enqueue(&RealnFilter::init, mOpt->realnf, mOpt->alnref);
+    std::vector<std::future<void>> scanret(ctgRdStat.size());
     for(uint32_t i = 0; i < ctgRdStat.size(); ++i){
         int32_t refidx = ctgRdStat[i].mTid;
-        scanret[i + 1] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, refidx, jct[refidx], dps[refidx]);
+        scanret[i] = mOpt->pool->enqueue(&SVScanner::scanDPandSROne, this, refidx, jct[refidx], dps[refidx]);
     }
     for(auto& e: scanret) e.get();
     // Merge and clean
@@ -171,6 +172,7 @@ void SVScanner::scanDPandSR(){
     }
     // Merge SR and DP SVs
     util::loginfo("Beg merging SVs from SRs and DPs");
+    refInxLoad.get();
     SVSet mergedSVs;
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
     if(mOpt->debug & DEBUG_FCALL){
