@@ -27,13 +27,13 @@ struct VCFMerger{
     bool filterForPrecise = false;     ///< keep PRECISE record if true
     uint32_t chunksize = 100;          ///< max input files to merge at one time
     int32_t svcounter = 0;             ///< output SV record counter
-    int32_t bpoffset = 1000;           ///< max difference allowed for two duplicated SV pos
+    int32_t bpoffset = 300;            ///< max difference allowed for two duplicated SV pos
     int32_t minsize = 0;               ///< min SV size to output
     int32_t maxsize = (1 << 20);       ///< max SV size to output
     int32_t coverage = 0;              ///< min coverage for SV to output
     float recoverlap = 0.8;            ///< min overlap ratio for SV to output
     float vaf = 0.0;                   ///< min VAF for SV to output
-    std::string tmpdir = "./.tmpdir";   ///< temp directory used during merging
+    std::string tmpdir = "./.tmpdir";  ///< temp directory used during merging
     std::string outfile = "merge.bcf"; ///< output bcf file path
     std::string infilelist;            ///< input bcf file list
     std::vector<std::string> infiles;  ///< input bcf file list parsed

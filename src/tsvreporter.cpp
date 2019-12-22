@@ -79,6 +79,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
+    mOpt->fuseOpt->mMaxBpOffset = std::max(mOpt->libInfo->mMaxNormalISize, 300);
     if(mOpt->debug & DEBUG_FOUTF){
         if(!mOpt->fuseOpt->mFsRptList.empty()){
             for(auto iter = mOpt->fuseOpt->mFusionRptMap.begin(); iter != mOpt->fuseOpt->mFusionRptMap.end(); ++iter){
