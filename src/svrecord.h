@@ -220,7 +220,7 @@ class SVRecord{
           * @param maxReadSep max inserted length allowed
           */
         inline void getSCIns(const bam1_t* b, std::string& rseq, std::string& iseq, int32_t inslen, int32_t maxReadSep){
-            if(mSVT == 4 || inslen <= maxReadSep ){
+            if(mSVT == 4 || inslen < maxReadSep ){
                 rseq = bamutil::getSeq(b);
                 return;
             }
