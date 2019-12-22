@@ -24,6 +24,7 @@ class SRBamRecord{
         int32_t mInslen;   ///< insert size of two part of one read contributed, this might caused by insertion or sequence error
         int32_t mSVID;     ///< default -1, if allocated to an StructuralVariant, it is the index at which to store a StructuralVariant in vector
         size_t mID;        ///< hash value of the read name
+        bool mRead1;       ///< from read1 if true
 
     public:
         /** construct SRBamRecord object
@@ -34,8 +35,9 @@ class SRBamRecord{
          * @param rstart starting mapping position on reference of one part read which is not -1
          * @param inslen insert size of two part of one read contributed
          * @param id hash value of the read name
+         * @param rd1 read1 if true
          */
-        SRBamRecord(int32_t chr1, int32_t pos1, int32_t chr2, int32_t pos2, int32_t rstart, int32_t inslen, size_t id){
+        SRBamRecord(int32_t chr1, int32_t pos1, int32_t chr2, int32_t pos2, int32_t rstart, int32_t inslen, size_t id, bool rd1){
             mChr1 = chr1;
             mPos1 = pos1;
             mChr2 = chr2;
@@ -44,6 +46,7 @@ class SRBamRecord{
             mInslen = inslen;
             mSVID = -1;
             mID = id;
+            mRead1 = rd1;
         }
 
         /** SRBamRecord destructor */
@@ -68,6 +71,7 @@ class SRBamRecord{
          */
         inline friend std::ostream& operator<<(std::ostream& os, const SRBamRecord& sr){
             os << "===============================================================\n";
+            os << "Split read is from read1 of pair: " << std::boolalpha << sr.mRead1 << "\n";
             os << "Part1 of Split Read Reference ID: " << sr.mChr1 << "\n";
             os << "Part1 of Split Read Breakpoint Position on Reference: " << sr.mPos1 << "\n";
             os << "Part2 of Split Read Reference ID: " << sr.mChr2 << "\n";

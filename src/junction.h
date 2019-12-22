@@ -13,6 +13,7 @@
 class Junction{
     public:
         bool mForward;     ///< junction read is from forward strand if true (eg. !b->core.BAM_FREVERSE)
+        bool mRead1;       ///< junction read is from read1 if true
         bool mSCleft;      ///< softclip is at leading left part of alignment if true
         int32_t mSCLen;    ///< softclip length of this junction alignment record
         int32_t mRefidx;   ///< junction record alignment reference tid (b->core.tid)
@@ -30,8 +31,9 @@ class Junction{
          * @param refpos b->core.pos + reference length consumed before junction point
          * @param seqpos sequence length consumed before junction point(count from read 5'->3')
          * @param seqmatch sequence length consumed before junction point(count from read alignment direction)
+         * @param rd1 if true Junction read is from read1 of pair
          */
-        Junction(bool forward, bool scleft, int32_t sclen, int32_t refidx, int32_t rstart, int32_t refpos, int32_t seqpos, int32_t seqmatch){
+        Junction(bool forward, bool scleft, int32_t sclen, int32_t refidx, int32_t rstart, int32_t refpos, int32_t seqpos, int32_t seqmatch, bool rd1){
             mForward = forward;
             mSCleft = scleft;
             mSCLen = sclen;
@@ -40,6 +42,7 @@ class Junction{
             mRefpos = refpos;
             mSeqpos = seqpos;
             mSeqmatch = seqmatch;
+            mRead1 = rd1;
         }
 
         /** operator to output an Junction object to ostream
@@ -50,6 +53,7 @@ class Junction{
         inline friend std::ostream& operator<<(std::ostream& os, const Junction& jct){
             os << "==========================================\n";
             os << std::boolalpha << "From Forward Strand: " << jct.mForward << "\n";
+            os << std::boolalpha << "From read1 of pair: " << jct.mRead1 << "\n";
             os << std::boolalpha << "Leading Soft Clip: " << jct.mSCleft << "\n";
             os << "Soft clip length: " << jct.mSCLen << "\n";
             os << "Reference ID: " << jct.mRefidx << "\n";

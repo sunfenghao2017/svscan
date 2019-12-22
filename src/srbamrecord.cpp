@@ -58,7 +58,8 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                                                     iter->second[littleChrIdx].mRefpos,
                                                     rst,
                                                     inslen,
-                                                    iter->first));
+                                                    iter->first,
+                                                    iter->second[littleChrIdx].mRead1));
                 }
             }else{
                 svtIdx = -1;
@@ -91,7 +92,8 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                                                        iter->second[rightPart].mRefpos,
                                                        rst,
                                                        inslen,
-                                                       iter->first));
+                                                       iter->first,
+                                                       iter->second[leftPart].mRead1));
                 }
             }
         }
@@ -353,7 +355,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         int32_t svt = svs[svid].mSVT;
         int32_t bpInslen = 0;
         for(auto& rec : mSRs[svs[svid].mSVT]){
-            if(rec.mID == seed){
+            if(rec.mID == seed && rec.mRead1 == (b->core.flag & BAM_FREAD1)){
                 bpInslen = rec.mInslen;
                 break;
             }
@@ -425,7 +427,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
-                if(insStore[svid].size() > 1){
+                if(insStore[svid].size() > 0.5 * seqStore[svid].size()){
                     MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                     if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
                     imsa->msa(svs[svid].mBpInsSeq);
@@ -554,7 +556,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
                 if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
-                if(mTriSeqStore[svid].size()){
+                if(mTriSeqStore[svid].size() > 0.5 * mTraSeqStore[svid].size()){
                     MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
                     if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
                     imsa->msa(svs[svid].mBpInsSeq);

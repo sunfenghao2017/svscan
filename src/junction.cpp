@@ -35,7 +35,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
             seqmatch = seqlen - oplen;
             if(oplen > mOpt->filterOpt->minClipLen){
-                jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch));
+                jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
             }
         }else if(opint == BAM_CHARD_CLIP){
             return -1;
@@ -97,7 +97,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
                 readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
                 seqmatch = seqlen - oplen;
                 if(oplen > mOpt->filterOpt->minClipLen){
-                    jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch));
+                    jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
                 }
             }else if(opchr == BAM_CREF_SKIP) refpos += oplen;
         }
