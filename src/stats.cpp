@@ -312,14 +312,14 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                         int32_t bppos = irpos;
                                         if(sscr) bppos = erpos;
                                         if(itbp->mIsSVEnd){
-                                            if(bppos < svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosLow ||
-                                               bppos > svs[itbp->mID].mSVStart + svs[itbp->mID].mCiPosHigh ||
+                                            if(bppos < svs[itbp->mID].mSVStart - mOpt->libInfo->mReadLen ||
+                                               bppos > svs[itbp->mID].mSVStart + mOpt->libInfo->mReadLen ||
                                                svs[itbp->mID].mChr1 != stid){
                                                 validRSR = false;
                                             }
                                         }else{
-                                            if(bppos < svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndLow ||
-                                               bppos > svs[itbp->mID].mSVEnd + svs[itbp->mID].mCiEndHigh ||
+                                            if(bppos < svs[itbp->mID].mSVEnd - mOpt->libInfo->mReadLen ||
+                                               bppos > svs[itbp->mID].mSVEnd + mOpt->libInfo->mReadLen ||
                                                svs[itbp->mID].mChr2 != stid){
                                                 validRSR = false;
                                             }
