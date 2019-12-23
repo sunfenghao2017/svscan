@@ -140,29 +140,36 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         // Count aligned basepair (small InDels)
         int32_t leadingSC = 0, leadingHC = 0;
         int32_t tailingSC = 0, tailingHC = 0;
-        int32_t rp = 0; // reference pos
+        int32_t rp = b->core.pos; // reference pos
+        int32_t ep = rp;
         uint32_t* cigar = bam_get_cigar(b);
         for(uint32_t i = 0; i < b->core.n_cigar; ++i){
             int opint = bam_cigar_op(cigar[i]);
             int oplen = bam_cigar_oplen(cigar[i]);
-            if(opint == BAM_CMATCH || opint == BAM_CDIFF || opint == BAM_CEQUAL){
-                rp += oplen;
-            }else if(opint == BAM_CDEL){
-                rp += oplen;
-            }else if(opint == BAM_CREF_SKIP){
-                rp += oplen;
-            }else if(opint == BAM_CSOFT_CLIP){
-                if(i == 0) leadingSC = oplen;
-                else tailingSC = opint;
-            }else if(opint == BAM_CHARD_CLIP){
-                if(i == 0) leadingHC = oplen;
-                else tailingHC = oplen;
+            switch(opint){
+                case BAM_CMATCH: case BAM_CDIFF: case BAM_CEQUAL: case BAM_CDEL: case BAM_CREF_SKIP:
+                    ep += oplen;
+                    break;
+                case BAM_CSOFT_CLIP:
+                    if(i == 0) leadingSC = oplen;
+                    else tailingSC = oplen;
+                    break;
+                case BAM_CHARD_CLIP:
+                    if(i == 0) leadingHC = oplen;
+                    else tailingHC = oplen;
+                    break;
+                default:
+                    break;
             }
         }
         if(leadingHC || tailingHC) continue; // skip reads with any hardclipings
         if(leadingSC && tailingSC) continue; // skip reads with both leading and tailing softclips
+        int32_t bpapos = rp;
+        if(tailingSC) bpapos = ep;
         bool assigned = false;
         uint8_t* sa = bam_aux_get(b, "SA");
+        int32_t stid = -1, irpos = -1, erpos = -1, sscl = 0, sscr = 0, bpbpos = -1, scsvt = -1;
+        bool safwd = false, orifwd = !(b->core.flag & BAM_FREVERSE), sahdc = false;
         std::string sastr;
         if(sa){ // skip reads with cliped part in repeat regions
             sastr = bam_aux2Z(sa);
@@ -185,6 +192,55 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
             }
             if(sastr.empty()) continue;
+            else{
+                util::split(sastr, vstr, ",");
+                stid = bam_name2id(h, vstr[0].c_str());
+                irpos = std::atoi(vstr[1].c_str());
+                erpos = irpos;
+                safwd = (vstr[2][0] == '+');
+                char* scg = const_cast<char*>(vstr[3].c_str());
+                int32_t stotlen = 0;
+                while(*scg && *scg != '*'){
+                    long num = 0;
+                    if(std::isdigit((int)*scg)){
+                        num = std::strtol(scg, &scg, 10);
+                        stotlen += num;
+                    }
+                    switch(*scg){
+                        case 'S':
+                            if(stotlen == num) sscl = num;
+                            else sscr = num;
+                            break;
+                        case 'H':
+                            sahdc = true;
+                            break;
+                        case 'M': case '=': case 'X': case 'D': case 'N':
+                            erpos += num;
+                            break;
+                        default:
+                            break;
+                    }
+                    ++scg;
+                }
+                if(sscr) bpbpos = erpos;
+                if(stid == b->core.tid){
+                    if(bpapos < bpbpos){
+                        scsvt = svutil::getSRSASVT(bpapos, leadingSC, orifwd, bpbpos, sscl, safwd, true,
+                                                   mOpt->filterOpt->mMaxReadSep, mOpt->filterOpt->mMinRefSep);
+                    }else{
+                        scsvt = svutil::getSRSASVT(bpbpos, sscl, safwd, bpapos, leadingSC, orifwd, true,
+                                                   mOpt->filterOpt->mMaxReadSep, mOpt->filterOpt->mMinRefSep);
+                    }
+                }else{
+                    if(b->core.tid < stid){
+                        scsvt = svutil::getSRSASVT(bpapos, leadingSC, orifwd, bpbpos, sscl, safwd, false,
+                                                   mOpt->filterOpt->mMaxReadSep, mOpt->filterOpt->mMinRefSep);
+                    }else{
+                        scsvt = svutil::getSRSASVT(bpbpos, sscl, safwd, bpapos, leadingSC, orifwd, false,
+                                                   mOpt->filterOpt->mMaxReadSep, mOpt->filterOpt->mMinRefSep);
+                    }
+                }
+            }
         }
         std::set<int32_t> sptids;
         int32_t svt = DPBamRecord::getSVType(b, mOpt);
@@ -252,6 +308,22 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             continue;
                         }
+                        if(sa){
+                            if((scsvt != itbp->mSVT) || sahdc) continue;
+                            if(itbp->mIsSVEnd){
+                                if(bpbpos < svs[itbp->mID].mSVStart - mOpt->libInfo->mReadLen ||
+                                   bpbpos > svs[itbp->mID].mSVStart + mOpt->libInfo->mReadLen ||
+                                   svs[itbp->mID].mChr1 != stid){
+                                    continue;
+                                }
+                            }else{
+                                if(bpbpos < svs[itbp->mID].mSVEnd - mOpt->libInfo->mReadLen ||
+                                   bpbpos > svs[itbp->mID].mSVEnd + mOpt->libInfo->mReadLen ||
+                                   svs[itbp->mID].mChr2 != stid){
+                                    continue;
+                                }
+                            }
+                        }
                         // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
                         if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
@@ -265,76 +337,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
                         if(scoreAlt > mOpt->filterOpt->mMinSRResScore){
-                            bool validRSR = true;
-                            if(sa){
-                                std::vector<std::string> vstr;
-                                util::split(sastr, vstr, ",");
-                                int32_t stid = bam_name2id(h, vstr[0].c_str());
-                                int32_t irpos = std::atoi(vstr[1].c_str());
-                                int32_t erpos = irpos;
-                                bool safwd = (vstr[2][0] == '+');
-                                bool orifwd = !(b->core.flag & BAM_FREVERSE);
-                                int32_t catt = itbp->mSVT;
-                                if(itbp->mSVT >= 5) catt -= 5;
-                                if(catt <= 1){
-                                    if(safwd == orifwd) validRSR = false;
-                                }
-                                if(catt >= 2){
-                                    if(safwd != orifwd) validRSR = false;
-                                }
-                                if(validRSR){
-                                    char* scg = const_cast<char*>(vstr[3].c_str());
-                                    int32_t sscl = 0, sscr = 0;
-                                    int32_t stotlen = 0;
-                                    while(validRSR && *scg && *scg != '*'){
-                                        long num = 0;
-                                        if(std::isdigit((int)*scg)){
-                                            num = std::strtol(scg, &scg, 10);
-                                            stotlen += num;
-                                        }
-                                        switch(*scg){
-                                            case 'S':
-                                                if(stotlen == num) sscl = num;
-                                                else sscr = num;
-                                                break;
-                                            case 'H':
-                                                validRSR = false;
-                                                break;
-                                            case 'M': case '=': case 'X': case 'D': case 'N':
-                                                erpos += num;
-                                                break;
-                                            default:
-                                                break;
-                                        }
-                                        ++scg;
-                                    }
-                                    if(validRSR && ((sscl > 0) ^ (sscr > 0))){
-                                        int32_t bppos = irpos;
-                                        if(sscr) bppos = erpos;
-                                        if(itbp->mIsSVEnd){
-                                            if(bppos < svs[itbp->mID].mSVStart - mOpt->libInfo->mReadLen ||
-                                               bppos > svs[itbp->mID].mSVStart + mOpt->libInfo->mReadLen ||
-                                               svs[itbp->mID].mChr1 != stid){
-                                                validRSR = false;
-                                            }
-                                        }else{
-                                            if(bppos < svs[itbp->mID].mSVEnd - mOpt->libInfo->mReadLen ||
-                                               bppos > svs[itbp->mID].mSVEnd + mOpt->libInfo->mReadLen ||
-                                               svs[itbp->mID].mChr2 != stid){
-                                                validRSR = false;
-                                            }
-                                        }
-                                    }else{
-                                        validRSR = false;
-                                    }
-                                }
-                            }
-                            if(validRSR){
-                                assigned = true;
-                                if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
-                                if(itbp->mSVT != 4) onlySupportIns = false;
-                                if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = itbp->mIsSVEnd;
-                            }
+                            assigned = true;
+                            if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
+                            if(itbp->mSVT != 4) onlySupportIns = false;
+                            if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = itbp->mIsSVEnd;
                         }
                         delete altAligner;
                         altAligner = NULL;

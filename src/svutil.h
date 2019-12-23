@@ -686,6 +686,64 @@ namespace svutil{
         trec.unit = r2dl[j].uname;
         trec.version = r2dl[j].tversion;
     } 
+
+    /** determine sv type based on two part cigar of a read
+     * @param bp1p part1 on lite chr pos
+     * @param p1lc part1 is left clip if true
+     * @param p1fwd part1 is on forward strand if true
+     * @param bp2p part2 on lite chr pos
+     * @param p2lc part2 is left clip if true
+     * @param p2fwd part2 is on forward strand if true
+     * @param intrach across chr if true
+     * @param maxrdsep max read sep
+     * @param minrefsep min ref sep
+     */
+    inline int32_t getSRSASVT(int32_t bp1p, bool p1lc, bool p1fwd, int32_t bp2p, bool p2lc, bool p2fwd, bool intrach, int32_t maxrdsep, int32_t minrefsep){
+        if(intrach){// same chr
+            if(p1fwd == p2fwd){ // same strand
+                if(p1lc != p2lc){ // opposing sc
+                    if(std::abs(bp1p - bp2p) < maxrdsep){// bp close
+                        return 4; // foreign ins
+                    }else if(std::abs(bp1p - bp2p) > minrefsep){ // bp farway
+                        if(p1lc){ // lite pos left clip
+                            return 3; // dup
+                        }else{ // lite pos right clip
+                            return 2; // del
+                        }
+                    }
+                }
+            }else{
+                if(p1lc == p2lc){ // same clip direction
+                    if(std::abs(bp1p - bp2p) > minrefsep){ // bp farway
+                        if(p2lc){
+                            return 1; // 3to3
+                        }else{
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }else{ // across chr
+            if(p1fwd == p2fwd){ // same strand
+                if(p1lc != p2lc){// opposint clip
+                    if(p1lc){ // lite chr left clip
+                        return 7;
+                    }else{
+                        return 8;
+                    }
+                }
+            }else{ // different strand
+                if(p1lc == p2lc){ // same clip direction
+                    if(p1lc){
+                        return 6;
+                    }else{
+                        return 5;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
 }
 
 #endif
