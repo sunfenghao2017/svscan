@@ -352,17 +352,48 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 if(supportSrsID.size()){
                     auto iit = supportSrsID.begin();
                     int32_t ixmx = iit->first;
-                    // first run
-                    for(; iit != supportSrsID.end(); ++iit){
-                        if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
-                            ixmx = iit->first;
+                    if(supportSrsID.size() > 1){
+                        // din non-repeat region svs
+                        std::vector<int32_t> nrps;
+                        for(; iit != supportSrsID.end(); ++iit){
+                            if(svs[iit->first].mRealnRet >= 0 && 
+                               svs[iit->first].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                                nrps.push_back(iit->first);
+                            }
                         }
-                    }
-                    // second run
-                    iit = supportSrsID.begin();
-                    for(; iit != supportSrsID.end(); ++iit){
-                        if(svs[iit->first].mPESupport > svs[ixmx].mPESupport){
-                            ixmx = iit->first;
+                        if(nrps.size() == 1) ixmx = nrps[0]; // only one non-repeat region hit
+                        else{
+                            if(nrps.size() == 0){ // all in repeat region
+                                // first run
+                                for(; iit != supportSrsID.end(); ++iit){
+                                    if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
+                                        ixmx = iit->first;
+                                    }
+                                }
+                                // second run
+                                iit = supportSrsID.begin();
+                                for(; iit != supportSrsID.end(); ++iit){
+                                    if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
+                                       svs[iit->first].mPESupport > svs[ixmx].mPESupport){
+                                       ixmx = iit->first;
+                                    }
+                                }
+                            }else{ // more than 2 non-repeat region
+                                ixmx = nrps[0];
+                                // first run
+                                for(uint32_t xxvid = 1; xxvid < nrps.size(); ++xxvid){
+                                    if(svs[nrps[xxvid]].mSRSupport > svs[ixmx].mSRSupport){
+                                        ixmx = nrps[xxvid];
+                                    }
+                                }
+                                // second run
+                                for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
+                                    if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
+                                       svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
+                                        ixmx = xxvid;
+                                    }
+                                }
+                            }
                         }
                     }
                     // output
@@ -500,17 +531,48 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     if(supportSpnID.size()){
                         auto iit = supportSpnID.begin();
                         int32_t ixmx = iit->first;
-                        // first run
-                        for(; iit != supportSpnID.end(); ++iit){
-                            if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
-                                ixmx = iit->first;
+                        if(supportSpnID.size() > 1){
+                            // din non-repeat region svs
+                            std::vector<int32_t> nrps;
+                            for(; iit != supportSpnID.end(); ++iit){
+                                if(svs[iit->first].mRealnRet >= 0 && 
+                                   svs[iit->first].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                                    nrps.push_back(iit->first);
+                                }
                             }
-                        }
-                        // second run
-                        iit = supportSpnID.begin();
-                        for(; iit != supportSpnID.end(); ++iit){
-                            if(svs[iit->first].mPESupport > svs[ixmx].mPESupport){
-                                ixmx = iit->first;
+                            if(nrps.size() == 1) ixmx = nrps[0]; // only one non-repeat region hit
+                            else{
+                                if(nrps.size() == 0){ // all in repeat region
+                                    // first run
+                                    for(; iit != supportSpnID.end(); ++iit){
+                                        if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
+                                            ixmx = iit->first;
+                                        }
+                                    }
+                                    // second run
+                                    iit = supportSpnID.begin();
+                                    for(; iit != supportSpnID.end(); ++iit){
+                                        if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
+                                           svs[iit->first].mPESupport > svs[ixmx].mPESupport){
+                                           ixmx = iit->first;
+                                        }
+                                    }
+                                }else{ // more than 2 non-repeat region
+                                    ixmx = nrps[0];
+                                    // first run
+                                    for(uint32_t xxvid = 1; xxvid < nrps.size(); ++xxvid){
+                                        if(svs[nrps[xxvid]].mSRSupport > svs[ixmx].mSRSupport){
+                                            ixmx = nrps[xxvid];
+                                        }
+                                    }
+                                    // second run
+                                    for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
+                                        if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
+                                           svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
+                                            ixmx = xxvid;
+                                        }
+                                    }
+                                }
                             }
                         }
                         // output

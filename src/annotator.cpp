@@ -415,31 +415,59 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
     hts_close(fp);
 }
 
-void Annotator::refineCovAnno(Stats* sts){
+void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
     ReadSupportStatMap rssm;
     getReadSupportStatus(mOpt->bamout, rssm);
-    std::set<std::string> drec;
+    std::map<std::string, int32_t> drec;
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
         if(iter->second.mR1MapQ && iter->second.mR2MapQ){
             if((iter->second.mR1SVID != iter->second.mR2SVID)){
-                if(iter->second.mR1SRT){
-                    sts->mSpnCnts[iter->second.mR1SVID].mAltCnt -= 1;
-                    sts->mSpnCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
-                }else{
-                    sts->mJctCnts[iter->second.mR1SVID].mAltCnt -= 1;
-                    sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+                // find the one which is not in repeat region
+                bool r1svrp = (svs[iter->second.mR1SVID].mRealnRet < 0 || svs[iter->second.mR1SVID].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r2svrp = (svs[iter->second.mR2SVID].mRealnRet < 0 || svs[iter->second.mR2SVID].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                if(r1svrp == r2svrp){
+                    if(!r1svrp){ // both not in repeat region
+                        if(svs[iter->second.mR1SVID].mSRSupport < svs[iter->second.mR2SVID].mSRSupport){
+                            r1svrp = true;
+                            r2svrp = false;
+                        }else if(svs[iter->second.mR1SVID].mSRSupport == svs[iter->second.mR2SVID].mSRSupport &&
+                                 svs[iter->second.mR1SVID].mPESupport < svs[iter->second.mR2SVID].mPESupport){
+                            r1svrp = true;
+                            r2svrp = false;
+                        }else{
+                            r1svrp = false;
+                            r2svrp = true;
+                        }
+                    }
                 }
-                if(iter->second.mR2SRT){
-                    sts->mSpnCnts[iter->second.mR2SVID].mAltCnt -= 1;
-                    sts->mSpnCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
-                }else{
-                    sts->mJctCnts[iter->second.mR2SVID].mAltCnt -= 1;
-                    sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
+                if(r1svrp){
+                    sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
+                    if(iter->second.mR1SRT){
+                        sts->mSpnCnts[iter->second.mR1SVID].mAltCnt -= 1;
+                        sts->mSpnCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+                    }else{
+                        sts->mJctCnts[iter->second.mR1SVID].mAltCnt -= 1;
+                        sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+                    }
                 }
-                drec.insert(iter->first);
-                sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
-                sts->mTotalAltCnts[iter->second.mR2SVID] -= 1;
+                if(r2svrp){
+                    sts->mTotalAltCnts[iter->second.mR2SVID] -= 1;
+                    if(iter->second.mR2SRT){
+                        sts->mSpnCnts[iter->second.mR2SVID].mAltCnt -= 1;
+                        sts->mSpnCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
+                    }else{
+                        sts->mJctCnts[iter->second.mR2SVID].mAltCnt -= 1;
+                        sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
+                    }
+                }
+                if(r1svrp && r2svrp){
+                    drec[iter->first] = 3;
+                }else if(r1svrp){
+                    drec[iter->first] = 1;
+                }else if(r2svrp){
+                    drec[iter->first] = 2;
+                }
             }else{
                 sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
             }
@@ -452,8 +480,15 @@ void Annotator::refineCovAnno(Stats* sts){
     samFile* ofp = sam_open(tmpBam.c_str(), "wb");
     assert(sam_hdr_write(ofp, h) >= 0);
     while(sam_read1(ifp, h, b) >= 0){
-        if(drec.find(bam_get_qname(b)) == drec.end()){
+        auto iter = drec.find(bam_get_qname(b));
+        if(iter == drec.end()){
             assert(sam_write1(ofp, h, b) >= 0);
+        }else{
+            if(iter->second == 1 && (b->core.flag & BAM_FREAD2)){
+                assert(sam_write1(ofp, h, b) >= 0);
+            }else if(iter->second == 2 && (b->core.flag & BAM_FREAD1)){
+                assert(sam_write1(ofp, h, b) >= 0);
+            }
         }
     }
     rename(tmpBam.c_str(), mOpt->bamout.c_str());

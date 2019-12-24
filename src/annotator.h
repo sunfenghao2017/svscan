@@ -25,7 +25,7 @@ class Annotator{
         ~Annotator(){}
 
         /** refine coverage stat */
-        void refineCovAnno(Stats* sts);
+        void refineCovAnno(Stats* sts, const SVSet& svs);
 
         /** annotate SV coverage
          * @param svs reference of SVRecords

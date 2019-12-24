@@ -220,7 +220,7 @@ void SVScanner::scanDPandSR(){
     if(!mOpt->bamout.empty()){
         sam_close(mOpt->fbamout);
         util::loginfo("Beg refining SV coverage");
-        covAnn->refineCovAnno(covStat);
+        covAnn->refineCovAnno(covStat, mergedSVs);
         util::loginfo("End refining SV coverage");
     }
     GeneInfoList gl;
