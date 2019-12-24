@@ -222,6 +222,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     }
                     ++scg;
                 }
+                bpbpos = irpos;
                 if(sscr) bpbpos = erpos;
                 if(stid == b->core.tid){
                     if(bpapos < bpbpos){
