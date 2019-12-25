@@ -11,7 +11,6 @@
 #include "options.h"
 #include "junction.h"
 #include "svrecord.h"
-#include "edgerecord.h"
 
 /** class to store split read alignment record */
 class SRBamRecord{
@@ -173,8 +172,6 @@ class SRBamRecordSet{
         void classifyJunctions(JunctionMap* jctMap);
 
         /** cluster SRBamRecord of one type SV and find all supporting SV of this type\n
-         * step1: cluster SRBamRecord into different component, SRBamRecord with same chr1, pos1 abs diff in a limit[MaxReadSep](only considre nearing two) consists a component\n
-         * step2: search each component for an clique, use the EdgeRecord in a component with the least weight as an seed, grow the clique as big as possible\n
          * @param srs reference of SRBamRecords which supporting SV type svt
          * @param svs SVSet used to store SV found
          * @param svt SV type to find in srs, range [0-8]
@@ -184,15 +181,13 @@ class SRBamRecordSet{
         /** cluster all SRBamRecord in SRBamRecordSet into their seperate supporting SVs */
         void cluster(SVSet& svs);
 
-        /** a subroutine used to search all possible clique supporting an type of SV\n
-         * step1: select seed, use the EdgeRecord in a component with the least weight as an seed of clique\n
-         * step2: grow the clique, add another component if the expanded clique have starting/ending position diff smaller than a limit[MaxReadSep]\n
-         * @param compEdge <compNumber, components> pairs clustered from SRBamRecords
+        /** get sv candidates of a cluster
+         * @param clique sr id of a cluster
          * @param srs reference of SRBamRecords which supporting SV type svt
          * @param svs SVSet used to store SV found
          * @param svt SV type to find in srs, range [0-8]
-         */
-        void searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& compEdge, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt);
+         */ 
+        void searchCliques(std::set<int32_t>& clique, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt);
 
         /** assembly reads of SR supporting each SV by MSA to get an consensus representation of SRs,\n
          * split align the consensus sequence against the constructed reference sequence to refine the breakpoint position

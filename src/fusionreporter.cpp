@@ -129,9 +129,9 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     std::getline(fr, tmpstr);
     if(!fuseOpt->mSVModFile.empty()) fsv << tmpstr << "\n";
     while(std::getline(fr, tmpstr)){
-        if(debug){
-            std::cout << tmpstr << std::endl;
-        }
+#ifdef DEBUG
+        if(debug)  std::cout << tmpstr << std::endl;
+#endif
         SVRec svr;
         SVRec::line2rec(tmpstr, svr);
         TrsRecList trsl1, trsl2;
@@ -139,6 +139,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         str2trsl(trsl2, svr.bp2Gene);
         FuseGeneList fgl;
         str2fsgs(fgl, svr.fuseGene, svr.fsMask, trsl1, trsl2);
+#ifdef DEBUG
         if(debug){
             std::cout << "FuseGeneList fgl: " << std::endl;
             for(uint32_t flidx = 0; flidx < fgl.size(); ++flidx){
@@ -153,6 +154,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 std::cout << trsl2[trsidx].toStr() << std::endl;
             }
         }
+#endif
         int32_t svt = svr.svInt;
         std::string chr1 = svr.bp1Chr;
         std::string chr2 = svr.bp2Chr;
@@ -285,9 +287,9 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.ts2name = fgr.ts2name; // ts2Name
                 fgr.ts2pos = fgr.ts2pos;   // ts2Pos
             }
-            if(debug){
-                std::cout << fgr << std::endl;
-            }
+#ifdef DEBUG
+            if(debug) std::cout << fgr << std::endl;
+#endif
             frl.push_back(fgr);
         }
         bool reported = false;

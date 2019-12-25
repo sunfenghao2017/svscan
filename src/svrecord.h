@@ -45,6 +45,8 @@ class SVRecord{
         std::string mNameChr2 = "";  ///< name of chr on 3' end of SV | little chr
         std::string mProbeBegC = ""; ///< an consensus sequence segment spanning the SV starting position
         std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
+        std::string mProbeBegA = ""; ///< an alternative consensus sequence segment spanning the SV starting position
+        std::string mProbeEndA = ""; ///< an alternative consensus sequence segment spanning the SV ending position
         std::string mInsSeq = "";    ///< insertion sequence of insertion event
         std::string mTraChr1Seq = "";///< larger chr reference sequence of translocation 
         std::string mTraChr2Seq = "";///< little chr reference sequence of translocation

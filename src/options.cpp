@@ -68,7 +68,7 @@ void Options::update(int argc, char** argv){
     }
     // adjust sr score
     if(rnamode){
-        filterOpt->mMinSRResScore = 0.99;
+        filterOpt->mMinSRResScore = 0.95;
         batchsvn = 500;
     }
     // update contigNum

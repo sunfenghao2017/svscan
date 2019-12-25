@@ -104,210 +104,83 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
 void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
     int32_t origSize = svs.size();
     util::loginfo("Beg clustering SRs for SV type " + std::to_string(svt) + ", all " + std::to_string(srs.size()) + " SRs ");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_Beg_clustering_SRs_for_SV_type:" << svt << std::endl;
     }
-    // Components assigned marker
-    std::vector<int32_t> comp = std::vector<int32_t>(srs.size(), 0);
-    int32_t compNum = 0;
-    Cluster compEdge; // component clusters
-    // Construct graphs
-    size_t lastConnectedNodesEnd = 0;
-    size_t lastConnectedNodesBeg = 0;
-    for(uint32_t i = 0; i < srs.size(); ++i){
-        if(mOpt->debug & DEBUG_FCALL){
-            std::cout << "index of srs: " << i << std::endl;
-            std::cout << "lastConnectedNodesEnd: " << lastConnectedNodesEnd << std::endl;
-            std::cout << "lastConnectedNodesBeg: " << lastConnectedNodesBeg << std::endl;
-        }
-        // Safe to clean the graph ?
-        if(i > lastConnectedNodesEnd){
-            if(mOpt->debug & DEBUG_FCALL){
-                std::cout << "clean the last graph now" << std::endl;
-            }
-            // Clean edge lists
-            if(!compEdge.empty()){
-                searchCliques(compEdge, srs, svs, svt);
-                lastConnectedNodesBeg = lastConnectedNodesEnd;
-                compEdge.clear();
+#endif
+    std::set<int32_t> clique; // component cluster
+    int32_t totsrs = srs.size();
+    int32_t i = 0, j = 0;
+    while(i < totsrs){
+        clique.clear();
+        clique.insert(i);
+        j = i + 1;
+        while(j < totsrs){
+            if(srs[j].mChr1 == srs[i].mChr1 && 
+               srs[j].mChr2 == srs[i].mChr2 &&
+               (srs[j].mPos1 - srs[i].mPos1 < mOpt->filterOpt->mMaxReadSep ||
+               std::abs(srs[j].mPos2 - srs[i].mPos2) < mOpt->filterOpt->mMaxReadSep)){
+                clique.insert(j);
+                ++j;
             }else{
-                lastConnectedNodesBeg = i;
+                break;
             }
         }
-        // Search possible connectable node
-        for(uint32_t j = i + 1; j < srs.size(); ++j){
-            if(srs[j].mChr1 != srs[i].mChr1) break; // same chr1
-            if(srs[j].mChr2 != srs[i].mChr2) break; // same chr2
-            if(srs[j].mPos1 - srs[i].mPos1 > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
-            if(std::abs(srs[j].mPos2 - srs[i].mPos2) > mOpt->filterOpt->mMaxReadSep) break; // breakpoint position in valid range
-            // Update last connected node
-            if(j > lastConnectedNodesEnd) lastConnectedNodesEnd = j;
-            // Assign components
-            int32_t compIndex = 0;
-            if(!comp[i]){
-                if(!comp[j]){// Neither vertex has component assigned
-                    compIndex = ++compNum;
-                    comp[i] = compIndex;
-                    comp[j] = compIndex;
-                    compEdge.insert(std::make_pair(compIndex, std::vector<EdgeRecord>()));
-                }else{// Only one vertex has component assigned
-                    compIndex = comp[j];
-                    comp[i] = compIndex;
-                }
-            }else{
-                if(!comp[j]){// Only one vertex has component assigned
-                    compIndex = comp[i];
-                    comp[j] = compIndex;
-                }else{// Both vertices have components assigned, then merge these components
-                    if(comp[i] == comp[j]) compIndex = comp[i];
-                    else{// Merge components
-                        compIndex = comp[i];
-                        int32_t otherIndex = comp[j];
-                        if(otherIndex < compIndex){
-                            compIndex = comp[j];
-                            otherIndex = comp[i];
-                        }
-                        // Re-label other index
-                        for(uint32_t k = lastConnectedNodesBeg; k <= lastConnectedNodesEnd; ++k){
-                            if(otherIndex == comp[k]){
-                                comp[k] = compIndex;
-                            }
-                        }
-                        // Merge edge list
-                        auto compIdxIter = compEdge.find(compIndex);
-                        auto otherIdxIter = compEdge.find(otherIndex);
-                        compIdxIter->second.insert(compIdxIter->second.end(), otherIdxIter->second.begin(), otherIdxIter->second.end());
-                        compEdge.erase(otherIdxIter);
-                    }
-                }
-            }
-            // Append new edge
-            auto compEdgeIter = compEdge.find(compIndex);
-            if(compEdgeIter->second.size() < mOpt->filterOpt->mGraphPruning){
-                // Breakpoint distance
-                int32_t weight = std::abs(srs[j].mPos2 - srs[i].mPos2) + std::abs(srs[j].mPos1 - srs[i].mPos1);
-                compEdgeIter->second.push_back(EdgeRecord(i, j, weight));
-            }
-        }
-    }
-    // Search cliques
-    if(!compEdge.empty()){
-        searchCliques(compEdge, srs, svs, svt);
-        compEdge.clear();
-    }
-    // singleton sr should also be taken into consideration
-    if(mOpt->filterOpt->mMinSeedSR < 2){
-        for(auto& sr: srs){
-            if(sr.mSVID == -1){
-                SVRecord svr;
-                svr.mChr1 = sr.mChr1;
-                svr.mSVStart = sr.mPos1;
-                svr.mChr2 = sr.mChr2;
-                svr.mSVEnd = sr.mPos2;
-                svr.mCiPosLow = 0;
-                svr.mCiPosHigh = 0;
-                svr.mCiEndLow = 0;
-                svr.mCiEndHigh = 0;
-                svr.mAlnInsLen = sr.mInslen;
-                svr.mID = svs.size();
-                svr.mSVT = svt;
-                svr.mFromOneSR = true;
-                svs.push_back(svr);
-                sr.mSVID = svr.mID;
-            }
-        }
+        searchCliques(clique, srs, svs, svt);
+        i = j;
     }
     util::loginfo("End clustering SRs for SV type " + std::to_string(svt) + ", got " + std::to_string(svs.size() - origSize) + " SV candidates.");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "End clustering SRs for SV type " << svt << std::endl;
     }
+#endif
 }
 
-void SRBamRecordSet::searchCliques(Cluster& compEdge, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
-    // Iterate all components
-    for(auto compIter = compEdge.begin(); compIter != compEdge.end(); ++compIter){
-        // Sort edges by weight
-        std::sort(compIter->second.begin(), compIter->second.end());
-        auto edgeIter = compIter->second.begin();
-        if(mOpt->debug & DEBUG_FCALL){
-            std::cout << "Beg output component:" << std::endl;
-            for(auto dbiter = compIter->second.begin(); dbiter != compIter->second.end(); ++dbiter){
-                std::cout << *dbiter << std::endl;
-            }
-            std::cout << "End output component:" << std::endl;
-            std::cout << "Beg search cliques: " << std::endl;
-            std::cout << "Beg edge: " << *edgeIter << std::endl;
-        }
-        // Find a large clique
-        std::set<int32_t> clique, incompatible;
-        // Initialization clique
-        clique.insert(edgeIter->mSource);
-        int32_t chr1 = srs[edgeIter->mSource].mChr1;
-        int32_t chr2 = srs[edgeIter->mSource].mChr2;
-        int32_t ciposlow = srs[edgeIter->mSource].mPos1;
-        uint64_t pos1 = srs[edgeIter->mSource].mPos1;
-        int32_t ciposhigh = srs[edgeIter->mSource].mPos1;
-        int32_t ciendlow = srs[edgeIter->mSource].mPos2;
-        uint64_t pos2 = srs[edgeIter->mSource].mPos2;
-        int32_t ciendhigh = srs[edgeIter->mSource].mPos2;
-        int32_t inslen = srs[edgeIter->mSource].mInslen;
-        // Grow clique
-        for(; edgeIter != compIter->second.end(); ++edgeIter){
-            // Find next best edge for extension
-            int32_t v;
-            if(clique.find(edgeIter->mSource) == clique.end() && clique.find(edgeIter->mTarget) != clique.end()){
-                v = edgeIter->mSource;
-            }else if(clique.find(edgeIter->mSource) != clique.end() && clique.find(edgeIter->mTarget) == clique.end()){
-                v = edgeIter->mTarget;
-            }else continue;
-            if(incompatible.find(v) != incompatible.end()) continue;
-            // Try to update clique with this vertex
-            int32_t newCiPosLow = std::min(srs[v].mPos1, ciposlow);
-            int32_t newCiPosHigh = std::max(srs[v].mPos1, ciposhigh);
-            int32_t newCiEndLow = std::min(srs[v].mPos2, ciendlow);
-            int32_t newCiEndHigh = std::max(srs[v].mPos2, ciendhigh);
-            if((newCiPosHigh - newCiPosLow) < mOpt->filterOpt->mMaxReadSep &&
-               (newCiEndHigh - newCiEndLow) < mOpt->filterOpt->mMaxReadSep){// Accept new vertex
-                if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "edge: " << v << " add compatible" << std::endl;
-                }
-                clique.insert(v);
-                ciposlow = newCiPosLow;
-                pos1 += srs[v].mPos1;
-                ciposhigh = newCiPosHigh;
-                ciendlow = newCiEndLow;
-                pos2 += srs[v].mPos2;
-                ciendhigh = newCiEndHigh;
-                inslen += srs[v].mInslen;
-              }else{
-                  incompatible.insert(v);
-                  if(mOpt->debug & DEBUG_FCALL){
-                      std::cout << "edge: " << v << " not compatibale" << std::endl;
-                  }
-              }
-        }
-        // At least 2 split read support
-        if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
-            int32_t svStart = pos1/clique.size();
-            int32_t svEnd = pos2/clique.size();
-            int32_t svISize = inslen/clique.size();
-            int32_t svid = svs.size();
-            SVRecord svr;
-            svr.mChr1 = chr1;
-            svr.mSVStart = svStart;
-            svr.mChr2 = chr2;
-            svr.mSVEnd = svEnd;
-            svr.mCiPosLow = ciposlow - svStart;
-            svr.mCiPosHigh = ciposhigh - svStart;
-            svr.mCiEndLow = ciendlow - svEnd;
-            svr.mCiEndHigh = ciendhigh - svEnd;
-            svr.mAlnInsLen = svISize;
-            svr.mID = svid;
-            svr.mSVT = svt;
-            svs.push_back(svr);
-            // Reads assigned
-            for(auto& e : clique) srs[e].mSVID = svid;
-        }
+void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt){
+    auto iter = clique.begin();
+    int32_t srid = *iter;
+    int32_t ciposlow = srs[srid].mPos1;
+    int32_t ciposhigh = srs[srid].mPos1;
+    int32_t ciendlow = srs[srid].mPos2;
+    int32_t ciendhigh = srs[srid].mPos2;
+    uint64_t pos1 = srs[srid].mPos1;
+    uint64_t pos2 = srs[srid].mPos2;
+    int32_t inslen = srs[srid].mInslen;
+    int32_t chr1 = srs[srid].mChr1;
+    int32_t chr2 = srs[srid].mChr2;
+    ++iter;
+    for(; iter != clique.end(); ++iter){
+        srid = *iter;
+        ciposlow = std::min(srs[srid].mPos1, ciposlow);
+        ciposhigh = std::max(srs[srid].mPos1, ciposhigh);
+        ciendlow = std::min(srs[srid].mPos2, ciendlow);
+        ciendhigh = std::max(srs[srid].mPos2, ciendhigh);
+        pos1 += srs[srid].mPos1;
+        pos2 += srs[srid].mPos2;
+        inslen += srs[srid].mInslen;
+    }
+    if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
+        int32_t svStart = pos1/clique.size();
+        int32_t svEnd = pos2/clique.size();
+        int32_t svISize = inslen/clique.size();
+        int32_t svid = svs.size();
+        SVRecord svr;
+        svr.mChr1 = chr1;
+        svr.mSVStart = svStart;
+        svr.mChr2 = chr2;
+        svr.mSVEnd = svEnd;
+        svr.mCiPosLow = ciposlow - svStart;
+        svr.mCiPosHigh = ciposhigh - svStart;
+        svr.mCiEndLow = ciendlow - svEnd;
+        svr.mCiEndHigh = ciendhigh - svEnd;
+        svr.mAlnInsLen = svISize;
+        svr.mID = svid;
+        svr.mSVT = svt;
+        svs.push_back(svr);
+        // Reads assigned
+        for(auto& e : clique) srs[e].mSVID = svid;
     }
 }
 
@@ -427,18 +300,24 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
-                if(insStore[svid].size() > 0.5 * seqStore[svid].size()){
-                    MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
-                    if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
-                    imsa->msa(svs[svid].mBpInsSeq);
-                    delete imsa;
+                if(insStore[svid].size()){
+                    if(insStore[svid].size() == 1){
+                        svs[svid].mBpInsSeq = *(insStore[svid].begin());
+                    }else{
+                        MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
+                        if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
+                        imsa->msa(svs[svid].mBpInsSeq);
+                        delete imsa;
+                    }
                 }
             }
             if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
             if(!bpRefined){
+#ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
                     std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
                 }
+#endif
                 svs[svid].mConsensus = "";
                 svs[svid].mSVRef = "";
                 svs[svid].mSRSupport = 0;
@@ -556,18 +435,24 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
                 if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
                 msa->msa(svs[svid].mConsensus);
                 delete msa;
-                if(mTriSeqStore[svid].size() > 0.5 * mTraSeqStore[svid].size()){
-                    MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
-                    if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
-                    imsa->msa(svs[svid].mBpInsSeq);
-                    delete imsa;
+                if(mTriSeqStore[svid].size()){
+                    if(mTriSeqStore[svid].size() == 1){
+                        svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
+                    }else{
+                        MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
+                        if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
+                        imsa->msa(svs[svid].mBpInsSeq);
+                        delete imsa;
+                    }
                 }
             }
             if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
             if(!bpRefined){
+#ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
                     std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
                 }
+#endif
                 svs[svid].mConsensus = "";
                 svs[svid].mSVRef = "";
                 svs[svid].mSRSupport = 0;

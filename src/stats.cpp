@@ -337,7 +337,19 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         int matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
-                        if(scoreAlt > mOpt->filterOpt->mMinSRResScore){
+                        if(scoreAlt < mOpt->filterOpt->mMinSRResScore && svs[itbp->mID].mProbeEndA.size()){
+                            consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndA : svs[itbp->mID].mProbeBegA;
+                            Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
+                            Matrix2D<char>* secResult = new Matrix2D<char>();
+                            alnScore = secAligner->needle(secResult);
+                            matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
+                            scoreAlt = (double)alnScore / (double)matchThreshold;
+                            delete secAligner;
+                            secResult = NULL;
+                            delete secResult;
+                            secResult = NULL;
+                        }
+                        if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
                             assigned = true;
                             if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                             if(itbp->mSVT != 4) onlySupportIns = false;

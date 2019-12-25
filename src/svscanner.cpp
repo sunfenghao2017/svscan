@@ -138,6 +138,7 @@ void SVScanner::scanDPandSR(){
             mOpt->svRefID.insert(f.mChr2);
         }
     }
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_svRefID:";
         for(auto& srfid: mOpt->svRefID){
@@ -145,12 +146,15 @@ void SVScanner::scanDPandSR(){
         }
         std::cout << std::endl;
     }
+#endif
     srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_SRSV_Cluster_result: " << std::endl;
         std::cout << srs << std::endl;
     }
+#endif
     util::loginfo("Beg assembling SRs and refining breakpoints");
     srs.assembleSplitReads(mSRSVs);
     util::loginfo("End assembling SRs and refining breakpoints");
@@ -159,26 +163,32 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg clustering DPs");
     dprSet->cluster(mDPSVs);
     util::loginfo("End clustering DPs");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SV_Cluster_result: " << std::endl;
         std::cout << dprSet << std::endl;
     }
+#endif
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SVS_found: " << std::endl;
         std::cout << mDPSVs << std::endl;
         std::cout << "debug_SR_SVS_found: " << std::endl;
         std::cout << mSRSVs << std::endl;
     }
+#endif
     // Merge SR and DP SVs
     util::loginfo("Beg merging SVs from SRs and DPs");
     refInxLoad.get();
     SVSet mergedSVs;
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_ALL_SVS_found: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
+#endif
     util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs.size()));
     util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
@@ -199,10 +209,12 @@ void SVScanner::scanDPandSR(){
         mOpt->svRefID.insert(mergedSVs[i].mChr1);
         mOpt->svRefID.insert(mergedSVs[i].mChr2);
     }
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
         std::cout << "debug_final_merged_svs: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
+#endif
     // open bamout for write
     if(!mOpt->bamout.empty()){
         samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
@@ -238,10 +250,12 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg writing Fusions to TSV file");
     covStat->reportFusionTSV(mergedSVs, gl);
     util::loginfo("End writing Fusions to TSV file");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
         std::cout << "debug_final_merged_svs: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
+#endif
     if(!mOpt->bcfOut.empty()){
         util::loginfo("Beg writing SVs to BCF file");
         std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVs());

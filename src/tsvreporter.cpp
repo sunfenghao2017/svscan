@@ -80,6 +80,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
     mOpt->fuseOpt->mMaxBpOffset = std::max(mOpt->libInfo->mMaxNormalISize, 300);
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
         if(!mOpt->fuseOpt->mFsRptList.empty()){
             for(auto iter = mOpt->fuseOpt->mFusionRptMap.begin(); iter != mOpt->fuseOpt->mFusionRptMap.end(); ++iter){
@@ -88,6 +89,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }
     }
+#endif
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
         for(uint32_t i = 0; i < gl.size(); ++i){
@@ -170,9 +172,11 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     // mask other status of fusions
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+#ifdef DEBUG
             if(mOpt->debug & DEBUG_FOUTF){
                 std::cout << gl[i].mFuseGene[j].debugStr();
             }
+#endif
             if(mOpt->fuseOpt->hasBlackGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FBLACKGENE;
             }
@@ -339,12 +343,14 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
         l = i;
     }
     if(!frl.empty()) frl[frl.size() - 1].report = true;
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
         std::cout << "debug_sorted_fs_event:" << std::endl;
         for(uint32_t i = 0; i < frl.size(); ++i){
             std::cout << std::boolalpha << frl[i].report << "\t" <<  frl[i] << std::endl;
         }
     }
+#endif
     // output valid fusions
     std::string header = FusionRecord::gethead(mOpt->rnamode);
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
