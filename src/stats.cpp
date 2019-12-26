@@ -309,6 +309,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             continue;
                         }
+                        bool seedgot = false;
                         if(sa){
                             if((scsvt != itbp->mSVT) || sahdc) continue;
                             if(itbp->mIsSVEnd){
@@ -324,6 +325,11 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     continue;
                                 }
                             }
+                            seedgot = true;
+                        }
+                        if(seedgot){
+                            supportSrsID[itbp->mID] = itbp->mIsSVEnd;
+                            continue;
                         }
                         // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
