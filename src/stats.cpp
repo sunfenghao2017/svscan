@@ -328,7 +328,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             seedgot = true;
                         }
                         if(seedgot){
-                            supportSrsID[itbp->mID] = itbp->mIsSVEnd;
+                            assigned = true;
+                            if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
+                            if(itbp->mSVT != 4) onlySupportIns = false;
+                            if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = itbp->mIsSVEnd;
                             continue;
                         }
                         // possible ALT
