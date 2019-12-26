@@ -377,14 +377,13 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         else{
                             if(nrps.size() == 0){ // all in repeat region
                                 // first run
-                                for(; iit != supportSrsID.end(); ++iit){
+                                for(iit = supportSrsID.begin(); iit != supportSrsID.end(); ++iit){
                                     if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
                                         ixmx = iit->first;
                                     }
                                 }
                                 // second run
-                                iit = supportSrsID.begin();
-                                for(; iit != supportSrsID.end(); ++iit){
+                                for(iit = supportSrsID.begin(); iit != supportSrsID.end(); ++iit){
                                     if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
                                        svs[iit->first].mPESupport > svs[ixmx].mPESupport){
                                        ixmx = iit->first;
@@ -402,7 +401,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
                                     if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
                                        svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
-                                        ixmx = xxvid;
+                                        ixmx = nrps[xxvid];
                                     }
                                 }
                             }
@@ -556,14 +555,13 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             else{
                                 if(nrps.size() == 0){ // all in repeat region
                                     // first run
-                                    for(; iit != supportSpnID.end(); ++iit){
+                                    for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
                                         if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
                                             ixmx = iit->first;
                                         }
                                     }
                                     // second run
-                                    iit = supportSpnID.begin();
-                                    for(; iit != supportSpnID.end(); ++iit){
+                                    for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
                                         if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
                                            svs[iit->first].mPESupport > svs[ixmx].mPESupport){
                                            ixmx = iit->first;
@@ -581,7 +579,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
                                         if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
                                            svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
-                                            ixmx = xxvid;
+                                            ixmx = nrps[xxvid];
                                         }
                                     }
                                 }
