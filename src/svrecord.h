@@ -94,6 +94,8 @@ class SVRecord{
             os << "Constructed reference sequence of this SV: " << sv.mSVRef << "\n";
             os << "Consensus sequence segment spanning the SV starting position: " << sv.mProbeBegC << "\n";
             os << "Consensus sequence segment spanning the SV ending position: " << sv.mProbeEndC << "\n";
+            os << "Consensus sequence segment spanning the SV starting position(with bpIns): " << sv.mProbeBegA << "\n";
+            os << "Consensus sequence segment spanning the SV ending position(with bpIns): " << sv.mProbeEndA << "\n";
             os << "Translocation chr1Seq: " << sv.mTraChr1Seq << "\n";
             os << "Translocation chr2Seq: " << sv.mTraChr2Seq << "\n";
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
@@ -133,6 +135,8 @@ class SVRecord{
             ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";
             ss << "Consensus sequence segment spanning the SV starting pssition: " << mProbeBegC << "\n";
             ss << "Consensus sequence segment spanning the SV ending pssition: " << mProbeEndC << "\n";
+            ss << "Consensus sequence segment spanning the SV starting pssition(with bpIns): " << mProbeBegA << "\n";
+            ss << "Consensus sequence segment spanning the SV ending pssition(with bpIns): " << mProbeEndA << "\n";
             ss << "Translocation chr1Seq: " << mTraChr1Seq << "\n";
             ss << "Translocation chr2Seq: " << mTraChr2Seq << "\n";
             if(mSVT == 4) ss << "Inserted sequence: " << mInsSeq << "\n";
