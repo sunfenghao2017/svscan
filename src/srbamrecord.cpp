@@ -119,8 +119,8 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
         while(j < totsrs){
             if(srs[j].mChr1 == srs[i].mChr1 && 
                srs[j].mChr2 == srs[i].mChr2 &&
-               (srs[j].mPos1 - srs[i].mPos1 < mOpt->filterOpt->mMaxReadSep ||
-               std::abs(srs[j].mPos2 - srs[i].mPos2) < mOpt->filterOpt->mMaxReadSep)){
+               srs[j].mPos1 - srs[i].mPos1 < mOpt->filterOpt->mMaxReadSep &&
+               std::abs(srs[j].mPos2 - srs[i].mPos2) < mOpt->filterOpt->mMaxReadSep){
                 clique.insert(j);
                 ++j;
             }else{
