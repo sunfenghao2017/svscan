@@ -147,7 +147,7 @@ struct FusionRecord{
             if(totalreads < fsopt->mWhiteFilter.mMinDepth){ // depth
                 fsmask |= FUSION_FLOWDEPTH;
             }
-            if(svint != 4 && fsmask & FUSION_FINSAMEGENE){ // size
+            if(svint != 4 && (fsmask & FUSION_FINSAMEGENE) && (!(fsmask & FUSION_FCALLFROMRNASEQ))){ // size
                 if(svsize < fsopt->mWhiteFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
@@ -172,7 +172,7 @@ struct FusionRecord{
             }else{
                 fsmask |= FUSION_FLOWSUPPORT;
             }
-            if(svint != 4 && fsmask & FUSION_FINSAMEGENE){
+            if(svint != 4 && (fsmask & FUSION_FINSAMEGENE) && (!(fsmask & FUSION_FCALLFROMRNASEQ))){ // size
                 if(svsize < fsopt->mUsualFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }

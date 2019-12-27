@@ -117,7 +117,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         fsv.open(fuseOpt->mSVModFile.c_str());
     }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
+    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
                                      FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FINREPORTRNG);
@@ -204,7 +204,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     gname = trsl1[fgl[i].tidx].gene;
                 }
                 for(int32_t excnt = minExon; excnt <= maxExon; ++excnt) exonl.push_back(excnt);
-                if(!fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask |= FUSION_FTOOSMALLSIZE;
+                if(fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask &= (~FUSION_FTOOSMALLSIZE);
             }
             int32_t totalreads = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);

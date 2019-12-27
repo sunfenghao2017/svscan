@@ -219,8 +219,8 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gname = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
                 }
                 for(int32_t ecnt = minExon; ecnt <= maxExon; ++ecnt) exlist.push_back(ecnt);
-                if(!mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
-                    gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
+                if(mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
+                    gl[i].mFuseGene[j].status &= (~(FUSION_FTOOSMALLSIZE | FUSION_FINSAMEGENE));
                 }
             }
             if(svs[i].mPrecise){
@@ -293,7 +293,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
         }
     }
     // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
+    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
                                      FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
