@@ -64,15 +64,14 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--usualminaf", fuserptOpt->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true);
     pfsrpt->add_option("--whiteminigs", fuserptOpt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion in whitelist", true);
     pfsrpt->add_option("--usualminigs", fuserptOpt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion not in whitelist", true);
-    pfsrpt->add_option("--whitemaxrph", fuserptOpt->fuseOpt->mWhiteFilter.mMaxRepHit, "max hits on reference allowed for partial seqs of fusion in whitelist", true)->group("Fusion Options");
-    pfsrpt->add_option("--usualmaxrph", fuserptOpt->fuseOpt->mUsualFilter.mMaxRepHit, "max hits on reference allowed for partial seqs of fusion not in whitelist", true)->group("Fusion Options");
+    pfsrpt->add_option("--whitemaxrph", fuserptOpt->fuseOpt->mWhiteFilter.mMaxRepHit, "max hits on reference allowed for partial seqs of fusion in whitelist", true);
+    pfsrpt->add_option("--usualmaxrph", fuserptOpt->fuseOpt->mUsualFilter.mMaxRepHit, "max hits on reference allowed for partial seqs of fusion not in whitelist", true);
     pfsrpt->add_option("--maxbpoffset", fuserptOpt->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true);
     pfsrpt->add_option("--bgbcf", fuserptOpt->fuseOpt->mBgBCF, "background events BCF file");
     pfsrpt->add_option("--whitelist", fuserptOpt->fuseOpt->mWhiteList, "white list of fusion events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--blacklist", fuserptOpt->fuseOpt->mBlackList, "black list of fusion events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--samegenel", fuserptOpt->fuseOpt->mSameGeneSVList, "white list of gene with inner sv events")->check(CLI::ExistingFile);
     pfsrpt->add_option("--fsrptlist", fuserptOpt->fuseOpt->mFsRptList, "report range list")->check(CLI::ExistingFile);
-    pfsrpt->add_option("--fusionrpt", fuserptOpt->fuseOpt->mOutFile, "primary fusion report file path", true)->check(CLI::ExistingFile);
     pfsrpt->add_option("--genecrdlist", fuserptOpt->fuseOpt->mGeneCrdList, "gene coord list")->check(CLI::ExistingFile);
     // dna annodb
     SVDNADBOpt* annDBOpt = new SVDNADBOpt();
