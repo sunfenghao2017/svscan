@@ -178,10 +178,13 @@ void SVScanner::scanDPandSR(){
         std::cout << mSRSVs << std::endl;
     }
 #endif
-    // Merge SR and DP SVs
-    util::loginfo("Beg merging SVs from SRs and DPs");
+    // Continue loading reference index if unfinished
+    util::loginfo("Try loading reference index");
     refInxLoad.get();
+    util::loginfo("End loading reference index");
+    // Merge SR and DP SVs
     SVSet mergedSVs;
+    util::loginfo("Beg merging SVs from SRs and DPs");
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){

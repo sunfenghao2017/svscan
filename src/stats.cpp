@@ -498,122 +498,114 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
             }
             // Abnormal spanning coverage
-            if((sst != 2 || outerISize < mOpt->libInfo->mMinNormalISize || outerISize > mOpt->libInfo->mMaxNormalISize) || (b->core.tid != b->core.mtid)){
-                // Get SV type
-                if(svt == -1) continue;
-                // Spanning a breakpoint?
-                bool spanvalid = false;
-                int32_t pbegin = b->core.pos;
-                int32_t pend = std::min((int32_t)(b->core.pos + mOpt->libInfo->mMaxNormalISize), (int32_t)h->target_len[refIdx]);
-                if(b->core.flag & BAM_FREVERSE){
-                    pbegin = std::max((BIGD_TYPE)0, b->core.pos + b->core.l_qseq - mOpt->libInfo->mMaxNormalISize);
-                    pend = std::min((int32_t)(b->core.pos + b->core.l_qseq), (int32_t)h->target_len[refIdx]);
+            if(svt == -1) continue;
+            // Spanning a breakpoint?
+            bool spanvalid = false;
+            DPBamRecord dpr(b, svt);
+            int32_t svstart = -1, svend = -1, pbegin = -1, pend = -1;
+            dpr.initClique(svstart, svend, svt);
+            if(dpr.mCurTid == dpr.mMateTid){
+                pbegin = svstart - mOpt->libInfo->mVarisize;
+                pend = svend + mOpt->libInfo->mVarisize;
+            }else{
+                pbegin = svstart - mOpt->libInfo->mVarisize;
+                pend = svstart + mOpt->libInfo->mVarisize;
+            }
+            for(int32_t i = pbegin; i < pend; ++i){
+                if(spanBp.find(i) != spanBp.end()){
+                    spanvalid = true;
+                    break;
                 }
-                for(int32_t i = pbegin; i < pend; ++i){
-                    if(spanBp.find(i) != spanBp.end()){
-                        spanvalid = true;
-                        break;
+            }
+            if(spanvalid){
+                std::map<int32_t, bool> supportSpnID;
+                if(lspap != pbegin){
+                    itspna = std::lower_bound(spPts[refIdx].begin(), spPts[refIdx].end(), SpanPoint(pbegin));
+                    lspap = pbegin;
+                    ltap = itspna;
+                }else{
+                    itspna = ltap;
+                }
+                for(; itspna != spPts[refIdx].end() && pend >= itspna->mBpPos; ++itspna){
+                    if(svt == itspna->mSVT && svs[itspna->mID].mChr1 == b->core.tid && svs[itspna->mID].mChr2 == b->core.mtid){
+                        // valid dp in pe-mode
+                        bool validDPE = true;
+                        if(std::abs(svend - svs[itspna->mID].mSVEnd) > mOpt->libInfo->mVarisize){
+                            validDPE = false;
+                        }
+                        if(std::abs(svstart - svs[itspna->mID].mSVStart) > mOpt->libInfo->mVarisize){
+                            validDPE = false;
+                        }
+                        if(validDPE){
+                            supportSpnID[itspna->mID] = itspna->mIsSVEnd;
+                        }
                     }
                 }
-                if(spanvalid){
-                    std::map<int32_t, bool> supportSpnID;
-                    if(lspap != pbegin){
-                        itspna = std::lower_bound(spPts[refIdx].begin(), spPts[refIdx].end(), SpanPoint(pbegin));
-                        lspap = pbegin;
-                        ltap = itspna;
-                    }else{
-                        itspna = ltap;
+                if(supportSpnID.size()){
+                    auto iit = supportSpnID.begin();
+                    int32_t ixmx = iit->first;
+                    if(supportSpnID.size() > 1){
+                        // din non-repeat region svs
+                        std::vector<int32_t> nrps;
+                        for(; iit != supportSpnID.end(); ++iit){
+                            if(svs[iit->first].mRealnRet >= 0 && 
+                               svs[iit->first].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                                nrps.push_back(iit->first);
+                            }
+                        }
+                        if(nrps.size() == 1) ixmx = nrps[0]; // only one non-repeat region hit
+                        else{
+                            if(nrps.size() == 0){ // all in repeat region
+                                // first run
+                                for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
+                                    if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
+                                        ixmx = iit->first;
+                                    }
+                                }
+                                // second run
+                                for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
+                                    if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
+                                       svs[iit->first].mPESupport > svs[ixmx].mPESupport){
+                                       ixmx = iit->first;
+                                    }
+                                }
+                            }else{ // more than 2 non-repeat region
+                                ixmx = nrps[0];
+                                // first run
+                                for(uint32_t xxvid = 1; xxvid < nrps.size(); ++xxvid){
+                                    if(svs[nrps[xxvid]].mSRSupport > svs[ixmx].mSRSupport){
+                                        ixmx = nrps[xxvid];
+                                    }
+                                }
+                                // second run
+                                for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
+                                    if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
+                                       svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
+                                        ixmx = nrps[xxvid];
+                                    }
+                                }
+                            }
+                        }
                     }
-                    for(; itspna != spPts[refIdx].end() && pend >= itspna->mBpPos; ++itspna){
-                        if(svt == itspna->mSVT && svs[itspna->mID].mChr1 == b->core.tid && svs[itspna->mID].mChr2 == b->core.mtid){
-                            // valid dp in pe-mode
-                            bool validDPE = true;
-                            if(itspna->mIsSVEnd){
-                                if(std::abs(b->core.pos - svs[itspna->mID].mSVEnd) > mOpt->libInfo->mMaxNormalISize){
-                                    validDPE = false;
-                                }
-                                if(std::abs(b->core.mpos - svs[itspna->mID].mSVStart) > mOpt->libInfo->mMaxNormalISize){
-                                    validDPE = false;
-                                }
-                            }else{
-                                if(std::abs(b->core.pos - svs[itspna->mID].mSVStart) > mOpt->libInfo->mMaxNormalISize){
-                                    validDPE = false;
-                                }
-                                if(std::abs(b->core.mpos - svs[itspna->mID].mSVEnd) > mOpt->libInfo->mMaxNormalISize){
-                                    validDPE = false;
-                                }
-                            }
-                            if(validDPE){
-                                supportSpnID[itspna->mID] = itspna->mIsSVEnd;
-                            }
+                    // output
+                    mOpt->logMtx.lock();
+                    mSpnCnts[ixmx].mAltCnt += 1;
+                    if(!assigned) mTotalAltCnts[ixmx] += 1;
+                    if(mOpt->writebcf){
+                        auto qiter = mSpnCnts[ixmx].mAltQual.find(b->core.qual);
+                        if(qiter == mSpnCnts[ixmx].mAltQual.end()){
+                            mSpnCnts[ixmx].mAltQual[b->core.qual] = 1;
+                        }else{
+                            qiter->second += 1;
                         }
                     }
-                    if(supportSpnID.size()){
-                        auto iit = supportSpnID.begin();
-                        int32_t ixmx = iit->first;
-                        if(supportSpnID.size() > 1){
-                            // din non-repeat region svs
-                            std::vector<int32_t> nrps;
-                            for(; iit != supportSpnID.end(); ++iit){
-                                if(svs[iit->first].mRealnRet >= 0 && 
-                                   svs[iit->first].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
-                                    nrps.push_back(iit->first);
-                                }
-                            }
-                            if(nrps.size() == 1) ixmx = nrps[0]; // only one non-repeat region hit
-                            else{
-                                if(nrps.size() == 0){ // all in repeat region
-                                    // first run
-                                    for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
-                                        if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
-                                            ixmx = iit->first;
-                                        }
-                                    }
-                                    // second run
-                                    for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
-                                        if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
-                                           svs[iit->first].mPESupport > svs[ixmx].mPESupport){
-                                           ixmx = iit->first;
-                                        }
-                                    }
-                                }else{ // more than 2 non-repeat region
-                                    ixmx = nrps[0];
-                                    // first run
-                                    for(uint32_t xxvid = 1; xxvid < nrps.size(); ++xxvid){
-                                        if(svs[nrps[xxvid]].mSRSupport > svs[ixmx].mSRSupport){
-                                            ixmx = nrps[xxvid];
-                                        }
-                                    }
-                                    // second run
-                                    for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
-                                        if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
-                                           svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
-                                            ixmx = nrps[xxvid];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // output
-                        mOpt->logMtx.lock();
-                        mSpnCnts[ixmx].mAltCnt += 1;
-                        if(!assigned) mTotalAltCnts[ixmx] += 1;
-                        if(mOpt->writebcf){
-                            auto qiter = mSpnCnts[ixmx].mAltQual.find(b->core.qual);
-                            if(qiter == mSpnCnts[ixmx].mAltQual.end()){
-                                mSpnCnts[ixmx].mAltQual[b->core.qual] = 1;
-                            }else{
-                                qiter->second += 1;
-                            }
-                        }
-                        if((!assigned) && mOpt->fbamout){
-                            bam_aux_update_int(b, "ZF", ixmx);
-                            bam_aux_update_int(b, "ST", 1);
-                            assert(sam_write1(mOpt->fbamout, h, b) >= 0);
-                            sptids.insert(ixmx);
-                        }
-                        mOpt->logMtx.unlock();
+                    if((!assigned) && mOpt->fbamout){
+                        bam_aux_update_int(b, "ZF", ixmx);
+                        bam_aux_update_int(b, "ST", 1);
+                        assert(sam_write1(mOpt->fbamout, h, b) >= 0);
+                        sptids.insert(ixmx);
                     }
+                    mOpt->logMtx.unlock();
                 }
             }
         }
