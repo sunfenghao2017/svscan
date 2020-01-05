@@ -1,6 +1,6 @@
 #include "dpbamrecord.h"
 
-void DPBamRecord::initClique(int32_t& svStart, int32_t& svEnd, int32_t& wiggle, Options* opt, int32_t svt){
+void DPBamRecord::initClique(int32_t& svStart, int32_t& svEnd, int32_t svt){
     if(svt >= 5){
         int ct = svt - 5;
         if(ct == 0 || ct == 2){// 5to5 and 5to3
@@ -27,77 +27,41 @@ void DPBamRecord::initClique(int32_t& svStart, int32_t& svEnd, int32_t& wiggle, 
             svEnd = mCurPos + mCurAlen;
         }
     }
-    wiggle = opt->libInfo->mMaxNormalISize;
 }
 
-bool DPBamRecord::updateClique(int32_t& svStart, int32_t& svEnd, int32_t& wiggle, int32_t svt){
+void DPBamRecord::updateClique(int32_t& svStart, int32_t& svEnd, int32_t svt){
     if(svt >= 5){
         int ct = svt - 5;
-        int32_t newSVStart;
-        int32_t newSVEnd;
-        int32_t newWiggle = wiggle;
         if(ct == 0 || ct == 2){// 5to5 and 5to3
-            newSVStart = std::max(svStart, mCurPos + mCurAlen);
-            newWiggle -= (newSVStart - svStart);
+            svStart = std::max(svStart, mCurPos + mCurAlen);
             if(ct == 2){// 5to3
-                newSVEnd = std::min(svEnd, mMatePos);
-                newWiggle -= (svEnd - newSVEnd);
+                svEnd = std::min(svEnd, mMatePos);
             }else{// 5to5
-                newSVEnd = std::max(svEnd, mMatePos + mMateAlen);
-                newWiggle -= (newSVEnd - svEnd);
+                svEnd = std::max(svEnd, mMatePos + mMateAlen);
             }
         }else{// 3to3 and 3to5
-            newSVStart = std::min(svStart, mCurPos);
-            newWiggle -= (svStart - newSVStart);
+            svStart = std::min(svStart, mCurPos);
             if(ct == 3){// 3to5
-                newSVEnd = std::max(svEnd, mMatePos + mMateAlen);
-                newWiggle -= (newSVEnd - svEnd);
+                svEnd = std::max(svEnd, mMatePos + mMateAlen);
             }else{// 3to3
-                newSVEnd = std::min(svEnd, mMatePos);
-                newWiggle -= (svEnd - newSVEnd);
+                svEnd = std::min(svEnd, mMatePos);
             }
         }
-        // check whether this still a valid translocation cluster
-        if(newWiggle > 0){
-            svStart = newSVStart;
-            svEnd = newSVEnd;
-            wiggle = newWiggle;
-            return true;
-        }
-        return false;
     }else{
-        int32_t newSVStart = svStart;
-        int32_t newSVEnd = svEnd;
-        int32_t newWiggle = wiggle;
-        if(svt == 0 || svt == 1){// inversion
-            if(svt == 0){// 5to5
-                newSVStart = std::max(svStart, mMatePos + mMateAlen);
-                newSVEnd = std::max(svEnd, mCurPos + mCurAlen);
-                newWiggle -= std::max(newSVStart - svStart, newSVEnd - svEnd);
-            }else{// 3to3
-                newSVStart = std::min(svStart, mMatePos);
-                newSVEnd = std::min(svEnd, mCurPos);
-                newWiggle -=  std::max(svStart - newSVStart, svEnd - newSVEnd);
-            }
-        }else if(svt == 2){// deletion
-            newSVStart = std::max(svStart, mMatePos + mMateAlen);
-            newSVEnd = std::min(svEnd, mCurPos);
-            newWiggle -= std::max(newSVStart - svStart,  svEnd - newSVEnd);
-        }else if(svt == 3){// duplication
-            newSVStart = std::min(svStart, mMatePos);
-            newSVEnd = std::max(svEnd, mCurPos + mCurAlen);
-            newWiggle -= std::max(newSVEnd - svEnd, svStart - newSVStart);
+        if(svt == 0){ // 5to5
+            svStart = std::max(svStart, mMatePos + mMateAlen);
+            svEnd = std::max(svEnd, mCurPos + mCurAlen);
+        }else if(svt == 1){ // 3to3
+            svStart = std::min(svStart, mMatePos);
+            svEnd = std::min(svEnd, mCurPos);
+        }else if(svt == 2){// 5to3
+            svStart = std::max(svStart, mMatePos + mMateAlen);
+            svEnd = std::min(svEnd, mCurPos);
+        }else if(svt == 3){// 3to5
+            svStart = std::min(svStart, mMatePos);
+            svEnd = std::max(svEnd, mCurPos + mCurAlen);
         }
-        // check whether new inversion size agree with all pairs
-        if(newSVStart < newSVEnd && newWiggle >= 0){
-            svStart = newSVStart;
-            svEnd = newSVEnd;
-            wiggle = newWiggle;
-            return true;
-        }
-        return false;
     }
-    return false;
 }
 
 int DPBamRecord::getSVType(const bam1_t* b){
@@ -158,181 +122,83 @@ int DPBamRecord::getSVType(const bam1_t* b, Options* opt){
 }
 
 void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet &svs, int32_t svt){
-    if(dps.empty()) return;
-    // Sort DPBamRecords
-    std::sort(dps.begin(), dps.end());
-    // Components
-    std::vector<int32_t> comp = std::vector<int32_t>(dps.size(), 0);
-    // Edge lists for each component
-    std::map<int32_t, std::vector<EdgeRecord>> compEdge;
-    int32_t compNum = 0;
-    size_t lastConnectedNodesEnd = 0;
-    size_t lastConnectedNodesBeg = 0;
-    for(uint32_t i = 0; i < dps.size(); ++i){
-        // Safe to clean the graph
-        if(i > lastConnectedNodesEnd){
-            // Clean edge lists
-            if(!compEdge.empty()){
-                searchCliques(compEdge, dps, svs, svt);
-                compEdge.clear();
-                lastConnectedNodesBeg = lastConnectedNodesEnd;
+    int32_t origSize = svs.size();
+    util::loginfo("Beg clustering DPs for SV type " + std::to_string(svt) + ", all " + std::to_string(dps.size()) + " SRs ");
+    std::set<int32_t> clique; // components cluster
+    int32_t totdps = dps.size();
+    int32_t i = 0, j = 0;
+    while(i < totdps){
+        clique.clear();
+        clique.insert(i);
+        j = i + 1;
+        while(j < totdps){
+            if(dps[j].mCurTid == dps[i].mCurTid &&
+               dps[j].mMateTid == dps[i].mMateTid &&
+               dps[j].mCurPos - dps[i].mCurPos < mOpt->libInfo->mVarisize &&
+               std::abs(dps[j].mMatePos - dps[i].mMatePos) < mOpt->libInfo->mVarisize){
+                clique.insert(j);
+                ++j;
             }else{
-                lastConnectedNodesBeg = i;
+                break;
             }
         }
-        // Try to expand components
-        int32_t mincrd = dps[i].minCoord();
-        int32_t maxcrd = dps[i].maxCoord();
-        for(uint32_t j = i + 1; j < dps.size(); ++j){
-            // Check that chr agree
-            if(dps[i].mCurTid != dps[j].mCurTid) break;
-            // Check that mate chr agree
-            if(dps[i].mMateTid != dps[j].mMateTid) break;
-            // Check two DP leftmost mapping position falling in reasonable range
-            if(std::abs(dps[j].minCoord() + dps[j].mCurAlen - mincrd) > mOpt->libInfo->mVarisize) break;
-            // Check two DP rightmost mapping position falling in reasonable range
-            if(std::abs(dps[j].maxCoord() - maxcrd) + mOpt->libInfo->mReadLen > mOpt->libInfo->mMaxNormalISize) break;
-            // Update last connected node
-            if(j > lastConnectedNodesEnd) lastConnectedNodesEnd = j;
-            // Assign components
-            int32_t compIndex = 0;
-            if(!comp[i]){
-                if(!comp[j]){// Neither vertex has component assigned
-                    compIndex = ++compNum;
-                    comp[i] = compIndex;
-                    comp[j] = compIndex;
-                    compEdge.insert(std::make_pair(compIndex, std::vector<EdgeRecord>()));
-                }else{// Only one vertex has component assigned
-                    compIndex = comp[j];
-                    comp[i] = compIndex;
-                }
-            }else{
-                if(!comp[j]){// Only one veretx has comopnent assigned
-                    compIndex = comp[i];
-                    comp[j] = compIndex;
-                }else{// Both vertices have component assigned
-                    if(comp[i] == comp[j]) compIndex = comp[i];
-                    else{// Merge components
-                        compIndex = comp[i];
-                        int32_t otherIndex = comp[j];
-                        if(otherIndex < compIndex){
-                            compIndex = comp[j];
-                            otherIndex = comp[i];
-                        }
-                        // Re-label other index
-                        for(size_t k = lastConnectedNodesBeg; k <= lastConnectedNodesEnd; ++k){
-                            if(otherIndex == comp[i]) comp[i] = compIndex;
-                        }
-                        // Merge edge lists
-                        auto compIdxIter = compEdge.find(compIndex);
-                        auto otherIdxIter = compEdge.find(otherIndex);
-                        compIdxIter->second.insert(compIdxIter->second.end(), otherIdxIter->second.begin(), otherIdxIter->second.end());
-                        compEdge.erase(otherIdxIter);
-                    }
-                }
-            }
-            // Append new edge
-            auto compEdgeIter = compEdge.find(compIndex);
-            if(compEdgeIter->second.size() < mOpt->filterOpt->mGraphPruning){
-                int32_t weight = std::abs(std::abs(dps[i].minCoord() - dps[j].minCoord()) - std::abs(dps[i].maxCoord() - dps[j].maxCoord()));
-                compEdgeIter->second.push_back(EdgeRecord(i, j, weight));
-            }
-        }
+        searchCliques(clique, dps, svs, svt);
+        i = j;
     }
-    if(!compEdge.empty()){
-        searchCliques(compEdge, dps, svs, svt);
-        compEdge.clear();
-    }
-    // singleton dp should be taken into consideration
-    if(mOpt->filterOpt->mMinSeedDP < 2){
-        for(auto& dp: dps){
-            if(dp.mSVID == -1){
-                SVRecord svr;
-                svr.mChr1 = dp.mCurTid;
-                svr.mChr2 = dp.mMateTid;
-                int32_t wiggle;
-                dp.initClique(svr.mSVStart, svr.mSVEnd, wiggle, mOpt, svt);
-                svr.mPESupport = 1;
-                int32_t ciwiggle = std::max(wiggle, 50);
-                svr.mCiPosLow = -ciwiggle;
-                svr.mCiPosHigh = ciwiggle;
-                svr.mCiEndLow = -ciwiggle;
-                svr.mCiEndHigh = ciwiggle;
-                svr.mPEMapQuality = dp.mMapQual;
-                svr.mSRSupport = 0;
-                svr.mSRAlignQuality = 0;
-                svr.mPrecise = 0;
-                svr.mSVT = svt;
-                svr.mAlnInsLen = 0;
-                svr.mHomLen = 0;
-                int32_t svid = svs.size();
-                dp.mSVID = svid;
-                svs.push_back(svr);
-            }
-        }
-    }
+    util::loginfo("End clustering DPs for SV type " + std::to_string(svt) + ", got " + std::to_string(svs.size() - origSize) + " SV candidates.");
 }
 
-void DPBamRecordSet::searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& compEdge, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt){
-    // Iterate all components
-    for(auto compIter = compEdge.begin(); compIter != compEdge.end(); ++compIter){
-        // Sort edges by weight
-        std::sort(compIter->second.begin(), compIter->second.end());
-        // Find a large clique
-        auto edgeIter = compIter->second.begin();
-        std::set<int32_t> clique, incompatible;
-        int32_t svStart = -1;
-        int32_t svEnd = -1;
-        int32_t wiggle = 0;
-        int32_t chr1 = dps[edgeIter->mSource].mCurTid;
-        int32_t chr2 = dps[edgeIter->mSource].mMateTid;
-        dps[edgeIter->mSource].initClique(svStart, svEnd, wiggle, mOpt, svt);
-        if(chr1 == chr2 && svStart >= svEnd) continue; // do not support SV
-        clique.insert(edgeIter->mSource);
-        // Grow the clique
-        for(; edgeIter != compIter->second.end(); ++edgeIter){
-            int32_t v;
-            if(clique.find(edgeIter->mSource) == clique.end() && clique.find(edgeIter->mTarget) != clique.end()){
-                v = edgeIter->mSource;
-            }else if(clique.find(edgeIter->mSource) != clique.end() && clique.find(edgeIter->mTarget) == clique.end()){
-                v = edgeIter->mTarget;
-            }else continue;
-            if(incompatible.find(v) != incompatible.end()) continue;
-            if(dps[v].updateClique(svStart, svEnd, wiggle, svt)) clique.insert(v);
-            else incompatible.insert(v);
-        }
-        if(clique.size() >= mOpt->filterOpt->mMinSeedDP && validSVSize(svStart, svEnd, svt)){
-            SVRecord svr;
-            svr.mChr1 = chr1;
-            svr.mChr2 = chr2;
-            svr.mSVStart = svStart;
-            svr.mSVEnd = svEnd;
-            svr.mPESupport = clique.size();
-            int32_t ciwiggle = std::max(std::abs(wiggle), 50);
-            svr.mCiPosLow = -ciwiggle;
-            svr.mCiPosHigh = ciwiggle;
-            svr.mCiEndLow = -ciwiggle;
-            svr.mCiEndHigh = ciwiggle;
-            std::vector<uint8_t> mapQV(clique.size(), 0);
-            int qIdx = 0;
-            for(auto& e : clique) mapQV[qIdx++] = dps[e].mMapQual;
-            svr.mPEMapQuality = statutil::median(mapQV);
-            svr.mSRSupport = 0;
-            svr.mSRAlignQuality = 0;
-            svr.mPrecise = 0;
-            svr.mSVT = svt;
-            svr.mAlnInsLen = 0;
-            svr.mHomLen = 0;
-            svs.push_back(svr);
-            int32_t svid = svs.size();
-            for(auto& e: clique)
-                dps[e].mSVID = svid;
-        }
+void DPBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt){
+    auto iter = clique.begin();
+    int32_t dpid = *iter;
+    int32_t svStart = -1, svEnd = -1, minStart = -1, minEnd = -1, maxStart = -1, maxEnd = -1;
+    int32_t chr1 = dps[dpid].mCurTid;
+    int32_t chr2 = dps[dpid].mMateTid;
+    dps[dpid].initClique(svStart, svEnd, svt);
+    minStart = svStart, maxStart = svStart, minEnd = svEnd, maxEnd = svEnd;
+    ++iter;
+    for(; iter != clique.end(); ++iter){
+        dpid = *iter;
+        dps[dpid].updateClique(svStart, svEnd, svt);
+        minStart = std::min(svStart, minStart);
+        maxStart = std::max(svStart, maxStart);
+        minEnd = std::min(svEnd, minEnd);
+        maxEnd = std::max(svEnd, maxEnd);
+    }
+    if(clique.size() >= mOpt->filterOpt->mMinSeedDP && validSVSize(svStart, svEnd, svt)){
+        SVRecord svr;
+        svr.mChr1 = chr1;
+        svr.mChr2 = chr2;
+        svr.mSVStart = svStart;
+        svr.mSVEnd = svEnd;
+        svr.mPESupport = clique.size();
+        int32_t posVar = std::max(std::abs(maxStart - minStart), 50);
+        int32_t endVar = std::max(std::abs(maxEnd - minEnd), 50);
+        svr.mCiPosLow = -posVar;
+        svr.mCiPosHigh = posVar;
+        svr.mCiEndLow = -endVar;
+        svr.mCiEndHigh = endVar;
+        std::vector<uint8_t> mapQV(clique.size(), 0);
+        int qIdx = 0;
+        for(auto& e : clique) mapQV[qIdx++] = dps[e].mMapQual;
+        svr.mPEMapQuality = statutil::median(mapQV);
+        svr.mSRSupport = 0;
+        svr.mSRAlignQuality = 0;
+        svr.mPrecise = 0;
+        svr.mSVT = svt;
+        svr.mAlnInsLen = 0;
+        svr.mHomLen = 0;
+        svs.push_back(svr);
+        int32_t svid = svs.size();
+        for(auto& e: clique) dps[e].mSVID = svid;
     }
 }
 
 void DPBamRecordSet::cluster(SVSet& svs){
     for(auto& e : mOpt->SVTSet){
-        cluster(mDPs[e], svs, e);
+        if(!mDPs[e].empty()){
+            std::sort(mDPs[e].begin(), mDPs[e].end());
+            cluster(mDPs[e], svs, e);
+        }
     }
 }

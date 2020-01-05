@@ -62,7 +62,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
                 }
                 if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
             }
-            if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// second read in pair
+            if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// read last met in pair
                 dprSet->insertDP(b, svt);
             }
         }

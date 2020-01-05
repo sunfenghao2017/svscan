@@ -7,7 +7,6 @@
 #include <htslib/sam.h>
 #include "options.h"
 #include "svrecord.h"
-#include "edgerecord.h"
 
 /** Class to store discordant pair of reads alignment record which supports SVs */
 class DPBamRecord{
@@ -126,22 +125,16 @@ class DPBamRecord{
         /** initialize an clique(cluster of DPBamRecords which support the same SV event) wich an DPBamRecord
          * @param svStart to store SV starting position this DPBamRecord supporting
          * @param svEnd to store SV ending position this DPBamRecord supporting
-         * @param wiggle maximum absolute diff of (beginning and ending pos) against the seed's for an valid DPBamRecord\n
-         *  to be included into this clique
-         * @param opt pointer to Options*
          * @param svt type of SV event this DPBamRecord supprting [0-8]
          */
-        void initClique(int32_t& svStart, int32_t& svEnd, int32_t& wiggle, Options* opt, int32_t svt);
+        void initClique(int32_t& svStart, int32_t& svEnd, int32_t svt);
         
         /** update an clique(cluster of DPBamRecords which support the same SV event) wich an DPBamRecord
          * @param svStart to store SV starting position this DPBamRecord supporting
          * @param svEnd to store SV ending position this DPBamRecord supporting
-         * @param wiggle maximum absolute diff of (beginning and ending pos) against the seed's for an valid DPBamRecord\n
-         *  to be included into this clique
          * @param svt type of SV event this DPBamRecord supprting [0-8]
-         * @return true if update the clique with this DPBamRecord successfully
          */
-        bool updateClique(int32_t& svStart, int32_t& svEnd, int32_t& wiggle, int32_t svt);
+        void updateClique(int32_t& svStart, int32_t& svEnd, int32_t svt);
 
 
 };
@@ -239,12 +232,12 @@ class DPBamRecordSet{
         void cluster(SVSet& svs);
         
         /** a subroutine used to search all possible clique supporting an type of SV
-         * @param compEdge <compNumber, components> pairs clustered from DPBamRecords
+         * @param clique discordant pairs clustered from DPBamRecords
          * @param dps reference of DPBamRecordSet list which supporting one kind of SV
          * @param svs SVSet to store SV supporting by DPs
          * @param svt SV type analyzed
          */
-        void searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& compEdge, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt);
+        void searchCliques(std::set<int32_t>& clique, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt);
        
         /** check whether SV size is valid 
          * @param svStart SV starting position
