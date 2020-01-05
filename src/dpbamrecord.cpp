@@ -123,7 +123,7 @@ int DPBamRecord::getSVType(const bam1_t* b, Options* opt){
 
 void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet &svs, int32_t svt){
     int32_t origSize = svs.size();
-    util::loginfo("Beg clustering DPs for SV type " + std::to_string(svt) + ", all " + std::to_string(dps.size()) + " SRs ");
+    util::loginfo("Beg clustering DPs for SV type " + std::to_string(svt) + ", all " + std::to_string(dps.size()) + " DPs ");
     std::set<int32_t> clique; // components cluster
     int32_t totdps = dps.size();
     int32_t i = 0, j = 0;
