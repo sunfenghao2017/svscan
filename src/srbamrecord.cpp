@@ -178,6 +178,7 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
         svr.mAlnInsLen = svISize;
         svr.mID = svid;
         svr.mSVT = svt;
+        if(clique.size() == 1) svr.mFromOneSR = true;
         svs.push_back(svr);
         // Reads assigned
         for(auto& e : clique) srs[e].mSVID = svid;
