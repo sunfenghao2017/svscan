@@ -91,23 +91,25 @@ void FusionReporter::report(){
     }
     if(!fuseList.empty()) fuseList[fuseList.size() - 1].report = true;
     // output valid fusions
+    std::set<std::string> fsoutset;
     std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
-    std::ofstream fs(fuseOpt->mSupFile);
     fw << header;
-    fs << header;
     for(auto& e: fuseList){
-        if(e.report){
-            if(e.fsmask & FUSION_FPRIMARY){
+        if(e.report && (e.fsmask & FUSION_FPRIMARY)){
+            fw << e;
+            fsoutset.insert(e.fusegene);
+        }
+    }
+    for(auto& e: fuseList){
+        if(e.report && (e.fsmask & FUSION_FSUPPLEMENTARY)){
+            std::string revfg = e.gene2 + "->" + e.gene1;
+            if((fsoutset.find(e.fusegene) == fsoutset.end()) && (fsoutset.find(revfg) == fsoutset.end())){
                 fw << e;
-            }
-            if(e.fsmask & FUSION_FSUPPLEMENTARY){
-                fs << e;
             }
         }
     }
     fw.close();
-    fs.close();
 }
 
 void FusionReporter::sv2fsl(FusionRecordList& fsrl){
@@ -122,7 +124,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FINREPORTRNG);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE);
+    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED);
     // supplementary fusion additional conditions
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;

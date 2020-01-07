@@ -204,9 +204,6 @@ void Options::writeEmptFile(){
     fw.open(fuseOpt->mOutFile.c_str());
     fw << header;
     fw.close();
-    fw.open(fuseOpt->mSupFile.c_str());
-    fw << header;
-    fw.close();
     // sv bcf
     if(bcfOut.empty()) return;
     samFile* samfp = sam_open(bamfile.c_str(), "r");

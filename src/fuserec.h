@@ -124,6 +124,7 @@ struct FusionRecord{
         std::string sts;
         if(fsmask & FUSION_FMIRRORINDB) sts.append("M");
         if(!(fsmask & FUSION_FNORMALCATDIRECT)) sts.append("D");
+        if(!(fsmask & FUSION_FCOMMONHOTDIRECT)) sts.append("d");
         if(sts.empty()) sts.append("Y");
         return sts;
     }

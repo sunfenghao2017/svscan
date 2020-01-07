@@ -78,8 +78,7 @@ typedef std::vector<BamRec> BamRecVector;
 class BamToTable{
     public:
         std::string svbam;          ///< sv supporting bam
-        std::string fstsv;          ///< primary fusion result tsv
-        std::string sstsv;          ///< secondary fusion result tsv
+        std::string fstsv;          ///< fusion result tsv
         std::vector<int32_t> usrid; ///< fusion id list
         std::string bamtb;          ///< bam output table
         int32_t svidf = 29;         ///< svid column index in tsv

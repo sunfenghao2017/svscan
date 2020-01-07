@@ -270,7 +270,6 @@ void SVScanner::scanDPandSR(){
         BamToTable btt;
         btt.svbam = mOpt->bamout;
         btt.fstsv = mOpt->fuseOpt->mOutFile;
-        btt.sstsv = mOpt->fuseOpt->mSupFile;
         btt.bamtb = mOpt->bam2tb;
         btt.b2t();
         util::loginfo("End writing fusion supporting bam records to excel file");

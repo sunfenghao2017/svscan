@@ -298,7 +298,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
     TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
     // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE | FUSION_FINREPORTRNG);
+    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FINREPORTRNG);
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;
@@ -352,22 +352,26 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     }
 #endif
     // output valid fusions
+    std::set<std::string> fsoutset;
     std::string header = FusionRecord::gethead(mOpt->rnamode);
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
-    std::ofstream fs(mOpt->fuseOpt->mSupFile);
     fw << header;
-    fs << header;
+    // output primary fusion firstly
     for(uint32_t i = 0; i < frl.size(); ++i){
-        if(frl[i].report){
-            if(frl[i].fsmask & FUSION_FPRIMARY){
+        if(frl[i].report && (frl[i].fsmask & FUSION_FPRIMARY)){
+            fw << frl[i];
+            fsoutset.insert(frl[i].fusegene);
+        }
+    }
+    for(uint32_t i = 0; i < frl.size(); ++i){
+        if(frl[i].report && (frl[i].fsmask & FUSION_FSUPPLEMENTARY)){
+            std::string revfg = frl[i].gene2 + "->" + frl[i].gene1;
+            if((fsoutset.find(frl[i].fusegene) == fsoutset.end()) && (fsoutset.find(revfg) == fsoutset.end())){
                 fw << frl[i];
-            }else if(frl[i].fsmask & FUSION_FSUPPLEMENTARY){
-                fs << frl[i];
             }
         }
     }
     fw.close();
-    fs.close();
 }
 
 void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i){
