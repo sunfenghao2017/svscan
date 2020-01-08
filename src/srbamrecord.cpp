@@ -328,6 +328,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
                 svs[svid].mSRSupport = seqStore[svid].size();
                 svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
+                svs[svid].mBpInsFreq = (float)(insStore[svid].size())/(float)(seqStore[svid].size());
             }
         }
     }
@@ -462,6 +463,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
                 svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
                 svs[svid].mSRSupport = mTraSeqStore[svid].size();
                 svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
+                svs[svid].mBpInsFreq = (float)(mTriSeqStore[svid].size())/(float)(mTraSeqStore[svid].size());
             }
         }
     }

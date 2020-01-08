@@ -29,6 +29,7 @@ class SVRecord{
         int32_t mSRSupport = 0;      ///< number of Split-reads supporting this SV(one split read consists two part)
         int32_t mAlnInsLen = 0;      ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
         std::string mBpInsSeq = "";  ///< insertion sequence after breakpoint position
+        float mBpInsFreq = 0;        ///< frequence of insertion sequence after breakpoint position 
         int32_t mHomLen = 0;         ///< total homology length of left/right part of consensus seq out of gap range with their gap elonged partner
         int32_t mSVT = -1;           ///< SV type[0-9]
         int32_t mID = -1;            ///< SV ID, is just the index at which this SVRecord is stored in the vector
