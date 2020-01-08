@@ -30,6 +30,8 @@ typedef std::vector<GeneRange> GeneRangeVector;
 
 /** class to store a fusion gene fusion range */
 struct FusionRange{
+    bool mOneMatchOkay = false;                       ///< one gene match is okay
+    bool mTwoMatchOkay = false;                       ///< two gene match ignoring ie is okay
     std::string mHgene;                               ///< hgene
     std::string mTgene;                               ///< tgene
     std::vector<std::pair<int32_t, int32_t>> mExPair; ///< hgene exon and tgene exon pairs

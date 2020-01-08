@@ -181,18 +181,32 @@ void FusionOptions::initFusionRptRange(){
     while(std::getline(fr, line)){
         util::split(line, vstr, "\t");
         std::string fsn = vstr[0] + "->" + vstr[2];
-        std::string uu = std::string(1, vstr[1][0]) + vstr[3][0];
-        int32_t hu = std::atoi(vstr[1].substr(1).c_str());
-        int32_t tu = std::atoi(vstr[3].substr(1).c_str());
-        auto iter = mFusionRptMap.find(fsn);
-        if(iter == mFusionRptMap.end()){
-            FusionRange fsr;
-            fsr.mHgene = vstr[0];
-            fsr.mTgene = vstr[2];
-            fsr.addp(hu, tu, uu);
-            mFusionRptMap[fsn] = fsr;
+        if(vstr[2] == "*"){
+            FusionRange sfsr;
+            sfsr.mOneMatchOkay = true;
+            mFusionRptMap[fsn] = sfsr;
         }else{
-            iter->second.addp(hu, tu, uu);
+            if(vstr[1] == "*"){
+                FusionRange tfsr;
+                tfsr.mHgene = vstr[0];
+                tfsr.mTgene = vstr[2];
+                tfsr.mTwoMatchOkay = true;
+                mFusionRptMap[fsn] = tfsr;
+            }else{
+                std::string uu = std::string(1, vstr[1][0]) + vstr[3][0];
+                int32_t hu = std::atoi(vstr[1].substr(1).c_str());
+                int32_t tu = std::atoi(vstr[3].substr(1).c_str());
+                auto iter = mFusionRptMap.find(fsn);
+                if(iter == mFusionRptMap.end()){
+                    FusionRange fsr;
+                    fsr.mHgene = vstr[0];
+                    fsr.mTgene = vstr[2];
+                    fsr.addp(hu, tu, uu);
+                    mFusionRptMap[fsn] = fsr;
+                }else{
+                    iter->second.addp(hu, tu, uu);
+                }
+            }
         }
     }
     fr.close();
@@ -200,11 +214,16 @@ void FusionOptions::initFusionRptRange(){
 
 bool FusionOptions::inFsRptRange(std::string hgene, std::string tgene,  int32_t hu, int32_t tu, std::string uu){
     if(!mInitialized) init();
+    std::string onemfs1 = hgene + "->*";
+    if(mFusionRptMap.find(onemfs1) != mFusionRptMap.end()) return true;
+    std::string onemfs2 = tgene + "->*";
+    if(mFusionRptMap.find(onemfs2) != mFusionRptMap.end()) return true;
     std::string fgname = hgene + "->" + tgene;
     auto iter = mFusionRptMap.find(fgname);
     if(iter == mFusionRptMap.end()){
         return false;
     }else{
+        if(iter->second.mTwoMatchOkay) return true;
         if(uu == "ee"){
             return iter->second.eegot(hu, tu);
         }else if(uu == "ei"){
