@@ -195,8 +195,8 @@ struct FusionRecord{
 /** class to store a list of FusionRecords */
 typedef std::vector<FusionRecord> FusionRecordList;
 
-/** mark mirror fusion event which came from same structural evnet to report the desired one */
-void markMirrorFromSameEvent(FusionRecordList& frl){
+/** mark mirror fusion event which came from mirror structural evnet to report the desired one */
+inline void markMirrorFromSameEvent(FusionRecordList& frl){
     if(frl.empty()) return;
     // construct index
     std::vector<int32_t> idxs(9, 0), idxe(9, 0);
