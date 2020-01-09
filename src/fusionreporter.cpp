@@ -284,10 +284,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }
             if(fgr.fsmask & FUSION_FCALLFROMRNASEQ){
-                fgr.ts1name = fgr.ts1name; // ts1Name
-                fgr.ts1pos = fgr.ts1pos;   // ts1Pos
-                fgr.ts2name = fgr.ts2name; // ts2Name
-                fgr.ts2pos = fgr.ts2pos;   // ts2Pos
+                fgr.ts1name = svr.trs1Name; // ts1Name
+                fgr.ts1pos = svr.trs1Pos;   // ts1Pos
+                fgr.ts2name = svr.trs2Name; // ts2Name
+                fgr.ts2pos = svr.trs2Pos;   // ts2Pos
             }
 #ifdef DEBUG
             if(debug) std::cout << fgr << std::endl;

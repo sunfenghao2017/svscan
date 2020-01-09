@@ -64,11 +64,12 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.fsMask = gl[i].getFsMask();
         svr.fsHits = svs[i].mRealnRet;
         if(mOpt->rnamode){
-            // ts1Name ts1Pos ts2Name ts2Pos
+            // ts1Name ts1Pos ts2Name ts2Pos fsCigar
             svr.trs1Name = svs[i].mNameChr1;
             svr.trs1Pos = svs[i].mSVStart;
             svr.trs2Name = svs[i].mNameChr2;
             svr.trs2Pos = svs[i].mSVEnd;
+            svr.fsCigar = gl[i].mFuseGene[0].cigar;
             svr.rnamode = true;
         }
         // output
