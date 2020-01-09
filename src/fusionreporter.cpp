@@ -90,24 +90,14 @@ void FusionReporter::report(){
         l = i;
     }
     if(!fuseList.empty()) fuseList[fuseList.size() - 1].report = true;
+    // mark fusion from same sv event
+    markMirrorFromSameEvent(fuseList);
     // output valid fusions
-    std::set<std::string> fsoutset;
     std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
     fw << header;
     for(auto& e: fuseList){
-        if(e.report && (e.fsmask & FUSION_FPRIMARY)){
-            fw << e;
-            fsoutset.insert(e.fusegene);
-        }
-    }
-    for(auto& e: fuseList){
-        if(e.report && (e.fsmask & FUSION_FSUPPLEMENTARY)){
-            std::string revfg = e.gene2 + "->" + e.gene1;
-            if((fsoutset.find(e.fusegene) == fsoutset.end()) && (fsoutset.find(revfg) == fsoutset.end())){
-                fw << e;
-            }
-        }
+        if(e.report) fw << e;
     }
     fw.close();
 }

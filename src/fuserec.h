@@ -195,4 +195,49 @@ struct FusionRecord{
 /** class to store a list of FusionRecords */
 typedef std::vector<FusionRecord> FusionRecordList;
 
+/** mark mirror fusion event which came from same structural evnet to report the desired one */
+void markMirrorFromSameEvent(FusionRecordList& frl){
+    if(frl.empty()) return;
+    // construct index
+    std::vector<int32_t> idxs(9, 0), idxe(9, 0);
+    for(uint32_t i = 1; i < frl.size(); ++i){
+        if(frl[i].svint != frl[i - 1].svint){
+            idxs[frl[i].svint] = i;
+            idxe[frl[i - 1].svint] = i - 1;
+        }
+    }
+    idxe[frl[frl.size() - 1].svint] = frl.size() - 1;
+    // construct mark pair
+    std::map<int32_t, int32_t> mkp = {{0, 1}, {5, 6}, {7, 8}};
+    // begin mark
+    for(auto iter = mkp.begin(); iter != mkp.end(); ++iter){
+        for(int32_t firidx = idxs[iter->first]; firidx <= idxe[iter->first]; ++firidx){
+            if(frl[firidx].report && (frl[firidx].fsmask & FUSION_FMIRROR) && (frl[firidx].fsmask & FUSION_FALLGENE)){
+                for(int32_t secidx = idxs[iter->second]; secidx <= idxe[iter->second]; ++secidx){
+                    if(frl[secidx].report && (frl[secidx].fsmask & FUSION_FMIRROR) && (frl[secidx].fsmask & FUSION_FALLGENE)){
+                        if(frl[firidx].gene1 == frl[secidx].gene2 && 
+                           frl[firidx].gene2 == frl[secidx].gene1 &&
+                           frl[firidx].exon1 == frl[secidx].exon2 &&
+                           frl[firidx].exon2 == frl[secidx].exon1){
+                            bool kf = false, ks = false;
+                            if(frl[firidx].fsmask & FUSION_FCOMMONHOTDIRECT) kf = true;
+                            if(frl[secidx].fsmask & FUSION_FCOMMONHOTDIRECT) ks = true;
+                            if(kf ^ ks){
+                                if(kf) frl[secidx].report = false;
+                                else frl[firidx].report = false;
+                            }else{
+                                if(frl[firidx].fusionreads > frl[secidx].fusionreads){
+                                    frl[secidx].report = false;
+                                }else{
+                                    frl[firidx].report = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 #endif

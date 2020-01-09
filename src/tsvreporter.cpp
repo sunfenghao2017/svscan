@@ -351,25 +351,14 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
         }
     }
 #endif
+    // mark fusion from same sv event
+    markMirrorFromSameEvent(frl);
     // output valid fusions
-    std::set<std::string> fsoutset;
     std::string header = FusionRecord::gethead(mOpt->rnamode);
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
     fw << header;
-    // output primary fusion firstly
     for(uint32_t i = 0; i < frl.size(); ++i){
-        if(frl[i].report && (frl[i].fsmask & FUSION_FPRIMARY)){
-            fw << frl[i];
-            fsoutset.insert(frl[i].fusegene);
-        }
-    }
-    for(uint32_t i = 0; i < frl.size(); ++i){
-        if(frl[i].report && (frl[i].fsmask & FUSION_FSUPPLEMENTARY)){
-            std::string revfg = frl[i].gene2 + "->" + frl[i].gene1;
-            if((fsoutset.find(frl[i].fusegene) == fsoutset.end()) && (fsoutset.find(revfg) == fsoutset.end())){
-                fw << frl[i];
-            }
-        }
+        if(frl[i].report) fw << frl[i];
     }
     fw.close();
 }
