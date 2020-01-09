@@ -75,7 +75,7 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
             if((!fg.hfrom1) && bp2trs[b2].gene == fg.hgene) fg.hidx = b2;
             if((!fg.tfrom1) && bp2trs[b2].gene == fg.tgene) fg.tidx = b2;
         }
-        if(fvstr.size() > 2) fg.cigar = fvstr[2];
+        if(fvstr.size() > 3) fg.cigar = fvstr[3];
         fsgl.push_back(fg);
     }
 }

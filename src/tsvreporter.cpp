@@ -69,7 +69,6 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
             svr.trs1Pos = svs[i].mSVStart;
             svr.trs2Name = svs[i].mNameChr2;
             svr.trs2Pos = svs[i].mSVEnd;
-            svr.fsCigar = gl[i].mFuseGene[0].cigar;
             svr.rnamode = true;
         }
         // output

@@ -38,7 +38,6 @@ struct SVRec{
     int32_t trs1Pos;
     std::string trs2Name;
     int32_t trs2Pos;
-    std::string fsCigar;
     bool rnamode;
 
     SVRec(){
@@ -57,7 +56,7 @@ struct SVRec{
         os << svr.id << "\t" << svr.svInt << "\t";
         os << svr.bp1Gene << "\t" << svr.bp2Gene << "\t" << svr.fuseGene << "\t" << svr.fsMask << "\t" << svr.fsHits;
         if(svr.rnamode){
-            os << "\t" << svr.trs1Name << "\t" << svr.trs1Pos << "\t" << svr.trs2Name << "\t" << svr.trs2Pos << "\t" << svr.fsCigar;
+            os << "\t" << svr.trs1Name << "\t" << svr.trs1Pos << "\t" << svr.trs2Name << "\t" << svr.trs2Pos;
         }
         os << "\n";
         return os;
@@ -74,7 +73,7 @@ struct SVRec{
         oss << "ID\tsvtInt\t"; // [19,20]
         oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [21,25]
         if(rnamode){
-            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n"; //[26,30]
+            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[26,30]
         }else{
             oss << "\n";
         }
@@ -115,7 +114,6 @@ struct SVRec{
             svr.trs1Pos = std::atoi(vstr[27].c_str());
             svr.trs2Name = vstr[28];
             svr.trs2Pos = std::atoi(vstr[29].c_str());
-            svr.fsCigar = std::atoi(vstr[30].c_str());
         }
     }
 };
