@@ -90,8 +90,8 @@ void FusionReporter::report(){
         l = i;
     }
     if(!fuseList.empty()) fuseList[fuseList.size() - 1].report = true;
-    // mark fusion from same sv event
-    markMirrorFromSameEvent(fuseList);
+    // mark mirror fusion to keep optimal one in output
+    markMirrorFusionEvent(fuseList);
     // output valid fusions
     std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
@@ -108,13 +108,6 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     if(!fuseOpt->mSVModFile.empty()){ // update sv tsv file if needed
         fsv.open(fuseOpt->mSVModFile.c_str());
     }
-    // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
-                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
-    // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
-    TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FINSAMEGENE);
-    // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FINREPORTRNG);
     // supplementary fusion additional conditions
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;
@@ -254,10 +247,13 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
                   else fgr.fsmask &= (~FUSION_FREALNPASSED);
             }
-            if(fgr.fsmask & FUSION_DROP_MASK){
+            if(((!(fgr.fsmask & FUSION_FINDB)) && (fgr.fsmask & FUSION_NDBDROP_MASK)) ||
+               ((fgr.fsmask & FUSION_FINDB) && (fgr.fsmask & FUSION_IDBDROP_MASK))){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{
-                if((fgr.fsmask & FUSION_KEEP_MASK) != FUSION_KEEP_MASK){
+                if(((fgr.fsmask & FUSION_KEEP_MASK1) != FUSION_KEEP_MASK1) &&
+                   ((fgr.fsmask & FUSION_KEEP_MASK2) != FUSION_KEEP_MASK2) &&
+                   ((fgr.fsmask & FUSION_KEEP_MASK3) != FUSION_KEEP_MASK3)){
                     fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
                 }else{
                     if((fgr.fsmask & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){

@@ -7,6 +7,19 @@
 #include "svutil.h"
 #include "fusionopt.h"
 
+// drop bits mask of fusion not in db, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
+const TFUSION_FLAG FUSION_NDBDROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
+                                          FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
+// drop bits mask of fusion in db, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
+const TFUSION_FLAG FUSION_IDBDROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FINSAMEGENE |
+                                          FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
+// keep bits mask, an fusion to be reported must match all bits in any of FUSION_KEEP_MASK1/2/3
+const TFUSION_FLAG FUSION_KEEP_MASK1 = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FINREPORTRNG);
+const TFUSION_FLAG FUSION_KEEP_MASK2 = (FUSION_FHOTGENE | FUSION_FINDB | FUSION_FINREPORTRNG);
+const TFUSION_FLAG FUSION_KEEP_MASK3 = (FUSION_FHOTGENE | FUSION_FMIRRORINDB |  FUSION_FINREPORTRNG);
+// primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
+const TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FALLGENE);
+
 /** class to store an fusion record */
 struct FusionRecord{
     std::string fusegene;       ///< fusion gene hgene->tgene
@@ -196,7 +209,7 @@ struct FusionRecord{
 typedef std::vector<FusionRecord> FusionRecordList;
 
 /** mark mirror fusion event which came from mirror structural evnet to report the desired one */
-inline void markMirrorFromSameEvent(FusionRecordList& frl){
+inline void markFusionMirrorFromMirrorSVEvent(FusionRecordList& frl){
     if(frl.empty()) return;
     // construct index
     std::vector<int32_t> idxs(9, 0), idxe(9, 0);
@@ -240,4 +253,20 @@ inline void markMirrorFromSameEvent(FusionRecordList& frl){
     }
 }
 
+/** mark mirror fusion event to keep the PRIMARY only if mirror SECONDARY exists */
+inline void markMirrorFusionEvent(FusionRecordList& frl){
+    std::set<std::string> fsoutset;
+    for(auto& e: frl){
+        if(e.report && (e.fsmask & FUSION_FPRIMARY)) fsoutset.insert(e.fusegene);
+    }
+    for(auto& e: frl){
+        if(e.report && (e.fsmask & FUSION_FSUPPLEMENTARY)){
+            std::string revfg = e.gene2 + "->" + e.gene1;
+            if(fsoutset.find(e.fusegene) != fsoutset.end() ||
+               fsoutset.find(revfg) != fsoutset.end()){
+                e.report = false;
+            }
+        }
+    }
+}
 #endif
