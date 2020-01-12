@@ -126,6 +126,7 @@ struct FusionRecord{
         if(!(fsmask & FUSION_FNORMALCATDIRECT)) sts.append("D");
         if(!(fsmask & FUSION_FCOMMONHOTDIRECT)) sts.append("C");
         if(gene1 == gene2) sts.append("S");
+        if(!(fsmask & FUSION_FALLGENE)) sts.append("G");
         if(sts.empty()) sts.append("Y");
         return sts;
     }
@@ -183,7 +184,21 @@ struct FusionRecord{
         if(fsopt->mFsRptList.empty()){
             fsmask |= FUSION_FINREPORTRNG;
         }else{
+            std::vector<std::string> vstr1, vstr2;
+            util::split(transcript1, vstr1, ",");
+            util::split(transcript2, vstr2, ",");
+            int32_t unum1 = std::atoi(vstr1[3].c_str());
+            int32_t unum2 = std::atoi(vstr2[3].c_str());
+            std::string uumk = "";
+            if(vstr1[2] == "intron") uumk.append("i");
+            else if(vstr1[2] == "exon") uumk.append("e");
+            else uumk.append("-");
+            if(vstr2[2] == "intron") uumk.append("i");
+            else if(vstr2[2] == "exon") uumk.append("e");
+            else uumk.append("-");
             if(fsopt->inFsRptRange(gene1, gene2, exon1, exon2, "ee")){
+                fsmask |= FUSION_FINREPORTRNG;
+            }else if(fsopt->inFsRptRange(gene1, gene2, unum1, unum2, uumk)){
                 fsmask |= FUSION_FINREPORTRNG;
             }
         }
