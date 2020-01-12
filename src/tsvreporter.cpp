@@ -295,17 +295,17 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     // mask report mask
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
-            if((gl[i].mFuseGene[j].status & FUSION_FINDB) && (gl[i].mFuseGene[j].status & FUSION_IDBDROP_MASK)) continue;
-            if((!(gl[i].mFuseGene[j].status & FUSION_FINDB)) && (gl[i].mFuseGene[j].status & FUSION_NDBDROP_MASK)) continue;
-            if(((gl[i].mFuseGene[j].status & FUSION_KEEP_MASK1) != FUSION_KEEP_MASK1) &&
-               ((gl[i].mFuseGene[j].status & FUSION_KEEP_MASK2) != FUSION_KEEP_MASK2) &&
-               ((gl[i].mFuseGene[j].status & FUSION_KEEP_MASK3) != FUSION_KEEP_MASK3)){
-                continue;
-            }
-            if((gl[i].mFuseGene[j].status & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
-                gl[i].mFuseGene[j].status |= FUSION_FPRIMARY;
-            }else{
-                gl[i].mFuseGene[j].status |= FUSION_FSUPPLEMENTARY;
+            if((gl[i].mFuseGene[j].status & FUSION_FINDB) && (gl[i].mFuseGene[j].status & mOpt->fuseOpt->mIDBDropMask)) continue;
+            if((!(gl[i].mFuseGene[j].status & FUSION_FINDB)) && (gl[i].mFuseGene[j].status & mOpt->fuseOpt->mNDBDropMask)) continue;
+            for(auto& e: mOpt->fuseOpt->mKeepMasks){
+                if((gl[i].mFuseGene[j].status & e) == e){
+                    if((gl[i].mFuseGene[j].status & mOpt->fuseOpt->mPrimaryMask) == mOpt->fuseOpt->mPrimaryMask){
+                        gl[i].mFuseGene[j].status |= FUSION_FPRIMARY;
+                    }else{
+                        gl[i].mFuseGene[j].status |= FUSION_FSUPPLEMENTARY;
+                    }
+                    break;
+                }
             }
         }
     }

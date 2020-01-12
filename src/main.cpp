@@ -69,7 +69,11 @@ int main(int argc, char** argv){
     app.add_option("--extraanno", opt->fuseOpt->mExtraAnnoList, "extra annoation gene list")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fsrptlist", opt->fuseOpt->mFsRptList, "report range list")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--genecrdlist", opt->fuseOpt->mGeneCrdList, "gene coord list")->check(CLI::ExistingFile)->group("Fusion Options");
-    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
+    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "fusion report file path", true)->group("Fusion Options");
+    app.add_option("--idpdropmask", opt->fuseOpt->mIDBDropMask, "fusion in db drop bit mask", true)->group("Fusion Options");
+    app.add_option("--ndbdropmask", opt->fuseOpt->mNDBDropMask, "fusion not in db drop bit mask", true)->group("Fusion Options");
+    app.add_option("--keepmasks", opt->fuseOpt->mKeepMasks, "fusion keep masks", true)->group("Fusion Options");
+    app.add_option("--primarymask", opt->fuseOpt->mPrimaryMask, "primary fusion mask", true)->group("Fusion Options");
     // parse arguments
     CLI_PARSE(app, argc, argv);
     // validate arguments

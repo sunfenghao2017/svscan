@@ -7,19 +7,6 @@
 #include "svutil.h"
 #include "fusionopt.h"
 
-// drop bits mask of fusion not in db, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-const TFUSION_FLAG FUSION_NDBDROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
-                                          FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
-// drop bits mask of fusion in db, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-const TFUSION_FLAG FUSION_IDBDROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FINSAMEGENE |
-                                          FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
-// keep bits mask, an fusion to be reported must match all bits in any of FUSION_KEEP_MASK1/2/3
-const TFUSION_FLAG FUSION_KEEP_MASK1 = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FINREPORTRNG);
-const TFUSION_FLAG FUSION_KEEP_MASK2 = (FUSION_FHOTGENE | FUSION_FINDB | FUSION_FINREPORTRNG);
-const TFUSION_FLAG FUSION_KEEP_MASK3 = (FUSION_FHOTGENE | FUSION_FMIRRORINDB |  FUSION_FINREPORTRNG);
-// primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
-const TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FALLGENE);
-
 /** class to store an fusion record */
 struct FusionRecord{
     std::string fusegene;       ///< fusion gene hgene->tgene

@@ -204,6 +204,7 @@ class Options{
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
         DEBUG_TYPE debug;             ///< debug mode
+        std::string jsncfg;           ///< json config file
 
     public:
         /** Options constructor */

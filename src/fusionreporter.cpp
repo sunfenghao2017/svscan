@@ -247,21 +247,23 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
                   else fgr.fsmask &= (~FUSION_FREALNPASSED);
             }
-            if(((!(fgr.fsmask & FUSION_FINDB)) && (fgr.fsmask & FUSION_NDBDROP_MASK)) ||
-               ((fgr.fsmask & FUSION_FINDB) && (fgr.fsmask & FUSION_IDBDROP_MASK))){
+            if(((!(fgr.fsmask & FUSION_FINDB)) && (fgr.fsmask & fuseOpt->mNDBDropMask)) ||
+               ((fgr.fsmask & FUSION_FINDB) && (fgr.fsmask & fuseOpt->mIDBDropMask))){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{
-                if(((fgr.fsmask & FUSION_KEEP_MASK1) != FUSION_KEEP_MASK1) &&
-                   ((fgr.fsmask & FUSION_KEEP_MASK2) != FUSION_KEEP_MASK2) &&
-                   ((fgr.fsmask & FUSION_KEEP_MASK3) != FUSION_KEEP_MASK3)){
-                    fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
-                }else{
-                    if((fgr.fsmask & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
-                        fgr.fsmask |= FUSION_FPRIMARY;
-                    }else{
-                        fgr.fsmask |= FUSION_FSUPPLEMENTARY;
+                bool notreport = true;
+                for(auto& emask: fuseOpt->mKeepMasks){
+                    if((fgr.fsmask & emask) == emask){
+                        if((fgr.fsmask & fuseOpt->mPrimaryMask) == fuseOpt->mPrimaryMask){
+                            fgr.fsmask |= FUSION_FPRIMARY;
+                        }else{
+                            fgr.fsmask |= FUSION_FSUPPLEMENTARY;
+                        }
+                        notreport = false;
+                        break;
                     }
                 }
+                if(notreport) fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }
             if((fgr.fsmask & fuseOpt->mFsMaskInclude) != fuseOpt->mFsMaskInclude){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));

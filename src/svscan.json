@@ -1,0 +1,52 @@
+{
+    "GeneralOptions": {
+        "dnaref": "/share/work1/wulj/database/hg19/hg19.fa",
+        "rnaref": "/share/work1/wulj/database/svdb/rna/ref/ref.fa",
+        "dnaanno": "/share/work1/wulj/database/svdb/dna/anndb/anno.sort.gz",
+        "rnaanno": "/share/work1/wulj/database/svdb/rna/anndb/anno.sort.gz"
+    },
+    "ThresholdOptions": {
+        "min_ref_sep": 50,
+        "max_read_sep": 10,
+        "min_flk_len": 10,
+        "min_map_qual": 1,
+        "min_clip_len": 20,
+        "min_tra_qual": 1,
+        "min_dup_dp": 100,
+        "min_inv_rpt": 100,
+        "min_del_rpt": 300,
+        "min_dup_rpt": 100,
+        "min_seed_sr": 3,
+        "min_seed_dp": 3
+    },
+    "FusionOptions": {
+        "whitemindep": 30,
+        "usualmindep": 50,
+        "whiteminsrs": 3,
+        "usualminsrs": 5,
+        "whitemindps": 3,
+        "usualmindps": 5,
+        "whiteminsrr": 3,
+        "usualminsrr": 3,
+        "whitemindpr": 5,
+        "usualmindpr": 5,
+        "whiteminttr": 3,
+        "usualminttr": 5,
+        "whiteminaf": 0,
+        "usualminaf": 0.01,
+        "whiteminigs": 2000,
+        "usualminigs": 2000,
+        "whitemaxrph": 4,
+        "usualmaxrph": 4,
+        "maxbpoffset": 10,
+        "dnabgbcf": "/share/work1/wulj/database/svdb/dna/bgbcf/bgbcf.bcf",
+        "rnabgbcf": "",
+        "genecrdlist": "/share/work1/wulj/database/svdb/extra/gene.coord.tsv"
+    },
+    "FusionReportOptions": {
+        "FUSION_NDBDROP_MASK": 127936,
+        "FUSION_IDBDROP_MASK": 127424,
+        "FUSION_ALLKEEP_MASK": [6291460, 4194324, 4718596],
+        "PRIMARY_KEEP_MASK": 27
+    }
+}
