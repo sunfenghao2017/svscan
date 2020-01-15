@@ -20,6 +20,7 @@ class SRBamRecord{
         int32_t mChr2;     ///< reference id part2 of read mapped
         int32_t mPos2;     ///< break point position of part2 read on reference
         int32_t mRstart;   ///< starting mapping position on reference of one part read which is not -1
+        bool mSRChr1;      ///< primary alignment of this read is on mChr1 if true
         int32_t mInslen;   ///< insert size of two part of one read contributed, this might caused by insertion or sequence error
         int32_t mSVID;     ///< default -1, if allocated to an StructuralVariant, it is the index at which to store a StructuralVariant in vector
         size_t mID;        ///< hash value of the read name
@@ -32,16 +33,18 @@ class SRBamRecord{
          * @param chr2 reference id part2 of read mapped
          * @param pos2 break point position of part2 read on reference
          * @param rstart starting mapping position on reference of one part read which is not -1
+         * @param srchr1 primary alignment of this read is on mChr1 if true
          * @param inslen insert size of two part of one read contributed
          * @param id hash value of the read name
          * @param rd1 read1 if true
          */
-        SRBamRecord(int32_t chr1, int32_t pos1, int32_t chr2, int32_t pos2, int32_t rstart, int32_t inslen, size_t id, bool rd1){
+        SRBamRecord(int32_t chr1, int32_t pos1, int32_t chr2, int32_t pos2, int32_t rstart, bool srchr1, int32_t inslen, size_t id, bool rd1){
             mChr1 = chr1;
             mPos1 = pos1;
             mChr2 = chr2;
             mPos2 = pos2;
             mRstart = rstart;
+            mSRChr1 = srchr1;
             mInslen = inslen;
             mSVID = -1;
             mID = id;
@@ -197,7 +200,7 @@ class SRBamRecordSet{
 
         void assembleOneContig(SVSet& svs, int32_t refIdx);
 
-        void assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
+        void assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
 };
 
 #endif

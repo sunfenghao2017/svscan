@@ -8,7 +8,6 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     hts_set_fai_filename(fp, mOpt->alnref.c_str());
-    bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
     const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
     // Iterate bam contig by contig
@@ -18,19 +17,18 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     if(!mapped){
         sam_close(fp);
         hts_idx_destroy(idx);
-        bam_hdr_destroy(h);
         bam_destroy1(b);
         return; // Skip contig without any mapped reads
     }
     // Iterate all read alignments on this contig and valid regions
-    util::loginfo("Beg SR/DP scanning on Contig: " + std::string(h->target_name[tid]), mOpt->logMtx);
+    util::loginfo("Beg SR/DP scanning on Contig: " + std::string(mOpt->bamheader->target_name[tid]), mOpt->logMtx);
     for(auto regit = mScanRegs[tid].begin(); regit != mScanRegs[tid].end(); ++regit){
         hts_itr_t* itr = sam_itr_queryi(idx, tid, regit->first, regit->second);
         while(sam_itr_next(fp, itr, b) >= 0){
             if(b->core.flag & BAM_SRSKIP_MASK) continue;// skip invalid reads
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
-            if(!inValidReg(b, h)) continue; // skip reads which do not overlap with creg, neither does its mate
-            int instat = jctMap->insertJunction(b, h); // only one softclip read can be SR candidates
+            if(!inValidReg(b, mOpt->bamheader)) continue; // skip reads which do not overlap with creg, neither does its mate
+            int instat = jctMap->insertJunction(b, mOpt->bamheader); // only one softclip read can be SR candidates
             if(instat == -1 || instat > 2) continue; // skip hardclip ones and read with head/tail sc
             if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
@@ -68,10 +66,9 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
         }
         hts_itr_destroy(itr);
     }
-    util::loginfo("End SR/DP scanning on Contig: " + std::string(h->target_name[tid]), mOpt->logMtx);
+    util::loginfo("End SR/DP scanning on Contig: " + std::string(mOpt->bamheader->target_name[tid]), mOpt->logMtx);
     sam_close(fp);
     hts_idx_destroy(idx);
-    bam_hdr_destroy(h);
     bam_destroy1(b);
 }
 
@@ -221,11 +218,9 @@ void SVScanner::scanDPandSR(){
     // open bamout for write
     if(!mOpt->bamout.empty()){
         samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-        bam_hdr_t* h = sam_hdr_read(fp);
         mOpt->fbamout = sam_open(mOpt->bamout.c_str(), "w");
-        assert(sam_hdr_write(mOpt->fbamout, h) >= 0);
+        assert(sam_hdr_write(mOpt->fbamout, mOpt->bamheader) >= 0);
         sam_close(fp);
-        bam_hdr_destroy(h);
     }
     // Annotate junction reads and spaning coverage
     util::loginfo("Beg annotating SV coverage");

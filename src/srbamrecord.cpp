@@ -5,6 +5,7 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
     util::loginfo("Beg classifing SRs into various SV candidates");
     int svtIdx = 0;
     int32_t rst = -1;
+    bool srchr1 = false;
     uint32_t j = 0;
     int32_t inslen = 0;
     for(auto iter = jctMap->mJunctionReads.begin(); iter != jctMap->mJunctionReads.end(); ++iter){
@@ -20,9 +21,6 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
             }else{
                 inslen = 0;
             }
-            // get read starting mapping position
-            rst = iter->second[i].mRstart;
-            if(rst == -1) rst = iter->second[j].mRstart;
             // check possible translocation split read
             if(iter->second[j].mRefidx != iter->second[i].mRefidx){
                 int32_t littleChrIdx = i;
@@ -52,11 +50,18 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                     }
                 }
                 if(svtIdx && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
+                    rst = iter->second[largerChrIdx].mRstart;
+                    srchr1 = true;
+                    if(rst < 0){
+                        rst = iter->second[littleChrIdx].mRstart;
+                        srchr1 = false;
+                    }
                     mSRs[svtIdx].push_back(SRBamRecord(iter->second[largerChrIdx].mRefidx,
                                                     iter->second[largerChrIdx].mRefpos,
                                                     iter->second[littleChrIdx].mRefidx,
                                                     iter->second[littleChrIdx].mRefpos,
                                                     rst,
+                                                    srchr1,
                                                     inslen,
                                                     iter->first,
                                                     iter->second[littleChrIdx].mRead1));
@@ -86,11 +91,18 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
                     else svtIdx = 0; // 5to5 left spanning inversion breakpoint
                 }
                 if(svtIdx != -1 && mOpt->SVTSet.find(svtIdx) != mOpt->SVTSet.end()){
+                    rst = iter->second[leftPart].mRstart;
+                    srchr1 = true;
+                    if(rst < 0){
+                        rst = iter->second[rightPart].mRstart;
+                        srchr1 = false;
+                    }
                     mSRs[svtIdx].push_back(SRBamRecord(iter->second[leftPart].mRefidx,
                                                        iter->second[leftPart].mRefpos,
                                                        iter->second[rightPart].mRefidx,
                                                        iter->second[rightPart].mRefpos,
                                                        rst,
+                                                       srchr1,
                                                        inslen,
                                                        iter->first,
                                                        iter->second[leftPart].mRead1));
@@ -193,20 +205,40 @@ void SRBamRecordSet::cluster(SVSet& svs){
 }
 
 void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
-    if(mSRMapPos[refIdx].empty()) return;
+    if(mSRMapPos[refIdx].empty()){
+        if(mOpt->svRefID.find(refIdx) != mOpt->svRefID.end()){
+            faidx_t* fai = fai_load(mOpt->alnref.c_str());
+            int32_t seqlen = -1;
+            char* chr1Seq = faidx_fetch_seq(fai, mOpt->bamheader->target_name[refIdx], 0, mOpt->bamheader->target_len[refIdx], &seqlen);
+            for(uint32_t svid = 0; svid < svs.size(); ++svid){
+                if(svs[svid].mChr1 != refIdx && svs[svid].mChr2 != refIdx) continue;
+                if(svs[svid].mSVT >= 5 && svs[svid].mChr2 == refIdx){// Fetch lite chr seq of translocation
+                    BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
+                    svs[svid].mTraChr2Seq = bp.getLittleRef(chr1Seq);
+                    continue;
+                }
+                if(svs[svid].mSVT >= 5 && svs[svid].mChr1 == refIdx){// Fetch large chr seq of translocation
+                    BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
+                    svs[svid].mTraChr1Seq = bp.getLargerRef(chr1Seq);
+                    continue;
+                }
+            }
+            if(chr1Seq) free(chr1Seq);
+            return;
+        }
+    }
     // Open file handles
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_set_fai_filename(fp, mOpt->alnref.c_str());
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
-    bam_hdr_t* hdr = sam_hdr_read(fp);
     faidx_t* fai = fai_load(mOpt->alnref.c_str());
     bam1_t* b = bam_init1();
-    util::loginfo("Beg assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
+    util::loginfo("Beg assembling SRs on contig: " + std::string(mOpt->bamheader->target_name[refIdx]), mOpt->logMtx);
     const uint16_t BAM_RDSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FSECONDARY | BAM_FUNMAP | BAM_FSUPPLEMENTARY);
     // Load sequence
     int32_t seqlen = -1;
-    char* chr1Seq = faidx_fetch_seq(fai, hdr->target_name[refIdx], 0, hdr->target_len[refIdx], &seqlen);
-    std::vector<bool> hits(hdr->target_len[refIdx], false);
+    char* chr1Seq = faidx_fetch_seq(fai, mOpt->bamheader->target_name[refIdx], 0, mOpt->bamheader->target_len[refIdx], &seqlen);
+    std::vector<bool> hits(mOpt->bamheader->target_len[refIdx], false);
     // Collect all split-read pos
     for(auto vsrIter = mSRMapPos[refIdx].begin(); vsrIter != mSRMapPos[refIdx].end(); ++vsrIter){
         hits[vsrIter->first.first] = true;
@@ -216,7 +248,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
     std::vector<std::multiset<std::string>> insStore(svs.size());
     std::vector<std::vector<uint8_t>> qualStore(svs.size());
     // Collect reads
-    hts_itr_t* bamIter = sam_itr_queryi(idx, refIdx, 0, hdr->target_len[refIdx]);
+    hts_itr_t* bamIter = sam_itr_queryi(idx, refIdx, 0, mOpt->bamheader->target_len[refIdx]);
     while(sam_itr_next(fp, bamIter, b) >= 0){
         if(b->core.flag & BAM_RDSKIP_MASK) continue;
         if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;
@@ -280,12 +312,12 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
     for(uint32_t svid = 0; svid < seqStore.size(); ++svid){
         if(svs[svid].mChr1 != refIdx && svs[svid].mChr2 != refIdx) continue;
         if(svs[svid].mSVT >= 5 && svs[svid].mChr2 == refIdx){// Fetch lite chr seq of translocation
-            BreakPoint bp = BreakPoint(svs[svid], hdr, 10 * mOpt->libInfo->mReadLen);
+            BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
             svs[svid].mTraChr2Seq = bp.getLittleRef(chr1Seq);
             continue;
         }
         if(svs[svid].mSVT >= 5 && svs[svid].mChr1 == refIdx){// Fetch large chr seq of translocation
-            BreakPoint bp = BreakPoint(svs[svid], hdr, 10 * mOpt->libInfo->mReadLen);
+            BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
             svs[svid].mTraChr1Seq = bp.getLargerRef(chr1Seq);
             continue;
         }
@@ -312,7 +344,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                     }
                 }
             }
-            if(svs[svid].refineSRBp(mOpt, hdr, chr1Seq, chr1Seq)) bpRefined = true;
+            if(svs[svid].refineSRBp(mOpt, mOpt->bamheader, chr1Seq, chr1Seq)) bpRefined = true;
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
@@ -333,9 +365,8 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         }
     }
     if(chr1Seq) free(chr1Seq);
-    util::loginfo("End assembling SRs on contig: " + std::string(hdr->target_name[refIdx]), mOpt->logMtx);
+    util::loginfo("End assembling SRs on contig: " + std::string(mOpt->bamheader->target_name[refIdx]), mOpt->logMtx);
     sam_close(fp);
-    bam_hdr_destroy(hdr);
     hts_idx_destroy(idx);
     fai_destroy(fai);
     bam_destroy1(b);
@@ -343,16 +374,12 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
 
 void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     // Construct bool filter of SR mapping positions
-    samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, mOpt->alnref.c_str());
-    bam_hdr_t* hdr = sam_hdr_read(fp);
     for(uint32_t svt = 0; svt < mSRs.size(); ++svt){
         for(uint32_t i = 0; i < mSRs[svt].size(); ++i){
-            if(mSRs[svt][i].mSVID == -1 || mSRs[svt][i].mRstart == -1) continue;
-            if(mSRs[svt][i].mRstart < (int32_t)hdr->target_len[mSRs[svt][i].mChr1]){
+            if(mSRs[svt][i].mSVID == -1) continue;
+            if(mSRs[svt][i].mSRChr1){
                 mSRMapPos[mSRs[svt][i].mChr1].insert(std::make_pair(std::make_pair(mSRs[svt][i].mRstart, mSRs[svt][i].mID), mSRs[svt][i].mSVID));
-            }
-            if(mSRs[svt][i].mChr1 != mSRs[svt][i].mChr2 && mSRs[svt][i].mRstart < (int32_t)hdr->target_len[mSRs[svt][i].mChr2]){
+            }else{
                 mSRMapPos[mSRs[svt][i].mChr2].insert(std::make_pair(std::make_pair(mSRs[svt][i].mRstart, mSRs[svt][i].mID), mSRs[svt][i].mSVID));
             }
         }
@@ -408,22 +435,20 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     AlignConfig* alnCfg = new AlignConfig(5, -4, -10, -1, true, true);
     std::vector<std::future<void>> casret(vpidx.size());
     for(uint32_t pidx = 0; pidx < vpidx.size(); ++pidx){
-        casret[pidx] = mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), alnCfg, hdr, std::ref(crsvids), vpidx[pidx].first, vpidx[pidx].second);
+        casret[pidx] = mOpt->pool->enqueue(&SRBamRecordSet::assembleCrossChr, this, std::ref(svs), alnCfg, std::ref(crsvids), vpidx[pidx].first, vpidx[pidx].second);
     }
     for(auto& e: casret) e.get();
     // Add ChrName
     for(uint32_t i = 0; i < svs.size(); ++i){
-        svs[i].mNameChr1 = hdr->target_name[svs[i].mChr1];
-        svs[i].mNameChr2 = hdr->target_name[svs[i].mChr2];
+        svs[i].mNameChr1 = mOpt->bamheader->target_name[svs[i].mChr1];
+        svs[i].mNameChr2 = mOpt->bamheader->target_name[svs[i].mChr2];
     }
     // Clean-up
-    sam_close(fp);
-    bam_hdr_destroy(hdr);
     delete alnCfg;
     util::loginfo("End assembling SRs across chromosomes", mOpt->logMtx);
 }
 
-void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx){
+void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx){
     util::loginfo("Beg processing vpidx: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
     for(int32_t cidx = begIdx; cidx < endIdx; ++cidx){
         int32_t svid = crsidx[cidx];
@@ -448,7 +473,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t
                     }
                 }
             }
-            if(svs[svid].refineSRBp(mOpt, hdr, NULL, NULL)) bpRefined = true;
+            if(svs[svid].refineSRBp(mOpt, mOpt->bamheader, NULL, NULL)) bpRefined = true;
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){

@@ -284,17 +284,13 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     std::sort(dp.begin(), dp.end());
     for(uint32_t i = 0; i < dp.size(); ++i) dp[i].mID = i;
     // filter invalid dp svs firstly
-    samFile* fp = sam_open(opt->bamfile.c_str(), "r");
-    bam_hdr_t* h = sam_hdr_read(fp);
     for(uint32_t dpi = 0; dpi < dp.size(); ++dpi){
         if(dp[dpi].mSVStart < 0 || dp[dpi].mSVEnd < 0 ||
-           dp[dpi].mSVEnd >= (int32_t)h->target_len[dp[dpi].mChr2] ||
-           dp[dpi].mSVStart >= (int32_t)h->target_len[dp[dpi].mChr1]){
+           dp[dpi].mSVEnd >= (int32_t)opt->bamheader->target_len[dp[dpi].mChr2] ||
+           dp[dpi].mSVStart >= (int32_t)opt->bamheader->target_len[dp[dpi].mChr1]){
             dp[dpi].mMerged = true;
         }
     }
-    sam_close(fp);
-    bam_hdr_destroy(h);
     // then do merge
     util::loginfo("Beg merging DP supported SVs, raw " + std::to_string(dp.size()));
     // index dpsvs
@@ -412,21 +408,16 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
 
 void getDPSVRef(SVSet& pe, Options* opt){
     // Open file handler
-    samFile* fp = sam_open(opt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, opt->alnref.c_str());
-    bam_hdr_t* h = sam_hdr_read(fp);
     faidx_t* fai = fai_load(opt->alnref.c_str());
     // get SVRef on same chr
     for(auto sviter = pe.begin(); sviter != pe.end(); ++sviter){
         if(sviter->mPrecise) continue;
-        sviter->mNameChr1 = h->target_name[sviter->mChr1];
-        sviter->mNameChr2 = h->target_name[sviter->mChr2];
+        sviter->mNameChr1 = opt->bamheader->target_name[sviter->mChr1];
+        sviter->mNameChr2 = opt->bamheader->target_name[sviter->mChr2];
         int32_t chrLen = -1;
-        char* chrSeq = faidx_fetch_seq(fai, h->target_name[sviter->mChr1],  sviter->mSVStart - 1, sviter->mSVStart - 1, &chrLen);
+        char* chrSeq = faidx_fetch_seq(fai, opt->bamheader->target_name[sviter->mChr1],  sviter->mSVStart - 1, sviter->mSVStart - 1, &chrLen);
         sviter->mSVRef = std::string(1, std::toupper(chrSeq[0]));
         free(chrSeq);
     }
-    sam_close(fp);
-    bam_hdr_destroy(h);
     fai_destroy(fai);
 }
