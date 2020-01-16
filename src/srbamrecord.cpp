@@ -223,7 +223,12 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                     continue;
                 }
             }
-            if(chr1Seq) free(chr1Seq);
+            if(chr1Seq){
+                free(chr1Seq);
+                chr1Seq = NULL;
+            }
+            fai_destroy(fai);
+            fai = NULL;
             return;
         }
     }
