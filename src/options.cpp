@@ -6,6 +6,7 @@ Options::Options(){
     batchsvn = 1000;
     tsvOut = "sv.tsv";
     pool = NULL;
+    bamout = "sv.bam";
     fbamout = NULL;
     overlapRegs = NULL;
     bamheader = NULL;
