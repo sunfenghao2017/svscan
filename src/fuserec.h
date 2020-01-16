@@ -122,7 +122,7 @@ struct FusionRecord{
     /** get status of fusion event */
     std::string getStatus() const {
         std::string sts;
-        if(fsmask & FUSION_FMIRRORINDB) sts.append("M");
+        if(fsmask & FUSION_FMINDB) sts.append("M");
         if(!(fsmask & FUSION_FNORMALCATDIRECT)) sts.append("D");
         if(!(fsmask & FUSION_FCOMMONHOTDIRECT)) sts.append("C");
         if(gene1 == gene2) sts.append("S");
@@ -134,7 +134,7 @@ struct FusionRecord{
     /** update seed/rescue/depth/.. determined fusion mask */
     inline void maskFusion(FusionOptions* fsopt){
         fsmask &= (~(FUSION_FLOWSUPPORT | FUSION_FLOWAF | FUSION_FLOWDEPTH | FUSION_FINREPORTRNG)); //clear some mask
-        if(fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){ // fusion/mirror in public db
+        if(fsmask & (FUSION_FINDB | FUSION_FMINDB)){ // fusion/mirror in public db
             if(fusionreads < fsopt->mWhiteFilter.mMinSupport){ // total molecule support
                 fsmask |= FUSION_FLOWSUPPORT;
             }
@@ -227,9 +227,9 @@ inline void markFusionMirrorFromMirrorSVEvent(FusionRecordList& frl){
     // begin mark
     for(auto iter = mkp.begin(); iter != mkp.end(); ++iter){
         for(int32_t firidx = idxs[iter->first]; firidx <= idxe[iter->first]; ++firidx){
-            if(frl[firidx].report && (frl[firidx].fsmask & FUSION_FMIRROR) && (frl[firidx].fsmask & FUSION_FALLGENE)){
+            if(frl[firidx].report && (frl[firidx].fsmask & FUSION_FWITHMIRROR) && (frl[firidx].fsmask & FUSION_FALLGENE)){
                 for(int32_t secidx = idxs[iter->second]; secidx <= idxe[iter->second]; ++secidx){
-                    if(frl[secidx].report && (frl[secidx].fsmask & FUSION_FMIRROR) && (frl[secidx].fsmask & FUSION_FALLGENE)){
+                    if(frl[secidx].report && (frl[secidx].fsmask & FUSION_FWITHMIRROR) && (frl[secidx].fsmask & FUSION_FALLGENE)){
                         if(frl[firidx].gene1 == frl[secidx].gene2 && 
                            frl[firidx].gene2 == frl[secidx].gene1 &&
                            frl[firidx].exon1 == frl[secidx].exon2 &&

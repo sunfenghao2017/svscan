@@ -165,31 +165,33 @@
  */
 
 #define FUSION_FALLGENE                 0x1                  ///< All partners are genes
-#define FUSION_FNORMALCATDIRECT         0x2                  ///< hgene 5' -> tgene 3' positive strand catenation
-#define FUSION_FHOTGENE                 0x4                  ///< one of the partner is in hot fusion gene list
+#define FUSION_FHOTGENE                 0x2                  ///< one of the partner is in hot fusion gene list
+#define FUSION_FNORMALCATDIRECT         0x4                  ///< hgene 5' -> tgene 3' positive strand catenation
 #define FUSION_FCOMMONHOTDIRECT         0x8                  ///< hot gene partner is in the predefined direction in fusion gene list
 #define FUSION_FINDB                    0x10                 ///< fusion gene is in database
-#define FUSION_FMIRROR                  0x20                 ///< fusion gene has mirror fusion
-#define FUSION_FBLACKPAIR               0x40                 ///< fusion gene is in black list
-#define FUSION_FFBG                     0x80                 ///< fusion gene is in background samples
+#define FUSION_FMINDB                   0x20                 ///< this fusion event's mirror event is in public db
+#define FUSION_FWITHMIRROR              0x40                 ///< fusion gene has mirror fusion
+#define FUSION_FBLACKPAIR               0x80                 ///< fusion gene is in black list
 #define FUSION_FBLACKGENE               0x100                ///< one partner is in black gene list
-#define FUSION_FLOWCOMPLEX              0x200                ///< one partner has low complex concensus sequence
-#define FUSION_FPRIMARY                 0x400                ///< this fusion event should be reported primarily
-#define FUSION_FSUPPLEMENTARY           0x800                ///< this fusion event should be reported as supplementary
-#define FUSION_FTOOSMALLSIZE            0x1000               ///< this fusion event has too small size
-#define FUSION_FINSAMEGENE              0x2000               ///< this fusion event occurs in the same gene
-#define FUSION_FLOWAF                   0x4000               ///< this fusion event has too low AF
-#define FUSION_FLOWSUPPORT              0x8000               ///< this fusion event has too low support
-#define FUSION_FLOWDEPTH                0x10000              ///< this fusion event has too low depth around breakpoint
-#define FUSION_FPRECISE                 0x20000              ///< this fusion event has precise breakpoint and concensus sequence
-#define FUSION_FCALLFROMRNASEQ          0x40000              ///< this fusion event is called from rna seq
-#define FUSION_FMIRRORINDB              0x80000              ///< this fusion event's mirror event is in public db
+#define FUSION_FFBG                     0x200                ///< fusion gene is in background samples
+#define FUSION_FLOWCOMPLEX              0x400                ///< one partner has low complex concensus sequence
+#define FUSION_FPRIMARY                 0x800                ///< this fusion event should be reported primarily
+#define FUSION_FSUPPLEMENTARY           0x1000               ///< this fusion event should be reported as supplementary
+#define FUSION_FTOOSMALLSIZE            0x2000               ///< this fusion event has too small size
+#define FUSION_FINSAMEGENE              0x4000               ///< this fusion event occurs in the same gene
+#define FUSION_FLOWAF                   0x8000               ///< this fusion event has too low AF
+#define FUSION_FLOWSUPPORT              0x10000              ///< this fusion event has too low support
+#define FUSION_FLOWDEPTH                0x20000              ///< this fusion event has too low depth around breakpoint
+#define FUSION_FPRECISE                 0x40000              ///< this fusion event has precise breakpoint and concensus sequence
+#define FUSION_FCALLFROMRNASEQ          0x80000              ///< this fusion event is called from rna seq
 #define FUSION_FHTFLSWAPPED             0x100000             ///< this fusion event's h/t gene swapped against bp1/2 gene
-#define FUSION_FREALNPASSED             0x200000             ///< this fusion event has passed consensus sequence realignment
-#define FUSION_FINREPORTRNG             0x400000             ///< this fusion event is in predefined report range
+#define FUSION_FMULTREALN               0x200000             ///< this fusion event concensus sequence realigned in multiple compatible positions
+#define FUSION_FERRREALN                0x400000             ///< this fusion event concensus sequence realignment in good status
+#define FUSION_FPASSREALN               0x800000             ///< this fusion event concensus sequence realignment in good status
+#define FUSION_FINREPORTRNG             0x1000000            ///< this fusion event is in predefined report range
 
 /** fusion flag type */
-typedef uint32_t TFUSION_FLAG;
+typedef uint64_t TFUSION_FLAG;
 
 /** fuse gene struct */
 struct FuseGene{

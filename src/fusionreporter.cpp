@@ -167,8 +167,8 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.fsmask &= (~FUSION_FHOTGENE);
             if(fuseOpt->inWhiteList(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FINDB;
             else fgr.fsmask &= (~FUSION_FINDB);
-            if(fuseOpt->inWhiteList(fgr.gene2, fgr.gene1)) fgr.fsmask |= FUSION_FMIRRORINDB;
-            else fgr.fsmask &= (~FUSION_FMIRRORINDB);
+            if(fuseOpt->inWhiteList(fgr.gene2, fgr.gene1)) fgr.fsmask |= FUSION_FMINDB;
+            else fgr.fsmask &= (~FUSION_FMINDB);
             if(fuseOpt->hasBlackGene(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FBLACKGENE;
             else fgr.fsmask &= (~FUSION_FBLACKGENE);
             if(fuseOpt->inBlackList(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FBLACKPAIR;
@@ -240,12 +240,17 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.distance = fuseOpt->geneNear(fgr.gene1, fgr.chr1, fgr.jctpos1, fgr.gene2, fgr.chr2); // fpDist
             // mask FUSION_FINREPORTRNG now
             fgr.maskFusion(fuseOpt);
-            if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){
-                if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
-                else fgr.fsmask &= (~FUSION_FREALNPASSED);
-            }else{
-                if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
-                  else fgr.fsmask &= (~FUSION_FREALNPASSED);
+            fgr.fsmask &= (~(FUSION_FERRREALN | FUSION_FMULTREALN));
+            if(fgr.fsmask & FUSION_FPRECISE){
+                if(fgr.fsHits < 0) fgr.fsmask |= FUSION_FERRREALN;
+                if(fgr.fsmask & (FUSION_FINDB | FUSION_FMINDB)){
+                    if(fgr.fsHits > fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
+                }else{
+                    if(fgr.fsHits > fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
+                }
+            }
+            if(!(fgr.fsmask & (FUSION_FERRREALN | FUSION_FMULTREALN))){
+                fgr.fsmask |= FUSION_FPASSREALN;
             }
             if(((!(fgr.fsmask & FUSION_FINDB)) && (fgr.fsmask & fuseOpt->mNDBDropMask)) ||
                ((fgr.fsmask & FUSION_FINDB) && (fgr.fsmask & fuseOpt->mIDBDropMask))){

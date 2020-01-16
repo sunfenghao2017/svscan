@@ -165,7 +165,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             std::string tg = gl[i].mFuseGene[j].tgene;
             auto titer = fpairs.find(tg);
             if(titer != fpairs.end() && titer->second.find(hg) != titer->second.end()){
-                gl[i].mFuseGene[j].status |= FUSION_FMIRROR;
+                gl[i].mFuseGene[j].status |= FUSION_FWITHMIRROR;
             }
         }
     }
@@ -190,7 +190,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene[j].status |= FUSION_FINDB;
             }
             if(mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene[j].tgene, gl[i].mFuseGene[j].hgene)){
-                gl[i].mFuseGene[j].status |= FUSION_FMIRRORINDB;
+                gl[i].mFuseGene[j].status |= FUSION_FMINDB;
             }
             if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
@@ -223,6 +223,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gl[i].mFuseGene[j].status &= (~(FUSION_FTOOSMALLSIZE | FUSION_FINSAMEGENE));
                 }
             }
+            gl[i].mFuseGene[j].status &= (~(FUSION_FERRREALN | FUSION_FMULTREALN));
             if(svs[i].mPrecise){
                 gl[i].mFuseGene[j].status |= FUSION_FPRECISE;
                 if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
@@ -230,16 +231,19 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                    svutil::tandemRepSeq(svs[i].mConsensus, TandemRepeatThresholdMap)){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWCOMPLEX;
                 }
-
-                if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){
-                    if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
-                    else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
+                if(svs[i].mRealnRet < 0) gl[i].mFuseGene[j].status |= FUSION_FERRREALN;
+                if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB)){
+                    if(svs[i].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                        gl[i].mFuseGene[j].status |= FUSION_FMULTREALN;
+                    }
                 }else{
-                    if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mUsualFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
-                    else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
+                    if(svs[i].mRealnRet > mOpt->fuseOpt->mUsualFilter.mMaxRepHit){
+                        gl[i].mFuseGene[j].status |= FUSION_FMULTREALN;
+                    }
                 }
-            }else{
-                gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+            }
+            if(!(gl[i].mFuseGene[j].status & (FUSION_FERRREALN | FUSION_FMULTREALN))){
+                gl[i].mFuseGene[j].status |= FUSION_FPASSREALN;
             }
             std::string gene1, gene2;
             if(gl[i].mFuseGene[j].hfrom1){
@@ -268,16 +272,16 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }else{
                     gl[i].mFuseGene[j].status |= FUSION_FHTFLSWAPPED;
                 }
-                bool omidb = (gl[i].mFuseGene[j].status & FUSION_FMIRRORINDB);
+                bool omidb = (gl[i].mFuseGene[j].status & FUSION_FMINDB);
                 bool oindb = (gl[i].mFuseGene[j].status & FUSION_FINDB);
                 if(omidb ^ oindb){
                     if(omidb){
-                        gl[i].mFuseGene[j].status &= (~FUSION_FMIRRORINDB);
+                        gl[i].mFuseGene[j].status &= (~FUSION_FMINDB);
                         gl[i].mFuseGene[j].status |= FUSION_FINDB;
                     }
                     if(oindb){
                         gl[i].mFuseGene[j].status &= (~FUSION_FINDB);
-                        gl[i].mFuseGene[j].status |= FUSION_FMIRRORINDB;
+                        gl[i].mFuseGene[j].status |= FUSION_FMINDB;
                     }
                 }
             }
