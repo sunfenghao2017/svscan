@@ -246,7 +246,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 if(fgr.fsmask & (FUSION_FINDB | FUSION_FMINDB)){
                     if(fgr.fsHits > fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
                 }else{
-                    if(fgr.fsHits > fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
+                    if(fgr.fsHits > fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
                 }
             }
             if(!(fgr.fsmask & (FUSION_FERRREALN | FUSION_FMULTREALN))){
