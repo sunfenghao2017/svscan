@@ -8,6 +8,7 @@ void RSVGen::getunit(SeqInfo& si, std::vector<UnitRec>& vur){
         util::split(rec.s, vstr, "\t");
         if(util::startsWith(vstr[3], "utr")) continue;
         if(si.chr.empty()) si.chr = vstr[6];
+        if(si.strand.empty()) si.strand = vstr[9];
         UnitRec ur;
         ur.rbeg = std::atoi(vstr[1].c_str());
         ur.rend = std::atoi(vstr[2].c_str());
@@ -36,12 +37,14 @@ void RSVGen::gethseq(SeqInfo& si){
         if(si.flklen < maxflk){
             if(si.flklen + vur[i].len <= maxflk){
                 si.flklen += vur[i].len;
-                si.dbeg = vur[i].gbeg;
+                if(si.strand == "+") si.dbeg = vur[i].gbeg;
+                else si.dend = vur[i].gend;
                 si.rbeg = vur[i].rbeg;
             }else{
                 int offbp = si.flklen + vur[i].len - maxflk;
                 si.flklen = maxflk;
-                si.dbeg = vur[i].gbeg + offbp;
+                if(si.strand == "+") si.dbeg = vur[i].gbeg + offbp;
+                else si.dend = vur[i].gend - offbp;
                 si.rbeg = vur[i].rbeg + offbp;
             }
         }
@@ -67,12 +70,14 @@ void RSVGen::gettseq(SeqInfo& si){
         if(si.flklen < maxflk){
             if(si.flklen + vur[i].len <= maxflk){
                 si.flklen += vur[i].len;
-                si.dend = vur[i].gend;
+                if(si.strand == "+") si.dend = vur[i].gend;
+                else si.dbeg = vur[i].gbeg;
                 si.rend = vur[i].rend;
             }else{
                 int offbp = si.flklen + vur[i].len - maxflk;
                 si.flklen = maxflk;
-                si.dend = vur[i].gend - offbp;
+                if(si.strand == "+") si.dend = vur[i].gend - offbp;
+                else si.dbeg = vur[i].gbeg + offbp;
                 si.rend = vur[i].rend - offbp;
             }
         }
