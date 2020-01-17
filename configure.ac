@@ -11,7 +11,7 @@ AC_PROG_CXX
 AC_PROG_CC
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_SUBST(AM_CXXFLAGS, "-std=c++11 -g -Wall -O3 -Wextra -Wno-unknown-pragmas -Wno-unused-function")
+AC_SUBST(AM_CXXFLAGS, "-std=c++11 -g -Wall -O2 -Wextra -Wno-unknown-pragmas -Wno-unused-function")
 AC_SUBST(LDFLAGS, "$LDFLAGS -lhts -pthread -lz -lxlsxwriter -lbwa")
 AC_CHECK_HEADER_STDBOOL
 AC_C_INLINE

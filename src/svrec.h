@@ -73,7 +73,7 @@ struct SVRec{
         oss << "ID\tsvtInt\t"; // [19,20]
         oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [21,25]
         if(rnamode){
-            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[26,29]
+            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[26,30]
         }else{
             oss << "\n";
         }

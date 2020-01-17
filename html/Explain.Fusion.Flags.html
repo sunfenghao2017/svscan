@@ -460,29 +460,32 @@
 		<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
 	<script type="text/javascript">
-    lstFlags = [["partner are all genes", 0x1],
-        ["catenation in normal pattern", 0x2],
-        ["partner in hotgene list", 0x4],
+    lstFlags = [
+        ["partner are all genes", 0x1],
+        ["partner in hotgene list", 0x2],
+        ["catenation in normal pattern", 0x4],
         ["hotgene partner in normal catenation pattern", 0x8],
         ["fusion pair in public db", 0x10],
-        ["fusion has mirror event", 0x20],
-        ["fusion pair in blacklist", 0x40],
-        ["fusion pair in background", 0x80],
+        ["fusion mirror event is in public db", 0x20],
+        ["fusion has mirror event", 0x40],
+        ["fusion pair in blacklist", 0x80],
         ["partner in blackgene list", 0x100],
-        ["partner has low complexity sequence", 0x200],
-        ["fusion should be reported as primary", 0x400],
-        ["fusion should be reported as supplementary", 0x800],
-        ["fusion size too small", 0x1000],
-        ["fusion in same gene", 0x2000],
-        ["fusion af too low", 0x4000],
-        ["fusion support too small", 0x8000],
-        ["fusion breakpoint depth too low", 0x10000],
-        ["fusion breakpoint is precise with concensus sequnce", 0x20000],
-        ["fusion event is computed from rna seq data", 0x40000],
-        ["fusion mirror event is in public db", 0x80000],
+        ["fusion pair in background", 0x200],
+        ["partner has low complexity sequence", 0x400],
+        ["fusion should be reported as primary", 0x800],
+        ["fusion should be reported as supplementary", 0x1000],
+        ["fusion size too small", 0x2000],
+        ["fusion in same gene", 0x4000],
+        ["fusion af too low", 0x8000],
+        ["fusion support too small", 0x10000],
+        ["fusion breakpoint depth too low", 0x20000],
+        ["fusion breakpoint is precise with concensus sequnce", 0x40000],
+        ["fusion event is computed from rna seq data", 0x80000],
         ["fusion event h/t is reverse to sv event bp1/2", 0x100000],
-        ["fusion event has passed consensus sequence realignment", 0x200000],
-        ["fusion event is in predefined report range", 0x400000]];
+        ["fusion concensus sequence realigned in multiple pos", 0x200000],
+        ["fusion concensus sequence realigned in invalid status", 0x400000],
+        ["fusion consensus sequence realigned very well", 0x800000],
+        ["fusion event is in predefined report range", 0x1000000]];
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary  = ""; 
@@ -556,28 +559,30 @@
                     <script type="text/javascript">
                     </script>
                     <br><input type="checkbox" name="cb0" id="cb0" onclick="checkboxClicked();"> &nbsp; partner are all genes
-                    <br><input type="checkbox" name="cb1" id="cb1" onclick="checkboxClicked();"> &nbsp; catenation in normal pattern
-                    <br><input type="checkbox" name="cb2" id="cb2" onclick="checkboxClicked();"> &nbsp; partner in hotgene list
+                    <br><input type="checkbox" name="cb1" id="cb1" onclick="checkboxClicked();"> &nbsp; partner in hotgene list 
+                    <br><input type="checkbox" name="cb2" id="cb2" onclick="checkboxClicked();"> &nbsp; catenation in normal pattern
                     <br><input type="checkbox" name="cb3" id="cb3" onclick="checkboxClicked();"> &nbsp; hotgene partner in normal catenation pattern
                     <br><input type="checkbox" name="cb4" id="cb4" onclick="checkboxClicked();"> &nbsp; fusion pair in public db
-                    <br><input type="checkbox" name="cb5" id="cb5" onclick="checkboxClicked();"> &nbsp; fusion has mirror event
-                    <br><input type="checkbox" name="cb6" id="cb6" onclick="checkboxClicked();"> &nbsp; fusion pair in blacklist
-                    <br><input type="checkbox" name="cb7" id="cb7" onclick="checkboxClicked();"> &nbsp; fusion pair in background
+                    <br><input type="checkbox" name="cb5" id="cb5" onclick="checkboxClicked();"> &nbsp; fusion mirror event is in public db
+                    <br><input type="checkbox" name="cb6" id="cb6" onclick="checkboxClicked();"> &nbsp; fusion has mirror event
+                    <br><input type="checkbox" name="cb7" id="cb7" onclick="checkboxClicked();"> &nbsp; fusion pair in blacklist 
                     <br><input type="checkbox" name="cb8" id="cb8" onclick="checkboxClicked();"> &nbsp; partner in blackgene list
-                    <br><input type="checkbox" name="cb9" id="cb9" onclick="checkboxClicked();"> &nbsp; partner has low complexity sequence
-                    <br><input type="checkbox" name="cb10" id="cb10" onclick="checkboxClicked();"> &nbsp; fusion should be reported as primary
-                    <br><input type="checkbox" name="cb11" id="cb11" onclick="checkboxClicked();"> &nbsp; fusion should be reported as supplementary
-                    <br><input type="checkbox" name="cb12" id="cb12" onclick="checkboxClicked();"> &nbsp; fusion size too small
-                    <br><input type="checkbox" name="cb13" id="cb13" onclick="checkboxClicked();"> &nbsp; fusion in same gene
-                    <br><input type="checkbox" name="cb14" id="cb14" onclick="checkboxClicked();"> &nbsp; fusion af too low
-                    <br><input type="checkbox" name="cb15" id="cb15" onclick="checkboxClicked();"> &nbsp; fusion support too small
-                    <br><input type="checkbox" name="cb16" id="cb16" onclick="checkboxClicked();"> &nbsp; fusion breakpoint depth too low
-                    <br><input type="checkbox" name="cb17" id="cb17" onclick="checkboxClicked();"> &nbsp; fusion breakpoint is precise with concensus sequnce
-                    <br><input type="checkbox" name="cb18" id="cb18" onclick="checkboxClicked();"> &nbsp; fusion event is computed from rna seq data
-                    <br><input type="checkbox" name="cb19" id="cb19" onclick="checkboxClicked();"> &nbsp; fusion mirror event is in public db
+                    <br><input type="checkbox" name="cb9" id="cb9" onclick="checkboxClicked();"> &nbsp; fusion pair in background 
+                    <br><input type="checkbox" name="cb10" id="cb10" onclick="checkboxClicked();"> &nbsp; partner has low complexity sequence
+                    <br><input type="checkbox" name="cb11" id="cb11" onclick="checkboxClicked();"> &nbsp; fusion should be reported as primary
+                    <br><input type="checkbox" name="cb12" id="cb12" onclick="checkboxClicked();"> &nbsp; fusion should be reported as supplementary
+                    <br><input type="checkbox" name="cb13" id="cb13" onclick="checkboxClicked();"> &nbsp; fusion size too small
+                    <br><input type="checkbox" name="cb14" id="cb14" onclick="checkboxClicked();"> &nbsp; fusion in same gene
+                    <br><input type="checkbox" name="cb15" id="cb15" onclick="checkboxClicked();"> &nbsp; fusion af too low
+                    <br><input type="checkbox" name="cb16" id="cb16" onclick="checkboxClicked();"> &nbsp; fusion support too small
+                    <br><input type="checkbox" name="cb17" id="cb17" onclick="checkboxClicked();"> &nbsp; fusion breakpoint depth too low
+                    <br><input type="checkbox" name="cb18" id="cb18" onclick="checkboxClicked();"> &nbsp; fusion breakpoint is precise with concensus sequnce
+                    <br><input type="checkbox" name="cb19" id="cb19" onclick="checkboxClicked();"> &nbsp; fusion event is computed from rna seq data
                     <br><input type="checkbox" name="cb20" id="cb20" onclick="checkboxClicked();"> &nbsp; fusion event h/t is reverse to sv event bp1/2
-                    <br><input type="checkbox" name="cb21" id="cb21" onclick="checkboxClicked();"> &nbsp; fusion event has passed consensus sequence realignment
-                    <br><input type="checkbox" name="cb22" id="cb22" onclick="checkboxClicked();"> &nbsp; fusion event is in predefined report range
+                    <br><input type="checkbox" name="cb21" id="cb21" onclick="checkboxClicked();"> &nbsp; fusion concensus sequence realigned in multiple pos
+                    <br><input type="checkbox" name="cb22" id="cb22" onclick="checkboxClicked();"> &nbsp; fusion concensus sequence realigned in invalid status
+                    <br><input type="checkbox" name="cb23" id="cb23" onclick="checkboxClicked();"> &nbsp; fusion consensus sequence realigned very well
+                    <br><input type="checkbox" name="cb24" id="cb24" onclick="checkboxClicked();"> &nbsp; fusion event is in predefined report range
                 </td>
                 <td style="text-align: left; vertical-align: top; width: 50%">
                     <strong>Summary:</strong><br>

@@ -305,13 +305,14 @@ typedef std::vector<FuseGene> FuseGeneList;
 /** class to store gene information of an SV */
 class GeneInfo{
     public:
-        TrsRecList mGene1;       ///< gene transcript records of breakpoint on larger chrosome
-        TrsRecList mGene2;       ///< gene transcript records of breakpoint on little chrosome
-        FuseGeneList mFuseGene;  ///< fusion gene information
-        int32_t mPos1 = 0;       ///< position on genome (RNA sv only)
-        int32_t mPos2 = 0;       ///< position on genome (RNA sv only)
-        std::string mChr1 = "."; ///< chr of gene1
-        std::string mChr2 = "."; ///< chr of gene2
+        TrsRecList mGene1;         ///< gene transcript records of breakpoint on larger chrosome
+        TrsRecList mGene2;         ///< gene transcript records of breakpoint on little chrosome
+        FuseGeneList mFuseGene;    ///< fusion gene information
+        int32_t mPos1 = 0;         ///< position on genome (RNA sv only)
+        int32_t mPos2 = 0;         ///< position on genome (RNA sv only)
+        std::string mChr1 = ".";   ///< chr of gene1
+        std::string mChr2 = ".";   ///< chr of gene2
+        std::string mFsCigar = ""; ///< fsCigar (RNA sv only)
 
     public:
         /** default constructor */

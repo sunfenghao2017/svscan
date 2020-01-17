@@ -115,10 +115,12 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     if(!cr_is_sorted(crsv)) cr_sort(crsv);
     cr_merge_pre_index(crsv);
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FANNC){
         std::cout << "debug_annc_cgrange_of_svs: " << std::endl;
         cr_iter_usual(crsv, stdout);
     }
+#endif
     std::vector<cgranges_t*> svregs(mOpt->contigNum, NULL);
     for(uint32_t i = 0; i < svregs.size(); ++i) svregs[i] = cr_init();
     for(int64_t i = 0; i < crsv->n_r; ++i){
@@ -129,22 +131,26 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     }
     for(uint32_t i = 0; i < svregs.size(); ++i) cr_index2(svregs[i], 1);
     util::loginfo("End construct SVs cgranges_t");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FANNC){
         std::cout << "debug_sv_cgrantest_constructed: " << std::endl;
         for(uint32_t i = 0; i < svregs.size(); ++i){
             cr_iter_indexed(svregs[i], stdout);
         }
     }
+#endif
     util::loginfo("Beg split SVs cgranges_t");
     std::vector<RegItemCnt> ctgRng;
     cgrsplit(crsv, ctgRng, mOpt->batchsvn);
     std::sort(ctgRng.begin(), ctgRng.end());
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FANNC){
         std::cout << "debug_ctg_rng_list: " << std::endl;
         for(uint32_t i = 0; i < ctgRng.size(); ++i){
             std::cout << ctgRng[i] << std::endl;
         }
     }
+#endif
     cr_destroy(crsv);
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT
@@ -262,7 +268,12 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
         if(!tr.drop) trl.push_back(tr);
     }
     // if empty, append an empty tr
-    if(trl.empty()) trl.push_back(TrsRec());
+    if(trl.empty()){
+        TrsRec tmpTrs;
+        tmpTrs.chr = chr;
+        tmpTrs.pos = pos;
+        trl.push_back(tmpTrs);
+    }
     // cleanup
     if(itr) hts_itr_destroy(itr);
     if(rec.s) free(rec.s);
@@ -299,10 +310,12 @@ void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
                 svutil::getexon(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i].mSVT);
                 FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
+#ifdef DEBUG
                 if(mOpt->debug & DEBUG_FANNG){
                     std::cout << gl[i] << std::endl;
                     std::cout << fsg.debugStr() << std::endl;
                 }
+#endif
                 std::string newFg = fsg.hgene + "->" + fsg.tgene;
                 if(fgAdded.find(newFg) != fgAdded.end()) continue; // do not add twice for A,B->A,B
                 fgAdded.insert(newFg);

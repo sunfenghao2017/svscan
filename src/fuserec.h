@@ -122,8 +122,11 @@ struct FusionRecord{
     /** get status of fusion event */
     std::string getStatus() const {
         std::string sts;
-        if(fsmask & FUSION_FMIRRORINDB) sts.append("M");
+        if(fsmask & FUSION_FMINDB) sts.append("M");
         if(!(fsmask & FUSION_FNORMALCATDIRECT)) sts.append("D");
+        if(!(fsmask & FUSION_FCOMMONHOTDIRECT)) sts.append("C");
+        if(gene1 == gene2) sts.append("S");
+        if(!(fsmask & FUSION_FALLGENE)) sts.append("G");
         if(sts.empty()) sts.append("Y");
         return sts;
     }
@@ -131,7 +134,7 @@ struct FusionRecord{
     /** update seed/rescue/depth/.. determined fusion mask */
     inline void maskFusion(FusionOptions* fsopt){
         fsmask &= (~(FUSION_FLOWSUPPORT | FUSION_FLOWAF | FUSION_FLOWDEPTH | FUSION_FINREPORTRNG)); //clear some mask
-        if(fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){ // fusion/mirror in public db
+        if(fsmask & (FUSION_FINDB | FUSION_FMINDB)){ // fusion/mirror in public db
             if(fusionreads < fsopt->mWhiteFilter.mMinSupport){ // total molecule support
                 fsmask |= FUSION_FLOWSUPPORT;
             }
@@ -147,7 +150,7 @@ struct FusionRecord{
             if(totalreads < fsopt->mWhiteFilter.mMinDepth){ // depth
                 fsmask |= FUSION_FLOWDEPTH;
             }
-            if(svint != 4 && fsmask & FUSION_FINSAMEGENE){ // size
+            if(svint != 4 && (fsmask & FUSION_FINSAMEGENE) && (!(fsmask & FUSION_FCALLFROMRNASEQ))){ // size
                 if(svsize < fsopt->mWhiteFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
@@ -172,7 +175,7 @@ struct FusionRecord{
             }else{
                 fsmask |= FUSION_FLOWSUPPORT;
             }
-            if(svint != 4 && fsmask & FUSION_FINSAMEGENE){
+            if(svint != 4 && (fsmask & FUSION_FINSAMEGENE) && (!(fsmask & FUSION_FCALLFROMRNASEQ))){ // size
                 if(svsize < fsopt->mUsualFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
@@ -181,7 +184,21 @@ struct FusionRecord{
         if(fsopt->mFsRptList.empty()){
             fsmask |= FUSION_FINREPORTRNG;
         }else{
+            std::vector<std::string> vstr1, vstr2;
+            util::split(transcript1, vstr1, ",");
+            util::split(transcript2, vstr2, ",");
+            int32_t unum1 = std::atoi(vstr1[3].c_str());
+            int32_t unum2 = std::atoi(vstr2[3].c_str());
+            std::string uumk = "";
+            if(vstr1[2] == "intron") uumk.append("i");
+            else if(vstr1[2] == "exon") uumk.append("e");
+            else uumk.append("-");
+            if(vstr2[2] == "intron") uumk.append("i");
+            else if(vstr2[2] == "exon") uumk.append("e");
+            else uumk.append("-");
             if(fsopt->inFsRptRange(gene1, gene2, exon1, exon2, "ee")){
+                fsmask |= FUSION_FINREPORTRNG;
+            }else if(fsopt->inFsRptRange(gene1, gene2, unum1, unum2, uumk)){
                 fsmask |= FUSION_FINREPORTRNG;
             }
         }
@@ -193,4 +210,65 @@ struct FusionRecord{
 /** class to store a list of FusionRecords */
 typedef std::vector<FusionRecord> FusionRecordList;
 
+/** mark mirror fusion event which came from mirror structural evnet to report the desired one */
+inline void markFusionMirrorFromMirrorSVEvent(FusionRecordList& frl){
+    if(frl.empty()) return;
+    // construct index
+    std::vector<int32_t> idxs(9, 0), idxe(9, 0);
+    for(uint32_t i = 1; i < frl.size(); ++i){
+        if(frl[i].svint != frl[i - 1].svint){
+            idxs[frl[i].svint] = i;
+            idxe[frl[i - 1].svint] = i - 1;
+        }
+    }
+    idxe[frl[frl.size() - 1].svint] = frl.size() - 1;
+    // construct mark pair
+    std::map<int32_t, int32_t> mkp = {{0, 1}, {5, 6}, {7, 8}};
+    // begin mark
+    for(auto iter = mkp.begin(); iter != mkp.end(); ++iter){
+        for(int32_t firidx = idxs[iter->first]; firidx <= idxe[iter->first]; ++firidx){
+            if(frl[firidx].report && (frl[firidx].fsmask & FUSION_FWITHMIRROR) && (frl[firidx].fsmask & FUSION_FALLGENE)){
+                for(int32_t secidx = idxs[iter->second]; secidx <= idxe[iter->second]; ++secidx){
+                    if(frl[secidx].report && (frl[secidx].fsmask & FUSION_FWITHMIRROR) && (frl[secidx].fsmask & FUSION_FALLGENE)){
+                        if(frl[firidx].gene1 == frl[secidx].gene2 && 
+                           frl[firidx].gene2 == frl[secidx].gene1 &&
+                           frl[firidx].exon1 == frl[secidx].exon2 &&
+                           frl[firidx].exon2 == frl[secidx].exon1){
+                            bool kf = false, ks = false;
+                            if(frl[firidx].fsmask & FUSION_FCOMMONHOTDIRECT) kf = true;
+                            if(frl[secidx].fsmask & FUSION_FCOMMONHOTDIRECT) ks = true;
+                            if(kf ^ ks){
+                                if(kf) frl[secidx].report = false;
+                                else frl[firidx].report = false;
+                            }else{
+                                if(frl[firidx].fusionreads > frl[secidx].fusionreads){
+                                    frl[secidx].report = false;
+                                }else{
+                                    frl[firidx].report = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** mark mirror fusion event to keep the PRIMARY only if mirror SECONDARY exists */
+inline void markMirrorFusionEvent(FusionRecordList& frl){
+    std::set<std::string> fsoutset;
+    for(auto& e: frl){
+        if(e.report && (e.fsmask & FUSION_FPRIMARY)) fsoutset.insert(e.fusegene);
+    }
+    for(auto& e: frl){
+        if(e.report && (e.fsmask & FUSION_FSUPPLEMENTARY)){
+            std::string revfg = e.gene2 + "->" + e.gene1;
+            if(fsoutset.find(e.fusegene) != fsoutset.end() ||
+               fsoutset.find(revfg) != fsoutset.end()){
+                e.report = false;
+            }
+        }
+    }
+}
 #endif

@@ -144,11 +144,13 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     // Check breakpoint
     AlignDescriptor ad;
     if(!findSplit(alnResult, ad)){
+#ifdef DEBUG
         if(opt->debug & DEBUG_FCALL){
             std::cout << "debug_find_split_fail_SVID: " << mID << std::endl;
             std::cout << *alnResult << std::endl;
             std::cout << ad << std::endl;
         }
+#endif
         delete alnResult;
         return false;
     }
@@ -175,13 +177,15 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mGapCoord[1] = ad.mCSEnd;
     mGapCoord[2] = ad.mRefStart;
     mGapCoord[3] = ad.mRefEnd;
+    mProbeBegC = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
+    mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
     // Get probe sequences used for allele fraction computation
     if(mBpInsSeq.length() > 0){// Put inserted sequence after breakpoint back if possible
         mConsensus = mConsensus.substr(0, ad.mCSStart) + mBpInsSeq + mConsensus.substr(ad.mCSStart);
         ad.mCSEnd += mBpInsSeq.length();
+        mProbeBegA = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
+        mProbeEndA = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
     }
-    mProbeBegC = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
-    mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
     // Get inserted sequence if it's an insertion event
     if(mSVT == 4) mInsSeq = mConsensus.substr(ad.mCSStart, ad.mCSEnd - ad.mCSStart - 1);
     // Consensus of SRs and reference aligned successfully
@@ -202,6 +206,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
     }
     util::loginfo("End online BWA realignment");
+#ifdef DEBUG
     if(opt->debug & DEBUG_FREAN){
         std::cout << "\ndebug_realign_failed_sv_info:" << std::endl;
         for(uint32_t i = 0; i < sr.size(); ++i){
@@ -210,6 +215,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             }
         }
     }
+#endif
     // sort 
     std::sort(sr.begin(), sr.end());
     for(uint32_t i = 0; i < sr.size(); ++i) sr[i].mID = i;
@@ -220,9 +226,11 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         maxCI = std::max(maxCI, std::max(std::abs(sr[i].mCiEndLow), std::abs(sr[i].mCiEndHigh)));
     }
     maxCI = std::max(opt->filterOpt->mMaxReadSep, maxCI);
+#ifdef DEBUG
     if(opt->debug & DEBUG_FCALL){
         std::cout << "debug_maxCI_used_in_merge_SRSVS: " << maxCI << std::endl;
     }
+#endif
     int32_t totSV = sr.size();
     for(int32_t i = 0; i < totSV; ++i){
         if(sr[i].mMerged) continue;
@@ -257,6 +265,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     }
     std::copy_if(sr.begin(), sr.end(), std::back_inserter(msr), [&](const SVRecord& sv){return !sv.mMerged;});
     util::loginfo("End merging SR supported SVs, got " + std::to_string(msr.size()));
+#ifdef DEBUG
     if(opt->debug & DEBUG_FCALL){
         std::cout << "debug_Merged_SR_SV_IDs:";
         for(uint32_t i = 0; i < sr.size(); ++i){
@@ -266,6 +275,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         }
         std::cout << std::endl;
     }
+#endif
     sr.clear();
 }
 
@@ -274,17 +284,13 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     std::sort(dp.begin(), dp.end());
     for(uint32_t i = 0; i < dp.size(); ++i) dp[i].mID = i;
     // filter invalid dp svs firstly
-    samFile* fp = sam_open(opt->bamfile.c_str(), "r");
-    bam_hdr_t* h = sam_hdr_read(fp);
     for(uint32_t dpi = 0; dpi < dp.size(); ++dpi){
         if(dp[dpi].mSVStart < 0 || dp[dpi].mSVEnd < 0 ||
-           dp[dpi].mSVEnd >= (int32_t)h->target_len[dp[dpi].mChr2] ||
-           dp[dpi].mSVStart >= (int32_t)h->target_len[dp[dpi].mChr1]){
+           dp[dpi].mSVEnd >= (int32_t)opt->bamheader->target_len[dp[dpi].mChr2] ||
+           dp[dpi].mSVStart >= (int32_t)opt->bamheader->target_len[dp[dpi].mChr1]){
             dp[dpi].mMerged = true;
         }
     }
-    sam_close(fp);
-    bam_hdr_destroy(h);
     // then do merge
     util::loginfo("Beg merging DP supported SVs, raw " + std::to_string(dp.size()));
     // index dpsvs
@@ -319,6 +325,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     }
     std::copy_if(dp.begin(), dp.end(), std::back_inserter(mdp), [&](const SVRecord& sv){return !sv.mMerged;});
     util::loginfo("End merging DP supported SVs, got " + std::to_string(mdp.size()));
+#ifdef DEBUG
     if(opt->debug & DEBUG_FCALL){
         std::cout << "debug_Merged_DP_SV_IDs:";
         for(uint32_t i = 0; i < dp.size(); ++i){
@@ -328,6 +335,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
         }
         std::cout << std::endl;
     }
+#endif
     dp.clear();
 }
 
@@ -345,20 +353,52 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
     }
     // Augment SR SVs with PE records
     util::loginfo("Beg augmenting SR supported SV candidates with DPs");
-    for(uint32_t i = 0; i < svs.size(); ++i){
+    std::map<int32_t, std::vector<int32_t>> pemset;
+    int32_t ttsrs = svs.size();
+    for(int32_t i = 0; i < ttsrs; ++i){
         if(chridx[svs[i].mChr1].first < 0) continue;
         for(int32_t j = chridx[svs[i].mChr1].first; j <= chridx[svs[i].mChr1].second; ++j){
-            if(pe[j].mSVT != svs[i].mSVT || svs[i].mChr2 != pe[j].mChr2 || pe[j].mMerged) continue;
+            if(pe[j].mSVT != svs[i].mSVT || svs[i].mChr2 != pe[j].mChr2) continue;
             // Test whether breakpoint is within PE confidence interval
             if(svs[i].mSVStart >= pe[j].mSVStart - std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiPosHigh) && 
                svs[i].mSVStart <= pe[j].mSVStart + std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiPosHigh) &&
                svs[i].mSVEnd >= pe[j].mSVEnd - std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiEndHigh) && 
                svs[i].mSVEnd <= pe[j].mSVEnd + std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiEndHigh)){
-                svs[i].mPESupport = pe[j].mPESupport;
-                svs[i].mPEMapQuality = pe[j].mPEMapQuality;
-                pe[j].mMerged = true;
+                auto iter = pemset.find(j);
+                if(iter == pemset.end()) pemset[j] = std::vector<int32_t>(1, i);
+                else iter->second.push_back(i);
             }
         }
+    }
+    for(auto iter = pemset.begin(); iter != pemset.end(); ++iter){
+        int32_t pmid = iter->second[0];
+        if(iter->second.size() > 1){
+            std::vector<int32_t> ndps;
+            for(auto i: iter->second){
+                if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= opt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                    ndps.push_back(i);
+                }
+            }
+            if(ndps.size() == 1){
+                pmid = ndps[0];
+            }else if(ndps.size() > 2){
+                pmid = ndps[0];
+                for(uint32_t j = 1; j < ndps.size(); ++j){
+                    if(svs[ndps[j]].mSRSupport > svs[pmid].mSRSupport){
+                        pmid = ndps[j];
+                    }
+                }
+            }else if(ndps.empty()){
+                for(uint32_t j = 1; j < iter->second.size(); ++j){
+                    if(svs[iter->second[j]].mSRSupport > svs[pmid].mSRSupport){
+                        pmid = iter->second[j];
+                    }
+                }
+            }
+        }
+        svs[pmid].mPESupport = pe[iter->first].mPESupport;
+        svs[pmid].mPEMapQuality = pe[iter->first].mPEMapQuality;
+        pe[iter->first].mMerged = true;
     }
     util::loginfo("End augmenting SR supported SV candidates with DPs");
     // Append DP supported only SV 
@@ -368,21 +408,16 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
 
 void getDPSVRef(SVSet& pe, Options* opt){
     // Open file handler
-    samFile* fp = sam_open(opt->bamfile.c_str(), "r");
-    hts_set_fai_filename(fp, opt->alnref.c_str());
-    bam_hdr_t* h = sam_hdr_read(fp);
     faidx_t* fai = fai_load(opt->alnref.c_str());
     // get SVRef on same chr
     for(auto sviter = pe.begin(); sviter != pe.end(); ++sviter){
         if(sviter->mPrecise) continue;
-        sviter->mNameChr1 = h->target_name[sviter->mChr1];
-        sviter->mNameChr2 = h->target_name[sviter->mChr2];
+        sviter->mNameChr1 = opt->bamheader->target_name[sviter->mChr1];
+        sviter->mNameChr2 = opt->bamheader->target_name[sviter->mChr2];
         int32_t chrLen = -1;
-        char* chrSeq = faidx_fetch_seq(fai, h->target_name[sviter->mChr1],  sviter->mSVStart - 1, sviter->mSVStart - 1, &chrLen);
+        char* chrSeq = faidx_fetch_seq(fai, opt->bamheader->target_name[sviter->mChr1],  sviter->mSVStart - 1, sviter->mSVStart - 1, &chrLen);
         sviter->mSVRef = std::string(1, std::toupper(chrSeq[0]));
         free(chrSeq);
     }
-    sam_close(fp);
-    bam_hdr_destroy(h);
     fai_destroy(fai);
 }

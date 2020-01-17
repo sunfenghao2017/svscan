@@ -12,7 +12,7 @@ struct FuseFlags{
         flagmap[FUSION_FHOTGENE] = "partner in hotgene list";
         flagmap[FUSION_FCOMMONHOTDIRECT] = "hotgene partner in normal catenation pattern";
         flagmap[FUSION_FINDB] = "fusion pair in public db";
-        flagmap[FUSION_FMIRROR] = "fusion has mirror event";
+        flagmap[FUSION_FWITHMIRROR] = "fusion has mirror event";
         flagmap[FUSION_FBLACKPAIR] = "fusion pair in blacklist";
         flagmap[FUSION_FFBG] = "fusion pair in background";
         flagmap[FUSION_FBLACKGENE] = "partner in blackgene list";
@@ -26,9 +26,11 @@ struct FuseFlags{
         flagmap[FUSION_FLOWDEPTH] = "fusion breakpoint depth too low";
         flagmap[FUSION_FPRECISE] = "fusion breakpoint is precise with concensus sequnce";
         flagmap[FUSION_FCALLFROMRNASEQ] = "fusion event is called from rna seq";
-        flagmap[FUSION_FMIRRORINDB] = "fusion event's mirror event is in public db";
+        flagmap[FUSION_FMINDB] = "fusion event's mirror event is in public db";
         flagmap[FUSION_FHTFLSWAPPED] = "fusion event's h/t gene swapped against bp1/2 gene";
-        flagmap[FUSION_FREALNPASSED] = "fusion event has passed consensus sequence realignment";
+        flagmap[FUSION_FPASSREALN] = "fusion consensus sequence realigned very well";
+        flagmap[FUSION_FMULTREALN] = "fusion concensus sequence realigned in multiple compatible positions";
+        flagmap[FUSION_FERRREALN] = "fusion concensus sequence realigned in invalid status";
         flagmap[FUSION_FINREPORTRNG] = "fusion event is in predefined report range";
     }
 

@@ -64,7 +64,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.fsMask = gl[i].getFsMask();
         svr.fsHits = svs[i].mRealnRet;
         if(mOpt->rnamode){
-            // ts1Name ts1Pos ts2Name ts2Pos
+            // ts1Name ts1Pos ts2Name ts2Pos fsCigar
             svr.trs1Name = svs[i].mNameChr1;
             svr.trs1Pos = svs[i].mSVStart;
             svr.trs2Name = svs[i].mNameChr2;
@@ -80,6 +80,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
     mOpt->fuseOpt->mMaxBpOffset = std::max(mOpt->libInfo->mMaxNormalISize, 300);
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
         if(!mOpt->fuseOpt->mFsRptList.empty()){
             for(auto iter = mOpt->fuseOpt->mFusionRptMap.begin(); iter != mOpt->fuseOpt->mFusionRptMap.end(); ++iter){
@@ -88,6 +89,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }
     }
+#endif
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
         for(uint32_t i = 0; i < gl.size(); ++i){
@@ -163,16 +165,18 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             std::string tg = gl[i].mFuseGene[j].tgene;
             auto titer = fpairs.find(tg);
             if(titer != fpairs.end() && titer->second.find(hg) != titer->second.end()){
-                gl[i].mFuseGene[j].status |= FUSION_FMIRROR;
+                gl[i].mFuseGene[j].status |= FUSION_FWITHMIRROR;
             }
         }
     }
     // mask other status of fusions
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+#ifdef DEBUG
             if(mOpt->debug & DEBUG_FOUTF){
                 std::cout << gl[i].mFuseGene[j].debugStr();
             }
+#endif
             if(mOpt->fuseOpt->hasBlackGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FBLACKGENE;
             }
@@ -186,7 +190,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                 gl[i].mFuseGene[j].status |= FUSION_FINDB;
             }
             if(mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene[j].tgene, gl[i].mFuseGene[j].hgene)){
-                gl[i].mFuseGene[j].status |= FUSION_FMIRRORINDB;
+                gl[i].mFuseGene[j].status |= FUSION_FMINDB;
             }
             if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
@@ -215,10 +219,11 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gname = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
                 }
                 for(int32_t ecnt = minExon; ecnt <= maxExon; ++ecnt) exlist.push_back(ecnt);
-                if(!mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
-                    gl[i].mFuseGene[j].status |= FUSION_FTOOSMALLSIZE;
+                if(mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
+                    gl[i].mFuseGene[j].status &= (~(FUSION_FTOOSMALLSIZE | FUSION_FINSAMEGENE));
                 }
             }
+            gl[i].mFuseGene[j].status &= (~(FUSION_FERRREALN | FUSION_FMULTREALN));
             if(svs[i].mPrecise){
                 gl[i].mFuseGene[j].status |= FUSION_FPRECISE;
                 if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
@@ -226,16 +231,19 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                    svutil::tandemRepSeq(svs[i].mConsensus, TandemRepeatThresholdMap)){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWCOMPLEX;
                 }
-
-                if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMIRRORINDB)){
-                    if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
-                    else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
+                if(svs[i].mRealnRet < 0) gl[i].mFuseGene[j].status |= FUSION_FERRREALN;
+                if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB)){
+                    if(svs[i].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                        gl[i].mFuseGene[j].status |= FUSION_FMULTREALN;
+                    }
                 }else{
-                    if(svs[i].mRealnRet >= 0 && svs[i].mRealnRet <= mOpt->fuseOpt->mUsualFilter.mMaxRepHit) gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
-                    else gl[i].mFuseGene[j].status &= (~FUSION_FREALNPASSED);
+                    if(svs[i].mRealnRet > mOpt->fuseOpt->mUsualFilter.mMaxRepHit){
+                        gl[i].mFuseGene[j].status |= FUSION_FMULTREALN;
+                    }
                 }
-            }else{
-                gl[i].mFuseGene[j].status |= FUSION_FREALNPASSED;
+            }
+            if(!(gl[i].mFuseGene[j].status & (FUSION_FERRREALN | FUSION_FMULTREALN))){
+                gl[i].mFuseGene[j].status |= FUSION_FPASSREALN;
             }
             std::string gene1, gene2;
             if(gl[i].mFuseGene[j].hfrom1){
@@ -264,16 +272,16 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                 }else{
                     gl[i].mFuseGene[j].status |= FUSION_FHTFLSWAPPED;
                 }
-                bool omidb = (gl[i].mFuseGene[j].status & FUSION_FMIRRORINDB);
+                bool omidb = (gl[i].mFuseGene[j].status & FUSION_FMINDB);
                 bool oindb = (gl[i].mFuseGene[j].status & FUSION_FINDB);
                 if(omidb ^ oindb){
                     if(omidb){
-                        gl[i].mFuseGene[j].status &= (~FUSION_FMIRRORINDB);
+                        gl[i].mFuseGene[j].status &= (~FUSION_FMINDB);
                         gl[i].mFuseGene[j].status |= FUSION_FINDB;
                     }
                     if(oindb){
                         gl[i].mFuseGene[j].status &= (~FUSION_FINDB);
-                        gl[i].mFuseGene[j].status |= FUSION_FMIRRORINDB;
+                        gl[i].mFuseGene[j].status |= FUSION_FMINDB;
                     }
                 }
             }
@@ -288,21 +296,20 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             gl[i].mFuseGene[j].status |= fsr.fsmask;
         }
     }
-    // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
-                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
-    // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
-    TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB);
-    // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE | FUSION_FINREPORTRNG);
+    // mask report mask
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
-            if(gl[i].mFuseGene[j].status & FUSION_DROP_MASK) continue;
-            if((gl[i].mFuseGene[j].status & FUSION_KEEP_MASK) != FUSION_KEEP_MASK) continue;
-            if((gl[i].mFuseGene[j].status & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
-                gl[i].mFuseGene[j].status |= FUSION_FPRIMARY;
-            }else{
-                gl[i].mFuseGene[j].status |= FUSION_FSUPPLEMENTARY;
+            if((gl[i].mFuseGene[j].status & FUSION_FINDB) && (gl[i].mFuseGene[j].status & mOpt->fuseOpt->mIDBDropMask)) continue;
+            if((!(gl[i].mFuseGene[j].status & FUSION_FINDB)) && (gl[i].mFuseGene[j].status & mOpt->fuseOpt->mNDBDropMask)) continue;
+            for(auto& e: mOpt->fuseOpt->mKeepMasks){
+                if((gl[i].mFuseGene[j].status & e) == e){
+                    if((gl[i].mFuseGene[j].status & mOpt->fuseOpt->mPrimaryMask) == mOpt->fuseOpt->mPrimaryMask){
+                        gl[i].mFuseGene[j].status |= FUSION_FPRIMARY;
+                    }else{
+                        gl[i].mFuseGene[j].status |= FUSION_FSUPPLEMENTARY;
+                    }
+                    break;
+                }
             }
         }
     }
@@ -339,29 +346,24 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
         l = i;
     }
     if(!frl.empty()) frl[frl.size() - 1].report = true;
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
         std::cout << "debug_sorted_fs_event:" << std::endl;
         for(uint32_t i = 0; i < frl.size(); ++i){
             std::cout << std::boolalpha << frl[i].report << "\t" <<  frl[i] << std::endl;
         }
     }
+#endif
+    // mark mirror fusion to keep optimal one in output
+    markMirrorFusionEvent(frl);
     // output valid fusions
     std::string header = FusionRecord::gethead(mOpt->rnamode);
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
-    std::ofstream fs(mOpt->fuseOpt->mSupFile);
     fw << header;
-    fs << header;
     for(uint32_t i = 0; i < frl.size(); ++i){
-        if(frl[i].report){
-            if(frl[i].fsmask & FUSION_FPRIMARY){
-                fw << frl[i];
-            }else if(frl[i].fsmask & FUSION_FSUPPLEMENTARY){
-                fs << frl[i];
-            }
-        }
+        if(frl[i].report) fw << frl[i];
     }
     fw.close();
-    fs.close();
 }
 
 void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i){

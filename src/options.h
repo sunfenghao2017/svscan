@@ -20,7 +20,7 @@
 /** max tandem repeats allowed in an fusion sequence */
 const std::map<std::string, int32_t> TandemRepeatThresholdMap = {{"GT", 16}, {"TG", 16}, {"AC", 16}, {"CA", 16}};
 
-typedef int32_t BIGD_TYPE; ///< big data type
+typedef int64_t BIGD_TYPE; ///< big data type
 
 #define DEBUG_FCALL 0x1  ///< calling debug mask
 #define DEBUG_FANNC 0x2  ///< coverage anno debug mask
@@ -204,6 +204,7 @@ class Options{
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
         DEBUG_TYPE debug;             ///< debug mode
+        std::string jsncfg;           ///< json config file
 
     public:
         /** Options constructor */

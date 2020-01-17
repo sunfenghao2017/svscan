@@ -6,6 +6,7 @@ Options::Options(){
     batchsvn = 1000;
     tsvOut = "sv.tsv";
     pool = NULL;
+    bamout = "sv.bam";
     fbamout = NULL;
     overlapRegs = NULL;
     bamheader = NULL;
@@ -68,7 +69,7 @@ void Options::update(int argc, char** argv){
     }
     // adjust sr score
     if(rnamode){
-        filterOpt->mMinSRResScore = 0.99;
+        filterOpt->mMinSRResScore = 0.95;
         batchsvn = 500;
     }
     // update contigNum
@@ -202,9 +203,6 @@ void Options::writeEmptFile(){
         header.append("\n");
     }
     fw.open(fuseOpt->mOutFile.c_str());
-    fw << header;
-    fw.close();
-    fw.open(fuseOpt->mSupFile.c_str());
     fw << header;
     fw.close();
     // sv bcf

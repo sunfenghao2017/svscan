@@ -75,7 +75,7 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
             if((!fg.hfrom1) && bp2trs[b2].gene == fg.hgene) fg.hidx = b2;
             if((!fg.tfrom1) && bp2trs[b2].gene == fg.tgene) fg.tidx = b2;
         }
-        if(fvstr.size() > 2) fg.cigar = fvstr[2];
+        if(fvstr.size() > 3) fg.cigar = fvstr[3];
         fsgl.push_back(fg);
     }
 }
@@ -90,24 +90,16 @@ void FusionReporter::report(){
         l = i;
     }
     if(!fuseList.empty()) fuseList[fuseList.size() - 1].report = true;
+    // mark mirror fusion to keep optimal one in output
+    markMirrorFusionEvent(fuseList);
     // output valid fusions
     std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
-    std::ofstream fs(fuseOpt->mSupFile);
     fw << header;
-    fs << header;
     for(auto& e: fuseList){
-        if(e.report){
-            if(e.fsmask & FUSION_FPRIMARY){
-                fw << e;
-            }
-            if(e.fsmask & FUSION_FSUPPLEMENTARY){
-                fs << e;
-            }
-        }
+        if(e.report) fw << e;
     }
     fw.close();
-    fs.close();
 }
 
 void FusionReporter::sv2fsl(FusionRecordList& fsrl){
@@ -116,22 +108,15 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
     if(!fuseOpt->mSVModFile.empty()){ // update sv tsv file if needed
         fsv.open(fuseOpt->mSVModFile.c_str());
     }
-    // drop bits mask of all fusion events, if an fusion match any bit in FUSION_DROP_MASK, it will not be reported
-    TFUSION_FLAG FUSION_DROP_MASK = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX |
-                                     FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH);
-    // primary keep bits mask, fusion reported as primary must match all the bits in PRIMARY_KEEP_MASK
-    TFUSION_FLAG PRIMARY_KEEP_MASK = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FINREPORTRNG);
-    // keep bits mask, an fusion to be reported must match all bits in FUSION_KEEP_MASK
-    TFUSION_FLAG FUSION_KEEP_MASK = (FUSION_FHOTGENE | FUSION_FREALNPASSED | FUSION_FALLGENE);
     // supplementary fusion additional conditions
     std::ifstream fr(fuseOpt->mInfile);
     std::string tmpstr;
     std::getline(fr, tmpstr);
     if(!fuseOpt->mSVModFile.empty()) fsv << tmpstr << "\n";
     while(std::getline(fr, tmpstr)){
-        if(debug){
-            std::cout << tmpstr << std::endl;
-        }
+#ifdef DEBUG
+        if(debug)  std::cout << tmpstr << std::endl;
+#endif
         SVRec svr;
         SVRec::line2rec(tmpstr, svr);
         TrsRecList trsl1, trsl2;
@@ -139,6 +124,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         str2trsl(trsl2, svr.bp2Gene);
         FuseGeneList fgl;
         str2fsgs(fgl, svr.fuseGene, svr.fsMask, trsl1, trsl2);
+#ifdef DEBUG
         if(debug){
             std::cout << "FuseGeneList fgl: " << std::endl;
             for(uint32_t flidx = 0; flidx < fgl.size(); ++flidx){
@@ -153,6 +139,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 std::cout << trsl2[trsidx].toStr() << std::endl;
             }
         }
+#endif
         int32_t svt = svr.svInt;
         std::string chr1 = svr.bp1Chr;
         std::string chr2 = svr.bp2Chr;
@@ -180,8 +167,8 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.fsmask &= (~FUSION_FHOTGENE);
             if(fuseOpt->inWhiteList(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FINDB;
             else fgr.fsmask &= (~FUSION_FINDB);
-            if(fuseOpt->inWhiteList(fgr.gene2, fgr.gene1)) fgr.fsmask |= FUSION_FMIRRORINDB;
-            else fgr.fsmask &= (~FUSION_FMIRRORINDB);
+            if(fuseOpt->inWhiteList(fgr.gene2, fgr.gene1)) fgr.fsmask |= FUSION_FMINDB;
+            else fgr.fsmask &= (~FUSION_FMINDB);
             if(fuseOpt->hasBlackGene(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FBLACKGENE;
             else fgr.fsmask &= (~FUSION_FBLACKGENE);
             if(fuseOpt->inBlackList(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FBLACKPAIR;
@@ -202,7 +189,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     gname = trsl1[fgl[i].tidx].gene;
                 }
                 for(int32_t excnt = minExon; excnt <= maxExon; ++excnt) exonl.push_back(excnt);
-                if(!fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask |= FUSION_FTOOSMALLSIZE;
+                if(fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask &= (~FUSION_FTOOSMALLSIZE);
             }
             int32_t totalreads = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
@@ -253,25 +240,35 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.distance = fuseOpt->geneNear(fgr.gene1, fgr.chr1, fgr.jctpos1, fgr.gene2, fgr.chr2); // fpDist
             // mask FUSION_FINREPORTRNG now
             fgr.maskFusion(fuseOpt);
-            if(fgr.fsmask & (FUSION_FINDB | FUSION_FMIRRORINDB)){
-                if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
-                else fgr.fsmask &= (~FUSION_FREALNPASSED);
-            }else{
-                if(fgr.fsHits >= 0 && fgr.fsHits <= fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FREALNPASSED;
-                  else fgr.fsmask &= (~FUSION_FREALNPASSED);
+            fgr.fsmask &= (~(FUSION_FERRREALN | FUSION_FMULTREALN));
+            if(fgr.fsmask & FUSION_FPRECISE){
+                if(fgr.fsHits < 0) fgr.fsmask |= FUSION_FERRREALN;
+                if(fgr.fsmask & (FUSION_FINDB | FUSION_FMINDB)){
+                    if(fgr.fsHits > fuseOpt->mWhiteFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
+                }else{
+                    if(fgr.fsHits > fuseOpt->mUsualFilter.mMaxRepHit) fgr.fsmask |= FUSION_FMULTREALN;
+                }
             }
-            if(fgr.fsmask & FUSION_DROP_MASK){
+            if(!(fgr.fsmask & (FUSION_FERRREALN | FUSION_FMULTREALN))){
+                fgr.fsmask |= FUSION_FPASSREALN;
+            }
+            if(((!(fgr.fsmask & FUSION_FINDB)) && (fgr.fsmask & fuseOpt->mNDBDropMask)) ||
+               ((fgr.fsmask & FUSION_FINDB) && (fgr.fsmask & fuseOpt->mIDBDropMask))){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }else{
-                if((fgr.fsmask & FUSION_KEEP_MASK) != FUSION_KEEP_MASK){
-                    fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
-                }else{
-                    if((fgr.fsmask & PRIMARY_KEEP_MASK) == PRIMARY_KEEP_MASK){
-                        fgr.fsmask |= FUSION_FPRIMARY;
-                    }else{
-                        fgr.fsmask |= FUSION_FSUPPLEMENTARY;
+                bool notreport = true;
+                for(auto& emask: fuseOpt->mKeepMasks){
+                    if((fgr.fsmask & emask) == emask){
+                        if((fgr.fsmask & fuseOpt->mPrimaryMask) == fuseOpt->mPrimaryMask){
+                            fgr.fsmask |= FUSION_FPRIMARY;
+                        }else{
+                            fgr.fsmask |= FUSION_FSUPPLEMENTARY;
+                        }
+                        notreport = false;
+                        break;
                     }
                 }
+                if(notreport) fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }
             if((fgr.fsmask & fuseOpt->mFsMaskInclude) != fuseOpt->mFsMaskInclude){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
@@ -280,14 +277,14 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.fsmask &= (~(FUSION_FPRIMARY | FUSION_FSUPPLEMENTARY));
             }
             if(fgr.fsmask & FUSION_FCALLFROMRNASEQ){
-                fgr.ts1name = fgr.ts1name; // ts1Name
-                fgr.ts1pos = fgr.ts1pos;   // ts1Pos
-                fgr.ts2name = fgr.ts2name; // ts2Name
-                fgr.ts2pos = fgr.ts2pos;   // ts2Pos
+                fgr.ts1name = svr.trs1Name; // ts1Name
+                fgr.ts1pos = svr.trs1Pos;   // ts1Pos
+                fgr.ts2name = svr.trs2Name; // ts2Name
+                fgr.ts2pos = svr.trs2Pos;   // ts2Pos
             }
-            if(debug){
-                std::cout << fgr << std::endl;
-            }
+#ifdef DEBUG
+            if(debug) std::cout << fgr << std::endl;
+#endif
             frl.push_back(fgr);
         }
         bool reported = false;

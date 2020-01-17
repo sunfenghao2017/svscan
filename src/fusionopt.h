@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 #include <htslib/vcf.h>
+#include "fusegene.h"
 #include "extanno.h"
 #include "svinfo.h"
 #include "svutil.h"
@@ -30,6 +31,8 @@ typedef std::vector<GeneRange> GeneRangeVector;
 
 /** class to store a fusion gene fusion range */
 struct FusionRange{
+    bool mOneMatchOkay = false;                       ///< one gene match is okay
+    bool mTwoMatchOkay = false;                       ///< two gene match ignoring ie is okay
     std::string mHgene;                               ///< hgene
     std::string mTgene;                               ///< tgene
     std::vector<std::pair<int32_t, int32_t>> mExPair; ///< hgene exon and tgene exon pairs
@@ -141,35 +144,38 @@ struct FilterOptions{
 
 /** class to store fusion report options */
 struct FusionOptions{
-    FilterOptions mWhiteFilter;        ///< filter options for fusion events in whitelist
-    FilterOptions mUsualFilter;        ///< filter options for fusion event not in whitelist
-    ExtraAnno mExtraAnnotator;         ///< extra gene annotator 
-    uint32_t mFsMaskInclude;           ///< result must match this fusion mask;
-    uint32_t mFsMaskExclude;           ///< result must not match this fusion mask;
-    int32_t mMaxBpOffset = 10;         ///< max breakpoint offset of an SV against background SV to be excluded
-    std::string mRef;                  ///< reference file used in alignment of bam
-    std::string mBgBCF;                ///< background BCF file
-    std::string mWhiteList;            ///< fusion event which will keep always if found
-    std::string mBlackList;            ///< fusion event which will drop always if found
-    std::string mFsRptList;            ///< if provided, report fusions in this list only
-    std::string mGeneCrdList;          ///< gene coordinate range list
-    std::string mSameGeneSVList;       ///< fusion event in same gene to be reported
-    std::string mExtraAnnoList;        ///< fusion gene which should be annotated seperately
-    std::string mInfile;               ///< input file of svscan sv tsv format result file
-    std::string mOutFile = "fs.tsv";   ///< output file of reported fusion
-    std::string mSupFile = "ss.tsv";   ///< output file of supplementary fusions
-    std::string mSVModFile;            ///< output sv tsv file with fsmask updated
-    SVList mBgSVs;                     ///< to store background SVs
-    FusePairs mWhiteFusions;           ///< to store fusion events in fusion whitelist
-    FusePairs mBlackFusions;           ///< to store fusion events in fusion blacklist
-    std::set<std::string> m5Partners;  ///< genes commonly acts as 5' partner
-    std::set<std::string> m3Partners;  ///< genes commonly acts as 3' partner
-    std::set<std::string> mWhiteGenes; ///< to store hot gene in whitelist
-    std::set<std::string> mBlackGenes; ///< to store black gene which should excluded by all fusion events
-    DetectRangeMaps mDetectRngMap;     ///< detect range of sv event in the same gene
-    FusionReportRange mFusionRptMap;   ///< report fusion event only in this range
-    GeneRangeVector mGeneRangeVec;     ///< gene coordinates vector
-    bool mInitialized = false;         ///< FusionOptions is initialized if true
+    FilterOptions mWhiteFilter;           ///< filter options for fusion events in whitelist
+    FilterOptions mUsualFilter;           ///< filter options for fusion event not in whitelist
+    ExtraAnno mExtraAnnotator;            ///< extra gene annotator
+    uint32_t mFsMaskInclude;              ///< result must match this fusion mask;
+    uint32_t mFsMaskExclude;              ///< result must not match this fusion mask;
+    int32_t mMaxBpOffset = 10;            ///< max breakpoint offset of an SV against background SV to be excluded
+    std::string mRef;                     ///< reference file used in alignment of bam
+    std::string mBgBCF;                   ///< background BCF file
+    std::string mWhiteList;               ///< fusion event which will keep always if found
+    std::string mBlackList;               ///< fusion event which will drop always if found
+    std::string mFsRptList;               ///< if provided, report fusions in this list only
+    std::string mGeneCrdList;             ///< gene coordinate range list
+    std::string mSameGeneSVList;          ///< fusion event in same gene to be reported
+    std::string mExtraAnnoList;           ///< fusion gene which should be annotated seperately
+    std::string mInfile;                  ///< input file of svscan sv tsv format result file
+    std::string mOutFile = "fs.tsv";      ///< output file of reported fusion
+    std::string mSVModFile;               ///< output sv tsv file with fsmask updated
+    SVList mBgSVs;                        ///< to store background SVs
+    FusePairs mWhiteFusions;              ///< to store fusion events in fusion whitelist
+    FusePairs mBlackFusions;              ///< to store fusion events in fusion blacklist
+    std::set<std::string> m5Partners;     ///< genes commonly acts as 5' partner
+    std::set<std::string> m3Partners;     ///< genes commonly acts as 3' partner
+    std::set<std::string> mWhiteGenes;    ///< to store hot gene in whitelist
+    std::set<std::string> mBlackGenes;    ///< to store black gene which should excluded by all fusion events
+    DetectRangeMaps mDetectRngMap;        ///< detect range of sv event in the same gene
+    FusionReportRange mFusionRptMap;      ///< report fusion event only in this range
+    GeneRangeVector mGeneRangeVec;        ///< gene coordinates vector
+    bool mInitialized = false;            ///< FusionOptions is initialized if true
+    TFUSION_FLAG mNDBDropMask;            ///< fusion not in db will be dropped if any bit met
+    TFUSION_FLAG mIDBDropMask;            ///< fusion(mirror) in db will be dropped  any bit met
+    std::vector<TFUSION_FLAG> mKeepMasks; ///< fusion do not drop must satisify any one mask satisfied in all bits to keep
+    TFUSION_FLAG mPrimaryMask;            ///< fusion will be mask as primary and output always, others will drop if mirror 
 
     /** FusionOptions constructor */
     FusionOptions(){
@@ -185,6 +191,15 @@ struct FusionOptions{
         mUsualFilter.mMinSRSeed = 5;
         mUsualFilter.mMinDPSeed = 5;
         mUsualFilter.mMaxRepHit = 4;
+        mNDBDropMask = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
+                        FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FERRREALN | FUSION_FMULTREALN);
+        mIDBDropMask = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FINSAMEGENE |
+                        FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FERRREALN);
+        mKeepMasks = {(FUSION_FHOTGENE | FUSION_FPASSREALN | FUSION_FINREPORTRNG),
+                      (FUSION_FHOTGENE | FUSION_FINDB | FUSION_FINREPORTRNG),
+                      (FUSION_FHOTGENE | FUSION_FMINDB |  FUSION_FINREPORTRNG)};
+        mPrimaryMask = (FUSION_FNORMALCATDIRECT | FUSION_FCOMMONHOTDIRECT | FUSION_FINDB | FUSION_FALLGENE | FUSION_FPASSREALN);
+                      
     }
         
     /** FusionOptions destructor */

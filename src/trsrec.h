@@ -26,8 +26,10 @@ struct TrsRec{
         gene = "-";
         unit = "-";
         strand = "-";
+        number = "-1";
         version = "-";
         primary = "-";
+        exon = -1;
     }
 
     /** TrsRec destructor */

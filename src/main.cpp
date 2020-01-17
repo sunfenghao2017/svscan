@@ -21,7 +21,7 @@ int main(int argc, char** argv){
     app.add_option("-c,--creg", opt->creg, "file of region sv must capture")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
-    app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->required(true)->group("General Options");
+    app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->group("General Options");
     app.add_option("-e,--b2excel", opt->bam2tb, "output ss/fs event supportint bam records excel", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");
@@ -40,8 +40,8 @@ int main(int argc, char** argv){
     app.add_option("--min_inv_rpt", opt->filterOpt->mMinInversionRpt, "min inversion size to report", true)->group("Threshold Options");
     app.add_option("--min_del_rpt", opt->filterOpt->mMinDeletionRpt, "min deletion size to report", true)->group("Threshold Options");
     app.add_option("--min_dup_rpt", opt->filterOpt->mMinDupRpt, "min dup size to report", true)->group("Threshold Options");
-    app.add_option("--min_seed_sr", opt->filterOpt->mMinSeedSR, "min seed split reads needed to compute SV", true)->check(CLI::Range(1, 100000))->group("Threshold Options");
-    app.add_option("--min_seed_dp", opt->filterOpt->mMinSeedDP, "min seed discordant reads needed to computr SV", true)->check(CLI::Range(1, 100000))->group("Threshold Options");
+    app.add_option("--min_seed_sr", opt->filterOpt->mMinSeedSR, "min seed split reads needed to compute SV", true)->check(CLI::Range(1, 1000))->group("Threshold Options");
+    app.add_option("--min_seed_dp", opt->filterOpt->mMinSeedDP, "min seed discordant reads needed to computr SV", true)->check(CLI::Range(1, 1000))->group("Threshold Options");
     // Fusion report options
     app.add_option("--whitemindep", opt->fuseOpt->mWhiteFilter.mMinDepth, "min depth for an valid fusion break point in whitelist", true)->group("Fusion Options");
     app.add_option("--usualmindep", opt->fuseOpt->mUsualFilter.mMinDepth, "min depth for an valid fusion break point not in whitelist", true)->group("Fusion Options");
@@ -69,8 +69,11 @@ int main(int argc, char** argv){
     app.add_option("--extraanno", opt->fuseOpt->mExtraAnnoList, "extra annoation gene list")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--fsrptlist", opt->fuseOpt->mFsRptList, "report range list")->check(CLI::ExistingFile)->group("Fusion Options");
     app.add_option("--genecrdlist", opt->fuseOpt->mGeneCrdList, "gene coord list")->check(CLI::ExistingFile)->group("Fusion Options");
-    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "primary fusion report file path", true)->group("Fusion Options");
-    app.add_option("--supplerpt", opt->fuseOpt->mSupFile, "supplementary fusion report file path", true)->group("Fusion Options");
+    app.add_option("--fusionrpt", opt->fuseOpt->mOutFile, "fusion report file path", true)->group("Fusion Options");
+    app.add_option("--idpdropmask", opt->fuseOpt->mIDBDropMask, "fusion in db drop bit mask", true)->group("Fusion Options");
+    app.add_option("--ndbdropmask", opt->fuseOpt->mNDBDropMask, "fusion not in db drop bit mask", true)->group("Fusion Options");
+    app.add_option("--keepmasks", opt->fuseOpt->mKeepMasks, "fusion keep masks", true)->group("Fusion Options");
+    app.add_option("--primarymask", opt->fuseOpt->mPrimaryMask, "primary fusion mask", true)->group("Fusion Options");
     // parse arguments
     CLI_PARSE(app, argc, argv);
     // validate arguments

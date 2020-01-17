@@ -8,7 +8,6 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     hts_set_fai_filename(fp, mOpt->alnref.c_str());
-    bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
     const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
     // Iterate bam contig by contig
@@ -18,19 +17,18 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     if(!mapped){
         sam_close(fp);
         hts_idx_destroy(idx);
-        bam_hdr_destroy(h);
         bam_destroy1(b);
         return; // Skip contig without any mapped reads
     }
     // Iterate all read alignments on this contig and valid regions
-    util::loginfo("Beg SR/DP scanning on Contig: " + std::string(h->target_name[tid]), mOpt->logMtx);
+    util::loginfo("Beg SR/DP scanning on Contig: " + std::string(mOpt->bamheader->target_name[tid]), mOpt->logMtx);
     for(auto regit = mScanRegs[tid].begin(); regit != mScanRegs[tid].end(); ++regit){
         hts_itr_t* itr = sam_itr_queryi(idx, tid, regit->first, regit->second);
         while(sam_itr_next(fp, itr, b) >= 0){
             if(b->core.flag & BAM_SRSKIP_MASK) continue;// skip invalid reads
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
-            if(!inValidReg(b, h)) continue; // skip reads which do not overlap with creg, neither does its mate
-            int instat = jctMap->insertJunction(b, h); // only one softclip read can be SR candidates
+            if(!inValidReg(b, mOpt->bamheader)) continue; // skip reads which do not overlap with creg, neither does its mate
+            int instat = jctMap->insertJunction(b, mOpt->bamheader); // only one softclip read can be SR candidates
             if(instat == -1 || instat > 2) continue; // skip hardclip ones and read with head/tail sc
             if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
@@ -62,16 +60,15 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
                 }
                 if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
             }
-            if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// second read in pair
+            if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// read last met in pair
                 dprSet->insertDP(b, svt);
             }
         }
         hts_itr_destroy(itr);
     }
-    util::loginfo("End SR/DP scanning on Contig: " + std::string(h->target_name[tid]), mOpt->logMtx);
+    util::loginfo("End SR/DP scanning on Contig: " + std::string(mOpt->bamheader->target_name[tid]), mOpt->logMtx);
     sam_close(fp);
     hts_idx_destroy(idx);
-    bam_hdr_destroy(h);
     bam_destroy1(b);
 }
 
@@ -138,6 +135,7 @@ void SVScanner::scanDPandSR(){
             mOpt->svRefID.insert(f.mChr2);
         }
     }
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_svRefID:";
         for(auto& srfid: mOpt->svRefID){
@@ -145,12 +143,15 @@ void SVScanner::scanDPandSR(){
         }
         std::cout << std::endl;
     }
+#endif
     srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_SRSV_Cluster_result: " << std::endl;
         std::cout << srs << std::endl;
     }
+#endif
     util::loginfo("Beg assembling SRs and refining breakpoints");
     srs.assembleSplitReads(mSRSVs);
     util::loginfo("End assembling SRs and refining breakpoints");
@@ -159,26 +160,35 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg clustering DPs");
     dprSet->cluster(mDPSVs);
     util::loginfo("End clustering DPs");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SV_Cluster_result: " << std::endl;
         std::cout << dprSet << std::endl;
     }
+#endif
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SVS_found: " << std::endl;
         std::cout << mDPSVs << std::endl;
         std::cout << "debug_SR_SVS_found: " << std::endl;
         std::cout << mSRSVs << std::endl;
     }
-    // Merge SR and DP SVs
-    util::loginfo("Beg merging SVs from SRs and DPs");
+#endif
+    // Continue loading reference index if unfinished
+    util::loginfo("Try loading reference index");
     refInxLoad.get();
+    util::loginfo("End loading reference index");
+    // Merge SR and DP SVs
     SVSet mergedSVs;
+    util::loginfo("Beg merging SVs from SRs and DPs");
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_ALL_SVS_found: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
+#endif
     util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs.size()));
     util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
@@ -199,18 +209,18 @@ void SVScanner::scanDPandSR(){
         mOpt->svRefID.insert(mergedSVs[i].mChr1);
         mOpt->svRefID.insert(mergedSVs[i].mChr2);
     }
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
         std::cout << "debug_final_merged_svs: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
+#endif
     // open bamout for write
     if(!mOpt->bamout.empty()){
         samFile* fp = sam_open(mOpt->bamfile.c_str(), "r");
-        bam_hdr_t* h = sam_hdr_read(fp);
         mOpt->fbamout = sam_open(mOpt->bamout.c_str(), "w");
-        assert(sam_hdr_write(mOpt->fbamout, h) >= 0);
+        assert(sam_hdr_write(mOpt->fbamout, mOpt->bamheader) >= 0);
         sam_close(fp);
-        bam_hdr_destroy(h);
     }
     // Annotate junction reads and spaning coverage
     util::loginfo("Beg annotating SV coverage");
@@ -238,10 +248,12 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Beg writing Fusions to TSV file");
     covStat->reportFusionTSV(mergedSVs, gl);
     util::loginfo("End writing Fusions to TSV file");
+#ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
         std::cout << "debug_final_merged_svs: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
+#endif
     if(!mOpt->bcfOut.empty()){
         util::loginfo("Beg writing SVs to BCF file");
         std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVs());
@@ -253,7 +265,6 @@ void SVScanner::scanDPandSR(){
         BamToTable btt;
         btt.svbam = mOpt->bamout;
         btt.fstsv = mOpt->fuseOpt->mOutFile;
-        btt.sstsv = mOpt->fuseOpt->mSupFile;
         btt.bamtb = mOpt->bam2tb;
         btt.b2t();
         util::loginfo("End writing fusion supporting bam records to excel file");

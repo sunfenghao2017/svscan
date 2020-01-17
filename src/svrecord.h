@@ -29,6 +29,7 @@ class SVRecord{
         int32_t mSRSupport = 0;      ///< number of Split-reads supporting this SV(one split read consists two part)
         int32_t mAlnInsLen = 0;      ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
         std::string mBpInsSeq = "";  ///< insertion sequence after breakpoint position
+        float mBpInsFreq = 0;        ///< frequence of insertion sequence after breakpoint position 
         int32_t mHomLen = 0;         ///< total homology length of left/right part of consensus seq out of gap range with their gap elonged partner
         int32_t mSVT = -1;           ///< SV type[0-9]
         int32_t mID = -1;            ///< SV ID, is just the index at which this SVRecord is stored in the vector
@@ -45,6 +46,8 @@ class SVRecord{
         std::string mNameChr2 = "";  ///< name of chr on 3' end of SV | little chr
         std::string mProbeBegC = ""; ///< an consensus sequence segment spanning the SV starting position
         std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
+        std::string mProbeBegA = ""; ///< an alternative consensus sequence segment spanning the SV starting position
+        std::string mProbeEndA = ""; ///< an alternative consensus sequence segment spanning the SV ending position
         std::string mInsSeq = "";    ///< insertion sequence of insertion event
         std::string mTraChr1Seq = "";///< larger chr reference sequence of translocation 
         std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
@@ -92,6 +95,11 @@ class SVRecord{
             os << "Constructed reference sequence of this SV: " << sv.mSVRef << "\n";
             os << "Consensus sequence segment spanning the SV starting position: " << sv.mProbeBegC << "\n";
             os << "Consensus sequence segment spanning the SV ending position: " << sv.mProbeEndC << "\n";
+            os << "Consensus sequence segment spanning the SV starting position(with bpIns): " << sv.mProbeBegA << "\n";
+            os << "Consensus sequence segment spanning the SV ending position(with bpIns): " << sv.mProbeEndA << "\n";
+            os << "Gap coordinates of concensus sequence[cs, ce, rs, re]: ";
+            for(int i = 0; i < 4; ++i) os << sv.mGapCoord[i] << " ";
+            os << "\n";
             os << "Translocation chr1Seq: " << sv.mTraChr1Seq << "\n";
             os << "Translocation chr2Seq: " << sv.mTraChr2Seq << "\n";
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
@@ -131,6 +139,11 @@ class SVRecord{
             ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";
             ss << "Consensus sequence segment spanning the SV starting pssition: " << mProbeBegC << "\n";
             ss << "Consensus sequence segment spanning the SV ending pssition: " << mProbeEndC << "\n";
+            ss << "Consensus sequence segment spanning the SV starting pssition(with bpIns): " << mProbeBegA << "\n";
+            ss << "Consensus sequence segment spanning the SV ending pssition(with bpIns): " << mProbeEndA << "\n";
+            ss << "Gap coordinates of concensus sequence[cs, ce, rs, re]: ";
+            for(int i = 0; i < 4; ++i) ss << mGapCoord[i] << " ";
+            ss << "\n";
             ss << "Translocation chr1Seq: " << mTraChr1Seq << "\n";
             ss << "Translocation chr2Seq: " << mTraChr2Seq << "\n";
             if(mSVT == 4) ss << "Inserted sequence: " << mInsSeq << "\n";

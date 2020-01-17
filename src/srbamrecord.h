@@ -11,7 +11,6 @@
 #include "options.h"
 #include "junction.h"
 #include "svrecord.h"
-#include "edgerecord.h"
 
 /** class to store split read alignment record */
 class SRBamRecord{
@@ -21,6 +20,7 @@ class SRBamRecord{
         int32_t mChr2;     ///< reference id part2 of read mapped
         int32_t mPos2;     ///< break point position of part2 read on reference
         int32_t mRstart;   ///< starting mapping position on reference of one part read which is not -1
+        bool mSRChr1;      ///< primary alignment of this read is on mChr1 if true
         int32_t mInslen;   ///< insert size of two part of one read contributed, this might caused by insertion or sequence error
         int32_t mSVID;     ///< default -1, if allocated to an StructuralVariant, it is the index at which to store a StructuralVariant in vector
         size_t mID;        ///< hash value of the read name
@@ -33,16 +33,18 @@ class SRBamRecord{
          * @param chr2 reference id part2 of read mapped
          * @param pos2 break point position of part2 read on reference
          * @param rstart starting mapping position on reference of one part read which is not -1
+         * @param srchr1 primary alignment of this read is on mChr1 if true
          * @param inslen insert size of two part of one read contributed
          * @param id hash value of the read name
          * @param rd1 read1 if true
          */
-        SRBamRecord(int32_t chr1, int32_t pos1, int32_t chr2, int32_t pos2, int32_t rstart, int32_t inslen, size_t id, bool rd1){
+        SRBamRecord(int32_t chr1, int32_t pos1, int32_t chr2, int32_t pos2, int32_t rstart, bool srchr1, int32_t inslen, size_t id, bool rd1){
             mChr1 = chr1;
             mPos1 = pos1;
             mChr2 = chr2;
             mPos2 = pos2;
             mRstart = rstart;
+            mSRChr1 = srchr1;
             mInslen = inslen;
             mSVID = -1;
             mID = id;
@@ -173,8 +175,6 @@ class SRBamRecordSet{
         void classifyJunctions(JunctionMap* jctMap);
 
         /** cluster SRBamRecord of one type SV and find all supporting SV of this type\n
-         * step1: cluster SRBamRecord into different component, SRBamRecord with same chr1, pos1 abs diff in a limit[MaxReadSep](only considre nearing two) consists a component\n
-         * step2: search each component for an clique, use the EdgeRecord in a component with the least weight as an seed, grow the clique as big as possible\n
          * @param srs reference of SRBamRecords which supporting SV type svt
          * @param svs SVSet used to store SV found
          * @param svt SV type to find in srs, range [0-8]
@@ -184,15 +184,13 @@ class SRBamRecordSet{
         /** cluster all SRBamRecord in SRBamRecordSet into their seperate supporting SVs */
         void cluster(SVSet& svs);
 
-        /** a subroutine used to search all possible clique supporting an type of SV\n
-         * step1: select seed, use the EdgeRecord in a component with the least weight as an seed of clique\n
-         * step2: grow the clique, add another component if the expanded clique have starting/ending position diff smaller than a limit[MaxReadSep]\n
-         * @param compEdge <compNumber, components> pairs clustered from SRBamRecords
+        /** get sv candidates of a cluster
+         * @param clique sr id of a cluster
          * @param srs reference of SRBamRecords which supporting SV type svt
          * @param svs SVSet used to store SV found
          * @param svt SV type to find in srs, range [0-8]
-         */
-        void searchCliques(std::map<int32_t, std::vector<EdgeRecord>>& compEdge, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt);
+         */ 
+        void searchCliques(std::set<int32_t>& clique, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt);
 
         /** assembly reads of SR supporting each SV by MSA to get an consensus representation of SRs,\n
          * split align the consensus sequence against the constructed reference sequence to refine the breakpoint position
@@ -202,7 +200,7 @@ class SRBamRecordSet{
 
         void assembleOneContig(SVSet& svs, int32_t refIdx);
 
-        void assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, bam_hdr_t* hdr, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
+        void assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
 };
 
 #endif

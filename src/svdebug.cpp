@@ -76,12 +76,30 @@ void SVDebug::debugDNA(){
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
-        if(clips.first || clips.second){
-            uint8_t* data = bam_aux_get(b, "SA");
-            if(data){
-                char* val = bam_aux2Z(data);
+        if((clips.first  > 0) ^ (clips.second > 0)){
+            uint8_t* sa = bam_aux_get(b, "SA");
+            if(sa){
+                std::string sastr = bam_aux2Z(sa);
+                std::vector<std::string> cvs;
                 std::vector<std::string> vstr;
-                util::split(val, vstr, ",");
+                util::split(sastr, cvs, ";");
+                if(cvs[1].empty()) sastr = cvs[0];
+                else{
+                    std::vector<int32_t> mvidx;
+                    for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
+                        util::split(cvs[cvidx], vstr, ",");
+                        if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                            mvidx.push_back(cvidx);
+                        }
+                    }
+                    if(mvidx.size() == 1){
+                        sastr = cvs[mvidx[0]];
+                    }else{
+                        sastr = "";
+                    }
+                }
+                if(sastr.empty()) continue;
+                util::split(sastr, vstr, ",");
                 std::string sachr = vstr[0];
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == treg.chr && sapos > tpos && sapos < tend){
@@ -108,12 +126,30 @@ void SVDebug::debugDNA(){
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
-        if(clips.first || clips.second){
-            uint8_t* data = bam_aux_get(b, "SA");
-            if(data){
-                char* val = bam_aux2Z(data);
+        if((clips.first > 0) ^ (clips.second > 0)){
+            uint8_t* sa = bam_aux_get(b, "SA");
+            if(sa){
+                std::string sastr = bam_aux2Z(sa);
+                std::vector<std::string> cvs;
                 std::vector<std::string> vstr;
-                util::split(val, vstr, ",");
+                util::split(sastr, cvs, ";");
+                if(cvs[1].empty()) sastr = cvs[0];
+                else{
+                    std::vector<int32_t> mvidx;
+                    for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
+                        util::split(cvs[cvidx], vstr, ",");
+                        if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                            mvidx.push_back(cvidx);
+                        }
+                    }
+                    if(mvidx.size() == 1){
+                        sastr = cvs[mvidx[0]];
+                    }else{
+                        sastr = "";
+                    }
+                }
+                if(sastr.empty()) continue;
+                util::split(sastr, vstr, ",");
                 std::string sachr = vstr[0];
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == hreg.chr && sapos > hpos && sapos < hend){
