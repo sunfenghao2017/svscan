@@ -265,12 +265,15 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         int32_t svid = vsrIter->second;
         int32_t svt = svs[svid].mSVT;
         int32_t bpInslen = 0;
+        bool r12mismatch = true;
         for(auto& rec : mSRs[svs[svid].mSVT]){
             if(rec.mID == seed && rec.mRead1 == (b->core.flag & BAM_FREAD1)){
                 bpInslen = rec.mInslen;
+                r12mismatch = false;
                 break;
             }
         }
+        if(r12mismatch) continue;
         std::string srseq = ""; // read sequence excluding insertiong after clip pos
         std::string siseq = ""; // inserted sequence after clip pos
         svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep / 2);
