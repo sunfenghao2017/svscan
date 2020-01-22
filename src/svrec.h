@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <sstream>
 #include <iostream>
-#include "util.h"
+#include <util.h>
 
 struct SVRec{
     std::string svType;

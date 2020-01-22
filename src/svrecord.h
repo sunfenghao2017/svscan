@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "bamutil.h"
+#include <bamutil.h>
 #include "options.h"
 #include "aligner.h"
 #include "aligncfg.h"

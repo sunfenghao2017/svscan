@@ -1,7 +1,7 @@
 #ifndef GENERATE_RNA_FUSE
 #define GENERATE_RNA_FUSE
 
-#include "util.h"
+#include <util.h>
 #include <string>
 #include <cstdint>
 #include <unordered_map>

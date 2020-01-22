@@ -2,10 +2,10 @@
 #define SVDEBUG_H
 
 #include <map>
-#include "util.h"
+#include <util.h>
 #include <string>
 #include <sstream>
-#include "bamutil.h"
+#include <bamutil.h>
 #include <htslib/tbx.h>
 #include <htslib/sam.h>
 

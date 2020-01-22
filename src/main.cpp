@@ -1,4 +1,4 @@
-#include "CLI.hpp"
+#include <CLI.hpp>
 #include "options.h"
 #include "svscanner.h"
 #include <iostream>
@@ -75,7 +75,7 @@ int main(int argc, char** argv){
     app.add_option("--keepmasks", opt->fuseOpt->mKeepMasks, "fusion keep masks", true)->group("Fusion Options");
     app.add_option("--primarymask", opt->fuseOpt->mPrimaryMask, "primary fusion mask", true)->group("Fusion Options");
     // parse arguments
-    CLI_PARSE(app, argc, argv);
+    CLI11_PARSE(app, argc, argv);
     // validate arguments
     util::loginfo("Command line arguments parsed");
     opt->validate();

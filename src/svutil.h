@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstdint>
-#include "util.h"
+#include <util.h>
 #include "trsrec.h"
 #include "rna2dna.h"
 #include "fusegene.h"

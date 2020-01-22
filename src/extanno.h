@@ -3,7 +3,7 @@
 
 #include "cgranges.h"
 #include "trsrec.h"
-#include "util.h"
+#include <util.h>
 #include <fstream>
 #include <string>
 #include <vector>

@@ -84,7 +84,7 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
 void BamToTable::b2t(){
     std::set<int32_t> svids;
     getsvid(svids);
-    lxw_workbook* workbook = new_workbook(bamtb.c_str());
+    lxw_workbook* workbook = workbook_new(bamtb.c_str());
     lxw_format* format = workbook_add_format(workbook);
     format_set_align(format, LXW_ALIGN_LEFT);
     format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);

@@ -6,8 +6,8 @@
 #include <fstream>
 #include <htslib/sam.h>
 #include <xlsxwriter.h>
-#include "bamutil.h"
-#include "util.h"
+#include <bamutil.h>
+#include <util.h>
 
 /** bam record items to output */
 struct BamRec{

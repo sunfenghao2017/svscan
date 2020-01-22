@@ -12,8 +12,8 @@
 #include "software.h"
 #include "interval.h"
 #include "svutil.h"
-#include "CLI.hpp"
-#include "util.h"
+#include <CLI.hpp>
+#include <util.h>
 
 /** type to store Interval of each contigs */
 typedef std::vector<std::vector<Interval>> ContigIntervals;

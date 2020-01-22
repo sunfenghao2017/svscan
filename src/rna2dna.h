@@ -3,7 +3,7 @@
 
 #include <string>
 #include <cstdint>
-#include "util.h"
+#include <util.h>
 
 /** transcript unit to dna coordinate record */
 struct Rna2DnaUnit{

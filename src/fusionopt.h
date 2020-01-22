@@ -11,7 +11,7 @@
 #include "extanno.h"
 #include "svinfo.h"
 #include "svutil.h"
-#include "util.h"
+#include <util.h>
 
 struct GeneRange{
     std::string mGene;

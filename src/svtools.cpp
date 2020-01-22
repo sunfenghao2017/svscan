@@ -1,4 +1,4 @@
-#include "CLI.hpp"
+#include <CLI.hpp>
 #include "svtools.h"
 
 int main(int argc, char** argv){
@@ -151,7 +151,7 @@ int main(int argc, char** argv){
     prsvg->add_option("-o,--outcfg", rsvgOpt->outcfg, "output fusion construct info", true);
     prsvg->add_option("-f,--outfa", rsvgOpt->outfa, "output fasta file of fusion seqs", true);
     // parse arguments
-    CLI_PARSE(app, argc, argv);
+    CLI11_PARSE(app, argc, argv);
     // merge
     if(pmerge->parsed()){
         mergeOpt->update(argc, argv);

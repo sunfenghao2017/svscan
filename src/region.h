@@ -6,7 +6,7 @@
 #include <vector>
 #include <stack>
 #include <set>
-#include "util.h"
+#include <util.h>
 
 /** class used to store regions of genome */
 class Region{

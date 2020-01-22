@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <htslib/faidx.h>
 #include "msa.h"
-#include "bamutil.h"
+#include <bamutil.h>
 #include "options.h"
 #include "junction.h"
 #include "svrecord.h"

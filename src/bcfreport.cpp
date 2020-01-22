@@ -2,7 +2,7 @@
 #include <htslib/vcf.h>
 #include <htslib/faidx.h>
 #include "stats.h"
-#include "util.h"
+#include <util.h>
 
 void Stats::reportSVBCF(const SVSet& svs){
     // Open file handler

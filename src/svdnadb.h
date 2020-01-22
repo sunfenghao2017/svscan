@@ -3,7 +3,7 @@
 
 #include <map>
 #include <set>
-#include "util.h"
+#include <util.h>
 #include <stdio.h>
 #include <cassert>
 #include <fstream>

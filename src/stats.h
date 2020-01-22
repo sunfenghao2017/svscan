@@ -1,14 +1,14 @@
 #ifndef STATS_H
 #define STATS_H
 
-#include "util.h"
+#include <util.h>
 #include "trsrec.h"
 #include "svutil.h"
 #include "fuserec.h"
 #include "options.h"
 #include "svrecord.h"
 #include "aligner.h"
-#include "bamutil.h"
+#include <bamutil.h>
 #include "matrix2d.h"
 #include "aligncfg.h"
 #include "srbamrecord.h"

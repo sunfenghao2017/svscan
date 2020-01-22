@@ -14,7 +14,7 @@
 #include "ThreadPool.h"
 #include "software.h"
 #include "statutil.h"
-#include "util.h"
+#include <util.h>
 #include "bed.h"
 
 /** max tandem repeats allowed in an fusion sequence */
