@@ -123,20 +123,22 @@ struct TrsRec{
     }
 
     /** parsing fusion part of transcript */
-    inline void getCatPart(int32_t svt, bool svstart){
+    inline void getCatPart(int32_t svt, bool svstart, bool rnamode = true){
+        bool fwdstrand = (strand[0] == '+');
+        if(rnamode) fwdstrand = true;
         int32_t svcat = svt;
         if(svcat >= 5) svcat -= 5;
         if(svstart){
             switch(svcat){
                 case 0: case 2: // 5' part in cc
-                    if(strand[0] == '+'){
+                    if(fwdstrand){
                         pf5incc = true;
                     }else{
                         pf5incc = false;
                     }
                     break;
                 case 1: case 3: // 3' part in cc
-                    if(strand[0] == '+'){
+                    if(fwdstrand){
                         pf5incc = false;
                     }else{
                         pf5incc = true;
@@ -148,14 +150,14 @@ struct TrsRec{
         }else{
             switch(svcat){
                 case 0: case 3: // 5' part in cc
-                    if(strand[0] == '+'){
+                    if(fwdstrand){
                         pf5incc = true;
                     }else{
                         pf5incc = false;
                     }
                     break;
                 case 1: case 2: // 3' part in cc
-                    if(strand[0] == '+'){
+                    if(fwdstrand){
                         pf5incc = false;
                     }else{
                         pf5incc = true;
@@ -170,6 +172,8 @@ struct TrsRec{
     /** get cigar */
     inline void getCigar(){
         std::stringstream ss;
+        // e
+        ss << "E" << exon << "(";
         // h or t
         if(pf5incc) ss << "H";
         else ss << "T";
@@ -184,6 +188,7 @@ struct TrsRec{
             }
             ss << "M" << insl << "I";
         }
+        ss << ")";
         mstat = ss.str();
     }
 };
