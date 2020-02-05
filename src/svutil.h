@@ -685,7 +685,7 @@ namespace svutil{
             if(trec.strand == "-") trec.pos = r2dl[j].gend - (bp - r2dl[j].tbeg);
             trec.ioffset = bp - r2dl[j].tbeg;
             trec.eoffset = r2dl[j].tend - bp;
-            if(trec.ioffset + trec.eoffset == r2dl[j].tend - r2dl[j].tbeg) trec.fullincc = true;
+            if(trec.ioffset == 0 || trec.eoffset == 0) trec.fullincc = true;
         }
         trec.unit = r2dl[j].uname;
         trec.version = r2dl[j].tversion;
