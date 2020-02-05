@@ -544,8 +544,8 @@ namespace svutil{
      */
     inline std::string bp2cigar(const TrsRec& htrs, const TrsRec& ttrs){
         std::ostringstream oss;
-        oss << htrs.mstat << ",";
-        oss << ttrs.mstat;
+        oss << htrs.gene << htrs.mstat << ",";
+        oss << ttrs.gene << ttrs.mstat;
         return oss.str();
     }
 
