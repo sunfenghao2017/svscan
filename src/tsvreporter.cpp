@@ -409,6 +409,14 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int3
         fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].getTrs();
         fsr.exon2 = gi.mGene2[gi.mFuseGene[i].tidx].exon;
     }
+    // fsCigar
+    if(mOpt->rnamode){
+        if(gi.mFuseGene[i].tfrom1){
+            fsr.cigar = svutil::bp2cigar(gi.mGene2[gi.mFuseGene[i].hidx], gi.mGene1[gi.mFuseGene[i].tidx]);
+        }else{
+            fsr.cigar = svutil::bp2cigar(gi.mGene1[gi.mFuseGene[i].hidx], gi.mGene2[gi.mFuseGene[i].tidx]);
+        }
+    }
     // FusinSequence fseqBp
     if(svr.mSVT == 4 || (!svr.mPrecise)){
         fsr.fusionsequence = "-";
@@ -440,13 +448,9 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int3
         fsr.ts1pos = svr.mSVStart;                            // ts1Pos
         fsr.ts2name = svr.mNameChr2;                          // ts2Name
         fsr.ts2pos = svr.mSVEnd;                              // ts2Pos
-        fsr.cigar = gi.mFuseGene[i].cigar;                    // fsCigar
         if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){
             std::swap(fsr.ts1name, fsr.ts2name);
             std::swap(fsr.ts1pos, fsr.ts2pos);
-            std::vector<std::string> cgvstr;
-            util::split(fsr.cigar, cgvstr, ",");
-            fsr.cigar = cgvstr[1] + "," + cgvstr[0];
         }
     }
     fsr.distance = mOpt->fuseOpt->geneNear(fsr.gene1, fsr.chr1, fsr.jctpos1, fsr.gene2, fsr.chr2); // distance

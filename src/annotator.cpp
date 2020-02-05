@@ -415,16 +415,12 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
                     fsg.hidx = g2;
                     fsg.tfrom1 = true;
                     fsg.tidx = g1;
-                    // add cigar string of catentaion around breakpoint gl[i].mGene2[g2] -> gl[i].mGene1[g1]
-                    fsg.cigar = svutil::bp2cigar(gl[i].mGene2[g2], gl[i].mGene1[g1]);
                 }else{
                     // remember h/t gene sources
                     fsg.hfrom1 = true;
                     fsg.hidx = g1;
                     fsg.tfrom1 = false;
                     fsg.tidx = g2;
-                    // add cigar string of catentaion around breakpoint gl[i].mGene1[g1] -> gl[i].mGene2[g2]
-                    fsg.cigar = svutil::bp2cigar(gl[i].mGene1[g1], gl[i].mGene2[g2]);
                 }
                 gl[i].mFuseGene.push_back(fsg);
             }
