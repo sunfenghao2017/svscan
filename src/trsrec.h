@@ -124,8 +124,7 @@ struct TrsRec{
 
     /** parsing fusion part of transcript */
     inline void getCatPart(int32_t svt, bool svstart, bool rnamode = true){
-        bool fwdstrand = (strand[0] == '+');
-        if(rnamode) fwdstrand = true;
+        bool fwdstrand = (rnamode || (strand[0] == '+'));
         int32_t svcat = svt;
         if(svcat >= 5) svcat -= 5;
         if(svstart){
