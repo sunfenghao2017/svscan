@@ -172,7 +172,7 @@ struct TrsRec{
     inline void getCigar(){
         std::stringstream ss;
         // e
-        ss << "E" << exon << "(";
+        ss << "[E" << exon << "(";
         // h or t
         if(pf5incc) ss << "H";
         else ss << "T";
@@ -187,7 +187,7 @@ struct TrsRec{
             }
             ss << "M" << insl << "I";
         }
-        ss << ")";
+        ss << ")]";
         mstat = ss.str();
     }
 };
