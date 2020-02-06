@@ -64,7 +64,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.fsMask = gl[i].getFsMask();
         svr.fsHits = svs[i].mRealnRet;
         if(mOpt->rnamode){
-            // ts1Name ts1Pos ts2Name ts2Pos fsCigar
+            // ts1Name ts1Pos ts2Name ts2Pos
             svr.trs1Name = svs[i].mNameChr1;
             svr.trs1Pos = svs[i].mSVStart;
             svr.trs2Name = svs[i].mNameChr2;
@@ -287,6 +287,19 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
         }
     }
+    // fsCigar (RNA Only)
+    if(mOpt->rnamode){
+        for(uint32_t i = 0; i < gl.size(); ++i){
+            for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+                if(gl[i].mFuseGene[j].tfrom1){
+                    gl[i].mFuseGene[j].cigar = svutil::bp2cigar(gl[i].mGene2[gl[i].mFuseGene[j].hidx], gl[i].mGene1[gl[i].mFuseGene[j].tidx]);
+                }else{
+                    gl[i].mFuseGene[j].cigar = svutil::bp2cigar(gl[i].mGene1[gl[i].mFuseGene[j].hidx], gl[i].mGene2[gl[i].mFuseGene[j].tidx]);
+                }
+            }
+            gl[i].mFsCigar = gl[i].mFuseGene[0].cigar;
+        }
+    }
     // construct fusionrecord
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
@@ -409,14 +422,6 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int3
         fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].getTrs();
         fsr.exon2 = gi.mGene2[gi.mFuseGene[i].tidx].exon;
     }
-    // fsCigar
-    if(mOpt->rnamode){
-        if(gi.mFuseGene[i].tfrom1){
-            fsr.cigar = svutil::bp2cigar(gi.mGene2[gi.mFuseGene[i].hidx], gi.mGene1[gi.mFuseGene[i].tidx]);
-        }else{
-            fsr.cigar = svutil::bp2cigar(gi.mGene1[gi.mFuseGene[i].hidx], gi.mGene2[gi.mFuseGene[i].tidx]);
-        }
-    }
     // FusinSequence fseqBp
     if(svr.mSVT == 4 || (!svr.mPrecise)){
         fsr.fusionsequence = "-";
@@ -448,6 +453,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int3
         fsr.ts1pos = svr.mSVStart;                            // ts1Pos
         fsr.ts2name = svr.mNameChr2;                          // ts2Name
         fsr.ts2pos = svr.mSVEnd;                              // ts2Pos
+        fsr.cigar = gi.mFsCigar;                              // fsCigar
         if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){
             std::swap(fsr.ts1name, fsr.ts2name);
             std::swap(fsr.ts1pos, fsr.ts2pos);
