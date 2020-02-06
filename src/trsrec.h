@@ -181,11 +181,10 @@ struct TrsRec{
             ss << "AM" << insl << "I";
         }else{
             if(pf5incc){
-                ss << ioffset;
+                ss << ioffset << "M" << eoffset << "D";
             }else{
-                ss << eoffset;
+                ss << ioffset << "D" << eoffset << "M";
             }
-            ss << "M" << insl << "I";
         }
         ss << ")";
         mstat = ss.str();
