@@ -13,8 +13,8 @@ void SVDNADBOpt::prepDB(){
     kstring_t str = {0, 0, 0};
     bgzf_getline(ifp, '\n', &str);
     std::vector<std::string> vstr;
-    std::vector<std::string> istr, estr;
-    std::vector<int32_t> iint, eint;
+    std::vector<std::string> istr, estr, fstr;
+    std::vector<int32_t> iint, eint, fint;
     std::stringstream aoss; // annotation db record buffer
     std::stringstream coss; // cds bed region record buffer
     std::stringstream uoss; // unit bed region buffer
@@ -22,7 +22,7 @@ void SVDNADBOpt::prepDB(){
     std::set<std::string> validchrs; // valid chrs
     for(int i = 1; i < 23; ++i) validchrs.insert("chr" + std::to_string(i));
     validchrs.insert({"chrX", "chrY", "chrM"});
-    // chr start end strand feature count trsname tgenename trsversion
+    // chr start end strand feature count trsname tgenename trsversion frameshift
     while(bgzf_getline(ifp, '\n', &str) > 0){
         aoss.str(""); coss.str(""); uoss.str(""); ross.str("");
         aoss.clear(); coss.clear(); uoss.clear(); ross.clear();
@@ -54,28 +54,31 @@ void SVDNADBOpt::prepDB(){
             utr3end = cdsStart - 1;
         }
         if(utr5start < utr5end){
-            aoss << chr << "\t" << utr5start << "\t" << utr5end << "\t" << strand << "\tutr5\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+            aoss << chr << "\t" << utr5start << "\t" << utr5end << "\t" << strand << "\tutr5\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\t-1\n";
             uoss << chr << "\t" << utr5start << "\t" << utr5end + 1 << "\t" << trs << "\tutr5\t";
-            uoss << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
+            uoss << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\t-1\n";
         }
         if(utr3start < utr3end){
-            aoss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\tutr3\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
+            aoss << chr << "\t" << utr3start << "\t" << utr3end << "\t" << strand << "\tutr3\t0\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\t-1\n";
             uoss << chr << "\t" << utr3start << "\t" << utr3end + 1 << "\t" << trs << "\tutr3\t";
-            uoss << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
+            uoss << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\t-1\n";
         }
-        // exon range
+        // exon range, frame shift
         util::split(util::rstrip(vstr[9], ","), istr, ",");
         util::split(util::rstrip(vstr[10], ","), estr, ",");
+        util::split(util::rstrip(vstr[15], ","), fstr, ",");
         util::strvec2intvec(istr, iint);
         util::strvec2intvec(estr, eint);
+        util::strvec2intvec(fstr, fint);
         for(uint32_t i = 0; i < iint.size(); ++i){
             aoss << chr << "\t" << iint[i] << "\t" << (eint[i] - 1) << "\t" << strand << "\texon\t";
             uoss << chr << "\t" << iint[i] << "\t" << eint[i] << "\t" << trs << "\texon";
             if(cdsStart < cdsEnd){
                 if(!(iint[i] > cdsEnd) && !(eint[i] - 1 < cdsStart)){
                     coss << chr << "\t" << std::max(iint[i], cdsStart) << "\t" << std::min(eint[i], cdsEnd + 1) << "\t" << trs << "\t" << "exon\t";
-                    if(strand[0] == '+') coss << i + 1 << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
-                    else coss << (iint.size() - i) << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
+                    if(strand[0] == '+') coss << i + 1 << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK;
+                    else coss << (iint.size() - i) << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK;
+                    coss << "\t" << fint[i] << "\n";
                 }
             }
             if(strand[0] == '+'){
@@ -86,8 +89,8 @@ void SVDNADBOpt::prepDB(){
                 aoss << (iint.size() - i);
                 uoss << (iint.size() - i);
             }
-            aoss << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\n";
-            uoss << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\n";
+            aoss << "\t" << trs << "\t" << gene << "\t" << version << "\t" << msMK << "\t-1\n";
+            uoss << "\t" << gene << "\t" << strand << "\t" << version << "\t" << msMK << "\t-1\n";
         }
         // intron range
         std::vector<int32_t> intronbeg;
