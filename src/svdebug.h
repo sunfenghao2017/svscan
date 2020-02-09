@@ -102,6 +102,10 @@ struct SVDebug{
             std::vector<std::string> vstr;
             while(std::getline(fr, line)){
                 util::split(line, vstr, "\t");
+                if(vstr[0] == vstr[1]){
+                    util::loginfo("Skip scan same h/t gene:" + vstr[0]);
+                    continue;
+                }
                 hgl.push_back(vstr[0]);
                 tgl.push_back(vstr[1]);
             }

@@ -28,7 +28,7 @@ void SVDebug::getReg(const std::string& trs, tbx_t* tbx, htsFile* tfp, GeneRegio
             reg.beg = regs[0].beg;
         }
     }else{
-        util::errorExit("Transcript : " + trs + "has no exons");
+        return ;
     }
 }
 
@@ -40,9 +40,25 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
     tbx_t* tbx = tbx_index_load(annodb.c_str());
     std::string htrs = g2tmap[ft.hgene];
     std::string ttrs = g2tmap[ft.tgene];
+    if(htrs.empty()){
+        util::loginfo(ft.hgene + " has no recording trs", logmtx);
+        return;
+    }
+    if(ttrs.empty()){
+        util::loginfo(ft.hgene + " has no recording trs", logmtx);
+        return;
+    }
     GeneRegion hreg, treg;
     getReg(htrs, tbx, tfp, hreg);
+    if(hreg.chr.empty()){
+        util::loginfo(htrs +  " has no exon records", logmtx);
+        return;
+    }
     getReg(ttrs, tbx, tfp, treg);
+    if(hreg.chr.empty()){
+        util::loginfo(ttrs +  " has no exon records", logmtx);
+        return;
+    }
     std::string hqreg = hreg.toString();
     std::string tqreg = treg.toString();
     hts_close(tfp);
@@ -309,6 +325,8 @@ void SVDebug::debugDNA(){
         rets[i] = tp->enqueue(&SVDebug::debugOnePairDNA, this, std::ref(fdtv[i]));
     }
     for(auto& e: rets) e.get();
+    // out stat
+    outStat(fdtv);
 }
 
 void SVDebug::debugRNA(){
@@ -325,6 +343,8 @@ void SVDebug::debugRNA(){
         rets[i] = tp->enqueue(&SVDebug::debugOnePairRNA, this, std::ref(fdtv[i]));
     }
     for(auto& e: rets) e.get();
+    // out stat
+    outStat(fdtv);
 }
 
 void SVDebug::outStat(const std::vector<FusionDetail>& fdtv){
