@@ -105,6 +105,7 @@ bool FusionOptions::matchHotDirec(const std::string& hgene, const std::string& t
 
 bool FusionOptions::hasWhiteGene(const std::string& hgene, const std::string& tgene){
     if(!mInitialized) init();
+    if(mWhiteGenes.empty()) return true;
     auto hiter = mWhiteGenes.find(hgene);
     auto titer = mWhiteGenes.find(tgene);
     if(hiter != mWhiteGenes.end() || titer != mWhiteGenes.end()) return true;
