@@ -473,13 +473,13 @@ class Stats{
         }
 
         /** gather coverage information of one contig
-         * @param svs reference of SVSet(all SVs)
+         * @param svs pointer to SVSet(all SVs)
          * @param bpRegs SV breakpoint regions on each contig
          * @param spPts SV DP read mapping position on each contig
          * @param regInfo reference of RegItemCnt object
          * @param ctgCgrs sv events cgranges_t on each contig
          */
-        void stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, const RegItemCnt& regInfo, cgranges_t* ctgCgr);
+        void stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, const RegItemCnt& regInfo, cgranges_t* ctgCgr);
 
         /** merge coverage information of all contigs
          * @param sts reference of list of Stats
@@ -490,35 +490,35 @@ class Stats{
         static Stats* merge(const std::vector<Stats*>& sts, int32_t n, Options* opt);
 
         /** report BCF format report of all SVs
-         * @param svs reference of SVSet
+         * @param svs pointer to SVSet
          */
-        void reportSVBCF(const SVSet& svs);
+        void reportSVBCF(const SVSet* svs);
 
         /** report TSV format report of all SVs
-         * @param svs reference of SVSet
+         * @param svs pointer to SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportSVTSV(SVSet& svs, GeneInfoList& gl);
+        void reportSVTSV(SVSet* svs, GeneInfoList& gl);
 
         /** report TSV format report of valid Fusion events
-         * @param svs reference of SVSet
+         * @param svs pointer to SVSet
          * @param gl reference of GeneInfoList
          */
-        void reportFusionTSV(const SVSet& svs, GeneInfoList& gl);
+        void reportFusionTSV(const SVSet* svs, GeneInfoList& gl);
         
         /** convert an sv event to fusion record
          * @param fsr reference of FusionRecord
-         * @param svr reference of SVRecord
+         * @param svr pointer to SVRecord
          * @param gi reference of GeneInfo
          * @param i which fusion will  be converted(-1 to all)
          */
-        void toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i);
+        void toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int32_t i);
 
         /** mask fusion event status 
-         * @param svs reference of SVSet
+         * @param svs pointer of SVSet
          * @param gl reference of GeneInfoList
          */
-        void makeFuseRec(const SVSet& svs, GeneInfoList& gl);
+        void makeFuseRec(const SVSet* svs, GeneInfoList& gl);
 
         /** get alignment quality of sequence against an read
          * @param alnResult align result(sequence vertical, read horizontal)

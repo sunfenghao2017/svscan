@@ -2,29 +2,29 @@
 #include "svrec.h"
 #include "fusionopt.h"
 
-void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
+void Stats::reportSVTSV(SVSet* svs, GeneInfoList& gl){
     std::ofstream fw(mOpt->tsvOut);
     fw << SVRec::gethead(mOpt->rnamode);
     for(uint32_t i = 0; i < gl.size(); ++i){
         // skip false positive insertions
-        if(svs[i].mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].getAltDep() * mOpt->filterOpt->mMaxFPIns) continue;
+        if(svs->at(i)->mSVT == 4 && mJctCnts[i].mFPIns > mSpnCnts[i].getAltDep() * mOpt->filterOpt->mMaxFPIns) continue;
         SVRec svr;
         // svType
-        svr.svType = svutil::addID(svs[i].mSVT);
+        svr.svType = svutil::addID(svs->at(i)->mSVT);
         // svSize
-        if(svs[i].mSVT >= 5) svr.svSize = -1;
-        else if(svs[i].mSVT == 4) svr.svSize = svs[i].mInsSeq.size();
-        else svr.svSize = svs[i].mSize;
+        if(svs->at(i)->mSVT >= 5) svr.svSize = -1;
+        else if(svs->at(i)->mSVT == 4) svr.svSize = svs->at(i)->mInsSeq.size();
+        else svr.svSize = svs->at(i)->mSize;
         // bpMark
-        svr.bpMark = svutil::getBpMark(svs[i].mSVT);
+        svr.bpMark = svutil::getBpMark(svs->at(i)->mSVT);
         // bp1Chr bp1Pos bp2Chr bp2Pos
         svr.bp1Chr = gl[i].mChr1;
         svr.bp1Pos = gl[i].mPos1;
         svr.bp2Chr = gl[i].mChr2;
         svr.bp2Pos = gl[i].mPos2;
         // srCount dpCount srRescued dpRescued molRescued
-        svr.srCount = svs[i].mSRSupport;
-        svr.dpCount = svs[i].mPESupport;
+        svr.srCount = svs->at(i)->mSRSupport;
+        svr.dpCount = svs->at(i)->mPESupport;
         svr.srRescued = mJctCnts[i].getAltDep();
         svr.dpRescued = mSpnCnts[i].getAltDep();
         svr.molRescued = mTotalAltCnts[i];
@@ -38,22 +38,22 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
             svr.af = 0;
         }
         // insBp insSeq
-        svr.insBp = svs[i].mBpInsSeq.length();
-        svr.insSeq = (svs[i].mBpInsSeq.length() == 0 ? "-" : svs[i].mBpInsSeq);
+        svr.insBp = svs->at(i)->mBpInsSeq.length();
+        svr.insSeq = (svs->at(i)->mBpInsSeq.length() == 0 ? "-" : svs->at(i)->mBpInsSeq);
         // svSeq seqBp
-        if(svs[i].mSVT == 4){
-            svr.svSeq = svs[i].mInsSeq;
+        if(svs->at(i)->mSVT == 4){
+            svr.svSeq = svs->at(i)->mInsSeq;
             svr.seqBp = 0;
-        }else if(svs[i].mPrecise){
-            svr.svSeq = svs[i].mConsensus;
-            svr.seqBp = svs[i].mGapCoord[0];
+        }else if(svs->at(i)->mPrecise){
+            svr.svSeq = svs->at(i)->mConsensus;
+            svr.seqBp = svs->at(i)->mGapCoord[0];
         }else{
             svr.svSeq = "-";
             svr.seqBp = 0;
         }
         // svID svtInt
-        svr.id = svs[i].mID;
-        svr.svInt = svs[i].mSVT;
+        svr.id = svs->at(i)->mID;
+        svr.svInt = svs->at(i)->mSVT;
         // bp1Gene bp2Gene
         if(gl[i].mGene1.empty()) svr.bp1Gene = "-";
         else svr.bp1Gene = gl[i].getTrs1();
@@ -62,13 +62,13 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         // fuseGene fsMask fsHits
         svr.fuseGene = gl[i].getFuseGene();
         svr.fsMask = gl[i].getFsMask();
-        svr.fsHits = svs[i].mRealnRet;
+        svr.fsHits = svs->at(i)->mRealnRet;
         if(mOpt->rnamode){
             // ts1Name ts1Pos ts2Name ts2Pos
-            svr.trs1Name = svs[i].mNameChr1;
-            svr.trs1Pos = svs[i].mSVStart;
-            svr.trs2Name = svs[i].mNameChr2;
-            svr.trs2Pos = svs[i].mSVEnd;
+            svr.trs1Name = svs->at(i)->mNameChr1;
+            svr.trs1Pos = svs->at(i)->mSVStart;
+            svr.trs2Name = svs->at(i)->mNameChr2;
+            svr.trs2Pos = svs->at(i)->mSVEnd;
             svr.rnamode = true;
         }
         // output
@@ -77,7 +77,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
     fw.close();
 }
 
-void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
+void Stats::makeFuseRec(const SVSet* svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
     mOpt->fuseOpt->mMaxBpOffset = std::max(mOpt->libInfo->mMaxNormalISize, 300);
 #ifdef DEBUG
@@ -93,13 +93,13 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     // annotate extra gene fusion events
     if(!mOpt->fuseOpt->mExtraAnnoList.empty()){
         for(uint32_t i = 0; i < gl.size(); ++i){
-            TrsRecList exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr1, svs[i].mSVStart, svs[i].mSVStart + 1);
-            TrsRecList exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs[i].mNameChr2, svs[i].mSVEnd, svs[i].mSVEnd + 1);
+            TrsRecList exgs = mOpt->fuseOpt->mExtraAnnotator.anno(svs->at(i)->mNameChr1, svs->at(i)->mSVStart, svs->at(i)->mSVStart + 1);
+            TrsRecList exge = mOpt->fuseOpt->mExtraAnnotator.anno(svs->at(i)->mNameChr2, svs->at(i)->mSVEnd, svs->at(i)->mSVEnd + 1);
             for(uint32_t k = 0; k < exgs.size(); ++k){
-                exgs[k].pos = svs[i].mSVStart;
+                exgs[k].pos = svs->at(i)->mSVStart;
             }
             for(uint32_t k = 0; k < exge.size(); ++k){
-                exge[k].pos = svs[i].mSVEnd;
+                exge[k].pos = svs->at(i)->mSVEnd;
             }
             int32_t g1osize = gl[i].mGene1.size();
             int32_t g2osize = gl[i].mGene2.size();
@@ -183,7 +183,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             if(mOpt->fuseOpt->inBlackList(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FBLACKPAIR;
             }
-            if(!mOpt->fuseOpt->validSV(svs[i].mSVT, svs[i].mNameChr1, svs[i].mNameChr2, svs[i].mSVStart, svs[i].mSVEnd)){
+            if(!mOpt->fuseOpt->validSV(svs->at(i)->mSVT, svs->at(i)->mNameChr1, svs->at(i)->mNameChr2, svs->at(i)->mSVStart, svs->at(i)->mSVEnd)){
                 gl[i].mFuseGene[j].status |= FUSION_FFBG;
             }
             if(mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
@@ -219,25 +219,25 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                     gname = gl[i].mGene1[gl[i].mFuseGene[j].tidx].gene;
                 }
                 for(int32_t ecnt = minExon; ecnt <= maxExon; ++ecnt) exlist.push_back(ecnt);
-                if(mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs[i].mSVT)){
+                if(mOpt->fuseOpt->inSameSVRngMap(gname, exlist, svs->at(i)->mSVT)){
                     gl[i].mFuseGene[j].status &= (~(FUSION_FTOOSMALLSIZE | FUSION_FINSAMEGENE));
                 }
             }
             gl[i].mFuseGene[j].status &= (~(FUSION_FERRREALN | FUSION_FMULTREALN));
-            if(svs[i].mPrecise){
+            if(svs->at(i)->mPrecise){
                 gl[i].mFuseGene[j].status |= FUSION_FPRECISE;
-                if(svutil::simpleSeq(svs[i].mConsensus.substr(0, svs[i].mGapCoord[0])) ||
-                   svutil::simpleSeq(svs[i].mConsensus.substr(svs[i].mGapCoord[1])) ||
-                   svutil::tandemRepSeq(svs[i].mConsensus, TandemRepeatThresholdMap)){
+                if(svutil::simpleSeq(svs->at(i)->mConsensus.substr(0, svs->at(i)->mGapCoord[0])) ||
+                   svutil::simpleSeq(svs->at(i)->mConsensus.substr(svs->at(i)->mGapCoord[1])) ||
+                   svutil::tandemRepSeq(svs->at(i)->mConsensus, TandemRepeatThresholdMap)){
                     gl[i].mFuseGene[j].status |= FUSION_FLOWCOMPLEX;
                 }
-                if(svs[i].mRealnRet < 0) gl[i].mFuseGene[j].status |= FUSION_FERRREALN;
+                if(svs->at(i)->mRealnRet < 0) gl[i].mFuseGene[j].status |= FUSION_FERRREALN;
                 if(gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB)){
-                    if(svs[i].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                    if(svs->at(i)->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
                         gl[i].mFuseGene[j].status |= FUSION_FMULTREALN;
                     }
                 }else{
-                    if(svs[i].mRealnRet > mOpt->fuseOpt->mUsualFilter.mMaxRepHit){
+                    if(svs->at(i)->mRealnRet > mOpt->fuseOpt->mUsualFilter.mMaxRepHit){
                         gl[i].mFuseGene[j].status |= FUSION_FMULTREALN;
                     }
                 }
@@ -304,7 +304,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             FusionRecord fsr;
-            toFuseRec(fsr, svs[i], gl[i], j);
+            toFuseRec(fsr, svs->at(i), gl[i], j);
             fsr.maskFusion(mOpt->fuseOpt);
             gl[i].mFuseGene[j].status |= fsr.fsmask;
         }
@@ -328,7 +328,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     }
 }
 
-void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
+void Stats::reportFusionTSV(const SVSet* svs, GeneInfoList& gl){
     // get valid fusion list
     FusionRecordList frl;
     for(uint32_t i = 0; i < gl.size(); ++i){
@@ -336,7 +336,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(gl[i].mFuseGene[j].status & FUSION_FPRIMARY){
                 FusionRecord fsr;
-                toFuseRec(fsr, svs[i], gl[i], j);
+                toFuseRec(fsr, svs->at(i), gl[i], j);
                 frl.push_back(fsr);
                 reported = true;
             }
@@ -345,7 +345,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
             for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
                 if(gl[i].mFuseGene[j].status & FUSION_FSUPPLEMENTARY){
                     FusionRecord fsr;
-                    toFuseRec(fsr, svs[i], gl[i], j);
+                    toFuseRec(fsr, svs->at(i), gl[i], j);
                     frl.push_back(fsr);
                 }
             }
@@ -379,10 +379,10 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     fw.close();
 }
 
-void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i){
+void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
-    fsr.fusionreads = mTotalAltCnts[svr.mID];
-    fsr.totalreads = std::max(mJctCnts[svr.mID].getRefDep(), mSpnCnts[svr.mID].getRefDep()) + fsr.fusionreads;
+    fsr.fusionreads = mTotalAltCnts[svr->mID];
+    fsr.totalreads = std::max(mJctCnts[svr->mID].getRefDep(), mSpnCnts[svr->mID].getRefDep()) + fsr.fusionreads;
     fsr.fuserate = (double)(fsr.fusionreads)/(double)(fsr.totalreads);
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
@@ -423,36 +423,36 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int3
         fsr.exon2 = gi.mGene2[gi.mFuseGene[i].tidx].exon;
     }
     // FusinSequence fseqBp
-    if(svr.mSVT == 4 || (!svr.mPrecise)){
+    if(svr->mSVT == 4 || (!svr->mPrecise)){
         fsr.fusionsequence = "-";
         fsr.fseqbp = 0;
     }else{
-        fsr.fusionsequence = svr.mConsensus;
-        fsr.fseqbp = svr.mGapCoord[0];
+        fsr.fusionsequence = svr->mConsensus;
+        fsr.fseqbp = svr->mGapCoord[0];
     }
     if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y"; // inDB
     else fsr.indb = "N";
-    fsr.svt = svutil::addID(svr.mSVT);                        // svType
-    if(svr.mSVT >= 5) fsr.svsize = -1;                        // svSize
-    else fsr.svsize = svr.mSize;
-    fsr.srcount = svr.mSRSupport;                             // srCount
-    fsr.dpcount = svr.mPESupport;                             // dpCount
-    fsr.srrescued =  mJctCnts[svr.mID].getAltDep();           // srRescued
-    fsr.dprescued = mSpnCnts[svr.mID].getAltDep();            // dpRescued
-    fsr.srrefcount = mJctCnts[svr.mID].getRefDep();           // srRefCount
-    fsr.dprefcount = mSpnCnts[svr.mID].getRefDep();           // dpRefCount
-    fsr.insbp = svr.mBpInsSeq.length();                       // insBp
-    if(svr.mBpInsSeq.empty()) fsr.insseq = "-";               // insSeq
-    else fsr.insseq = svr.mBpInsSeq;
-    fsr.svid = svr.mID;                                       // svID
-    fsr.svint = svr.mSVT;                                     // svtInt
+    fsr.svt = svutil::addID(svr->mSVT);                        // svType
+    if(svr->mSVT >= 5) fsr.svsize = -1;                        // svSize
+    else fsr.svsize = svr->mSize;
+    fsr.srcount = svr->mSRSupport;                             // srCount
+    fsr.dpcount = svr->mPESupport;                             // dpCount
+    fsr.srrescued =  mJctCnts[svr->mID].getAltDep();           // srRescued
+    fsr.dprescued = mSpnCnts[svr->mID].getAltDep();            // dpRescued
+    fsr.srrefcount = mJctCnts[svr->mID].getRefDep();           // srRefCount
+    fsr.dprefcount = mSpnCnts[svr->mID].getRefDep();           // dpRefCount
+    fsr.insbp = svr->mBpInsSeq.length();                       // insBp
+    if(svr->mBpInsSeq.empty()) fsr.insseq = "-";               // insSeq
+    else fsr.insseq = svr->mBpInsSeq;
+    fsr.svid = svr->mID;                                       // svID
+    fsr.svint = svr->mSVT;                                     // svtInt
     fsr.fsmask = gi.mFuseGene[i].status;                      // fsMask
-    fsr.fsHits = svr.mRealnRet;                               // fsHits
+    fsr.fsHits = svr->mRealnRet;                               // fsHits
     if(mOpt->rnamode){
-        fsr.ts1name = svr.mNameChr1;                          // ts1Name
-        fsr.ts1pos = svr.mSVStart;                            // ts1Pos
-        fsr.ts2name = svr.mNameChr2;                          // ts2Name
-        fsr.ts2pos = svr.mSVEnd;                              // ts2Pos
+        fsr.ts1name = svr->mNameChr1;                          // ts1Name
+        fsr.ts1pos = svr->mSVStart;                            // ts1Pos
+        fsr.ts2name = svr->mNameChr2;                          // ts2Name
+        fsr.ts2pos = svr->mSVEnd;                              // ts2Pos
         fsr.cigar = gi.mFsCigar;                              // fsCigar
         if(gi.mGene1[i].gene != gi.mFuseGene[i].hgene){
             std::swap(fsr.ts1name, fsr.ts2name);

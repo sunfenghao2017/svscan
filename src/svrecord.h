@@ -279,18 +279,31 @@ class SVRecord{
         }
 };
 
+/** class to provide one way to sort SVs */
+struct SortSVOne{
+    inline bool operator()(const SVRecord* one, const SVRecord* other) const {
+        return (one->mSVT < other->mSVT) ||
+               (one->mSVT == other->mSVT && one->mChr1 < other->mChr1) || 
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 < other->mChr2) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart < other->mSVStart) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart == other->mSVStart && one->mSVEnd < other->mSVEnd) || 
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart == other->mSVStart && one->mSVEnd == other->mSVEnd && one->mSRSupport < other->mSRSupport) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart == other->mSVStart && one->mSVEnd == other->mSVEnd && one->mSRSupport == other->mSRSupport && one->mPESupport < other->mPESupport);
+        }
+};
+
 /** class to provide another way to sort SVs */
-struct SortSVs{
-    inline bool operator()(const SVRecord& sv1, const SVRecord& sv2){
-        return (sv1.mChr1 < sv2.mChr1) ||
-               (sv1.mChr1 == sv2.mChr1 && sv1.mSVStart < sv2.mSVStart) ||
-               (sv1.mChr1 == sv2.mChr1 && sv1.mSVStart == sv2.mSVStart && sv1.mSVEnd < sv2.mSVEnd) || 
-               (sv1.mChr1 == sv2.mChr1 && sv1.mSVStart == sv2.mSVStart && sv1.mSVEnd == sv2.mSVEnd && sv1.mSRSupport < sv2.mSRSupport);
+struct SortSVTwo{
+    inline bool operator()(const SVRecord* sv1, const SVRecord* sv2){
+        return (sv1->mChr1 < sv2->mChr1) ||
+               (sv1->mChr1 == sv2->mChr1 && sv1->mSVStart < sv2->mSVStart) ||
+               (sv1->mChr1 == sv2->mChr1 && sv1->mSVStart == sv2->mSVStart && sv1->mSVEnd < sv2->mSVEnd) || 
+               (sv1->mChr1 == sv2->mChr1 && sv1->mSVStart == sv2->mSVStart && sv1->mSVEnd == sv2->mSVEnd && sv1->mSRSupport < sv2->mSRSupport);
     }
 };
 
 /** type to store a list of structural variant record */
-typedef std::vector<SVRecord> SVSet; ///< list of SV
+typedef std::vector<SVRecord*> SVSet; ///< list of SV
 
 inline std::ostream& operator<<(std::ostream& os, const SVSet& svs){
     for(uint32_t id = 0; id < svs.size(); ++id) os<< svs[id];
@@ -303,27 +316,27 @@ inline std::ostream& operator<<(std::ostream& os, const SVSet& svs){
  * @param svs SVSet to store merged SVs
  * @param opt pointer to Options
  */
-void mergeAndSortSVSet(SVSet& sr, SVSet& pe, SVSet& svs, Options* opt);
+void mergeAndSortSVSet(SVSet* sr, SVSet* pe, SVSet* svs, Options* opt);
 
 /** merge SVSet supported by SR only
  * @param sr SVSet supported by SR
  * @param msr SVSet merged
  * @param opt pointer to Options
  */
-void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt);
+void mergeSRSVs(SVSet* sr, SVSet* msr, Options* opt);
 
 /** merge SVSet supported by DP only
  * @param dp SVSet supported by SR
  * @param mdp SVSet merged
  * @param opt pointer to Options
  */
-void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt);
+void mergeDPSVs(SVSet* dp, SVSet* mdp, Options* opt);
 
 /** get reference of SV supported by PE
  * @param pe SVSet supported by PE
  * @param opt pointer to Options object
  * @param boundary max length offset at each breakpoint to fetch reference
  */
-void getDPSVRef(SVSet& pe, Options* opt);
+void getDPSVRef(SVSet* pe, Options* opt);
 
 #endif

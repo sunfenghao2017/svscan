@@ -121,8 +121,8 @@ int DPBamRecord::getSVType(const bam1_t* b, Options* opt){
     return svt;
 }
 
-void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet &svs, int32_t svt){
-    int32_t origSize = svs.size();
+void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet* svs, int32_t svt){
+    int32_t origSize = svs->size();
     util::loginfo("Beg clustering DPs for SV type " + std::to_string(svt) + ", all " + std::to_string(dps.size()) + " DPs ");
     std::set<int32_t> clique; // components cluster
     int32_t totdps = dps.size();
@@ -145,10 +145,10 @@ void DPBamRecordSet::cluster(std::vector<DPBamRecord> &dps, SVSet &svs, int32_t 
         searchCliques(clique, dps, svs, svt);
         i = j;
     }
-    util::loginfo("End clustering DPs for SV type " + std::to_string(svt) + ", got " + std::to_string(svs.size() - origSize) + " SV candidates.");
+    util::loginfo("End clustering DPs for SV type " + std::to_string(svt) + ", got " + std::to_string(svs->size() - origSize) + " SV candidates.");
 }
 
-void DPBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt){
+void DPBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<DPBamRecord>& dps, SVSet* svs, int32_t svt){
     auto iter = clique.begin();
     int32_t dpid = *iter;
     int32_t svStart = -1, svEnd = -1, minStart = -1, minEnd = -1, maxStart = -1, maxEnd = -1;
@@ -166,35 +166,35 @@ void DPBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<DPBamR
         maxEnd = std::max(svEnd, maxEnd);
     }
     if(clique.size() >= mOpt->filterOpt->mMinSeedDP && validSVSize(svStart, svEnd, svt)){
-        SVRecord svr;
-        svr.mChr1 = chr1;
-        svr.mChr2 = chr2;
-        svr.mSVStart = svStart;
-        svr.mSVEnd = svEnd;
-        svr.mPESupport = clique.size();
+        SVRecord* svr = new SVRecord();
+        svr->mChr1 = chr1;
+        svr->mChr2 = chr2;
+        svr->mSVStart = svStart;
+        svr->mSVEnd = svEnd;
+        svr->mPESupport = clique.size();
         int32_t posVar = std::max(std::abs(maxStart - minStart), 50);
         int32_t endVar = std::max(std::abs(maxEnd - minEnd), 50);
-        svr.mCiPosLow = -posVar;
-        svr.mCiPosHigh = posVar;
-        svr.mCiEndLow = -endVar;
-        svr.mCiEndHigh = endVar;
+        svr->mCiPosLow = -posVar;
+        svr->mCiPosHigh = posVar;
+        svr->mCiEndLow = -endVar;
+        svr->mCiEndHigh = endVar;
         std::vector<uint8_t> mapQV(clique.size(), 0);
         int qIdx = 0;
         for(auto& e : clique) mapQV[qIdx++] = dps[e].mMapQual;
-        svr.mPEMapQuality = statutil::median(mapQV);
-        svr.mSRSupport = 0;
-        svr.mSRAlignQuality = 0;
-        svr.mPrecise = 0;
-        svr.mSVT = svt;
-        svr.mAlnInsLen = 0;
-        svr.mHomLen = 0;
-        svs.push_back(svr);
-        int32_t svid = svs.size();
+        svr->mPEMapQuality = statutil::median(mapQV);
+        svr->mSRSupport = 0;
+        svr->mSRAlignQuality = 0;
+        svr->mPrecise = 0;
+        svr->mSVT = svt;
+        svr->mAlnInsLen = 0;
+        svr->mHomLen = 0;
+        svs->push_back(svr);
+        int32_t svid = svs->size();
         for(auto& e: clique) dps[e].mSVID = svid;
     }
 }
 
-void DPBamRecordSet::cluster(SVSet& svs){
+void DPBamRecordSet::cluster(SVSet* svs){
     for(auto& e : mOpt->SVTSet){
         if(!mDPs[e].empty()){
             std::sort(mDPs[e].begin(), mDPs[e].end());

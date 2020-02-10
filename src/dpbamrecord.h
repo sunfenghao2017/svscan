@@ -155,7 +155,9 @@ class DPBamRecordSet{
         }
 
         /** DPBamRecordSet destructor */
-        ~DPBamRecordSet(){}
+        ~DPBamRecordSet(){
+            mOpt = NULL;
+        }
 
     public:
         /** merge a list of DPBamRecordSet into one
@@ -224,12 +226,12 @@ class DPBamRecordSet{
          * @param svs SVSet to store SV supporting by DPs
          * @param svt only cluster this type of SV supporting DPBamRecords
          */
-        void cluster(std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt);
+        void cluster(std::vector<DPBamRecord>& dps, SVSet* svs, int32_t svt);
         
         /** cluster all kinds SV supporting DPBamRecord
          * @param svs SVSet which support various kind of SVs
          */
-        void cluster(SVSet& svs);
+        void cluster(SVSet* svs);
         
         /** a subroutine used to search all possible clique supporting an type of SV
          * @param clique discordant pairs clustered from DPBamRecords
@@ -237,7 +239,7 @@ class DPBamRecordSet{
          * @param svs SVSet to store SV supporting by DPs
          * @param svt SV type analyzed
          */
-        void searchCliques(std::set<int32_t>& clique, std::vector<DPBamRecord>& dps, SVSet& svs, int32_t svt);
+        void searchCliques(std::set<int32_t>& clique, std::vector<DPBamRecord>& dps, SVSet* svs, int32_t svt);
        
         /** check whether SV size is valid 
          * @param svStart SV starting position
