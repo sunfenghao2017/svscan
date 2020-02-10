@@ -370,6 +370,8 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
                 svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
                 svs[svid].mBpInsFreq = (float)(insStore[svid].size())/(float)(seqStore[svid].size());
             }
+            svs[svid].mTraChr1Seq.resize(0); svs[svid].mTraChr1Seq.shrink_to_fit();
+            svs[svid].mTraChr2Seq.resize(0); svs[svid].mTraChr2Seq.shrink_to_fit();
         }
     }
     if(chr1Seq) free(chr1Seq);
@@ -498,6 +500,8 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std
                 svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
                 svs[svid].mBpInsFreq = (float)(mTriSeqStore[svid].size())/(float)(mTraSeqStore[svid].size());
             }
+            svs[svid].mTraChr1Seq.resize(0); svs[svid].mTraChr1Seq.shrink_to_fit();
+            svs[svid].mTraChr2Seq.resize(0); svs[svid].mTraChr2Seq.shrink_to_fit();
         }
     }
     util::loginfo("End processing vpidx: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);
