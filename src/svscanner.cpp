@@ -126,10 +126,10 @@ void SVScanner::scanDPandSR(){
     }
     // Process all SRs
     util::loginfo("End scanning bam for SRs and DPs");
-    SRBamRecordSet* psrs = new SRBamRecordSet(mOpt, jctMap);
+    SRBamRecordSet srs(mOpt, jctMap);
     util::loginfo("Beg clustering SRs");
     // Update all valid Ref IDs of SR
-    for(auto& e: psrs->mSRs){
+    for(auto& e: srs.mSRs){
         for(auto& f: e){
             mOpt->svRefID.insert(f.mChr1);
             mOpt->svRefID.insert(f.mChr2);
@@ -144,21 +144,18 @@ void SVScanner::scanDPandSR(){
         std::cout << std::endl;
     }
 #endif
-    psrs->cluster(mSRSVs);
+    srs.cluster(mSRSVs);
     util::loginfo("End clustering SRs");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_SRSV_Cluster_result: " << std::endl;
-        std::cout << psrs << std::endl;
+        std::cout << srs << std::endl;
     }
 #endif
     util::loginfo("Beg assembling SRs and refining breakpoints");
-    psrs->assembleSplitReads(mSRSVs);
+    srs.assembleSplitReads(mSRSVs);
     util::loginfo("End assembling SRs and refining breakpoints");
-    // free memory
-    delete psrs; psrs = NULL;
-    delete jctMap; jctMap = NULL;
-    util::loginfo("Found SRSV Candidates: " + std::to_string(mSRSVs->size()));
+    util::loginfo("Found SRSV Candidates: " + std::to_string(mSRSVs.size()));
     // Process all DPs
     util::loginfo("Beg clustering DPs");
     dprSet->cluster(mDPSVs);
@@ -169,8 +166,7 @@ void SVScanner::scanDPandSR(){
         std::cout << dprSet << std::endl;
     }
 #endif
-    util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs->size()));
-    delete dprSet; dprSet = NULL;
+    util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_DP_SVS_found: " << std::endl;
@@ -184,36 +180,34 @@ void SVScanner::scanDPandSR(){
     refInxLoad.get();
     util::loginfo("End loading reference index");
     // Merge SR and DP SVs
-    SVSet* mergedSVs = new SVSet();
+    SVSet mergedSVs;
     util::loginfo("Beg merging SVs from SRs and DPs");
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
-    delete mSRSVs; mSRSVs = NULL;
-    delete mDPSVs; mDPSVs = NULL;
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
         std::cout << "debug_ALL_SVS_found: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif
-    util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs->size()));
+    util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs.size()));
     util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
-    std::sort(mergedSVs->begin(), mergedSVs->end(), SortSVOne());
+    std::sort(mergedSVs.begin(), mergedSVs.end());
     util::loginfo("End fetching reference of SV supported by DP only");
     // Get Allele info of SVs and updatev SVsupporting contigs as well as svsize
     mOpt->svRefID.clear();
-    for(uint32_t i = 0; i < mergedSVs->size(); ++i){
-        mergedSVs->at(i)->addAlleles();
-        mergedSVs->at(i)->mID = i;
-        if(mergedSVs->at(i)->mSVT >= 5){
-            mergedSVs->at(i)->mSize = -1;
-        }else if(mergedSVs->at(i)->mSVT == 4){
-            mergedSVs->at(i)->mSize = mergedSVs->at(i)->mConsensus.size();
+    for(uint32_t i = 0; i < mergedSVs.size(); ++i){
+        mergedSVs[i].addAlleles();
+        mergedSVs[i].mID = i;
+        if(mergedSVs[i].mSVT >= 5){
+            mergedSVs[i].mSize = -1;
+        }else if(mergedSVs[i].mSVT == 4){
+            mergedSVs[i].mSize = mergedSVs[i].mConsensus.size();
         }else{
-            mergedSVs->at(i)->mSize = mergedSVs->at(i)->mSVEnd - mergedSVs->at(i)->mSVStart;
+            mergedSVs[i].mSize = mergedSVs[i].mSVEnd - mergedSVs[i].mSVStart;
         }
-        mOpt->svRefID.insert(mergedSVs->at(i)->mChr1);
-        mOpt->svRefID.insert(mergedSVs->at(i)->mChr2);
+        mOpt->svRefID.insert(mergedSVs[i].mChr1);
+        mOpt->svRefID.insert(mergedSVs[i].mChr2);
     }
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
@@ -262,7 +256,7 @@ void SVScanner::scanDPandSR(){
 #endif
     if(!mOpt->bcfOut.empty()){
         util::loginfo("Beg writing SVs to BCF file");
-        std::sort(mergedSVs->begin(), mergedSVs->end(), SortSVTwo());
+        std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVs());
         covStat->reportSVBCF(mergedSVs);
         util::loginfo("End writing SVs to BCF file");
     }
@@ -275,7 +269,6 @@ void SVScanner::scanDPandSR(){
         btt.b2t();
         util::loginfo("End writing fusion supporting bam records to excel file");
     }
-    delete mergedSVs;
     delete covAnn;
     delete covStat;
 }

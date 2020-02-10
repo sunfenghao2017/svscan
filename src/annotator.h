@@ -25,12 +25,12 @@ class Annotator{
         ~Annotator(){}
 
         /** refine coverage stat */
-        void refineCovAnno(Stats* sts, const SVSet* svs);
+        void refineCovAnno(Stats* sts, const SVSet& svs);
 
         /** annotate SV coverage
-         * @param svs pointer to SVRecords
+         * @param svs reference of SVRecords
          */
-        Stats* covAnnotate(SVSet* svs);
+        Stats* covAnnotate(SVSet& svs);
 
         /** split a cgranges_t by contig and label sum
          * @param cr pointer to cgranget_st
@@ -40,32 +40,32 @@ class Annotator{
         void cgrsplit(const cgranges_t* cr, std::vector<RegItemCnt>& ctgRng, int32_t us = 1000);
 
         /** annotate DNA SV gene information
-         * @param svs pointer to SVRecords
+         * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
          */
-        void geneAnnoDNA(SVSet* svs, GeneInfoList& gl);
+        void geneAnnoDNA(SVSet& svs, GeneInfoList& gl);
 
         /** annotate DNA SV gene information in a range of svs
-         * @param svs pointer to SVRecords
+         * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
          * @param begIdx beginning index of svs to annotate
          * @param endIdx ending index of svs to annotate
          */
-        void rangeGeneAnnoDNA(SVSet* svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx);
+        void rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx);
         
         /** annotate RNA SV gene information
-         * @param svs pointer to SVRecords
+         * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
          */
-        void geneAnnoRNA(SVSet* svs, GeneInfoList& gl);
+        void geneAnnoRNA(SVSet& svs, GeneInfoList& gl);
 
         /** annotate RNA SV gene information in a range of svs
-         * @param svs pointer to SVRecords
+         * @param svs reference of SVRecords
          * @param gl reference of GeneInfoList
          * @param begIdx beginning index of svs to annotate
          * @param endIdx ending index of svs to annotate
          */
-        void rangeGeneAnnoRNA(SVSet* svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx);
+        void rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx);
 
         /** get first overlap of an region against an region set
          * @param s region sets

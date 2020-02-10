@@ -179,10 +179,10 @@ class SRBamRecordSet{
          * @param svs SVSet used to store SV found
          * @param svt SV type to find in srs, range [0-8]
          */
-        void cluster(std::vector<SRBamRecord>& srs, SVSet* svs, int32_t svt);
+        void cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt);
         
         /** cluster all SRBamRecord in SRBamRecordSet into their seperate supporting SVs */
-        void cluster(SVSet* svs);
+        void cluster(SVSet& svs);
 
         /** get sv candidates of a cluster
          * @param clique sr id of a cluster
@@ -190,17 +190,17 @@ class SRBamRecordSet{
          * @param svs SVSet used to store SV found
          * @param svt SV type to find in srs, range [0-8]
          */ 
-        void searchCliques(std::set<int32_t>& clique, std::vector<SRBamRecord>& srs, SVSet* svs, int32_t svt);
+        void searchCliques(std::set<int32_t>& clique, std::vector<SRBamRecord>& srs, SVSet& svs, int32_t svt);
 
         /** assembly reads of SR supporting each SV by MSA to get an consensus representation of SRs,\n
          * split align the consensus sequence against the constructed reference sequence to refine the breakpoint position
          * @param svs reference of SVSet
          */
-        void assembleSplitReads(SVSet* svs);
+        void assembleSplitReads(SVSet& svs);
 
-        void assembleOneContig(SVSet* svs, int32_t refIdx);
+        void assembleOneContig(SVSet& svs, int32_t refIdx);
 
-        void assembleCrossChr(SVSet* svs, AlignConfig* alnCfg, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
+        void assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std::vector<int32_t>& crsidx, int32_t begIdx, int32_t endIdx);
 };
 
 #endif

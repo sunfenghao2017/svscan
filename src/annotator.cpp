@@ -100,18 +100,18 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<RegItemCnt>& ctgRng, 
     }
 }
 
-Stats* Annotator::covAnnotate(SVSet* svs){
+Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     // Store all regions of SV into cgranges_t
     util::loginfo("Beg construct SVs cgranges_t");
     cgranges_t* crsv = cr_init();
     int32_t regBeg = -1, regEnd = -1;
-    for(uint32_t i = 0; i < svs->size(); ++i){
-        regBeg = std::max(0, svs->at(i)->mSVStart - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(svs->at(i)->mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs->at(i)->mChr1]);
-        cr_add(crsv, svs->at(i)->mNameChr1.c_str(), regBeg, regEnd, 1);
-        regBeg = std::max(0, svs->at(i)->mSVEnd - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(svs->at(i)->mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs->at(i)->mChr2]);
-        cr_add(crsv, svs->at(i)->mNameChr2.c_str(), regBeg, regEnd, 1);
+    for(uint32_t i = 0; i < svs.size(); ++i){
+        regBeg = std::max(0, svs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i].mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr1]);
+        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, 1);
+        regBeg = std::max(0, svs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr2]);
+        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, 1);
     }
     if(!cr_is_sorted(crsv)) cr_sort(crsv);
     cr_merge_pre_index(crsv);
@@ -155,32 +155,32 @@ Stats* Annotator::covAnnotate(SVSet* svs){
     util::loginfo("End split Svs cgranges_t, got: " + std::to_string(ctgRng.size()) + " sub regions");
     // Preprocess REF and ALT
     ContigBpRegions bpRegion(mOpt->bamheader->n_targets);
-    std::vector<int32_t> refAlignedReadCount(svs->size());
-    std::vector<int32_t> refAlignedSpanCount(svs->size());
+    std::vector<int32_t> refAlignedReadCount(svs.size());
+    std::vector<int32_t> refAlignedSpanCount(svs.size());
     util::loginfo("Beg extracting breakpoint regions of each precisely classified SV");
-    for(uint32_t i = 0; i < svs->size(); ++i){
-        if(!svs->at(i)->mPrecise) continue;
+    for(auto itsv = svs.begin(); itsv != svs.end(); ++ itsv){
+        if(!itsv->mPrecise) continue;
         // Iterate all break point
         for(int bpPoint = 0; bpPoint < 2; ++bpPoint){
             int32_t regChr, regStart, regEnd, bpPos;
             if(bpPoint){// SV ending position region
-                regChr = svs->at(i)->mChr2;
-                regStart = std::max(0, svs->at(i)->mSVEnd - mOpt->filterOpt->mMinFlankSize);
-                regEnd = std::min(svs->at(i)->mSVEnd + mOpt->filterOpt->mMinFlankSize, (int32_t)mOpt->bamheader->target_len[svs->at(i)->mChr2]);
-                bpPos = svs->at(i)->mSVEnd;
+                regChr = itsv->mChr2;
+                regStart = std::max(0, itsv->mSVEnd - mOpt->filterOpt->mMinFlankSize);
+                regEnd = std::min(itsv->mSVEnd + mOpt->filterOpt->mMinFlankSize, (int32_t)mOpt->bamheader->target_len[itsv->mChr2]);
+                bpPos = itsv->mSVEnd;
             }else{// SV starting position region
-                regChr = svs->at(i)->mChr1;
-                regStart = std::max(0, svs->at(i)->mSVStart - mOpt->filterOpt->mMinFlankSize);
-                regEnd = std::min(svs->at(i)->mSVStart + mOpt->filterOpt->mMinFlankSize, (int32_t)mOpt->bamheader->target_len[svs->at(i)->mChr1]);
-                bpPos = svs->at(i)->mSVStart;
+                regChr = itsv->mChr1;
+                regStart = std::max(0, itsv->mSVStart - mOpt->filterOpt->mMinFlankSize);
+                regEnd = std::min(itsv->mSVStart + mOpt->filterOpt->mMinFlankSize, (int32_t)mOpt->bamheader->target_len[itsv->mChr1]);
+                bpPos = itsv->mSVStart;
             }
             BpRegion br;
             br.mIsSVEnd = bpPoint;
             br.mBpPos = bpPos;
-            br.mID = svs->at(i)->mID;
+            br.mID = itsv->mID;
             br.mRegEnd = regEnd;
             br.mRegStart = regStart;
-            br.mSVT = svs->at(i)->mSVT;
+            br.mSVT = itsv->mSVT;
             bpRegion[regChr].push_back(br);
         }
     }
@@ -191,15 +191,15 @@ Stats* Annotator::covAnnotate(SVSet* svs){
     util::loginfo("Beg extracting PE supported breakpoints of each SV");
     ContigSpanPoints spanPoint;
     spanPoint.resize(mOpt->contigNum);
-    for(uint32_t i = 0; i < svs->size(); ++i){
-        if(svs->at(i)->mPESupport == 0) continue;
-        spanPoint[svs->at(i)->mChr1].push_back(SpanPoint(svs->at(i)->mSVStart, svs->at(i)->mSVT, svs->at(i)->mID, false));
-        spanPoint[svs->at(i)->mChr2].push_back(SpanPoint(svs->at(i)->mSVEnd, svs->at(i)->mSVT, svs->at(i)->mID, true));
+    for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
+        if(itsv->mPESupport == 0) continue;
+        spanPoint[itsv->mChr1].push_back(SpanPoint(itsv->mSVStart, itsv->mSVT, itsv->mID, false));
+        spanPoint[itsv->mChr2].push_back(SpanPoint(itsv->mSVEnd, itsv->mSVT, itsv->mID, true));
     }
     for(uint32_t i = 0; i < spanPoint.size(); ++i) std::sort(spanPoint[i].begin(), spanPoint[i].end());
     util::loginfo("End extracting PE supported breakpoints of each SV");
     // Get coverage from each contig in parallel
-    Stats* covStats = new Stats(mOpt, svs->size());
+    Stats* covStats = new Stats(mOpt, svs.size());
     std::vector<std::future<void>> statRets(ctgRng.size());
     for(uint32_t i = 0; i < ctgRng.size(); ++i){
         statRets[i] = mOpt->pool->enqueue(&Stats::stat, covStats, std::ref(svs),  std::ref(bpRegion), 
@@ -279,11 +279,11 @@ void Annotator::getDNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
     if(rec.s) free(rec.s);
 }
 
-void Annotator::geneAnnoDNA(SVSet* svs, GeneInfoList& gl){
-    gl.resize(svs->size());
+void Annotator::geneAnnoDNA(SVSet& svs, GeneInfoList& gl){
+    gl.resize(svs.size());
     // split range list 
     std::vector<std::pair<int32_t, int32_t>> vpidx;
-    util::divideVecIdx(svs->size(), mOpt->nthread, vpidx);
+    util::divideVecIdx(svs.size(), mOpt->nthread, vpidx);
     // parallel run
     std::vector<std::future<void>> annRets(vpidx.size());
     for(uint32_t i = 0; i < vpidx.size(); ++i){
@@ -292,26 +292,26 @@ void Annotator::geneAnnoDNA(SVSet* svs, GeneInfoList& gl){
     for(auto& e: annRets) e.get();
 }
 
-void Annotator::rangeGeneAnnoDNA(SVSet* svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx){
+void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx){
     htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascripts at breakpoint 1
-        getDNABpTrs(gl[i].mGene1, svs->at(i)->mNameChr1, svs->at(i)->mSVStart, fp, tbx);
-        gl[i].mPos1 = svs->at(i)->mSVStart;
-        gl[i].mChr1 = svs->at(i)->mNameChr1;
+        getDNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
+        gl[i].mPos1 = svs[i].mSVStart;
+        gl[i].mChr1 = svs[i].mNameChr1;
         // get transcripts at breakpoint 2
-        getDNABpTrs(gl[i].mGene2, svs->at(i)->mNameChr2, svs->at(i)->mSVEnd, fp, tbx);
-        gl[i].mPos2 = svs->at(i)->mSVEnd;
-        gl[i].mChr2 = svs->at(i)->mNameChr2;
+        getDNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx);
+        gl[i].mPos2 = svs[i].mSVEnd;
+        gl[i].mChr2 = svs[i].mNameChr2;
         // annotate fusion gene
         std::set<std::string> fgAdded;
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
-                svutil::getexon(gl[i].mGene1[g1], gl[i].mGene2[g2], svs->at(i)->mSVT);
-                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs->at(i)->mSVT);
-                gl[i].mGene1[g1].getCatPart(svs->at(i)->mSVT, true);
-                gl[i].mGene2[g2].getCatPart(svs->at(i)->mSVT, false);
+                svutil::getexon(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i].mSVT);
+                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
+                gl[i].mGene1[g1].getCatPart(svs[i].mSVT, true);
+                gl[i].mGene2[g2].getCatPart(svs[i].mSVT, false);
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FANNG){
                     std::cout << gl[i] << std::endl;
@@ -376,11 +376,11 @@ void Annotator::getRNABpTrs(TrsRecList& trl, const std::string& chr, int32_t pos
     if(rec.s) free(rec.s);
 }
 
-void Annotator::geneAnnoRNA(SVSet* svs, GeneInfoList& gl){
-    gl.resize(svs->size());
+void Annotator::geneAnnoRNA(SVSet& svs, GeneInfoList& gl){
+    gl.resize(svs.size());
     // split range list 
     std::vector<std::pair<int32_t, int32_t>> vpidx;
-    util::divideVecIdx(svs->size(), mOpt->nthread, vpidx);
+    util::divideVecIdx(svs.size(), mOpt->nthread, vpidx);
     // parallel run
     std::vector<std::future<void>> annRets(vpidx.size());
     for(uint32_t i = 0; i < vpidx.size(); ++i){
@@ -389,24 +389,24 @@ void Annotator::geneAnnoRNA(SVSet* svs, GeneInfoList& gl){
     for(auto& e: annRets) e.get();
 }
 
-void Annotator::rangeGeneAnnoRNA(SVSet* svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx){
+void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, int32_t endIdx){
     htsFile* fp = hts_open(mOpt->annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascript at breakpoint 1
-        getRNABpTrs(gl[i].mGene1, svs->at(i)->mNameChr1, svs->at(i)->mSVStart, fp, tbx, true, svs->at(i)->mSVT);
+        getRNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx, true, svs[i].mSVT);
         gl[i].mChr1 = gl[i].mGene1[0].chr;
         gl[i].mPos1 = gl[i].mGene1[0].pos;
         // get trascript at breakpoint 2
-        getRNABpTrs(gl[i].mGene2, svs->at(i)->mNameChr2, svs->at(i)->mSVEnd, fp, tbx, false, svs->at(i)->mSVT);
+        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx, false, svs[i].mSVT);
         gl[i].mChr2 = gl[i].mGene2[0].chr;
         gl[i].mPos2 = gl[i].mGene2[0].pos;
         // annotate fusion gene
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
-                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs->at(i)->mSVT);
-                gl[i].mGene1[g1].getCatPart(svs->at(i)->mSVT, true);
-                gl[i].mGene2[g2].getCatPart(svs->at(i)->mSVT, false);
+                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
+                gl[i].mGene1[g1].getCatPart(svs[i].mSVT, true);
+                gl[i].mGene2[g2].getCatPart(svs[i].mSVT, false);
                 gl[i].mGene1[g1].getCigar();
                 gl[i].mGene2[g2].getCigar();
                 if(fsg.status & FUSION_FHTFLSWAPPED){
@@ -430,7 +430,7 @@ void Annotator::rangeGeneAnnoRNA(SVSet* svs, GeneInfoList& gl, int32_t begIdx, i
     hts_close(fp);
 }
 
-void Annotator::refineCovAnno(Stats* sts, const SVSet* svs){
+void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
     ReadSupportStatMap rssm;
     getReadSupportStatus(mOpt->bamout, rssm);
@@ -439,15 +439,15 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet* svs){
         if(iter->second.mR1MapQ && iter->second.mR2MapQ){
             if((iter->second.mR1SVID != iter->second.mR2SVID)){
                 // find the one which is not in repeat region
-                bool r1svrp = (svs->at(iter->second.mR1SVID)->mRealnRet < 0 || svs->at(iter->second.mR1SVID)->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
-                bool r2svrp = (svs->at(iter->second.mR2SVID)->mRealnRet < 0 || svs->at(iter->second.mR2SVID)->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r1svrp = (svs[iter->second.mR1SVID].mRealnRet < 0 || svs[iter->second.mR1SVID].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r2svrp = (svs[iter->second.mR2SVID].mRealnRet < 0 || svs[iter->second.mR2SVID].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
                 if(r1svrp == r2svrp){
                     if(!r1svrp){ // both not in repeat region
-                        if(svs->at(iter->second.mR1SVID)->mSRSupport < svs->at(iter->second.mR2SVID)->mSRSupport){
+                        if(svs[iter->second.mR1SVID].mSRSupport < svs[iter->second.mR2SVID].mSRSupport){
                             r1svrp = true;
                             r2svrp = false;
-                        }else if(svs->at(iter->second.mR1SVID)->mSRSupport == svs->at(iter->second.mR2SVID)->mSRSupport &&
-                                 svs->at(iter->second.mR1SVID)->mPESupport < svs->at(iter->second.mR2SVID)->mPESupport){
+                        }else if(svs[iter->second.mR1SVID].mSRSupport == svs[iter->second.mR2SVID].mSRSupport &&
+                                 svs[iter->second.mR1SVID].mPESupport < svs[iter->second.mR2SVID].mPESupport){
                             r1svrp = true;
                             r2svrp = false;
                         }else{

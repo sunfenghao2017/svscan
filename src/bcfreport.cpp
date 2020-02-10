@@ -4,7 +4,7 @@
 #include "stats.h"
 #include <util.h>
 
-void Stats::reportSVBCF(const SVSet* svs){
+void Stats::reportSVBCF(const SVSet& svs){
     // Open file handler
     samFile* samfp = sam_open(mOpt->bamfile.c_str(), "r");
     hts_set_fai_filename(samfp, mOpt->alnref.c_str());
@@ -64,7 +64,7 @@ void Stats::reportSVBCF(const SVSet* svs){
     bcf_hdr_add_sample(hdr, "SAMPLE");
     assert(bcf_hdr_write(fp, hdr) >= 0);
     // Add Records
-    if(svs->empty()){// if empty set, just return
+    if(svs.empty()){// if empty set, just return
         sam_close(samfp);
         bam_hdr_destroy(bamhdr);
         bcf_hdr_destroy(hdr);
@@ -87,68 +87,68 @@ void Stats::reportSVBCF(const SVSet* svs){
     const char* ftarr = {NULL};
     bcf1_t* rec = bcf_init1();
     int32_t tmpi = 0;
-    for(uint32_t i = 0; i < svs->size(); ++i){
+    for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
         // Prepare Filter field
         int filter = bcf_hdr_id2int(hdr, BCF_DT_ID, "PASS");
-        if(svs->at(i)->mChr1 == svs->at(i)->mChr2){// Intra-chromosomal sv
-            if((svs->at(i)->mPESupport < mOpt->passOpt->mIntraChrSVMinDPCnt || svs->at(i)->mPEMapQuality < mOpt->passOpt->mIntraChrSVMinDPQual) ||
-               (svs->at(i)->mSRSupport < mOpt->passOpt->mIntraChrSVMinSRCnt || svs->at(i)->mSRMapQuality < mOpt->passOpt->mIntraChrSVMinSRQual)){
+        if(itsv->mChr1 == itsv->mChr2){// Intra-chromosomal sv
+            if((itsv->mPESupport < mOpt->passOpt->mIntraChrSVMinDPCnt || itsv->mPEMapQuality < mOpt->passOpt->mIntraChrSVMinDPQual) ||
+               (itsv->mSRSupport < mOpt->passOpt->mIntraChrSVMinSRCnt || itsv->mSRMapQuality < mOpt->passOpt->mIntraChrSVMinSRQual)){
                 filter = bcf_hdr_id2int(hdr, BCF_DT_ID, "LowQual");
             }
         }else{// inter-chromosomal sv
-            if((svs->at(i)->mPESupport < mOpt->passOpt->mInterChrSVMinDPCnt || svs->at(i)->mPEMapQuality < mOpt->passOpt->mInterChrSVMinDPQual) ||
-               (svs->at(i)->mSRSupport < mOpt->passOpt->mInterChrSVMinSRCnt || svs->at(i)->mSRMapQuality < mOpt->passOpt->mInterChrSVMinSRQual)){
+            if((itsv->mPESupport < mOpt->passOpt->mInterChrSVMinDPCnt || itsv->mPEMapQuality < mOpt->passOpt->mInterChrSVMinDPQual) ||
+               (itsv->mSRSupport < mOpt->passOpt->mInterChrSVMinSRCnt || itsv->mSRMapQuality < mOpt->passOpt->mInterChrSVMinSRQual)){
                 filter = bcf_hdr_id2int(hdr, BCF_DT_ID, "LowQual");
             }
         }
-        rec->rid = bcf_hdr_name2id(hdr, bamhdr->target_name[svs->at(i)->mChr1]); // CHROM
-        int32_t svStartPos = std::max(1, svs->at(i)->mSVStart - 1);
-        int32_t svEndPos = std::max(1, svs->at(i)-> mSVEnd);
-        if(svEndPos >= (int32_t) bamhdr->target_len[svs->at(i)->mChr2]) svEndPos = bamhdr->target_len[svs->at(i)->mChr2] - 1;
+        rec->rid = bcf_hdr_name2id(hdr, bamhdr->target_name[itsv->mChr1]); // CHROM
+        int32_t svStartPos = std::max(1, itsv->mSVStart - 1);
+        int32_t svEndPos = std::max(1, itsv-> mSVEnd);
+        if(svEndPos >= (int32_t) bamhdr->target_len[itsv->mChr2]) svEndPos = bamhdr->target_len[itsv->mChr2] - 1;
         rec->pos = svStartPos; // POS
-        std::string id = svutil::addID(svs->at(i)->mSVT) + std::to_string(svs->at(i)->mID);
+        std::string id = svutil::addID(itsv->mSVT) + std::to_string(itsv->mID);
         bcf_update_id(hdr, rec, id.c_str()); // ID
-        bcf_update_alleles_str(hdr, rec, svs->at(i)->mAlleles.c_str()); // REF and ALT
+        bcf_update_alleles_str(hdr, rec, itsv->mAlleles.c_str()); // REF and ALT
         bcf_update_filter(hdr, rec, &filter, 1); // FILTER
         // Add INFO fields
-        if(svs->at(i)->mPrecise) bcf_update_info_flag(hdr, rec, "PRECISE", NULL, 1);
+        if(itsv->mPrecise) bcf_update_info_flag(hdr, rec, "PRECISE", NULL, 1);
         else bcf_update_info_flag(hdr, rec, "IMPRECISE", NULL, 1);
-        bcf_update_info_string(hdr, rec, "SVTYPE", svutil::addID(svs->at(i)->mSVT).c_str());
-        bcf_update_info_string(hdr, rec, "CHREND", bamhdr->target_name[svs->at(i)->mChr2]);
-        bcf_update_info_int32(hdr, rec, "SVEND", &svs->at(i)->mSVEnd, 1);
-        bcf_update_info_int32(hdr, rec, "PECNT", &svs->at(i)->mPESupport, 1);
-        tmpi = svs->at(i)->mPEMapQuality;
+        bcf_update_info_string(hdr, rec, "SVTYPE", svutil::addID(itsv->mSVT).c_str());
+        bcf_update_info_string(hdr, rec, "CHREND", bamhdr->target_name[itsv->mChr2]);
+        bcf_update_info_int32(hdr, rec, "SVEND", &itsv->mSVEnd, 1);
+        bcf_update_info_int32(hdr, rec, "PECNT", &itsv->mPESupport, 1);
+        tmpi = itsv->mPEMapQuality;
         bcf_update_info_int32(hdr, rec, "PEMAPQ", &tmpi, 1);
-        bcf_update_info_string(hdr, rec, "CATT", svutil::addOrientation(svs->at(i)->mSVT).c_str());
+        bcf_update_info_string(hdr, rec, "CATT", svutil::addOrientation(itsv->mSVT).c_str());
         int32_t tmpai[2];
-        tmpai[0] = svs->at(i)->mCiPosLow;
-        tmpai[1] = svs->at(i)->mCiPosHigh;
+        tmpai[0] = itsv->mCiPosLow;
+        tmpai[1] = itsv->mCiPosHigh;
         bcf_update_info_int32(hdr, rec, "CIPOS", tmpai, 2);
-        tmpai[0] = svs->at(i)->mCiEndLow;
-        tmpai[1] = svs->at(i)->mCiEndHigh;
+        tmpai[0] = itsv->mCiEndLow;
+        tmpai[1] = itsv->mCiEndHigh;
         bcf_update_info_int32(hdr, rec, "CIEND", tmpai, 2);
         // Precise SV specific tags
-        if(svs->at(i)->mPrecise){
-            bcf_update_info_int32(hdr, rec, "SRCNT", &svs->at(i)->mSRSupport, 1);
-            tmpi = svs->at(i)->mSRMapQuality;
+        if(itsv->mPrecise){
+            bcf_update_info_int32(hdr, rec, "SRCNT", &itsv->mSRSupport, 1);
+            tmpi = itsv->mSRMapQuality;
             bcf_update_info_int32(hdr, rec, "SRMAPQ", &tmpi, 1);
-            bcf_update_info_float(hdr, rec, "SRALNQ", &svs->at(i)->mSRAlignQuality, 1);
-            bcf_update_info_int32(hdr, rec, "INSLEN", &svs->at(i)->mAlnInsLen, 1);
-            bcf_update_info_int32(hdr, rec, "HOMLEN", &svs->at(i)->mHomLen, 1);
-            bcf_update_info_string(hdr, rec, "CONSENSUSSEQ", svs->at(i)->mConsensus.c_str());
+            bcf_update_info_float(hdr, rec, "SRALNQ", &itsv->mSRAlignQuality, 1);
+            bcf_update_info_int32(hdr, rec, "INSLEN", &itsv->mAlnInsLen, 1);
+            bcf_update_info_int32(hdr, rec, "HOMLEN", &itsv->mHomLen, 1);
+            bcf_update_info_string(hdr, rec, "CONSENSUSSEQ", itsv->mConsensus.c_str());
         }
         // Compute GLs
-        if(svs->at(i)->mPrecise){
-            if(mJctCnts[svs->at(i)->mID].mRefQualBeg.size() > mJctCnts[svs->at(i)->mID].mRefQualEnd.size()){
-                svutil::computeGL(mJctCnts[svs->at(i)->mID].mRefQualBeg, mJctCnts[svs->at(i)->mID].mAltQual, gls, gts, gqval);
+        if(itsv->mPrecise){
+            if(mJctCnts[itsv->mID].mRefQualBeg.size() > mJctCnts[itsv->mID].mRefQualEnd.size()){
+                svutil::computeGL(mJctCnts[itsv->mID].mRefQualBeg, mJctCnts[itsv->mID].mAltQual, gls, gts, gqval);
             }else{
-                svutil::computeGL(mJctCnts[svs->at(i)->mID].mRefQualEnd, mJctCnts[svs->at(i)->mID].mAltQual, gls, gts, gqval);
+                svutil::computeGL(mJctCnts[itsv->mID].mRefQualEnd, mJctCnts[itsv->mID].mAltQual, gls, gts, gqval);
             }
         }else{
-            if(mSpnCnts[svs->at(i)->mID].mRefQualBeg.size() > mSpnCnts[svs->at(i)->mID].mRefQualEnd.size()){
-                svutil::computeGL(mSpnCnts[svs->at(i)->mID].mRefQualBeg, mSpnCnts[svs->at(i)->mID].mAltQual, gls, gts, gqval);
+            if(mSpnCnts[itsv->mID].mRefQualBeg.size() > mSpnCnts[itsv->mID].mRefQualEnd.size()){
+                svutil::computeGL(mSpnCnts[itsv->mID].mRefQualBeg, mSpnCnts[itsv->mID].mAltQual, gls, gts, gqval);
             }else{
-                svutil::computeGL(mSpnCnts[svs->at(i)->mID].mRefQualEnd, mSpnCnts[svs->at(i)->mID].mAltQual, gls, gts, gqval);
+                svutil::computeGL(mSpnCnts[itsv->mID].mRefQualEnd, mSpnCnts[itsv->mID].mAltQual, gls, gts, gqval);
             }
         }
         bcf_update_genotypes(hdr, rec, gts, bcf_hdr_nsamples(hdr) * 2);
@@ -159,12 +159,12 @@ void Stats::reportSVBCF(const SVSet* svs){
         else ftarr = "PASS";
         bcf_update_format_string(hdr, rec, "FT", &ftarr, bcf_hdr_nsamples(hdr));
         // Add read/pair counts
-        drcount[0] = mSpnCnts[svs->at(i)->mID].getRefDep();
-        dvcount[0] = mSpnCnts[svs->at(i)->mID].getAltDep();
+        drcount[0] = mSpnCnts[itsv->mID].getRefDep();
+        dvcount[0] = mSpnCnts[itsv->mID].getAltDep();
         bcf_update_format_int32(hdr, rec, "DR", drcount, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "DV", dvcount, bcf_hdr_nsamples(hdr));
-        rrcount[0] = mJctCnts[svs->at(i)->mID].getRefDep();
-        rvcount[0] = mJctCnts[svs->at(i)->mID].getAltDep();
+        rrcount[0] = mJctCnts[itsv->mID].getRefDep();
+        rvcount[0] = mJctCnts[itsv->mID].getAltDep();
         bcf_update_format_int32(hdr, rec, "RR", rrcount, bcf_hdr_nsamples(hdr));
         bcf_update_format_int32(hdr, rec, "RV", rvcount, bcf_hdr_nsamples(hdr));
         assert(bcf_write(fp, hdr, rec) >= 0);

@@ -96,7 +96,7 @@ Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     return ret;
 }
 
-void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, const RegItemCnt& regInfo, cgranges_t* ctgCgr){
+void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSpanPoints& spPts, const RegItemCnt& regInfo, cgranges_t* ctgCgr){
     int32_t refIdx = regInfo.mTid;
     int32_t chrBeg = regInfo.mBeg;
     int32_t chrEnd = regInfo.mEnd;
@@ -315,19 +315,19 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                         if(sa){
                             if((scsvt != itbp->mSVT) || sahdc) continue;
                             if(itbp->mIsSVEnd){
-                                if(bpbpos < svs->at(itbp->mID)->mSVStart - mOpt->libInfo->mReadLen ||
-                                   bpbpos > svs->at(itbp->mID)->mSVStart + mOpt->libInfo->mReadLen ||
-                                   svs->at(itbp->mID)->mChr1 != stid){
+                                if(bpbpos < svs[itbp->mID].mSVStart - mOpt->libInfo->mReadLen ||
+                                   bpbpos > svs[itbp->mID].mSVStart + mOpt->libInfo->mReadLen ||
+                                   svs[itbp->mID].mChr1 != stid){
                                     continue;
                                 }
-                                seedoff = std::abs(svs->at(itbp->mID)->mSVStart - bpbpos);
+                                seedoff = std::abs(svs[itbp->mID].mSVStart - bpbpos);
                             }else{
-                                if(bpbpos < svs->at(itbp->mID)->mSVEnd - mOpt->libInfo->mReadLen ||
-                                   bpbpos > svs->at(itbp->mID)->mSVEnd + mOpt->libInfo->mReadLen ||
-                                   svs->at(itbp->mID)->mChr2 != stid){
+                                if(bpbpos < svs[itbp->mID].mSVEnd - mOpt->libInfo->mReadLen ||
+                                   bpbpos > svs[itbp->mID].mSVEnd + mOpt->libInfo->mReadLen ||
+                                   svs[itbp->mID].mChr2 != stid){
                                     continue;
                                 }
-                                seedoff = std::abs(svs->at(itbp->mID)->mSVEnd - bpbpos);
+                                seedoff = std::abs(svs[itbp->mID].mSVEnd - bpbpos);
                             }
                             seedgot = true;
                         }
@@ -340,7 +340,7 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                         }
                         if(svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
                         // possible ALT
-                        std::string consProbe = itbp->mIsSVEnd ? svs->at(itbp->mID)->mProbeEndC : svs->at(itbp->mID)->mProbeBegC;
+                        std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndC : svs[itbp->mID].mProbeBegC;
                         if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
                         readSeq = readOri;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
@@ -351,8 +351,8 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                         int matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
                         // Any confident alignment?
-                        if(scoreAlt < mOpt->filterOpt->mMinSRResScore && svs->at(itbp->mID)->mProbeEndA.size()){
-                            consProbe = itbp->mIsSVEnd ? svs->at(itbp->mID)->mProbeEndA : svs->at(itbp->mID)->mProbeBegA;
+                        if(scoreAlt < mOpt->filterOpt->mMinSRResScore && svs[itbp->mID].mProbeEndA.size()){
+                            consProbe = itbp->mIsSVEnd ? svs[itbp->mID].mProbeEndA : svs[itbp->mID].mProbeBegA;
                             Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
                             Matrix2D<char>* secResult = new Matrix2D<char>();
                             alnScore = secAligner->needle(secResult);
@@ -397,8 +397,8 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                             std::vector<int32_t> nrps;
                             for(iit = supportSrsID.begin(); iit != supportSrsID.end(); ++iit){
                                 if(iit->second.first == mmxhv &&
-                                   svs->at(iit->first)->mRealnRet >= 0 && 
-                                   svs->at(iit->first)->mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                                   svs[iit->first].mRealnRet >= 0 && 
+                                   svs[iit->first].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
                                     nrps.push_back(iit->first);
                                 }
                             }
@@ -407,14 +407,14 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                                 if(nrps.size() == 0){ // all in repeat region
                                     // first run
                                     for(iit = supportSrsID.begin(); iit != supportSrsID.end(); ++iit){
-                                        if(svs->at(iit->first)->mSRSupport > svs->at(ixmx)->mSRSupport){
+                                        if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
                                             ixmx = iit->first;
                                         }
                                     }
                                     // second run
                                     for(iit = supportSrsID.begin(); iit != supportSrsID.end(); ++iit){
-                                        if(svs->at(iit->first)->mSRSupport == svs->at(ixmx)->mSRSupport && 
-                                           svs->at(iit->first)->mPESupport > svs->at(ixmx)->mPESupport){
+                                        if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
+                                           svs[iit->first].mPESupport > svs[ixmx].mPESupport){
                                            ixmx = iit->first;
                                         }
                                     }
@@ -422,14 +422,14 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                                     ixmx = nrps[0];
                                     // first run
                                     for(uint32_t xxvid = 1; xxvid < nrps.size(); ++xxvid){
-                                        if(svs->at(nrps[xxvid])->mSRSupport > svs->at(ixmx)->mSRSupport){
+                                        if(svs[nrps[xxvid]].mSRSupport > svs[ixmx].mSRSupport){
                                             ixmx = nrps[xxvid];
                                         }
                                     }
                                     // second run
                                     for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
-                                        if(svs->at(nrps[xxvid])->mSRSupport == svs->at(ixmx)->mSRSupport &&
-                                           svs->at(nrps[xxvid])->mPESupport > svs->at(ixmx)->mPESupport){
+                                        if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
+                                           svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
                                             ixmx = nrps[xxvid];
                                         }
                                     }
@@ -548,17 +548,17 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                     itspna = ltap;
                 }
                 for(; itspna != spPts[refIdx].end() && pend >= itspna->mBpPos; ++itspna){
-                    if(svt == itspna->mSVT && svs->at(itspna->mID)->mChr1 == b->core.tid && svs->at(itspna->mID)->mChr2 == b->core.mtid){
+                    if(svt == itspna->mSVT && svs[itspna->mID].mChr1 == b->core.tid && svs[itspna->mID].mChr2 == b->core.mtid){
                         // valid dp in pe-mode
                         bool validDPE = true;
-                        if(std::abs(svend - svs->at(itspna->mID)->mSVEnd) > mOpt->libInfo->mVarisize){
+                        if(std::abs(svend - svs[itspna->mID].mSVEnd) > mOpt->libInfo->mVarisize){
                             validDPE = false;
                         }
-                        if(std::abs(svstart - svs->at(itspna->mID)->mSVStart) > mOpt->libInfo->mVarisize){
+                        if(std::abs(svstart - svs[itspna->mID].mSVStart) > mOpt->libInfo->mVarisize){
                             validDPE = false;
                         }
                         if(validDPE){
-                            supportSpnID[itspna->mID] = {std::abs(svend - svs->at(itspna->mID)->mSVEnd) + std::abs(svstart - svs->at(itspna->mID)->mSVStart),itspna->mIsSVEnd};
+                            supportSpnID[itspna->mID] = {std::abs(svend - svs[itspna->mID].mSVEnd) + std::abs(svstart - svs[itspna->mID].mSVStart),itspna->mIsSVEnd};
                         }
                     }
                 }
@@ -584,8 +584,8 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                             std::vector<int32_t> nrps;
                             for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
                                 if(iit->second.first == mmxhv &&
-                                   svs->at(iit->first)->mRealnRet >= 0 && 
-                                   svs->at(iit->first)->mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
+                                   svs[iit->first].mRealnRet >= 0 && 
+                                   svs[iit->first].mRealnRet <= mOpt->fuseOpt->mWhiteFilter.mMaxRepHit){
                                     nrps.push_back(iit->first);
                                 }
                             }
@@ -594,14 +594,14 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                                 if(nrps.size() == 0){ // all in repeat region
                                     // first run
                                     for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
-                                        if(svs->at(iit->first)->mSRSupport > svs->at(ixmx)->mSRSupport){
+                                        if(svs[iit->first].mSRSupport > svs[ixmx].mSRSupport){
                                             ixmx = iit->first;
                                         }
                                     }
                                     // second run
                                     for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
-                                        if(svs->at(iit->first)->mSRSupport == svs->at(ixmx)->mSRSupport && 
-                                           svs->at(iit->first)->mPESupport > svs->at(ixmx)->mPESupport){
+                                        if(svs[iit->first].mSRSupport == svs[ixmx].mSRSupport && 
+                                           svs[iit->first].mPESupport > svs[ixmx].mPESupport){
                                            ixmx = iit->first;
                                         }
                                     }
@@ -609,14 +609,14 @@ void Stats::stat(const SVSet* svs, const ContigBpRegions& bpRegs, const ContigSp
                                     ixmx = nrps[0];
                                     // first run
                                     for(uint32_t xxvid = 1; xxvid < nrps.size(); ++xxvid){
-                                        if(svs->at(nrps[xxvid])->mSRSupport > svs->at(ixmx)->mSRSupport){
+                                        if(svs[nrps[xxvid]].mSRSupport > svs[ixmx].mSRSupport){
                                             ixmx = nrps[xxvid];
                                         }
                                     }
                                     // second run
                                     for(uint32_t xxvid = 0; xxvid < nrps.size(); ++xxvid){
-                                        if(svs->at(nrps[xxvid])->mSRSupport == svs->at(ixmx)->mSRSupport &&
-                                           svs->at(nrps[xxvid])->mPESupport > svs->at(ixmx)->mPESupport){
+                                        if(svs[nrps[xxvid]].mSRSupport == svs[ixmx].mSRSupport &&
+                                           svs[nrps[xxvid]].mPESupport > svs[ixmx].mPESupport){
                                             ixmx = nrps[xxvid];
                                         }
                                     }

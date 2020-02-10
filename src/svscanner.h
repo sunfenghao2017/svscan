@@ -15,11 +15,11 @@
 /** class to scan sv */
 class SVScanner{
     public:
-        Options* mOpt = NULL; ///< pointer to Options object
+        Options* mOpt;         ///< pointer to Options object
         RegionList mScanRegs; ///< valid regions to scan for SV
-        SVSet* mDPSVs = NULL; ///< DP supported SV records
-        SVSet* mSRSVs = NULL; ///< SR supported SVrecords
-        ContigSRs mCtgSRs;    ///< SR supporting SV on each contig
+        SVSet mDPSVs;          ///< DP supported SV records
+        SVSet mSRSVs;          ///< SR supported SVrecords
+        ContigSRs mCtgSRs;     ///< SR supporting SV on each contig
 
     public:
         /** SVScanner constructor
@@ -28,21 +28,10 @@ class SVScanner{
         SVScanner(Options* opt){
             mOpt = opt;
             mScanRegs = opt->scanRegs;
-            mDPSVs = new SVSet();
-            mSRSVs = new SVSet();
         }
 
         /** SVScanner destructor */
-        ~SVScanner(){
-            if(mDPSVs){
-                delete mDPSVs;
-                mDPSVs = NULL;
-            }
-            if(mSRSVs){
-                delete mSRSVs;
-                mSRSVs = NULL;
-            }
-        }
+        ~SVScanner(){}
 
         /** scan bam for DP and SR supporting SVs */
         void scanDPandSR();
