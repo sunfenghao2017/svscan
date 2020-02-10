@@ -294,15 +294,10 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     // then do merge
     util::loginfo("Beg merging DP supported SVs, raw " + std::to_string(dp.size()));
     // index dpsvs
-    std::vector<std::pair<int32_t, int32_t>> chridx(opt->contigNum, {-1, -1});
-    for(int32_t i = 0; i < (int32_t)dp.size(); ++i){
-        if(chridx[dp[i].mChr1].first < 0) chridx[dp[i].mChr1].first = i;
-        chridx[dp[i].mChr1].second = i;
-    }
     int32_t totSV = dp.size();
     for(int32_t i = 0; i < totSV; ++i){
         if(dp[i].mMerged) continue;
-        for(int32_t j = i - 1; j >= chridx[dp[i].mChr1].first; --j){
+        for(int32_t j = i - 1; j >= 0; --j){
             if(dp[j].mMerged) continue;
             if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr1 != dp[j].mChr1 || dp[i].mChr2 != dp[j].mChr2) break;
             if(std::abs(dp[j].mSVStart - dp[i].mSVStart) > opt->libInfo->mMaxNormalISize) break;
@@ -312,7 +307,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
                 if(dp[i].mPESupport < dp[j].mPESupport || (i < j && dp[i].mPESupport == dp[j].mPESupport)) dp[i].mMerged = true;
             }
         }
-        for(int32_t j = i + 1; j <= chridx[dp[i].mChr1].second; ++j){
+        for(int32_t j = i + 1; j < totSV; ++j){
             if(dp[j].mMerged) continue;
             if(dp[i].mSVT != dp[j].mSVT || dp[i].mChr1 != dp[j].mChr1 || dp[i].mChr2 != dp[j].mChr2) break;
             if(std::abs(dp[j].mSVStart - dp[i].mSVStart) > opt->libInfo->mMaxNormalISize) break;
@@ -346,19 +341,21 @@ void mergeAndSortSVSet(SVSet& sr, SVSet& dp, SVSet& svs, Options* opt){
     SVSet pe;
     mergeDPSVs(dp, pe, opt);
     // index dpsvs
-    std::vector<std::pair<int32_t, int32_t>> chridx(opt->contigNum, {-1, -1});
+    std::vector<std::vector<std::pair<int32_t, int32_t>>> chridx(9);
+    for(uint32_t i = 0; i < 9; ++i) chridx[i].resize(opt->contigNum, {-1, -1});
     for(int32_t i = 0; i < (int32_t)pe.size(); ++i){
-        if(chridx[pe[i].mChr1].first < 0) chridx[pe[i].mChr1].first = i;
-        chridx[pe[i].mChr1].second = i;
+        if(chridx[pe[i].mSVT][pe[i].mChr1].first < 0) chridx[pe[i].mSVT][pe[i].mChr1].first = i;
+        chridx[pe[i].mSVT][pe[i].mChr1].second = i;
     }
     // Augment SR SVs with PE records
     util::loginfo("Beg augmenting SR supported SV candidates with DPs");
     std::map<int32_t, std::vector<int32_t>> pemset;
     int32_t ttsrs = svs.size();
     for(int32_t i = 0; i < ttsrs; ++i){
-        if(chridx[svs[i].mChr1].first < 0) continue;
-        for(int32_t j = chridx[svs[i].mChr1].first; j <= chridx[svs[i].mChr1].second; ++j){
-            if(pe[j].mSVT != svs[i].mSVT || svs[i].mChr2 != pe[j].mChr2) continue;
+        if(chridx[svs[i].mSVT][svs[i].mChr1].first < 0) continue;
+        for(int32_t j = chridx[svs[i].mSVT][svs[i].mChr1].first; j <= chridx[svs[i].mSVT][svs[i].mChr1].second; ++j){
+            if(svs[i].mChr2 > pe[j].mChr2) continue;
+            if(svs[i].mChr2 < pe[j].mChr2) break;
             // Test whether breakpoint is within PE confidence interval
             if(svs[i].mSVStart >= pe[j].mSVStart - std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiPosHigh) && 
                svs[i].mSVStart <= pe[j].mSVStart + std::max(opt->libInfo->mMaxNormalISize, pe[j].mCiPosHigh) &&
