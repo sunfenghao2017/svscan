@@ -178,19 +178,19 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
         int32_t svEnd = pos2/clique.size();
         int32_t svISize = inslen/clique.size();
         int32_t svid = svs.size();
-        SVRecord svr;
-        svr.mChr1 = chr1;
-        svr.mSVStart = svStart;
-        svr.mChr2 = chr2;
-        svr.mSVEnd = svEnd;
-        svr.mCiPosLow = ciposlow - svStart;
-        svr.mCiPosHigh = ciposhigh - svStart;
-        svr.mCiEndLow = ciendlow - svEnd;
-        svr.mCiEndHigh = ciendhigh - svEnd;
-        svr.mAlnInsLen = svISize;
-        svr.mID = svid;
-        svr.mSVT = svt;
-        if(clique.size() == 1) svr.mFromOneSR = true;
+        SVRecord* svr = new SVRecord();
+        svr->mChr1 = chr1;
+        svr->mSVStart = svStart;
+        svr->mChr2 = chr2;
+        svr->mSVEnd = svEnd;
+        svr->mCiPosLow = ciposlow - svStart;
+        svr->mCiPosHigh = ciposhigh - svStart;
+        svr->mCiEndLow = ciendlow - svEnd;
+        svr->mCiEndHigh = ciendhigh - svEnd;
+        svr->mAlnInsLen = svISize;
+        svr->mID = svid;
+        svr->mSVT = svt;
+        if(clique.size() == 1) svr->mFromOneSR = true;
         svs.push_back(svr);
         // Reads assigned
         for(auto& e : clique) srs[e].mSVID = svid;
@@ -211,15 +211,15 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             int32_t seqlen = -1;
             char* chr1Seq = faidx_fetch_seq(fai, mOpt->bamheader->target_name[refIdx], 0, mOpt->bamheader->target_len[refIdx], &seqlen);
             for(uint32_t svid = 0; svid < svs.size(); ++svid){
-                if(svs[svid].mChr1 != refIdx && svs[svid].mChr2 != refIdx) continue;
-                if(svs[svid].mSVT >= 5 && svs[svid].mChr2 == refIdx){// Fetch lite chr seq of translocation
+                if(svs[svid]->mChr1 != refIdx && svs[svid]->mChr2 != refIdx) continue;
+                if(svs[svid]->mSVT >= 5 && svs[svid]->mChr2 == refIdx){// Fetch lite chr seq of translocation
                     BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
-                    svs[svid].mTraChr2Seq = bp.getLittleRef(chr1Seq);
+                    svs[svid]->mTraChr2Seq = bp.getLittleRef(chr1Seq);
                     continue;
                 }
-                if(svs[svid].mSVT >= 5 && svs[svid].mChr1 == refIdx){// Fetch large chr seq of translocation
+                if(svs[svid]->mSVT >= 5 && svs[svid]->mChr1 == refIdx){// Fetch large chr seq of translocation
                     BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
-                    svs[svid].mTraChr1Seq = bp.getLargerRef(chr1Seq);
+                    svs[svid]->mTraChr1Seq = bp.getLargerRef(chr1Seq);
                     continue;
                 }
             }
@@ -263,10 +263,10 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         auto vsrIter = mSRMapPos[refIdx].find(std::make_pair(b->core.pos, seed));
         if(vsrIter == mSRMapPos[refIdx].end()) continue;
         int32_t svid = vsrIter->second;
-        int32_t svt = svs[svid].mSVT;
+        int32_t svt = svs[svid]->mSVT;
         int32_t bpInslen = 0;
         bool r12mismatch = true;
-        for(auto& rec : mSRs[svs[svid].mSVT]){
+        for(auto& rec : mSRs[svs[svid]->mSVT]){
             if(rec.mID == seed && rec.mRead1 == (b->core.flag & BAM_FREAD1)){
                 bpInslen = rec.mInslen;
                 r12mismatch = false;
@@ -276,16 +276,16 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         if(r12mismatch) continue;
         std::string srseq = ""; // read sequence excluding insertiong after clip pos
         std::string siseq = ""; // inserted sequence after clip pos
-        svs[svid].getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep / 2);
+        svs[svid]->getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep / 2);
         // Adjust orientation
         bool bpPoint = false;
-        if(svt >= 5 && b->core.tid == svs[svid].mChr2) bpPoint = true;
+        if(svt >= 5 && b->core.tid == svs[svid]->mChr2) bpPoint = true;
         else{
             if(svt == 0){
-                if(svs[svid].mSVStart - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
+                if(svs[svid]->mSVStart - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
                 else bpPoint = false;
             }else if(svt == 1){
-                if(svs[svid].mSVEnd - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
+                if(svs[svid]->mSVEnd - b->core.pos < mOpt->filterOpt->minClipLen) bpPoint = true;
                 else bpPoint = false;
             }
         }
@@ -318,60 +318,60 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
     }
     // Process all SVs on this chromosome
     for(uint32_t svid = 0; svid < seqStore.size(); ++svid){
-        if(svs[svid].mChr1 != refIdx && svs[svid].mChr2 != refIdx) continue;
-        if(svs[svid].mSVT >= 5 && svs[svid].mChr2 == refIdx){// Fetch lite chr seq of translocation
+        if(svs[svid]->mChr1 != refIdx && svs[svid]->mChr2 != refIdx) continue;
+        if(svs[svid]->mSVT >= 5 && svs[svid]->mChr2 == refIdx){// Fetch lite chr seq of translocation
             BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
-            svs[svid].mTraChr2Seq = bp.getLittleRef(chr1Seq);
+            svs[svid]->mTraChr2Seq = bp.getLittleRef(chr1Seq);
             continue;
         }
-        if(svs[svid].mSVT >= 5 && svs[svid].mChr1 == refIdx){// Fetch large chr seq of translocation
+        if(svs[svid]->mSVT >= 5 && svs[svid]->mChr1 == refIdx){// Fetch large chr seq of translocation
             BreakPoint bp = BreakPoint(svs[svid], mOpt->bamheader, 10 * mOpt->libInfo->mReadLen);
-            svs[svid].mTraChr1Seq = bp.getLargerRef(chr1Seq);
+            svs[svid]->mTraChr1Seq = bp.getLargerRef(chr1Seq);
             continue;
         }
         // MSA
         bool bpRefined = false;
         if(seqStore[svid].size()){
-            if(svs[svid].mFromOneSR){
-                svs[svid].mConsensus = *(seqStore[svid].begin());
-                if(insStore[svid].size()) svs[svid].mBpInsSeq = *(insStore[svid].begin());
+            if(svs[svid]->mFromOneSR){
+                svs[svid]->mConsensus = *(seqStore[svid].begin());
+                if(insStore[svid].size()) svs[svid]->mBpInsSeq = *(insStore[svid].begin());
             }else{
                 AlignConfig alnCfg(5, -4, -10, -1, true, true);// both end gap free to keep each read ungapped as long as possible
                 MSA* msa = new MSA(&seqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                 if(seqStore[svid].size() < 3) msa->mMinCovForCS = seqStore[svid].size();
-                msa->msa(svs[svid].mConsensus);
+                msa->msa(svs[svid]->mConsensus);
                 delete msa;
                 if(insStore[svid].size()){
                     if(insStore[svid].size() == 1){
-                        svs[svid].mBpInsSeq = *(insStore[svid].begin());
+                        svs[svid]->mBpInsSeq = *(insStore[svid].begin());
                     }else{
                         MSA* imsa = new MSA(&insStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, &alnCfg);
                         if(insStore[svid].size() < 3) imsa->mMinCovForCS = insStore[svid].size();
-                        imsa->msa(svs[svid].mBpInsSeq);
+                        imsa->msa(svs[svid]->mBpInsSeq);
                         delete imsa;
                     }
                 }
             }
-            if(svs[svid].refineSRBp(mOpt, mOpt->bamheader, chr1Seq, chr1Seq)) bpRefined = true;
+            if(svs[svid]->refineSRBp(mOpt, mOpt->bamheader, chr1Seq, chr1Seq)) bpRefined = true;
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
                     std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
                 }
 #endif
-                svs[svid].mConsensus = "";
-                svs[svid].mSVRef = "";
-                svs[svid].mSRSupport = 0;
-                svs[svid].mSRAlignQuality = 0;
-                svs[svid].mSRMapQuality = 0;
+                svs[svid]->mConsensus = "";
+                svs[svid]->mSVRef = "";
+                svs[svid]->mSRSupport = 0;
+                svs[svid]->mSRAlignQuality = 0;
+                svs[svid]->mSRMapQuality = 0;
             }else{// SR support and qualities
-                svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
-                svs[svid].mSRSupport = seqStore[svid].size();
-                svs[svid].mSRMapQuality = statutil::median(qualStore[svid]);
-                svs[svid].mBpInsFreq = (float)(insStore[svid].size())/(float)(seqStore[svid].size());
+                svs[svid]->mSVRef = svs[svid]->mSVRef.substr(svs[svid]->mGapCoord[2] - 1, 1);
+                svs[svid]->mSRSupport = seqStore[svid].size();
+                svs[svid]->mSRMapQuality = statutil::median(qualStore[svid]);
+                svs[svid]->mBpInsFreq = (float)(insStore[svid].size())/(float)(seqStore[svid].size());
             }
-            svs[svid].mTraChr1Seq.resize(0); svs[svid].mTraChr1Seq.shrink_to_fit();
-            svs[svid].mTraChr2Seq.resize(0); svs[svid].mTraChr2Seq.shrink_to_fit();
+            svs[svid]->mTraChr1Seq.clear(); svs[svid]->mTraChr1Seq.shrink_to_fit();
+            svs[svid]->mTraChr2Seq.clear(); svs[svid]->mTraChr2Seq.shrink_to_fit();
         }
     }
     if(chr1Seq) free(chr1Seq);
@@ -408,8 +408,8 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     std::vector<int32_t> nonOnesIds;
     std::vector<int32_t> yesOnesIds;
     for(uint32_t cri = 0; cri < svs.size(); ++cri){
-        if(svs[cri].mSVT >= 5){
-            if(svs[cri].mFromOneSR) yesOnesIds.push_back(cri);
+        if(svs[cri]->mSVT >= 5){
+            if(svs[cri]->mFromOneSR) yesOnesIds.push_back(cri);
             else nonOnesIds.push_back(cri);
         }
     }
@@ -450,8 +450,8 @@ void SRBamRecordSet::assembleSplitReads(SVSet& svs){
     for(auto& e: casret) e.get();
     // Add ChrName
     for(uint32_t i = 0; i < svs.size(); ++i){
-        svs[i].mNameChr1 = mOpt->bamheader->target_name[svs[i].mChr1];
-        svs[i].mNameChr2 = mOpt->bamheader->target_name[svs[i].mChr2];
+        svs[i]->mNameChr1 = mOpt->bamheader->target_name[svs[i]->mChr1];
+        svs[i]->mNameChr2 = mOpt->bamheader->target_name[svs[i]->mChr2];
     }
     // Clean-up
     delete alnCfg;
@@ -464,44 +464,44 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std
         int32_t svid = crsidx[cidx];
         bool bpRefined = false;
         if(mTraSeqStore[svid].size()){
-            if(svs[svid].mFromOneSR){
-                svs[svid].mConsensus = *(mTraSeqStore[svid].begin());
-                if(mTriSeqStore[svid].size()) svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
+            if(svs[svid]->mFromOneSR){
+                svs[svid]->mConsensus = *(mTraSeqStore[svid].begin());
+                if(mTriSeqStore[svid].size()) svs[svid]->mBpInsSeq = *(mTriSeqStore[svid].begin());
             }else{
                 MSA* msa = new MSA(&mTraSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
                 if(mTraSeqStore[svid].size() < 3) msa->mMinCovForCS = mTraSeqStore[svid].size();
-                msa->msa(svs[svid].mConsensus);
+                msa->msa(svs[svid]->mConsensus);
                 delete msa;
                 if(mTriSeqStore[svid].size()){
                     if(mTriSeqStore[svid].size() == 1){
-                        svs[svid].mBpInsSeq = *(mTriSeqStore[svid].begin());
+                        svs[svid]->mBpInsSeq = *(mTriSeqStore[svid].begin());
                     }else{
                         MSA* imsa = new MSA(&mTriSeqStore[svid], mOpt->msaOpt->mMinCovForCS, mOpt->msaOpt->mMinBaseRateForCS, alnCfg);
                         if(mTriSeqStore[svid].size() < 3) imsa->mMinCovForCS = mTriSeqStore[svid].size();
-                        imsa->msa(svs[svid].mBpInsSeq);
+                        imsa->msa(svs[svid]->mBpInsSeq);
                         delete imsa;
                     }
                 }
             }
-            if(svs[svid].refineSRBp(mOpt, mOpt->bamheader, NULL, NULL)) bpRefined = true;
+            if(svs[svid]->refineSRBp(mOpt, mOpt->bamheader, NULL, NULL)) bpRefined = true;
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
                     std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
                 }
 #endif
-                svs[svid].mConsensus = "";
-                svs[svid].mSVRef = "";
-                svs[svid].mSRSupport = 0;
-                svs[svid].mSRAlignQuality = 0;
+                svs[svid]->mConsensus = "";
+                svs[svid]->mSVRef = "";
+                svs[svid]->mSRSupport = 0;
+                svs[svid]->mSRAlignQuality = 0;
             }else{// SR support and qualities
-                svs[svid].mSVRef = svs[svid].mSVRef.substr(svs[svid].mGapCoord[2] - 1, 1);
-                svs[svid].mSRSupport = mTraSeqStore[svid].size();
-                svs[svid].mSRMapQuality = util::median(mTraQualStore[svid]);
-                svs[svid].mBpInsFreq = (float)(mTriSeqStore[svid].size())/(float)(mTraSeqStore[svid].size());
+                svs[svid]->mSVRef = svs[svid]->mSVRef.substr(svs[svid]->mGapCoord[2] - 1, 1);
+                svs[svid]->mSRSupport = mTraSeqStore[svid].size();
+                svs[svid]->mSRMapQuality = util::median(mTraQualStore[svid]);
+                svs[svid]->mBpInsFreq = (float)(mTriSeqStore[svid].size())/(float)(mTraSeqStore[svid].size());
             }
-            svs[svid].mTraChr1Seq.resize(0); svs[svid].mTraChr1Seq.shrink_to_fit();
-            svs[svid].mTraChr2Seq.resize(0); svs[svid].mTraChr2Seq.shrink_to_fit();
+            svs[svid]->mTraChr1Seq.clear(); svs[svid]->mTraChr1Seq.shrink_to_fit();
+            svs[svid]->mTraChr2Seq.clear(); svs[svid]->mTraChr2Seq.shrink_to_fit();
         }
     }
     util::loginfo("End processing vpidx: " + std::to_string(begIdx) + "->" + std::to_string(endIdx), mOpt->logMtx);

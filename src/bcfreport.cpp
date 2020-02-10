@@ -87,7 +87,7 @@ void Stats::reportSVBCF(const SVSet& svs){
     const char* ftarr = {NULL};
     bcf1_t* rec = bcf_init1();
     int32_t tmpi = 0;
-    for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
+    for(auto& itsv: svs){
         // Prepare Filter field
         int filter = bcf_hdr_id2int(hdr, BCF_DT_ID, "PASS");
         if(itsv->mChr1 == itsv->mChr2){// Intra-chromosomal sv

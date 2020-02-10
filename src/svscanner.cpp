@@ -192,22 +192,22 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End merging SVs from SRs and DPs, all SV got: " + std::to_string(mergedSVs.size()));
     util::loginfo("Beg fetching reference of SV supported by DP only");
     getDPSVRef(mergedSVs, mOpt);
-    std::sort(mergedSVs.begin(), mergedSVs.end());
+    std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVOne());
     util::loginfo("End fetching reference of SV supported by DP only");
     // Get Allele info of SVs and updatev SVsupporting contigs as well as svsize
     mOpt->svRefID.clear();
     for(uint32_t i = 0; i < mergedSVs.size(); ++i){
-        mergedSVs[i].addAlleles();
-        mergedSVs[i].mID = i;
-        if(mergedSVs[i].mSVT >= 5){
-            mergedSVs[i].mSize = -1;
-        }else if(mergedSVs[i].mSVT == 4){
-            mergedSVs[i].mSize = mergedSVs[i].mConsensus.size();
+        mergedSVs[i]->addAlleles();
+        mergedSVs[i]->mID = i;
+        if(mergedSVs[i]->mSVT >= 5){
+            mergedSVs[i]->mSize = -1;
+        }else if(mergedSVs[i]->mSVT == 4){
+            mergedSVs[i]->mSize = mergedSVs[i]->mConsensus.size();
         }else{
-            mergedSVs[i].mSize = mergedSVs[i].mSVEnd - mergedSVs[i].mSVStart;
+            mergedSVs[i]->mSize = mergedSVs[i]->mSVEnd - mergedSVs[i]->mSVStart;
         }
-        mOpt->svRefID.insert(mergedSVs[i].mChr1);
-        mOpt->svRefID.insert(mergedSVs[i].mChr2);
+        mOpt->svRefID.insert(mergedSVs[i]->mChr1);
+        mOpt->svRefID.insert(mergedSVs[i]->mChr2);
     }
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
@@ -256,7 +256,7 @@ void SVScanner::scanDPandSR(){
 #endif
     if(!mOpt->bcfOut.empty()){
         util::loginfo("Beg writing SVs to BCF file");
-        std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVs());
+        std::sort(mergedSVs.begin(), mergedSVs.end(), SortSVTwo());
         covStat->reportSVBCF(mergedSVs);
         util::loginfo("End writing SVs to BCF file");
     }

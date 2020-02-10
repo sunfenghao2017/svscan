@@ -508,11 +508,11 @@ class Stats{
         
         /** convert an sv event to fusion record
          * @param fsr reference of FusionRecord
-         * @param svr reference of SVRecord
+         * @param svr pointer of SVRecord
          * @param gi reference of GeneInfo
          * @param i which fusion will  be converted(-1 to all)
          */
-        void toFuseRec(FusionRecord& fsr, const SVRecord& svr, GeneInfo& gi, int32_t i);
+        void toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int32_t i);
 
         /** mask fusion event status 
          * @param svs reference of SVSet

@@ -100,18 +100,18 @@ void Annotator::cgrsplit(const cgranges_t* cr, std::vector<RegItemCnt>& ctgRng, 
     }
 }
 
-Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
+Stats* Annotator::covAnnotate(SVSet& svs){
     // Store all regions of SV into cgranges_t
     util::loginfo("Beg construct SVs cgranges_t");
     cgranges_t* crsv = cr_init();
     int32_t regBeg = -1, regEnd = -1;
     for(uint32_t i = 0; i < svs.size(); ++i){
-        regBeg = std::max(0, svs[i].mSVStart - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(svs[i].mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr1]);
-        cr_add(crsv, svs[i].mNameChr1.c_str(), regBeg, regEnd, 1);
-        regBeg = std::max(0, svs[i].mSVEnd - mOpt->libInfo->mMaxNormalISize);
-        regEnd = std::min(svs[i].mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i].mChr2]);
-        cr_add(crsv, svs[i].mNameChr2.c_str(), regBeg, regEnd, 1);
+        regBeg = std::max(0, svs[i]->mSVStart - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i]->mSVStart + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i]->mChr1]);
+        cr_add(crsv, svs[i]->mNameChr1.c_str(), regBeg, regEnd, 1);
+        regBeg = std::max(0, svs[i]->mSVEnd - mOpt->libInfo->mMaxNormalISize);
+        regEnd = std::min(svs[i]->mSVEnd + mOpt->libInfo->mMaxNormalISize, (int32_t)mOpt->bamheader->target_len[svs[i]->mChr2]);
+        cr_add(crsv, svs[i]->mNameChr2.c_str(), regBeg, regEnd, 1);
     }
     if(!cr_is_sorted(crsv)) cr_sort(crsv);
     cr_merge_pre_index(crsv);
@@ -158,7 +158,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     std::vector<int32_t> refAlignedReadCount(svs.size());
     std::vector<int32_t> refAlignedSpanCount(svs.size());
     util::loginfo("Beg extracting breakpoint regions of each precisely classified SV");
-    for(auto itsv = svs.begin(); itsv != svs.end(); ++ itsv){
+    for(auto& itsv: svs){
         if(!itsv->mPrecise) continue;
         // Iterate all break point
         for(int bpPoint = 0; bpPoint < 2; ++bpPoint){
@@ -191,7 +191,7 @@ Stats* Annotator::covAnnotate(std::vector<SVRecord>& svs){
     util::loginfo("Beg extracting PE supported breakpoints of each SV");
     ContigSpanPoints spanPoint;
     spanPoint.resize(mOpt->contigNum);
-    for(auto itsv = svs.begin(); itsv != svs.end(); ++itsv){
+    for(auto& itsv: svs){
         if(itsv->mPESupport == 0) continue;
         spanPoint[itsv->mChr1].push_back(SpanPoint(itsv->mSVStart, itsv->mSVT, itsv->mID, false));
         spanPoint[itsv->mChr2].push_back(SpanPoint(itsv->mSVEnd, itsv->mSVT, itsv->mID, true));
@@ -297,21 +297,21 @@ void Annotator::rangeGeneAnnoDNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascripts at breakpoint 1
-        getDNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx);
-        gl[i].mPos1 = svs[i].mSVStart;
-        gl[i].mChr1 = svs[i].mNameChr1;
+        getDNABpTrs(gl[i].mGene1, svs[i]->mNameChr1, svs[i]->mSVStart, fp, tbx);
+        gl[i].mPos1 = svs[i]->mSVStart;
+        gl[i].mChr1 = svs[i]->mNameChr1;
         // get transcripts at breakpoint 2
-        getDNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx);
-        gl[i].mPos2 = svs[i].mSVEnd;
-        gl[i].mChr2 = svs[i].mNameChr2;
+        getDNABpTrs(gl[i].mGene2, svs[i]->mNameChr2, svs[i]->mSVEnd, fp, tbx);
+        gl[i].mPos2 = svs[i]->mSVEnd;
+        gl[i].mChr2 = svs[i]->mNameChr2;
         // annotate fusion gene
         std::set<std::string> fgAdded;
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
-                svutil::getexon(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i].mSVT);
-                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i].mSVT);
-                gl[i].mGene1[g1].getCatPart(svs[i].mSVT, true);
-                gl[i].mGene2[g2].getCatPart(svs[i].mSVT, false);
+                svutil::getexon(gl[i].mGene1[g1], gl[i].mGene2[g2], svs[i]->mSVT);
+                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, gl[i].mGene1[g1].strand[0], gl[i].mGene2[g2].strand[0], svs[i]->mSVT);
+                gl[i].mGene1[g1].getCatPart(svs[i]->mSVT, true);
+                gl[i].mGene2[g2].getCatPart(svs[i]->mSVT, false);
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FANNG){
                     std::cout << gl[i] << std::endl;
@@ -394,19 +394,19 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
     tbx_t* tbx = tbx_index_load(mOpt->annodb.c_str());
     for(int32_t i = begIdx; i < endIdx; ++i){
         // get trascript at breakpoint 1
-        getRNABpTrs(gl[i].mGene1, svs[i].mNameChr1, svs[i].mSVStart, fp, tbx, true, svs[i].mSVT);
+        getRNABpTrs(gl[i].mGene1, svs[i]->mNameChr1, svs[i]->mSVStart, fp, tbx, true, svs[i]->mSVT);
         gl[i].mChr1 = gl[i].mGene1[0].chr;
         gl[i].mPos1 = gl[i].mGene1[0].pos;
         // get trascript at breakpoint 2
-        getRNABpTrs(gl[i].mGene2, svs[i].mNameChr2, svs[i].mSVEnd, fp, tbx, false, svs[i].mSVT);
+        getRNABpTrs(gl[i].mGene2, svs[i]->mNameChr2, svs[i]->mSVEnd, fp, tbx, false, svs[i]->mSVT);
         gl[i].mChr2 = gl[i].mGene2[0].chr;
         gl[i].mPos2 = gl[i].mGene2[0].pos;
         // annotate fusion gene
         for(uint32_t g1 = 0; g1 < gl[i].mGene1.size(); ++g1){
             for(uint32_t g2 = 0; g2 < gl[i].mGene2.size(); ++g2){
-                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i].mSVT);
-                gl[i].mGene1[g1].getCatPart(svs[i].mSVT, true);
-                gl[i].mGene2[g2].getCatPart(svs[i].mSVT, false);
+                FuseGene fsg = svutil::getFusionGene(gl[i].mGene1[g1].gene, gl[i].mGene2[g2].gene, '+', '+', svs[i]->mSVT);
+                gl[i].mGene1[g1].getCatPart(svs[i]->mSVT, true);
+                gl[i].mGene2[g2].getCatPart(svs[i]->mSVT, false);
                 gl[i].mGene1[g1].getCigar();
                 gl[i].mGene2[g2].getCigar();
                 if(fsg.status & FUSION_FHTFLSWAPPED){
@@ -439,15 +439,15 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         if(iter->second.mR1MapQ && iter->second.mR2MapQ){
             if((iter->second.mR1SVID != iter->second.mR2SVID)){
                 // find the one which is not in repeat region
-                bool r1svrp = (svs[iter->second.mR1SVID].mRealnRet < 0 || svs[iter->second.mR1SVID].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
-                bool r2svrp = (svs[iter->second.mR2SVID].mRealnRet < 0 || svs[iter->second.mR2SVID].mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r1svrp = (svs[iter->second.mR1SVID]->mRealnRet < 0 || svs[iter->second.mR1SVID]->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r2svrp = (svs[iter->second.mR2SVID]->mRealnRet < 0 || svs[iter->second.mR2SVID]->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
                 if(r1svrp == r2svrp){
                     if(!r1svrp){ // both not in repeat region
-                        if(svs[iter->second.mR1SVID].mSRSupport < svs[iter->second.mR2SVID].mSRSupport){
+                        if(svs[iter->second.mR1SVID]->mSRSupport < svs[iter->second.mR2SVID]->mSRSupport){
                             r1svrp = true;
                             r2svrp = false;
-                        }else if(svs[iter->second.mR1SVID].mSRSupport == svs[iter->second.mR2SVID].mSRSupport &&
-                                 svs[iter->second.mR1SVID].mPESupport < svs[iter->second.mR2SVID].mPESupport){
+                        }else if(svs[iter->second.mR1SVID]->mSRSupport == svs[iter->second.mR2SVID]->mSRSupport &&
+                                 svs[iter->second.mR1SVID]->mPESupport < svs[iter->second.mR2SVID]->mPESupport){
                             r1svrp = true;
                             r2svrp = false;
                         }else{
