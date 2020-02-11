@@ -238,7 +238,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
         if(sr[i]->mSVT == 4 && sr[i]->mInsSeq.length() > 0){ // Keep all insertions
             msr.push_back(sr[i]);
             sr[i]->mMerged = true;
-            sr[i] = NULL;
+            continue;
         }
         if(sr[i]->mSRSupport == 0 || sr[i]->mSRAlignQuality == 0){
             sr[i]->mMerged = true;
@@ -280,7 +280,10 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
 #endif
     // clean merged ones and set unmerge to NULL in case freed
     for(auto& e: sr){
-        if(e->mMerged) delete e;
+        if(e->mMerged){
+            if(e->mSVT == 4 && e->mInsSeq.length() > 0) e = NULL;
+            else delete e;
+        }
         e = NULL;
     }
     sr.clear(); sr.shrink_to_fit();
