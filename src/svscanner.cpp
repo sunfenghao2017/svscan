@@ -126,10 +126,11 @@ void SVScanner::scanDPandSR(){
     }
     // Process all SRs
     util::loginfo("End scanning bam for SRs and DPs");
-    SRBamRecordSet srs(mOpt, jctMap);
+    SRBamRecordSet* srs = new SRBamRecordSet(mOpt, jctMap);
+    delete jctMap; jctMap = NULL;
     util::loginfo("Beg clustering SRs");
     // Update all valid Ref IDs of SR
-    for(auto& e: srs.mSRs){
+    for(auto& e: srs->mSRs){
         for(auto& f: e){
             mOpt->svRefID.insert(f.mChr1);
             mOpt->svRefID.insert(f.mChr2);
@@ -144,7 +145,7 @@ void SVScanner::scanDPandSR(){
         std::cout << std::endl;
     }
 #endif
-    srs.cluster(mSRSVs);
+    srs->cluster(mSRSVs);
     util::loginfo("End clustering SRs");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
@@ -153,8 +154,9 @@ void SVScanner::scanDPandSR(){
     }
 #endif
     util::loginfo("Beg assembling SRs and refining breakpoints");
-    srs.assembleSplitReads(mSRSVs);
+    srs->assembleSplitReads(mSRSVs);
     util::loginfo("End assembling SRs and refining breakpoints");
+    delete srs; srs = NULL;
     util::loginfo("Found SRSV Candidates: " + std::to_string(mSRSVs.size()));
     // Process all DPs
     util::loginfo("Beg clustering DPs");
@@ -166,6 +168,7 @@ void SVScanner::scanDPandSR(){
         std::cout << dprSet << std::endl;
     }
 #endif
+    delete dprSet; dprSet = NULL;
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){

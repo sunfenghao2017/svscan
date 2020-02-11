@@ -436,18 +436,18 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     getReadSupportStatus(mOpt->bamout, rssm);
     std::map<std::string, int32_t> drec;
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
-        if(iter->second.mR1MapQ && iter->second.mR2MapQ){
-            if((iter->second.mR1SVID != iter->second.mR2SVID)){
+        if(iter->second->mR1MapQ && iter->second->mR2MapQ){
+            if(iter->second->mR1SVID != iter->second->mR2SVID){
                 // find the one which is not in repeat region
-                bool r1svrp = (svs[iter->second.mR1SVID]->mRealnRet < 0 || svs[iter->second.mR1SVID]->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
-                bool r2svrp = (svs[iter->second.mR2SVID]->mRealnRet < 0 || svs[iter->second.mR2SVID]->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r1svrp = (svs[iter->second->mR1SVID]->mRealnRet < 0 || svs[iter->second->mR1SVID]->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
+                bool r2svrp = (svs[iter->second->mR2SVID]->mRealnRet < 0 || svs[iter->second->mR2SVID]->mRealnRet > mOpt->fuseOpt->mWhiteFilter.mMaxRepHit);
                 if(r1svrp == r2svrp){
                     if(!r1svrp){ // both not in repeat region
-                        if(svs[iter->second.mR1SVID]->mSRSupport < svs[iter->second.mR2SVID]->mSRSupport){
+                        if(svs[iter->second->mR1SVID]->mSRSupport < svs[iter->second->mR2SVID]->mSRSupport){
                             r1svrp = true;
                             r2svrp = false;
-                        }else if(svs[iter->second.mR1SVID]->mSRSupport == svs[iter->second.mR2SVID]->mSRSupport &&
-                                 svs[iter->second.mR1SVID]->mPESupport < svs[iter->second.mR2SVID]->mPESupport){
+                        }else if(svs[iter->second->mR1SVID]->mSRSupport == svs[iter->second->mR2SVID]->mSRSupport &&
+                                 svs[iter->second->mR1SVID]->mPESupport < svs[iter->second->mR2SVID]->mPESupport){
                             r1svrp = true;
                             r2svrp = false;
                         }else{
@@ -457,23 +457,23 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
                     }
                 }
                 if(r1svrp){
-                    sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
-                    if(iter->second.mR1SRT){
-                        sts->mSpnCnts[iter->second.mR1SVID].mAltCnt -= 1;
-                        sts->mSpnCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+                    sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
+                    if(iter->second->mR1SRT){
+                        sts->mSpnCnts[iter->second->mR1SVID].mAltCnt -= 1;
+                        sts->mSpnCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
                     }else{
-                        sts->mJctCnts[iter->second.mR1SVID].mAltCnt -= 1;
-                        sts->mJctCnts[iter->second.mR1SVID].mAltQual[iter->second.mR1MapQ] -= 1;
+                        sts->mJctCnts[iter->second->mR1SVID].mAltCnt -= 1;
+                        sts->mJctCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
                     }
                 }
                 if(r2svrp){
-                    sts->mTotalAltCnts[iter->second.mR2SVID] -= 1;
-                    if(iter->second.mR2SRT){
-                        sts->mSpnCnts[iter->second.mR2SVID].mAltCnt -= 1;
-                        sts->mSpnCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
+                    sts->mTotalAltCnts[iter->second->mR2SVID] -= 1;
+                    if(iter->second->mR2SRT){
+                        sts->mSpnCnts[iter->second->mR2SVID].mAltCnt -= 1;
+                        sts->mSpnCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
                     }else{
-                        sts->mJctCnts[iter->second.mR2SVID].mAltCnt -= 1;
-                        sts->mJctCnts[iter->second.mR2SVID].mAltQual[iter->second.mR2MapQ] -= 1;
+                        sts->mJctCnts[iter->second->mR2SVID].mAltCnt -= 1;
+                        sts->mJctCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
                     }
                 }
                 if(r1svrp && r2svrp){
@@ -484,7 +484,7 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
                     drec[iter->first] = 2;
                 }
             }else{
-                sts->mTotalAltCnts[iter->second.mR1SVID] -= 1;
+                sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
             }
         }
     }
