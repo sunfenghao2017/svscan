@@ -132,7 +132,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     if((int32_t)mConsensus.size() < 2 * opt->filterOpt->mMinFlankSize) return false;
     // Get reference slice
     BreakPoint bp = BreakPoint(this, hdr);
-    if(mSVT >= 5) bp = BreakPoint(this, hdr, 3 * opt->libInfo->mReadLen);
+    if(mSVT >= 5) bp = BreakPoint(this, hdr, 10 * opt->libInfo->mReadLen);
     if(liteChrSeq || largeChrSeq) mSVRef = bp.getSVRef(liteChrSeq, largeChrSeq);
     else mergeRef();
     // SR consensus to mSVRef alignment
