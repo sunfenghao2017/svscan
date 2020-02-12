@@ -78,6 +78,10 @@ void cr_index2(cgranges_t *cr, int32_t merge);
 int64_t cr_overlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
 int64_t cr_contain(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
 int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t en, int64_t **b_, int64_t *m_b_);
+cgranges_t* cr_overlap2(const cgranges_t *cr1, const cgranges_t *cr2);
+cgranges_t* cr_mergetwo(const cgranges_t *cr1, const cgranges_t *cr2);
+void cr_mergeone(cgranges_t *des, const cgranges_t *src);
+void cr_copyone(cgranges_t *des, const cgranges_t *src);
 
 // only check overlap or not
 bool cr_isoverlap(const cgranges_t *cr, const char *ctg, int32_t st, int32_t en);
@@ -94,10 +98,10 @@ void cr_sort(cgranges_t *cr);
 int64_t cr_merge_pre_index(cgranges_t *cr); // NB: call *after* cr_sort() but *before* cr_index_prepare()
 
 // user defined iterator to outpt cr to fp
-void cr_iter_indexed(const cgranges_t *cr, FILE* fp);
+void cr_iter_indexed(const cgranges_t *cr, FILE* fp, bool nolabel = true);
 
 // user defined iterator to output cr to fp
-void cr_iter_usual(const cgranges_t *cr, FILE* fp);
+void cr_iter_usual(const cgranges_t *cr, FILE* fp, bool nolabel = true);
 
 #ifdef __cplusplus
 }
