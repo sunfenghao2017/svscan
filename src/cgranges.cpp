@@ -392,9 +392,19 @@ cgranges_t* cr_overlap2(const cgranges_t *cr1, const cgranges_t *cr2){
         int64_t i, *b = 0, max_b = 0, n = 0;
         n = cr_overlap_int(qcr, ctg_id, 0, INT_MAX, &b, &max_b);
         for(i = 0; i < n; ++i){
-            if(cr_isoverlap(rcr, qcr->ctg[ctg_id].name, cr_start(qcr, b[i]), cr_end(qcr, b[i]))){
-                cr_add(cro, qcr->ctg[ctg_id].name, cr_start(qcr, b[i]), cr_end(qcr, b[i]), 0);
+            int64_t j, *bb = 0, max_bb = 0, nn =0;
+            char* ctg = qcr->ctg[ctg_id].name;
+            int32_t st1 = cr_start(qcr, b[i]);
+            int32_t en1 = cr_end(qcr, b[i]);
+            nn = cr_overlap(rcr, ctg, st1, en1, &bb, &max_bb);
+            for(j = 0; j < nn; ++j){
+                cr_intv_t *r = &rcr->r[bb[j]];
+                int32_t st0 = cr_st(r), en0 = cr_en(r);
+                if(st0 < st1) st0 = st1;
+                if(en0 > en1) en0 = en1;
+                cr_add(cro, ctg, st0, en0, -1);
             }
+            free(bb);
         }
         free(b);
     }

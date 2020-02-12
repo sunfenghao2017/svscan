@@ -138,7 +138,7 @@ void BedRegs::olpAna(){
     // output results of all overlaps
     for(auto iter = olpret.begin(); iter != olpret.end(); ++iter){
         if(iter->second->idx.size() > 1){
-            std::string outname = outdir + "/" + mNames[iter->second->idx[0]];
+            std::string outname = outdir + "/" + mNames[iter->second->idx[0]] + ".bed";
             for(uint32_t i = 1; i < iter->second->idx.size(); ++i){
                 outname.append("_" + mNames[iter->second->idx[i]]);
             }
@@ -156,15 +156,28 @@ void BedRegs::olpAna(){
     cgranges_t* qcr = NULL;
     for(uint32_t i = 0; i < mRegs.size(); ++i){
         qcr = mRegs[i];
-        std::string outname = outdir + "/uniq_" + mNames[i];
+        std::string outname = outdir + "/uniq_" + mNames[i] + ".bed";
         FILE* fp = fopen(outname.c_str(), "w");
         for(int32_t ctg_id = 0; ctg_id < qcr->n_ctg; ++ctg_id){
             int64_t i, *b = 0, max_b = 0, n = 0;
             n = cr_overlap_int(qcr, ctg_id, 0, INT_MAX, &b, &max_b);
             for(i = 0; i < n; ++i){
-                if(!cr_isoverlap(cra, qcr->ctg[ctg_id].name, cr_start(qcr, b[i]), cr_end(qcr, b[i]))){
-                    fprintf(fp, "%s\t%d\t%d\n", qcr->ctg[ctg_id].name, cr_start(qcr, b[i]), cr_end(qcr, b[i]));
+                int64_t j, *bb = 0, max_bb = 0, nn =0;
+                char* ctg = qcr->ctg[ctg_id].name;
+                int32_t st1 = cr_start(qcr, b[i]);
+                int32_t en1 = cr_end(qcr, b[i]);
+                int32_t x = 0;
+                nn = cr_overlap(cra, ctg, st1, en1, &bb, &max_bb);
+                for(j = 0, x = st1; j < nn; ++j){
+                    cr_intv_t *r = &cra->r[bb[j]];
+                    int32_t st0 = cr_st(r), en0 = cr_en(r);
+                    if(st0 < st1) st0 = st1;
+                    if(en0 > en1) en0 = en1;
+                    if(st0 > x) fprintf(fp, "%s\t%d\t%d\n", ctg, x, st0);
+                    x = en0;
                 }
+                if(x < en1) fprintf(fp, "%s\t%d\t%d\n", ctg, x, en1);
+                free(bb);
             }
             free(b);
         }
