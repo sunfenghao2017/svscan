@@ -138,10 +138,11 @@ void BedRegs::olpAna(){
     // output results of all overlaps
     for(auto iter = olpret.begin(); iter != olpret.end(); ++iter){
         if(iter->second->idx.size() > 1){
-            std::string outname = outdir + "/" + mNames[iter->second->idx[0]] + ".bed";
+            std::string outname = outdir + "/" + mNames[iter->second->idx[0]];
             for(uint32_t i = 1; i < iter->second->idx.size(); ++i){
                 outname.append("_" + mNames[iter->second->idx[i]]);
             }
+            outname.append(".bed");
             FILE* fp = fopen(outname.c_str(), "w");
             cr_iter_indexed(iter->second->olpret, fp, true);
             fclose(fp);
