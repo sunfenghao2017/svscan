@@ -1,11 +1,5 @@
 #include "olpbedl.h"
 
-BedRegs::BedRegs(){
-}
-
-BedRegs::~BedRegs(){
-}
-
 char* BedRegs::parse_bed3b(char *s, int32_t *st_, int32_t *en_, char **r){
     char *p, *q, *ctg = 0;
     int32_t i, st = -1, en = -1;
@@ -205,14 +199,17 @@ int main(int argc, char** argv){
     app.get_formatter()->column_width(50);
     CLI::Option* pbed = app.add_option("-b,--beds", pbr->mBedPaths, "bed files to do ana")->required(false);
     CLI::Option* plst = app.add_option("-l,--list", pbr->bedlist, "bed list file")->excludes(pbed)->required(false)->check(CLI::ExistingFile);
-    app.add_option("-o,--outdir", pbr->outdir, "output directory")->required(true);
+    app.add_option("-o,--outdir", pbr->outdir, "output directory", true);
     CLI11_PARSE(app, argc, argv);
-    util::makedir(pbr->outdir);
     if(pbed->count() == 0 && plst->count() == 0){
         util::errorExit("-b and -l must be provides one");
     }else{
         if(plst->count()) util::makeListFromFileByLine(pbr->bedlist, pbr->mBedPaths);
     }
+    if(pbr->mBedPaths.size() < 2){
+        util::errorExit("must provide at least 2 beds");
+    }
+    util::makedir(pbr->outdir);
     pbr->loadBeds();
     pbr->olpAna();
 }

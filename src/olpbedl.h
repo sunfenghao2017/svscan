@@ -7,8 +7,10 @@
 #include <vector>
 #include <zlib.h>
 #include <util.h>
-#include <bwa/kseq.h>
+#include <kseq.h>
 #include "cgranges.h"
+
+KSEQ_INIT(gzFile, gzread)
 
 typedef struct {
     int32_t l;
@@ -34,10 +36,12 @@ class BedRegs{
         std::string bedlist;                ///< bed list file
         
         /** constructor of BedRegs */
-        BedRegs();
+        BedRegs(){
+            outdir = "anaout";
+        }
 
         /** destructor of BedRegs */
-        ~BedRegs();
+        ~BedRegs(){}
 
     public:
         cgranges_t* loadOneBed(const std::string& bedFile);
