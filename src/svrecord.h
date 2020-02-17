@@ -108,6 +108,16 @@ class SVRecord{
             return os;
         }
 
+        /** operator to output SVRecord to ostream
+         * @param os reference of ostream object
+         * @param sv pointer of SVRecord object
+         * @return reference of ostream object
+         */
+        inline friend std::ostream& operator<<(std::ostream& os, const SVRecord* sv){
+            os << (*sv);
+            return os;
+        }
+
         /** convert an SVRecord object to string
          * @return str representation of SVRecord
          */
@@ -294,6 +304,11 @@ typedef std::vector<SVRecord*> SVSet; ///< list of SV
 
 inline std::ostream& operator<<(std::ostream& os, const SVSet& svs){
     for(uint32_t id = 0; id < svs.size(); ++id) os<< svs[id];
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SVSet* svs){
+    for(uint32_t id = 0; id < svs->size(); ++id) os<< svs[id];
     return os;
 }
 

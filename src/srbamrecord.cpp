@@ -266,8 +266,10 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         int32_t svt = svs[svid]->mSVT;
         int32_t bpInslen = 0;
         bool r12mismatch = true;
+        bool oread1 = false;
         for(auto& rec : mSRs[svs[svid]->mSVT]){
-            if(rec.mID == seed && rec.mRead1 == (b->core.flag & BAM_FREAD1)){
+            oread1 = (b->core.flag & BAM_FREAD1);
+            if(rec.mID == seed && rec.mRead1 == oread1){
                 bpInslen = rec.mInslen;
                 r12mismatch = false;
                 break;
