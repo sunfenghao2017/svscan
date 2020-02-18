@@ -44,15 +44,16 @@ struct FusionDetail{
     std::string tgene;
     int32_t srcnt = 0;
     int32_t dpcnt = 0;
+    int32_t mocnt = 0;
     int32_t svid = -1;
 
     inline friend std::ostream& operator <<(std::ostream& os, const FusionDetail& fd){
-        os << fd.svid << "\t" << fd.hgene << "\t" << fd.tgene << "\t" << fd.srcnt << "\t" << fd.dpcnt << "\n";
+        os << fd.svid << "\t" << fd.hgene << "\t" << fd.tgene << "\t" << fd.srcnt << "\t" << fd.dpcnt << "\t" << fd.mocnt << "\n";
         return os;
     }
 
     static void outheader(std::ostream& os){
-        os << "svid\tgene1\tgene2\tsrcnt\tdpcnt\n";
+        os << "svid\tgene1\tgene2\tsrcnt\tdpcnt\tmocnt\n";
     }
 };
 

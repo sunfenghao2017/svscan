@@ -79,9 +79,12 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
     hts_itr_t* itr = sam_itr_querys(idx, hdr, hqreg.c_str());
     bam1_t* b = bam_init1();
     bool write = false;
+    std::string qname;
+    std::set<std::string> mols;
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
         write = false;
+        qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if((clips.first  > 0) ^ (clips.second > 0)){
             uint8_t* sa = bam_aux_get(b, "SA");
@@ -111,6 +114,8 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == treg.chr && sapos > tpos && sapos < tend){
                     ++srcnt;
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 0);
                     wmtx.lock();
@@ -123,6 +128,10 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
         if(b->core.mtid == tgid){
             if(b->core.mpos > tpos && b->core.mpos < tend){
                 ++dpcnt;
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
                 if(!write){
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 1);
@@ -138,6 +147,8 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
     itr = sam_itr_querys(idx, hdr, tqreg.c_str());
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
+        write = false;
+        qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if((clips.first > 0) ^ (clips.second > 0)){
             uint8_t* sa = bam_aux_get(b, "SA");
@@ -167,6 +178,8 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == hreg.chr && sapos > hpos && sapos < hend){
                     ++srcnt;
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 0);
                     wmtx.lock();
@@ -179,6 +192,10 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
         if(b->core.mtid == hgid){
             if(b->core.mpos > hpos && b->core.mpos < hend){
                 ++dpcnt;
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
                 if(!write){
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 1);
@@ -197,6 +214,7 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
     // store stat
     ft.srcnt = srcnt;
     ft.dpcnt = dpcnt;
+    ft.mocnt = mols.size();
     util::loginfo("End " + logstr, logmtx);
 }
 
@@ -223,9 +241,12 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
     hts_itr_t* itr = sam_itr_querys(idx, hdr, regs.str().c_str());
     bam1_t* b = bam_init1();
     bool write = false;
+    std::set<std::string> mols;
+    std::string qname;
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
         write = false;
+        qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if(clips.first || clips.second){
             uint8_t* data = bam_aux_get(b, "SA");
@@ -237,6 +258,8 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == ttrs && sapos > tpos && sapos < tend){
                     ++srcnt;
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 0);
                     wmtx.lock();
@@ -249,6 +272,10 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
         if(b->core.mtid == tgid){
             if(b->core.mpos > tpos && b->core.mpos < tend){
                 ++dpcnt;
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
                 if(!write){
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 1);
@@ -267,6 +294,8 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
     itr = sam_itr_querys(idx, hdr, regs.str().c_str());
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
+        qname.clear();
+        write = false;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if(clips.first || clips.second){
             uint8_t* data = bam_aux_get(b, "SA");
@@ -278,6 +307,8 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == htrs && sapos > hpos && sapos < hend){
                     ++srcnt;
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 0);
                     wmtx.lock();
@@ -290,6 +321,10 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
         if(b->core.mtid == hgid){
             if(b->core.mpos > hpos && b->core.mpos < hend){
                 ++dpcnt;
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
                 if(!write){
                     bam_aux_update_int(b, "ZF", ft.svid);
                     bam_aux_update_int(b, "ST", 1);
@@ -308,6 +343,7 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
     // store stat
     ft.srcnt = srcnt;
     ft.dpcnt = dpcnt;
+    ft.mocnt = mols.size();
     util::loginfo("End " + logstr, logmtx);
 }
 
