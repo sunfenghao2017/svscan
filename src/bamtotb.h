@@ -80,13 +80,12 @@ class BamToTable{
         std::string svbam;          ///< sv supporting bam
         std::string fstsv;          ///< fusion result tsv
         std::vector<int32_t> usrid; ///< fusion id list
-        std::string bamtb;          ///< bam output table
+        std::string bamtb;          ///< bam output table(excel format)
+        std::string bamtt;          ///< bam output txt(tsv format)
         int32_t svidf = 29;         ///< svid column index in tsv
 
     /** BamToTable constructor */
-    BamToTable(){
-        bamtb = "b2t.xlsx";
-    }
+    BamToTable(){}
 
     /** BamToTable destructor */
     ~BamToTable(){}

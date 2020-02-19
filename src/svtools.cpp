@@ -121,7 +121,8 @@ int main(int argc, char** argv){
     pb2t->add_option("-f,--fstsv", bam2tb->fstsv, "fusion result tsv")->required(false)->check(CLI::ExistingFile);
     pb2t->add_option("-u,--usrid", bam2tb->usrid, "sv ids user intereseted")->required(false);
     pb2t->add_option("-c,--column", bam2tb->svidf, "svid column index in tsv[0-based]", true)->required(false);
-    pb2t->add_option("-o,--outfile", bam2tb->bamtb, "output excel path", true)->required(false);
+    pb2t->add_option("-o,--outexcel", bam2tb->bamtb, "output excel path(ignore output if not provided)", true)->required(false);
+    pb2t->add_option("-t,--outtsv", bam2tb->bamtt, "output tsv path(ignore output if not provided)", true)->required(false);
     // svcreg
     SVCreg* crgOpt = new SVCreg();
     CLI::App* psvcrg = app.add_subcommand("svcreg", "get creg for svscan");

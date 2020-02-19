@@ -82,12 +82,11 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
 }
 
 void BamToTable::b2t(){
+    if(bamtt.empty() && bamtb.empty()) return; // return if both types of output does not needed
+    // fetch svids
     std::set<int32_t> svids;
     getsvid(svids);
-    lxw_workbook* workbook = workbook_new(bamtb.c_str());
-    lxw_format* format = workbook_add_format(workbook);
-    format_set_align(format, LXW_ALIGN_LEFT);
-    format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
+    // fetch bam records
     BamRecVector brecs;
     samFile* fp = sam_open(svbam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
@@ -105,15 +104,30 @@ void BamToTable::b2t(){
         }
     }
     std::sort(brecs.begin(), brecs.end());
+    // bam records to string buffer
     std::stringstream oss;
     oss << BamRec::getHeader();
     for(uint32_t i = 0; i < brecs.size(); ++i){
         oss << brecs[i].toStr();
     }
-    lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
-    int ttl = lines2sheet(rsheet, oss.str(), format);
-    worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
-    workbook_close(workbook);
+    // store into txt if needed
+    if(!bamtt.empty()){
+        std::ofstream fw(bamtt);
+        fw << oss.str();
+        fw.close();
+    }
+    // store into excel if needed
+    if(!bamtb.empty()){
+        lxw_workbook* workbook = workbook_new(bamtb.c_str());
+        lxw_format* format = workbook_add_format(workbook);
+        format_set_align(format, LXW_ALIGN_LEFT);
+        format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
+        lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
+        int ttl = lines2sheet(rsheet, oss.str(), format);
+        worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
+        workbook_close(workbook);
+    }
+    // release memory
     sam_close(fp);
     bam_hdr_destroy(h);
     bam_destroy1(b);
