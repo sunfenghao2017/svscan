@@ -421,7 +421,6 @@ cgranges_t* cr_mergetwo(const cgranges_t *cr1, const cgranges_t *cr2){
 
 void cr_mergeone(cgranges_t *des, const cgranges_t *src){
     cr_copyone(des, src);
-    cr_index2(des, 1);
 }
 
 void cr_copyone(cgranges_t *des, const cgranges_t *src){
