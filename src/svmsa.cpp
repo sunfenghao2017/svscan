@@ -1,5 +1,5 @@
 #include "msa.h"
-#include "util.h"
+#include <util.h>
 #include "aligner.h"
 
 /** class to store MSA argument */

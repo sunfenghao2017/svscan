@@ -17,7 +17,7 @@ struct ReadSupport{
 };
 
 /** type to store read supporting statistics */
-typedef std::map<std::string, ReadSupport> ReadSupportStatMap;
+typedef std::map<std::string, ReadSupport*> ReadSupportStatMap;
 
 inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rssm){
     samFile* fp = sam_open(bam.c_str(), "r");
@@ -32,26 +32,26 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             std::string qname = bam_get_qname(b);
             auto iter = rssm.find(qname);
             if(iter == rssm.end()){
-                ReadSupport rs;
+                ReadSupport* rs = new ReadSupport();
                 if(b->core.flag & BAM_FREAD1){
-                    rs.mR1SVID = svid;
-                    rs.mR1MapQ = b->core.qual;
-                    rs.mR1SRT = srst;
+                    rs->mR1SVID = svid;
+                    rs->mR1MapQ = b->core.qual;
+                    rs->mR1SRT = srst;
                 }else{
-                    rs.mR2SVID = svid;
-                    rs.mR2MapQ = b->core.qual;
-                    rs.mR2SRT = srst;
+                    rs->mR2SVID = svid;
+                    rs->mR2MapQ = b->core.qual;
+                    rs->mR2SRT = srst;
                 }
                 rssm[qname] = rs;
             }else{
                 if(b->core.flag & BAM_FREAD1){
-                    iter->second.mR1SVID = svid;
-                    iter->second.mR1MapQ = b->core.qual;
-                    iter->second.mR1SRT = srst;
+                    iter->second->mR1SVID = svid;
+                    iter->second->mR1MapQ = b->core.qual;
+                    iter->second->mR1SRT = srst;
                 }else{
-                    iter->second.mR2SVID = svid;
-                    iter->second.mR2MapQ = b->core.qual;
-                    iter->second.mR2SRT = srst;
+                    iter->second->mR2SVID = svid;
+                    iter->second->mR2MapQ = b->core.qual;
+                    iter->second->mR2SRT = srst;
                 }
             }
         }

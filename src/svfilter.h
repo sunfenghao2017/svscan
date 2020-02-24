@@ -10,8 +10,8 @@
 #include "software.h"
 #include "svinfo.h"
 #include "svutil.h"
-#include "CLI.hpp"
-#include "util.h"
+#include <CLI.hpp>
+#include <util.h>
 
 typedef std::vector<std::vector<SVInfo>> SVList;
 

@@ -1,7 +1,7 @@
 #ifndef ANNOTATOR_H
 #define ANNOTATOR_H
 
-#include "util.h"
+#include <util.h>
 #include "stats.h"
 #include "resbamstat.h"
 #include <htslib/tbx.h>

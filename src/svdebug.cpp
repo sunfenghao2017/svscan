@@ -28,26 +28,39 @@ void SVDebug::getReg(const std::string& trs, tbx_t* tbx, htsFile* tfp, GeneRegio
             reg.beg = regs[0].beg;
         }
     }else{
-        util::errorExit("Transcript : " + trs + "has no exons");
+        return ;
     }
 }
 
-void SVDebug::debugDNA(){
-    if(annodb.empty()) util::errorExit("annodb must be provided in DNA SV debugging");
-    // fetch gene coordinates
+void SVDebug::debugOnePairDNA(FusionDetail& ft){
+    std::string logstr = ft.hgene + "-" + ft.tgene + " scan";
+    util::loginfo("Beg " + logstr, logmtx);
+    // load fp
     htsFile* tfp = hts_open(annodb.c_str(), "r");
     tbx_t* tbx = tbx_index_load(annodb.c_str());
-    std::map<std::string, std::string> g2tmap;
-    util::makeMapPairFromFileByLine(gene2trans, g2tmap);
-    std::string htrs = g2tmap[hgene];
-    std::string ttrs = g2tmap[tgene];
+    std::string htrs = g2tmap[ft.hgene];
+    std::string ttrs = g2tmap[ft.tgene];
+    if(htrs.empty()){
+        util::loginfo(ft.hgene + " has no recording trs", logmtx);
+        return;
+    }
+    if(ttrs.empty()){
+        util::loginfo(ft.hgene + " has no recording trs", logmtx);
+        return;
+    }
     GeneRegion hreg, treg;
     getReg(htrs, tbx, tfp, hreg);
+    if(hreg.chr.empty()){
+        util::loginfo(htrs +  " has no exon records", logmtx);
+        return;
+    }
     getReg(ttrs, tbx, tfp, treg);
+    if(hreg.chr.empty()){
+        util::loginfo(ttrs +  " has no exon records", logmtx);
+        return;
+    }
     std::string hqreg = hreg.toString();
     std::string tqreg = treg.toString();
-    util::loginfo(hgene + ": " + hqreg);
-    util::loginfo(tgene + ": " + tqreg);
     hts_close(tfp);
     tbx_destroy(tbx);
     // open bam and idx
@@ -59,22 +72,19 @@ void SVDebug::debugDNA(){
     int32_t hend = std::atoi(hreg.end.c_str());
     int32_t tpos = std::atoi(treg.beg.c_str());
     int32_t tend = std::atoi(treg.end.c_str());
-    int32_t srcnt = 0, oscnt = 0, dpcnt = 0;
-    samFile* srfp = sam_open(srbam.c_str(), "wb");
-    samFile* osfp = NULL;
-    if(!osbam.empty()){
-        sam_open(osbam.c_str(), "wb");
-        assert(sam_hdr_write(osfp, hdr) >= 0);
-    }
-    samFile* dpfp = sam_open(dpbam.c_str(), "wb");
-    assert(sam_hdr_write(srfp, hdr) >= 0 && sam_hdr_write(dpfp, hdr) >= 0);
+    int32_t srcnt = 0, dpcnt = 0;
     hts_idx_t* idx = sam_index_load(sfp, inbam.c_str());
     // check hgene range for possible evidence
      const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
     hts_itr_t* itr = sam_itr_querys(idx, hdr, hqreg.c_str());
     bam1_t* b = bam_init1();
+    bool write = false;
+    std::string qname;
+    std::set<std::string> mols;
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
+        write = false;
+        qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if((clips.first  > 0) ^ (clips.second > 0)){
             uint8_t* sa = bam_aux_get(b, "SA");
@@ -104,19 +114,31 @@ void SVDebug::debugDNA(){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == treg.chr && sapos > tpos && sapos < tend){
                     ++srcnt;
-                    assert(sam_write1(srfp, hdr, b) >= 0);
-                }
-            }else{
-                if(osfp){
-                    ++oscnt;
-                    assert(sam_write1(osfp, hdr, b) >= 0);
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 0);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    write = true;
+                    wmtx.unlock();
                 }
             }
         }
         if(b->core.mtid == tgid){
             if(b->core.mpos > tpos && b->core.mpos < tend){
                 ++dpcnt;
-                assert(sam_write1(dpfp, hdr, b) >= 0);
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
+                if(!write){
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 1);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    wmtx.unlock();
+                }
             }
         }
     }
@@ -125,6 +147,8 @@ void SVDebug::debugDNA(){
     itr = sam_itr_querys(idx, hdr, tqreg.c_str());
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
+        write = false;
+        qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if((clips.first > 0) ^ (clips.second > 0)){
             uint8_t* sa = bam_aux_get(b, "SA");
@@ -154,45 +178,51 @@ void SVDebug::debugDNA(){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == hreg.chr && sapos > hpos && sapos < hend){
                     ++srcnt;
-                    assert(sam_write1(srfp, hdr, b) >= 0);
-                }
-            }else{
-                if(osfp){
-                    ++oscnt;
-                    assert(sam_write1(osfp, hdr, b) >= 0);
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 0);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    write = true;
+                    wmtx.unlock();
                 }
             }
         }
         if(b->core.mtid == hgid){
             if(b->core.mpos > hpos && b->core.mpos < hend){
                 ++dpcnt;
-                assert(sam_write1(dpfp, hdr, b) >= 0);
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
+                if(!write){
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 1);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    wmtx.unlock();
+                }
             }
         }
     }
     hts_itr_destroy(itr);
     hts_idx_destroy(idx);
     sam_close(sfp);
-    sam_close(srfp);
-    if(osfp) sam_close(osfp);
-    sam_close(dpfp);
     bam_hdr_destroy(hdr);
     bam_destroy1(b);
-    // write statics to output 
-    std::ofstream fw(table);
-    fw << "fusion" << "\t" << hgene << "->" << tgene << "\n";
-    fw << "srcount" << "\t" << srcnt << "\n";
-    if(oscnt) fw << "oscount" << "\t" << oscnt << "\n";
-    fw << "dpcount" << "\t" << dpcnt << "\n";
-    fw.close();
+    // store stat
+    ft.srcnt = srcnt;
+    ft.dpcnt = dpcnt;
+    ft.mocnt = mols.size();
+    util::loginfo("End " + logstr, logmtx);
 }
 
-void SVDebug::debugRNA(){
-    // fetch gene coordinates
-    std::map<std::string, std::string> g2tmap;
-    util::makeMapPairFromFileByLine(gene2trans, g2tmap);
-    std::string htrs = g2tmap[hgene];
-    std::string ttrs = g2tmap[tgene];
+void SVDebug::debugOnePairRNA(FusionDetail& ft){
+    std::string logstr = ft.hgene + "-" + ft.tgene + " scan";
+    util::loginfo("Beg " + logstr, logmtx);
+    std::string htrs = g2tmap[ft.hgene];
+    std::string ttrs = g2tmap[ft.tgene];
     // open bam and idx
     samFile* sfp = sam_open(inbam.c_str(), "r");
     bam_hdr_t* hdr = sam_hdr_read(sfp);
@@ -202,15 +232,7 @@ void SVDebug::debugRNA(){
     int32_t tpos = 0;
     int32_t hend = hdr->target_len[hgid];
     int32_t tend = hdr->target_len[tgid];
-    int32_t srcnt = 0, oscnt = 0, dpcnt = 0;
-    samFile* srfp = sam_open(srbam.c_str(), "wb");
-    samFile* osfp = NULL;
-    if(!osbam.empty()){
-        sam_open(osbam.c_str(), "wb");
-        assert(sam_hdr_write(osfp, hdr) >= 0);
-    }
-    samFile* dpfp = sam_open(dpbam.c_str(), "wb");
-    assert(sam_hdr_write(srfp, hdr) >= 0 && sam_hdr_write(dpfp, hdr) >= 0);
+    int32_t srcnt = 0, dpcnt = 0;
     hts_idx_t* idx = sam_index_load(sfp, inbam.c_str());
     // check hgene range for possible evidence
     const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
@@ -218,8 +240,13 @@ void SVDebug::debugRNA(){
     regs << htrs << ":" << hpos << "-" << hend;
     hts_itr_t* itr = sam_itr_querys(idx, hdr, regs.str().c_str());
     bam1_t* b = bam_init1();
+    bool write = false;
+    std::set<std::string> mols;
+    std::string qname;
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
+        write = false;
+        qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if(clips.first || clips.second){
             uint8_t* data = bam_aux_get(b, "SA");
@@ -231,19 +258,31 @@ void SVDebug::debugRNA(){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == ttrs && sapos > tpos && sapos < tend){
                     ++srcnt;
-                    assert(sam_write1(srfp, hdr, b) >= 0);
-                }
-            }else{
-                if(osfp){
-                    ++oscnt;
-                    assert(sam_write1(osfp, hdr, b) >= 0);
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 0);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    write = true;
+                    wmtx.unlock();
                 }
             }
         }
         if(b->core.mtid == tgid){
             if(b->core.mpos > tpos && b->core.mpos < tend){
                 ++dpcnt;
-                assert(sam_write1(dpfp, hdr, b) >= 0);
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
+                if(!write){
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 1);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    wmtx.unlock();
+                }
             }
         }
     }
@@ -255,6 +294,8 @@ void SVDebug::debugRNA(){
     itr = sam_itr_querys(idx, hdr, regs.str().c_str());
     while(sam_itr_next(sfp, itr, b) >= 0){
         if(b->core.flag & BAM_SRSKIP_MASK) continue;
+        qname.clear();
+        write = false;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
         if(clips.first || clips.second){
             uint8_t* data = bam_aux_get(b, "SA");
@@ -266,36 +307,87 @@ void SVDebug::debugRNA(){
                 int32_t sapos = std::atoi(vstr[1].c_str());
                 if(sachr == htrs && sapos > hpos && sapos < hend){
                     ++srcnt;
-                    assert(sam_write1(srfp, hdr, b) >= 0);
-                }
-            }else{
-                if(osfp){
-                    ++oscnt;
-                    assert(sam_write1(osfp, hdr, b) >= 0);
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 0);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    write = true;
+                    wmtx.unlock();
                 }
             }
         }
         if(b->core.mtid == hgid){
             if(b->core.mpos > hpos && b->core.mpos < hend){
                 ++dpcnt;
-                assert(sam_write1(dpfp, hdr, b) >= 0);
+                if(qname.empty()){
+                    qname = bamutil::getQName(b);
+                    mols.insert(qname);
+                }
+                if(!write){
+                    bam_aux_update_int(b, "ZF", ft.svid);
+                    bam_aux_update_int(b, "ST", 1);
+                    wmtx.lock();
+                    assert(sam_write1(svbfp, hdr, b) >= 0);
+                    wmtx.unlock();
+                }
             }
         }
     }
     hts_itr_destroy(itr);
     hts_idx_destroy(idx);
     sam_close(sfp);
-    sam_close(srfp);
-    if(osfp) sam_close(osfp);
-    sam_close(dpfp);
     bam_hdr_destroy(hdr);
     bam_destroy1(b);
-    // write statics to output 
-    std::ofstream fw(table);
-    fw << "fusion" << "\t" << hgene << "->" << tgene << "\n";
-    fw << "srcount" << "\t" << srcnt << "\n";
-    if(oscnt) fw << "oscount" << "\t" << oscnt << "\n";
-    fw << "dpcount" << "\t" << dpcnt << "\n";
-    fw.close();
+    // store stat
+    ft.srcnt = srcnt;
+    ft.dpcnt = dpcnt;
+    ft.mocnt = mols.size();
+    util::loginfo("End " + logstr, logmtx);
 }
 
+void SVDebug::debugDNA(){
+    // construct FusionDetail vector
+    std::vector<FusionDetail> fdtv(hgl.size());
+    for(uint32_t i = 0; i < hgl.size(); ++i){
+        fdtv[i].hgene = hgl[i];
+        fdtv[i].tgene = tgl[i];
+        fdtv[i].svid = i;
+    }
+    // parallel scan
+    std::vector<std::future<void>> rets(fdtv.size());
+    for(uint32_t i = 0; i < fdtv.size(); ++i){
+        rets[i] = tp->enqueue(&SVDebug::debugOnePairDNA, this, std::ref(fdtv[i]));
+    }
+    for(auto& e: rets) e.get();
+    // out stat
+    outStat(fdtv);
+}
+
+void SVDebug::debugRNA(){
+    // construct FusionDetail vector
+    std::vector<FusionDetail> fdtv(hgl.size());
+    for(uint32_t i = 0; i < hgl.size(); ++i){
+        fdtv[i].hgene = hgl[i];
+        fdtv[i].tgene = tgl[i];
+        fdtv[i].svid = i;
+    }
+    // parallel scan
+    std::vector<std::future<void>> rets(fdtv.size());
+    for(uint32_t i = 0; i < fdtv.size(); ++i){
+        rets[i] = tp->enqueue(&SVDebug::debugOnePairRNA, this, std::ref(fdtv[i]));
+    }
+    for(auto& e: rets) e.get();
+    // out stat
+    outStat(fdtv);
+}
+
+void SVDebug::outStat(const std::vector<FusionDetail>& fdtv){
+    std::ofstream fw(table);
+    FusionDetail::outheader(fw);
+    for(auto& e: fdtv){
+        fw << e;
+    }
+    fw.close();
+}

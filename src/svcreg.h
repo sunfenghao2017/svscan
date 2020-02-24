@@ -2,7 +2,7 @@
 #define SVCREG_H
 
 #include <string>
-#include "util.h"
+#include <util.h>
 #include "cgranges.h"
 
 /** class to fetch creg for svscan */

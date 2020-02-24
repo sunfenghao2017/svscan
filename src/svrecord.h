@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "bamutil.h"
+#include <bamutil.h>
 #include "options.h"
 #include "aligner.h"
 #include "aligncfg.h"
@@ -89,7 +89,7 @@ class SVRecord{
             os << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << sv.mPEMapQuality << "\n";
             os << "Consensus split read split aligned against reference got a refined breakpoint: " << std::boolalpha << sv.mPrecise << "\n";
             os << "Merged by other SV event: " << std::boolalpha << sv.mMerged << "\n";
-            os << "Consensu sequence realign return value: " << sv.mRealnRet << "\n";
+            os << "Consensus sequence realign return value: " << sv.mRealnRet << "\n";
             os << "Allele of this SV event: " << sv.mAlleles << "\n";
             os << "Consensus sequence of split reads supporting this SV: " << sv.mConsensus << "\n";
             os << "Constructed reference sequence of this SV: " << sv.mSVRef << "\n";
@@ -105,6 +105,16 @@ class SVRecord{
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
             if(sv.mBpInsSeq.length() > 0) os << "Sequence inserted after break point: " << sv.mBpInsSeq << "\n";
             os << "======================================================================================================\n";
+            return os;
+        }
+
+        /** operator to output SVRecord to ostream
+         * @param os reference of ostream object
+         * @param sv pointer of SVRecord object
+         * @return reference of ostream object
+         */
+        inline friend std::ostream& operator<<(std::ostream& os, const SVRecord* sv){
+            os << (*sv);
             return os;
         }
 
@@ -133,7 +143,7 @@ class SVRecord{
             ss << "Median mapping quality of all discordant paired-end reads alignment record which support this SV: " << mPEMapQuality << "\n";
             ss << "Consensus split read split aligned against reference got a refined breakpoint: " << std::boolalpha << mPrecise << "\n";
             ss << "Merged by other SV event: " << std::boolalpha << mMerged << "\n";
-            ss << "Consensu sequence realign return value: " << mRealnRet << "\n";
+            ss << "Consensus sequence realign return value: " << mRealnRet << "\n";
             ss << "Allele of this SV event: " << mAlleles << "\n";
             ss << "Consensus sequence of split reads supporting this SV: " << mConsensus << "\n";
             ss << "Constructed reference sequence of this SV: " << mSVRef << "\n";
@@ -290,10 +300,15 @@ struct SortSVs{
 };
 
 /** type to store a list of structural variant record */
-typedef std::vector<SVRecord> SVSet; ///< list of SV
+typedef std::vector<SVRecord*> SVSet; ///< list of SV
 
 inline std::ostream& operator<<(std::ostream& os, const SVSet& svs){
     for(uint32_t id = 0; id < svs.size(); ++id) os<< svs[id];
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const SVSet* svs){
+    for(uint32_t id = 0; id < svs->size(); ++id) os<< svs[id];
     return os;
 }
 
@@ -325,5 +340,28 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt);
  * @param boundary max length offset at each breakpoint to fetch reference
  */
 void getDPSVRef(SVSet& pe, Options* opt);
+
+/** class to provide one way to sort SVs */
+struct SortSVOne{
+    inline bool operator()(const SVRecord* one, const SVRecord* other) const {
+        return (one->mSVT < other->mSVT) ||
+               (one->mSVT == other->mSVT && one->mChr1 < other->mChr1) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 < other->mChr2) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart < other->mSVStart) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart == other->mSVStart && one->mSVEnd < other->mSVEnd) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart == other->mSVStart && one->mSVEnd == other->mSVEnd && one->mSRSupport < other->mSRSupport) ||
+               (one->mSVT == other->mSVT && one->mChr1 == other->mChr1 && one->mChr2 == other->mChr2 && one->mSVStart == other->mSVStart && one->mSVEnd == other->mSVEnd && one->mSRSupport == other->mSRSupport && one->mPESupport < other->mPESupport);
+    }
+ };
+
+/** class to provide another way to sort SVs */
+struct SortSVTwo{
+    inline bool operator()(const SVRecord* sv1, const SVRecord* sv2){
+        return (sv1->mChr1 < sv2->mChr1) ||
+               (sv1->mChr1 == sv2->mChr1 && sv1->mSVStart < sv2->mSVStart) ||
+               (sv1->mChr1 == sv2->mChr1 && sv1->mSVStart == sv2->mSVStart && sv1->mSVEnd < sv2->mSVEnd) || 
+               (sv1->mChr1 == sv2->mChr1 && sv1->mSVStart == sv2->mSVStart && sv1->mSVEnd == sv2->mSVEnd && sv1->mSRSupport < sv2->mSRSupport);
+    }
+};
 
 #endif

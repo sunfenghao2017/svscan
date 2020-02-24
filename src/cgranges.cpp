@@ -379,21 +379,82 @@ int64_t cr_overlap_int(const cgranges_t *cr, int32_t ctg_id, int32_t st, int32_t
 	return n;
 }
 
-void cr_iter_indexed(const cgranges_t *cr, FILE* fp){
+cgranges_t* cr_overlap2(const cgranges_t *cr1, const cgranges_t *cr2){
+    cgranges_t* cro = cr_init();
+    const cgranges_t* qcr = cr1; // to query
+    const cgranges_t* rcr = cr2; // queried against
+    if(qcr->n_r > rcr->n_r){ // make sure qcr has less regions
+        const cgranges_t* tmp = qcr;
+        qcr = rcr;
+        rcr = tmp;
+    }
+    for(int32_t ctg_id = 0; ctg_id < qcr->n_ctg; ++ctg_id){
+        int64_t i, *b = 0, max_b = 0, n = 0;
+        n = cr_overlap_int(qcr, ctg_id, 0, INT_MAX, &b, &max_b);
+        for(i = 0; i < n; ++i){
+            int64_t j, *bb = 0, max_bb = 0, nn =0;
+            char* ctg = qcr->ctg[ctg_id].name;
+            int32_t st1 = cr_start(qcr, b[i]);
+            int32_t en1 = cr_end(qcr, b[i]);
+            nn = cr_overlap(rcr, ctg, st1, en1, &bb, &max_bb);
+            for(j = 0; j < nn; ++j){
+                cr_intv_t *r = &rcr->r[bb[j]];
+                int32_t st0 = cr_st(r), en0 = cr_en(r);
+                if(st0 < st1) st0 = st1;
+                if(en0 > en1) en0 = en1;
+                cr_add(cro, ctg, st0, en0, -1);
+            }
+            free(bb);
+        }
+        free(b);
+    }
+    cr_index2(cro, 1);
+    return cro;
+}
+
+cgranges_t* cr_mergetwo(const cgranges_t *cr1, const cgranges_t *cr2){
+    cgranges_t* cro = cr_init();
+    cr_copyone(cro, cr1);
+    cr_mergeone(cro, cr2);
+    return cro;
+}
+
+void cr_mergeone(cgranges_t *des, const cgranges_t *src){
+    cr_copyone(des, src);
+}
+
+void cr_copyone(cgranges_t *des, const cgranges_t *src){
+    for(int32_t ctg_id = 0; ctg_id < src->n_ctg; ++ctg_id){
+        int64_t i, *b = 0, max_b = 0, n = 0;
+        n = cr_overlap_int(src, ctg_id, 0, INT_MAX, &b, &max_b);
+        for(i = 0; i < n; ++i) cr_add(des, src->ctg[ctg_id].name, cr_start(src, b[i]), cr_end(src, b[i]), 0);
+        free(b);
+    }
+}
+
+void cr_iter_indexed(const cgranges_t *cr, FILE* fp, bool nolabel){
     for(int32_t ctg_id = 0; ctg_id < cr->n_ctg; ++ctg_id){
         int64_t i, *b = 0, max_b = 0, n = 0;
         n = cr_overlap_int(cr, ctg_id, 0, INT_MAX, &b, &max_b);
         for(i = 0; i < n; ++i){
-            fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[ctg_id].name, cr_start(cr, b[i]), cr_end(cr, b[i]), cr_label(cr, b[i]));
+            if(nolabel){
+                fprintf(fp, "%s\t%d\t%d\n", cr->ctg[ctg_id].name, cr_start(cr, b[i]), cr_end(cr, b[i]));
+            }else{
+                fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[ctg_id].name, cr_start(cr, b[i]), cr_end(cr, b[i]), cr_label(cr, b[i]));
+            }
         }
         free(b);
     }
 }
 
-void cr_iter_usual(const cgranges_t *cr, FILE* fp){
+void cr_iter_usual(const cgranges_t *cr, FILE* fp, bool nolabel){
     for(int i = 0; i < cr->n_r; ++i){
          const cr_intv_t *r = &cr->r[i];
-         fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[r->x>>32].name, (int32_t)r->x, (int32_t)r->y, r->label);
+         if(nolabel){
+             fprintf(fp, "%s\t%d\t%d\n", cr->ctg[r->x>>32].name, (int32_t)r->x, (int32_t)r->y);
+         }else{
+             fprintf(fp, "%s\t%d\t%d\t%d\n", cr->ctg[r->x>>32].name, (int32_t)r->x, (int32_t)r->y, r->label);
+         }
     }
 }
 

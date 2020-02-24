@@ -7,7 +7,7 @@
 #include <vector>
 #include <htslib/sam.h>
 #include "software.h"
-#include "util.h"
+#include <util.h>
 
 struct SVBAMOpt{
     std::string ibam;

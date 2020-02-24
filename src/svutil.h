@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstdint>
-#include "util.h"
+#include <util.h>
 #include "trsrec.h"
 #include "rna2dna.h"
 #include "fusegene.h"
@@ -544,8 +544,8 @@ namespace svutil{
      */
     inline std::string bp2cigar(const TrsRec& htrs, const TrsRec& ttrs){
         std::ostringstream oss;
-        oss << htrs.insl << "I";
-        oss << ttrs.insl << "I";
+        oss << htrs.gene << htrs.mstat << ",";
+        oss << ttrs.gene << ttrs.mstat;
         return oss.str();
     }
 
@@ -666,22 +666,26 @@ namespace svutil{
         trec.name = r2dl[j].tname;
         trec.number = std::to_string(r2dl[j].ucount);
         if(ad < 0){
+            trec.fullincc = true;
             trec.pos = r2dl[j].gend;
             trec.eoffset = 0;
             trec.ioffset = r2dl[j].tend - r2dl[j].tbeg;
             if(trec.strand == "-") trec.pos = r2dl[j].gbeg;
         }
         if(ad > 0){
+            trec.fullincc = true;
             trec.pos = r2dl[j].gbeg;
             trec.eoffset = r2dl[j].tend - r2dl[j].tbeg;
             trec.ioffset = 0;
             if(trec.strand == "-") trec.pos = r2dl[j].gend;
         }
         if(ad == 0){
+            trec.fullincc = false;
             trec.pos = r2dl[j].gbeg + (bp - r2dl[j].tbeg);
             if(trec.strand == "-") trec.pos = r2dl[j].gend - (bp - r2dl[j].tbeg);
             trec.ioffset = bp - r2dl[j].tbeg;
             trec.eoffset = r2dl[j].tend - bp;
+            if(trec.ioffset == 0 || trec.eoffset == 0) trec.fullincc = true;
         }
         trec.unit = r2dl[j].uname;
         trec.version = r2dl[j].tversion;

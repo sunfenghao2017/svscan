@@ -1,4 +1,4 @@
-#include "CLI.hpp"
+#include <CLI.hpp>
 #include "options.h"
 #include "svscanner.h"
 #include <iostream>
@@ -22,7 +22,8 @@ int main(int argc, char** argv){
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->group("General Options");
-    app.add_option("-e,--b2excel", opt->bam2tb, "output ss/fs event supportint bam records excel", true)->required(false)->group("General Options");
+    app.add_option("-e,--b2excel", opt->bam2tb, "output ss/fs event supporting bam records to excel", true)->required(false)->group("General Options");
+    app.add_option("-f,--b2tsv", opt->bam2tt, "output ss/fs event supporting bam records to tsv", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used to process bam", true)->check(CLI::Range(1, 100))->group("General Options");
     app.add_option("-d,--debug", opt->debug, "debug mask,1:call,2:cann,4:gann,8:out,16:realn,32:finsv", true)->group("General Options");
@@ -75,7 +76,7 @@ int main(int argc, char** argv){
     app.add_option("--keepmasks", opt->fuseOpt->mKeepMasks, "fusion keep masks", true)->group("Fusion Options");
     app.add_option("--primarymask", opt->fuseOpt->mPrimaryMask, "primary fusion mask", true)->group("Fusion Options");
     // parse arguments
-    CLI_PARSE(app, argc, argv);
+    CLI11_PARSE(app, argc, argv);
     // validate arguments
     util::loginfo("Command line arguments parsed");
     opt->validate();

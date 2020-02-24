@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstdint>
-#include "util.h"
+#include <util.h>
 
 /* inversion
  * reference genome, two strands

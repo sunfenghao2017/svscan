@@ -1,7 +1,7 @@
 #ifndef GENERATE_RNA_FUSE
 #define GENERATE_RNA_FUSE
 
-#include "util.h"
+#include <util.h>
 #include <string>
 #include <cstdint>
 #include <unordered_map>
@@ -21,16 +21,17 @@ struct UnitRec{
 
 /** class to store sequence got for each partner gene */
 struct SeqInfo{
-    std::string gene; ///< gene name
-    std::string trs;  ///< transcript name
-    int32_t exon;     ///< exon number in fusion(0 based)
-    std::string seq;  ///< seqeunce in fusion
-    std::string chr;  ///< chr of gene
-    int32_t rend;     ///< refrna end coordinate
-    int32_t rbeg;     ///< refrna beg coordinate
-    int32_t dend;     ///< genome end coordinate
-    int32_t dbeg;     ///< genome beg coordinate
-    int32_t flklen;   ///< flank length got
+    std::string gene;   ///< gene name
+    std::string trs;    ///< transcript name
+    std::string strand; ///< transcript strand on genome
+    int32_t exon;       ///< exon number in fusion(0 based)
+    std::string seq;    ///< seqeunce in fusion
+    std::string chr;    ///< chr of gene
+    int32_t rend;       ///< refrna end coordinate
+    int32_t rbeg;       ///< refrna beg coordinate
+    int32_t dend;       ///< genome end coordinate
+    int32_t dbeg;       ///< genome beg coordinate
+    int32_t flklen;     ///< flank length got
 
     SeqInfo(){
         flklen = 0;
@@ -50,8 +51,8 @@ struct FuseInfo{
     }
 
     static void outInfoHead(std::ostream& os){
-        os << "HGene\tHExon\tHTrs\t";
-        os << "TGene\tTExon\tTTrs\t";
+        os << "HGene\tHExon\tHTrs\tHGStrand\t";
+        os << "TGene\tTExon\tTTrs\tTGStrand\t";
         os << "HLen\tTLen\tHFLen\tTFLen\t";
         os << "HRBeg\tHREnd\tTRBeg\tTREnd\t";
         os << "HGBeg\tHGEnd\tTGBeg\tTGEnd\t";
@@ -59,8 +60,8 @@ struct FuseInfo{
     }
 
     void outInfoRec(std::ostream& os){
-        os << hseq.gene << "\t" << (hseq.exon + 1) << "\t" << hseq.trs << "\t";
-        os << tseq.gene << "\t" << (tseq.exon + 1) << "\t" << tseq.trs << "\t";
+        os << hseq.gene << "\t" << (hseq.exon + 1) << "\t" << hseq.trs << "\t" << hseq.strand << "\t";
+        os << tseq.gene << "\t" << (tseq.exon + 1) << "\t" << tseq.trs << "\t" << tseq.strand << "\t";
         os << hseq.seq.length() << "\t" << tseq.seq.length() << "\t" << hseq.flklen << "\t" << tseq.flklen << "\t";
         os << hseq.rbeg << "\t" << hseq.rend << "\t" << tseq.rbeg << "\t" << tseq.rend << "\t";
         os << hseq.dbeg << "\t" << hseq.dend << "\t" << tseq.dbeg << "\t" << tseq.dend << "\t";

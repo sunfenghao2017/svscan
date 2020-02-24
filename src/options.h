@@ -14,7 +14,7 @@
 #include "ThreadPool.h"
 #include "software.h"
 #include "statutil.h"
-#include "util.h"
+#include <util.h>
 #include "bed.h"
 
 /** max tandem repeats allowed in an fusion sequence */
@@ -180,6 +180,7 @@ class Options{
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
         std::string bam2tb;           ///< fusion event supporting reads excel file
+        std::string bam2tt;           ///< fusion event supporting reads tsv file
         samFile* fbamout;             ///< file pointer of sv bam output
         int32_t madCutoff;            ///< insert size cutoff, median+s*MAD (deletions only)
         int32_t batchsvn;             ///< batch sv events to annotate coverage 

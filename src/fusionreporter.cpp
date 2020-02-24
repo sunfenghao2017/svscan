@@ -307,7 +307,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 nfmsk.push_back(std::to_string(frl[fk].fsmask));
             }
             svr.fsMask = util::join(nfmsk, ";");
-            fsv << svr << "\n";
+            fsv << svr;
         }
     }
     if(!fuseOpt->mSVModFile.empty()) fsv.close();

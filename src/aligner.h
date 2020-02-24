@@ -1,7 +1,7 @@
 #ifndef ALIGNER_H
 #define ALIGNER_H
 
-#include "util.h"
+#include <util.h>
 #include "matrix2d.h"
 #include "aligncfg.h"
 

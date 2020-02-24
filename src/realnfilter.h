@@ -2,7 +2,7 @@
 #define REALNFILTER_H
 
 #include "onlinebwa.h"
-#include "bamutil.h"
+#include <bamutil.h>
 
 struct BpPair{
     int32_t tid1;
