@@ -189,6 +189,7 @@
 #define FUSION_FERRREALN                0x400000             ///< this fusion event concensus sequence realignment in good status
 #define FUSION_FPASSREALN               0x800000             ///< this fusion event concensus sequence realignment in good status
 #define FUSION_FINREPORTRNG             0x1000000            ///< this fusion event is in predefined report range
+#define FUSION_FWITHNCRNA               0x2000000            ///< this fusion event contains a non-coding rna partner
 
 /** fusion flag type */
 typedef uint64_t TFUSION_FLAG;

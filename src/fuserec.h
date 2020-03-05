@@ -204,6 +204,7 @@ struct FusionRecord{
         }
         if(distance < 0) fsmask |= FUSION_FFBG; // overlap gene leading fusion treat as background
         if((fsmask & FUSION_FPRECISE) && srrescued == 0) fsmask |= FUSION_FLOWSUPPORT; // rescue failed fusion drop
+        if(util::startsWith(transcript1, "NR") || util::startsWith(transcript2, "NR")) fsmask |= FUSION_FWITHNCRNA; // ncrna participated
     }
 };
 
