@@ -309,7 +309,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             continue;
                         }
-                        if(leadingSC + tailingSC == 0) continue; // no sc, go to dp directly
+                        if(leadingSC + tailingSC < mOpt->filterOpt->mMinFlankSize) continue; // skip reads with too short softclips
                         bool seedgot = false;
                         int seedoff = 0;
                         if(sa){
@@ -341,7 +341,15 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         if(svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
                         // possible ALT
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndC : svs[itbp->mID]->mProbeBegC;
-                        if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
+                        if(readOri.empty()){
+                            readOri = bamutil::getSeq(b); // then fetch read to do realign
+                            // fetch flank sequence around breakpoint
+                            if(leadingSC){
+                                readOri = readOri.substr(leadingSC - mOpt->filterOpt->mMinFlankSize, 2 * mOpt->filterOpt->mMinFlankSize);
+                            }else if(tailingSC){
+                                readOri = readOri.substr(readOri.length() - tailingSC - mOpt->filterOpt->mMinFlankSize, 2 * mOpt->filterOpt->mMinFlankSize);
+                            }
+                        }
                         readSeq = readOri;
                         SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
                         // Compute alignment to alternative haplotype
