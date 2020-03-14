@@ -527,6 +527,16 @@ class Stats{
          */
         uint32_t getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual);
 
+
+        /** check whether an alignment of probe to read is valid
+         * @param alnResult align result(sequence vertical, read horizontal)
+         * @param bppos breakpoint position on read by ogirinam BAM aligner
+         * @param seqlen length of read sequence
+         * @param minoff minimum offset needed to spanning bppos
+         * @return true if alnResult spanning bppos with at least minoff bps
+         */
+        bool validAlignment(Matrix2D<char>* alnResult, int32_t bppos,  int32_t seqlen, int32_t minoff = 5);
+
         /** test whether an bam record is met for the first time
          * @param b pointer to bam1_t struct
          * @param lastAlignedReads set of reads mapped at last position

@@ -58,12 +58,15 @@ class SRBamRecord{
          * @param seq SR bam record seq
          * @param bpPoint if(SR mapped on little chr in translocation || mapped on higher coordinate in inversion) bpPoint = true;
          * @param svt SV type
+         * @return true if recov
          */
-        inline static void adjustOrientation(std::string& seq, bool bpPoint, int32_t svt){
+        inline static bool adjustOrientation(std::string& seq, bool bpPoint, int32_t svt){
             if((svt == 5 && bpPoint) || (svt == 6 && !bpPoint) ||
                (svt == 0 && bpPoint) || (svt == 1 && !bpPoint)){
                 util::reverseComplement(seq);
+                return true;
             }
+            return false;
         }
 
         /** operator to output an SRBamRecord object to ostream

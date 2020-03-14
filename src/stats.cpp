@@ -27,6 +27,36 @@ uint32_t Stats::getAlignmentQual(Matrix2D<char>* alnResult, const uint8_t* qual)
     return baseQualSum/alignedBases;
 }
 
+bool Stats::validAlignment(Matrix2D<char>* alnResult, int32_t bppos, int32_t seqlen, int32_t minoff){
+    int beg = 0, end = seqlen - 1;
+    // find internal match range beg
+    for(int i = 0; i < alnResult->ncol() - 3; ++i){
+        if(alnResult->get(1, i) != '-') ++beg;
+        if((alnResult->get(0, i) != '-') &&
+           (alnResult->get(1, i) != '-') &&
+           (alnResult->get(0, i+1) != '-') &&
+           (alnResult->get(1, i+1) != '-') &&
+           (alnResult->get(0, i+2) != '-') &&
+           (alnResult->get(1, i+2) != '-')){
+            break;
+        }
+    }
+    // find internal match range end
+    for(int i = alnResult->ncol() - 1; i >= 2; --i){
+        if(alnResult->get(1, i) != '-') --end;
+        if((alnResult->get(0, i) != '-') &&
+           (alnResult->get(1, i) != '-') &&
+           (alnResult->get(0, i-1) != '-') &&
+           (alnResult->get(1, i-1) != '-') &&
+           (alnResult->get(0, i-2) != '-') &&
+           (alnResult->get(1, i-2) != '-')){
+            break;
+        }
+    }
+    // check validated bppos or not
+    return bppos - beg > minoff && end - bppos > minoff;
+}
+
 Stats* Stats::merge(const std::vector<Stats*>& sts, int32_t n, Options* opt){
     Stats* ret = new Stats(opt, n);
     if(sts.size() == 0) return ret;
@@ -309,7 +339,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             continue;
                         }
-                        if(leadingSC + tailingSC < mOpt->filterOpt->mMinFlankSize) continue; // skip reads with too short softclips
+                        if(leadingSC + tailingSC < 0.6 * mOpt->filterOpt->mMinFlankSize) continue; // skip reads with too short softclips
                         bool seedgot = false;
                         int seedoff = 0;
                         if(sa){
@@ -339,37 +369,76 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             continue;
                         }
                         if(svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
-                        // possible ALT
-                        std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndC : svs[itbp->mID]->mProbeBegC;
-                        if(readOri.empty()){
-                            readOri = bamutil::getSeq(b); // then fetch read to do realign
-                            // fetch flank sequence around breakpoint
-                            if(leadingSC){
-                                readOri = readOri.substr(leadingSC - mOpt->filterOpt->mMinFlankSize, 2 * mOpt->filterOpt->mMinFlankSize);
-                            }else if(tailingSC){
-                                readOri = readOri.substr(readOri.length() - tailingSC - mOpt->filterOpt->mMinFlankSize, 2 * mOpt->filterOpt->mMinFlankSize);
+                        // breakpoint check for rescue reads
+                        if(itbp->mIsSVEnd){
+                            if(std::abs(svs[itbp->mID]->mSVEnd - bpapos) >= mOpt->filterOpt->mMaxReadSep){
+                                continue;
+                            }
+                        }else{
+                            if(std::abs(svs[itbp->mID]->mSVStart - bpapos) >= mOpt->filterOpt->mMaxReadSep){
+                                continue;
                             }
                         }
+                        // possible ALT
+                        std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndC : svs[itbp->mID]->mProbeBegC;
+                        if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
                         readSeq = readOri;
-                        SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
+                        bool recov = SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
+                        int adjbppos = 0;
+                        if(leadingSC){
+                            if(recov){
+                                adjbppos = readSeq.length() - leadingSC;
+                            }else{
+                                adjbppos = leadingSC;
+                            }
+                        }else{
+                            if(recov){
+                                adjbppos = tailingSC;
+                            }else{
+                                adjbppos = readSeq.length() - tailingSC;
+                            }
+                        }
                         // Compute alignment to alternative haplotype
                         Aligner* altAligner = new Aligner(consProbe, readSeq, &alnCfg);
                         Matrix2D<char>* altResult = new Matrix2D<char>();
                         int alnScore = altAligner->needle(altResult);
                         int matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
-                        // Any confident alignment?
-                        if(scoreAlt < mOpt->filterOpt->mMinSRResScore && svs[itbp->mID]->mProbeEndA.size()){
-                            consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndA : svs[itbp->mID]->mProbeBegA;
-                            Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
-                            Matrix2D<char>* secResult = new Matrix2D<char>();
-                            alnScore = secAligner->needle(secResult);
-                            matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
-                            scoreAlt = (double)alnScore / (double)matchThreshold;
-                            delete secAligner;
-                            secResult = NULL;
-                            delete secResult;
-                            secResult = NULL;
+                        // check match range on read
+                        if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
+                            if(!validAlignment(altResult, adjbppos, readSeq.length(), 0.6 * mOpt->filterOpt->mMinFlankSize)){
+                                // free resouces and go to next round
+                                delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
+                                continue;
+                            }else{
+                                // just free resources
+                                delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
+                            }
+                        }else{
+                            // free previous resources
+                            delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
+                            // Any confident alignment?
+                            if(scoreAlt < mOpt->filterOpt->mMinSRResScore && svs[itbp->mID]->mProbeEndA.size()){
+                                consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndA : svs[itbp->mID]->mProbeBegA;
+                                Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
+                                Matrix2D<char>* secResult = new Matrix2D<char>();
+                                alnScore = secAligner->needle(secResult);
+                                matchThreshold = mOpt->filterOpt->mFlankQuality * consProbe.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * consProbe.size() * alnCfg.mMisMatch;
+                                scoreAlt = (double)alnScore / (double)matchThreshold;
+                                // check match range on read
+                                if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
+                                    if(!validAlignment(secResult, adjbppos, readSeq.length(), 0.6 * mOpt->filterOpt->mMinFlankSize)){
+                                        // free resouces and go to next round 
+                                        delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
+                                        continue;
+                                    }else{
+                                        // just free resources
+                                        delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
+                                    }
+                                }else{
+                                    delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
+                                }
+                            }
                         }
                         if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
                             assigned = true;
@@ -377,10 +446,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             if(itbp->mSVT != 4) onlySupportIns = false;
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = {1.0/scoreAlt, itbp->mIsSVEnd};
                         }
-                        delete altAligner;
-                        altAligner = NULL;
-                        delete altResult;
-                        altResult = NULL;
                     }
                 }
                 if(supportSrsID.size()){
