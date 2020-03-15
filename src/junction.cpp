@@ -51,7 +51,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
         std::vector<std::string> vstr;
         util::split(sastr, cvs, ";");
         if(cvs[1].empty()){
-            if(cvs[0].find_first_of("SH") == vstr[0].find_last_of("SH")) sastr = cvs[0];
+            if(cvs[0].find_first_of("SH") == cvs[0].find_last_of("SH")) sastr = cvs[0];
             else sastr = "";
         }else{
             std::vector<int32_t> mvidx;
