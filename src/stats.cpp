@@ -347,16 +347,12 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         if(sa){
                             if((scsvt != itbp->mSVT) || sahdc) continue;
                             if(itbp->mIsSVEnd){
-                                if(bpbpos < svs[itbp->mID]->mSVStart - mOpt->libInfo->mReadLen ||
-                                   bpbpos > svs[itbp->mID]->mSVStart + mOpt->libInfo->mReadLen ||
-                                   svs[itbp->mID]->mChr1 != stid){
+                                if(std::abs(bpbpos - svs[itbp->mID]->mSVStart) >  mOpt->filterOpt->mMaxReadSep || svs[itbp->mID]->mChr1 != stid){
                                     continue;
                                 }
                                 seedoff = std::abs(svs[itbp->mID]->mSVStart - bpbpos);
                             }else{
-                                if(bpbpos < svs[itbp->mID]->mSVEnd - mOpt->libInfo->mReadLen ||
-                                   bpbpos > svs[itbp->mID]->mSVEnd + mOpt->libInfo->mReadLen ||
-                                   svs[itbp->mID]->mChr2 != stid){
+                                if(std::abs(bpbpos - svs[itbp->mID]->mSVEnd) > mOpt->filterOpt->mMaxReadSep || svs[itbp->mID]->mChr2 != stid){
                                     continue;
                                 }
                                 seedoff = std::abs(svs[itbp->mID]->mSVEnd - bpbpos);
