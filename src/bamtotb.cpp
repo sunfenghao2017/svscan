@@ -22,7 +22,7 @@ int BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_fo
          for(size_t i = 0; i < vrec.size(); ++i){
             vclen[i] = std::max(vclen[i], vrec[i].length());
             char* p = NULL;
-            float val = std::strtof(vrec[i].c_str(), &p);
+            int64_t val = std::strtoll(vrec[i].c_str(), &p, 10);
             if(*p) worksheet_write_string(sheet, row, col++, vrec[i].c_str(), NULL);
             else worksheet_write_number(sheet, row, col++, val, NULL);
          }
@@ -43,8 +43,10 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.barcode = bamutil::getStrTag(b, "BC");
     br.seq = bamutil::getSeq(b);
     std::pair<int32_t, int32_t> scl = bamutil::getSoftClipLength(b);
-    if(scl.first + scl.second == 0) br.lseq = br.seq;
-    else if((scl.first > 0) ^ (scl.second > 0)){
+    if(scl.first + scl.second == 0){
+        br.lseq = br.seq;
+        br.rbp = -1;
+    }else if((scl.first > 0) ^ (scl.second > 0)){
         if(scl.first){
             br.lseq = br.seq.substr(0, scl.first);
             br.tseq = br.seq.substr(scl.first);
@@ -53,6 +55,37 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             br.lseq = br.seq.substr(0, br.seq.length() - scl.second);
             br.tseq = br.seq.substr(br.seq.length() - scl.second);
         }
+        uint32_t* cigar = bam_get_cigar(b);
+        int refpos = b->core.pos;
+        for(uint32_t i = 0; i < b->core.n_cigar; ++i){
+            int opint = bam_cigar_op(cigar[i]);
+            int oplen = bam_cigar_oplen(cigar[i]);
+            if(opint == BAM_CMATCH || opint == BAM_CEQUAL || opint == BAM_CDIFF || opint == BAM_CDEL || opint == BAM_CREF_SKIP){
+                refpos += oplen;
+            }else if(opint == BAM_CSOFT_CLIP){
+                br.rbp = refpos;
+                break;
+            }
+        }
+    }
+    if(br.sa.size()){
+        std::vector<std::string> vstr;
+        util::split(br.sa, vstr, ",");
+        int32_t refpos = std::atoi(vstr[1].c_str());
+        std::vector<std::pair<int32_t, char>> pcigar;
+        bamutil::parseCigar(vstr[3], pcigar);
+        for(auto& e: pcigar){
+            char opchr = e.second;
+            int oplen = e.first;
+            if(opchr == 'M' || opchr == '=' || opchr == 'X' || opchr == 'D' || opchr == BAM_CREF_SKIP){
+                refpos += oplen;
+            }else if(opchr == 'S'){
+                br.sbp = refpos;
+                break;
+            }
+        }
+    }else{
+        br.sbp = -1;
     }
     br.svid = id;
     br.qname = bamutil::getQName(b);

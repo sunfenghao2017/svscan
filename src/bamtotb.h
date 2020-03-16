@@ -26,6 +26,8 @@ struct BamRec{
     std::string barcode; ///< barcode
     std::string qname;   ///< read name
     std::string sname;   ///< sample name
+    int32_t rbp;         ///< read breakpoint position
+    int32_t sbp;         ///< supplementary read breakpoint position
     int32_t svid;        ///< sv id
     bool read1;          ///< read1 if true
     int32_t svrt;        ///< sv read type
@@ -46,16 +48,16 @@ struct BamRec{
     inline std::string toStr(){
         std::ostringstream oss;
         oss << svid << "\t";
-        oss << chr << "\t" << pos << "\t" << strand << "\t";
-        oss << mchr << "\t" << mpos << "\t" << mstrand << "\t";
-        oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << lseq << "\t" << tseq << "\t";
+        oss << chr  << "," << pos  << "," << strand  << "," << cigar  << "\t";
+        oss << mchr << "," << mpos << "," << mstrand << "," << mcigar << "\t"; 
+        oss << sa << "\t" << rbp << "\t" << sbp << "\t" << lseq << "\t" << tseq << "\t";
         oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt << "\n";
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
+        return "svid\trmap\tmmap\tsa\trbp\tsbp\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
     }
 
     /** compare two BamRec */
