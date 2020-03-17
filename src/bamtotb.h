@@ -2,11 +2,13 @@
 #define BAMTOETB_H
 
 #include <map>
+#include <regex>
 #include <string>
 #include <fstream>
 #include <htslib/sam.h>
 #include <xlsxwriter.h>
 #include <bamutil.h>
+#include <lxwutil.h>
 #include <util.h>
 
 /** bam record items to output */
@@ -100,8 +102,5 @@ class BamToTable{
 
     /** get svids from fs/ss tsvs */
     void getsvid(std::set<int32_t>& svids);
-
-    /** output line buffers to a sheet */
-    static int lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt = NULL);
 };
 #endif

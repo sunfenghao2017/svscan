@@ -1,37 +1,5 @@
 #include "bamtotb.h"
 
-int BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt){
-    int row = 0, col = 0;
-    std::vector<size_t> vclen;
-    std::vector<std::string> vline;
-    util::split(buf, vline, "\n");
-    std::vector<std::string> vrec;
-    size_t maxcol = 0;
-    for(auto& line: vline){
-        util::split(line, vrec, "\t");
-        maxcol = std::max(maxcol, vrec.size());
-    }
-    vclen.resize(maxcol, 0);
-    for(auto& line: vline){
-         if(line.empty()){
-             ++row;
-             continue;
-         }
-         util::split(line, vrec, "\t");
-         col = 0;
-         for(size_t i = 0; i < vrec.size(); ++i){
-            vclen[i] = std::max(vclen[i], vrec[i].length());
-            char* p = NULL;
-            int64_t val = std::strtoll(vrec[i].c_str(), &p, 10);
-            if(*p) worksheet_write_string(sheet, row, col++, vrec[i].c_str(), NULL);
-            else worksheet_write_number(sheet, row, col++, val, NULL);
-         }
-         ++row;
-     }
-     for(size_t i = 0; i < vclen.size(); ++i) worksheet_set_column(sheet, i, i, vclen[i], fmt);
-     return row;
-}
-
 void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.chr = h->target_name[b->core.tid];
     br.pos = b->core.pos;
@@ -156,7 +124,7 @@ void BamToTable::b2t(){
         format_set_align(format, LXW_ALIGN_LEFT);
         format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
         lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
-        int ttl = lines2sheet(rsheet, oss.str(), format);
+        int ttl = lxwutil::lines2sheet(rsheet, oss.str(), format);
         worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
         workbook_close(workbook);
     }
