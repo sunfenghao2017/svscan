@@ -529,23 +529,17 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         if(nosrssvs.find(iter->second->mR1SVID) != nosrssvs.end() ||
            nosrssvs.find(iter->second->mR2SVID) != nosrssvs.end()){
             drec[iter->first] = 3;
-            if(iter->second->mR1MapQ){
-                sts->mSpnCnts[iter->second->mR1SVID].mAltCnt = 0;
-                sts->mSpnCnts[iter->second->mR1SVID].mAltQual.clear();
-                sts->mJctCnts[iter->second->mR1SVID].mAltCnt = 0;
-                sts->mJctCnts[iter->second->mR1SVID].mAltQual.clear();
-                svs[iter->second->mR1SVID]->mSRSupport = 0;
-                svs[iter->second->mR1SVID]->mPESupport = 0;
-            }
-            if(iter->second->mR2MapQ){
-                sts->mSpnCnts[iter->second->mR2SVID].mAltCnt = 0;
-                sts->mSpnCnts[iter->second->mR2SVID].mAltQual.clear();
-                sts->mJctCnts[iter->second->mR2SVID].mAltCnt = 0;
-                sts->mJctCnts[iter->second->mR2SVID].mAltQual.clear();
-                svs[iter->second->mR2SVID]->mSRSupport = 0;
-                svs[iter->second->mR2SVID]->mPESupport = 0;
-            }
         }
+    }
+    // clear invalid svs
+    for(auto& id: nosrssvs){
+        sts->mSpnCnts[id].mAltCnt = 0;
+        sts->mSpnCnts[id].mAltQual.clear();
+        sts->mJctCnts[id].mAltCnt = 0;
+        sts->mJctCnts[id].mAltQual.clear();
+        svs[id]->mSRSupport = 0;
+        svs[id]->mPESupport = 0;
+        svs[id]->mRealnRet = -4;
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");

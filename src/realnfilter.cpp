@@ -26,10 +26,7 @@ int32_t RealnFilter::validSRSeq(const std::string& seq){
     for(auto& e: alnret){
         if(e->core.flag & BAM_FUNMAP) continue;
         std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-        if(clip.first && clip.second) continue;
-        if(clip.first + clip.second == 0){
-            ++mpcnt;
-        }
+        if(clip.first + clip.second == 0) ++mpcnt;
     }
     for(auto& e: alnret) bam_destroy1(e);
     return mpcnt;

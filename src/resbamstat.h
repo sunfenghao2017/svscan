@@ -59,12 +59,12 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     rs->mR1SVID = svid;
                     rs->mR1MapQ = b->core.qual;
                     rs->mR1SRT = srst;
-                    if(saval) rs->mR1Hit = lhit + thit;
+                    rs->mR1Hit = lhit + thit;
                 }else{
                     rs->mR2SVID = svid;
                     rs->mR2MapQ = b->core.qual;
                     rs->mR2SRT = srst;
-                    if(saval) rs->mR2Hit = lhit + thit;
+                    rs->mR2Hit = lhit + thit;
                 }
                 rssm[qname] = rs;
             }else{
@@ -72,12 +72,12 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     iter->second->mR1SVID = svid;
                     iter->second->mR1MapQ = b->core.qual;
                     iter->second->mR1SRT = srst;
-                    if(saval) iter->second->mR1Hit = lhit + thit;
+                    iter->second->mR1Hit = lhit + thit;
                 }else{
                     iter->second->mR2SVID = svid;
                     iter->second->mR2MapQ = b->core.qual;
                     iter->second->mR2SRT = srst;
-                    if(saval) iter->second->mR2Hit = lhit + thit;
+                    iter->second->mR2Hit = lhit + thit;
                 }
             }
         }
