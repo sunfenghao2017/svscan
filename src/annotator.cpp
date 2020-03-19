@@ -454,19 +454,19 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
                     sts->mJctCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
                 }
             }
-            if(iter->second->mR1Hit > 2){
+            if(iter->second->mR2Hit > 2){
                 svs[iter->second->mR2SVID]->mSRSupport -= 1;
                 if(svs[iter->second->mR2SVID]->mSRSupport <= 0){
                     svs[iter->second->mR2SVID]->mRealnRet = -4;
                     nosrssvs.insert(iter->second->mR2SVID);
                 }
                 sts->mTotalAltCnts[iter->second->mR2SVID] -= 1;
-                if(iter->second->mR1SRT){
+                if(iter->second->mR2SRT){
                     sts->mSpnCnts[iter->second->mR2SVID].mAltCnt -= 1;
-                    sts->mSpnCnts[iter->second->mR2SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                    sts->mSpnCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
                 }else{
                     sts->mJctCnts[iter->second->mR2SVID].mAltCnt -= 1;
-                    sts->mJctCnts[iter->second->mR2SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                    sts->mJctCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
                 }
             }
             drec[iter->first] = 3;
@@ -529,18 +529,22 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         if(nosrssvs.find(iter->second->mR1SVID) != nosrssvs.end() ||
            nosrssvs.find(iter->second->mR2SVID) != nosrssvs.end()){
             drec[iter->first] = 3;
-            sts->mSpnCnts[iter->second->mR1SVID].mAltCnt = 0;
-            sts->mSpnCnts[iter->second->mR1SVID].mAltQual.clear();
-            sts->mJctCnts[iter->second->mR1SVID].mAltCnt = 0;
-            sts->mJctCnts[iter->second->mR1SVID].mAltQual.clear();
-            sts->mSpnCnts[iter->second->mR2SVID].mAltCnt = 0;
-            sts->mSpnCnts[iter->second->mR2SVID].mAltQual.clear();
-            sts->mJctCnts[iter->second->mR2SVID].mAltCnt = 0;
-            sts->mJctCnts[iter->second->mR2SVID].mAltQual.clear();
-            svs[iter->second->mR1SVID]->mSRSupport = 0;
-            svs[iter->second->mR2SVID]->mSRSupport = 0;
-            svs[iter->second->mR1SVID]->mPESupport = 0;
-            svs[iter->second->mR2SVID]->mPESupport = 0;
+            if(iter->second->mR1MapQ){
+                sts->mSpnCnts[iter->second->mR1SVID].mAltCnt = 0;
+                sts->mSpnCnts[iter->second->mR1SVID].mAltQual.clear();
+                sts->mJctCnts[iter->second->mR1SVID].mAltCnt = 0;
+                sts->mJctCnts[iter->second->mR1SVID].mAltQual.clear();
+                svs[iter->second->mR1SVID]->mSRSupport = 0;
+                svs[iter->second->mR1SVID]->mPESupport = 0;
+            }
+            if(iter->second->mR2MapQ){
+                sts->mSpnCnts[iter->second->mR2SVID].mAltCnt = 0;
+                sts->mSpnCnts[iter->second->mR2SVID].mAltQual.clear();
+                sts->mJctCnts[iter->second->mR2SVID].mAltCnt = 0;
+                sts->mJctCnts[iter->second->mR2SVID].mAltQual.clear();
+                svs[iter->second->mR2SVID]->mSRSupport = 0;
+                svs[iter->second->mR2SVID]->mPESupport = 0;
+            }
         }
     }
     // write to result
