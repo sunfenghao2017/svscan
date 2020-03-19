@@ -205,7 +205,6 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
             sr[i]->mRealnRet = alnret[i].get();
         }
     }
-    delete opt->realnf; opt->realnf = NULL;
     util::loginfo("End online BWA realignment");
 #ifdef DEBUG
     if(opt->debug & DEBUG_FREAN){

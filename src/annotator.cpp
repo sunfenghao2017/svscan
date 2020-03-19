@@ -432,10 +432,46 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
 
 void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
+    // first run, kick out multiple alignment evidences
     ReadSupportStatMap rssm;
-    getReadSupportStatus(mOpt->bamout, rssm);
+    getReadSupportStatus(mOpt->bamout, rssm, mOpt->realnf);
     std::map<std::string, int32_t> drec;
+    std::set<int32_t> nosrssvs;
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+        if(iter->second->mR1Hit > 2 || iter->second->mR2Hit > 2){
+            if(iter->second->mR1Hit > 2){
+                svs[iter->second->mR1SVID]->mSRSupport -= 1;
+                if(svs[iter->second->mR1SVID]->mSRSupport <= 0){
+                    svs[iter->second->mR1SVID]->mRealnRet = -4;
+                    nosrssvs.insert(iter->second->mR1SVID);
+                }
+                sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
+                if(iter->second->mR1SRT){
+                    sts->mSpnCnts[iter->second->mR1SVID].mAltCnt -= 1;
+                    sts->mSpnCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                }else{
+                    sts->mJctCnts[iter->second->mR1SVID].mAltCnt -= 1;
+                    sts->mJctCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                }
+            }
+            if(iter->second->mR1Hit > 2){
+                svs[iter->second->mR2SVID]->mSRSupport -= 1;
+                if(svs[iter->second->mR2SVID]->mSRSupport <= 0){
+                    svs[iter->second->mR2SVID]->mRealnRet = -4;
+                    nosrssvs.insert(iter->second->mR2SVID);
+                }
+                sts->mTotalAltCnts[iter->second->mR2SVID] -= 1;
+                if(iter->second->mR1SRT){
+                    sts->mSpnCnts[iter->second->mR2SVID].mAltCnt -= 1;
+                    sts->mSpnCnts[iter->second->mR2SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                }else{
+                    sts->mJctCnts[iter->second->mR2SVID].mAltCnt -= 1;
+                    sts->mJctCnts[iter->second->mR2SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                }
+            }
+            drec[iter->first] = 3;
+            continue;
+        }
         if(iter->second->mR1MapQ && iter->second->mR2MapQ){
             if(iter->second->mR1SVID != iter->second->mR2SVID){
                 // find the one which is not in repeat region
@@ -488,6 +524,26 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             }
         }
     }
+    // second run, kick out all the rescued sr with seed cleared
+    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+        if(nosrssvs.find(iter->second->mR1SVID) != nosrssvs.end() ||
+           nosrssvs.find(iter->second->mR2SVID) != nosrssvs.end()){
+            drec[iter->first] = 3;
+            sts->mSpnCnts[iter->second->mR1SVID].mAltCnt = 0;
+            sts->mSpnCnts[iter->second->mR1SVID].mAltQual.clear();
+            sts->mJctCnts[iter->second->mR1SVID].mAltCnt = 0;
+            sts->mJctCnts[iter->second->mR1SVID].mAltQual.clear();
+            sts->mSpnCnts[iter->second->mR2SVID].mAltCnt = 0;
+            sts->mSpnCnts[iter->second->mR2SVID].mAltQual.clear();
+            sts->mJctCnts[iter->second->mR2SVID].mAltCnt = 0;
+            sts->mJctCnts[iter->second->mR2SVID].mAltQual.clear();
+            svs[iter->second->mR1SVID]->mSRSupport = 0;
+            svs[iter->second->mR2SVID]->mSRSupport = 0;
+            svs[iter->second->mR1SVID]->mPESupport = 0;
+            svs[iter->second->mR2SVID]->mPESupport = 0;
+        }
+    }
+    // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(ifp);
     bam1_t* b = bam_init1();

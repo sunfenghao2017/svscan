@@ -18,6 +18,23 @@ bool BpPair::agree(const BpPair& other){
     return true;
 }
 
+int32_t RealnFilter::validSRSeq(const std::string& seq){
+    std::vector<bam1_t*> alnret;
+    mBWA->alignSeq("seq", seq, alnret);
+    // first run, test repeat region
+    int32_t mpcnt = 0;
+    for(auto& e: alnret){
+        if(e->core.flag & BAM_FUNMAP) continue;
+        std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
+        if(clip.first && clip.second) continue;
+        if(clip.first + clip.second == 0){
+            ++mpcnt;
+        }
+    }
+    for(auto& e: alnret) bam_destroy1(e);
+    return mpcnt;
+}
+
 int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq, int32_t inslen){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
