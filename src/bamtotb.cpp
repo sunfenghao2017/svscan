@@ -65,7 +65,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     else br.mstrand = '+';
 }
 
-void BamToTable::getsvid(std::set<int32_t>& svids){
+void BamToTable::getFRExtraInfo(std::map<int32_t, FRExtraInfo>& fim){
     if(!fstsv.empty()){
         std::ifstream fr(fstsv);
         std::string line;
@@ -73,20 +73,31 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
         std::vector<std::string> vstr;
         while(std::getline(fr, line)){
             util::split(line, vstr, "\t");
-            svids.insert(std::atoi(vstr[svidf].c_str()));
+            FRExtraInfo fi;
+            fi.svid = std::atoi(vstr[svidf].c_str());
+            fi.fsgene = vstr[fsidf];
+            fim[fi.svid] = fi;
         }
         fr.close();
     }
-    for(auto& e: usrid){
-        svids.insert(e);
+
+    for(uint32_t i = 0; i < usrid.size(); ++i){
+        FRExtraInfo fi;
+        fi.svid = usrid[i];
+        if(usrid.size() == fsgene.size()){
+            fi.fsgene = fsgene[i];
+        }else{
+            fi.fsgene = "-";
+        }
+        fim[usrid[i]] = fi;
     }
 }
 
 void BamToTable::b2t(){
     if(bamtt.empty() && bamtb.empty()) return; // return if both types of output does not needed
     // fetch svids
-    std::set<int32_t> svids;
-    getsvid(svids);
+    std::map<int32_t, FRExtraInfo> fim;
+    getFRExtraInfo(fim);
     // fetch bam records
     BamRecVector brecs;
     samFile* fp = sam_open(svbam.c_str(), "r");
@@ -96,10 +107,11 @@ void BamToTable::b2t(){
         uint8_t* data = bam_aux_get(b, "ZF");
         if(data){
             int32_t id= bam_aux2i(data);
-            auto iter = svids.find(id);
-            if(iter != svids.end()){
+            auto iter = fim.find(id);
+            if(iter != fim.end()){
                 BamRec br;
                 b2r(b, h, br, id);
+                br.fsgene = iter->second.fsgene;
                 brecs.push_back(br);
             }
         }

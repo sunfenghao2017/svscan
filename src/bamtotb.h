@@ -11,6 +11,12 @@
 #include <lxwutil.h>
 #include <util.h>
 
+/** fusion information corresponding to a svid */
+struct FRExtraInfo{
+    int32_t svid;
+    std::string fsgene;
+};
+
 /** bam record items to output */
 struct BamRec{
     std::string chr;     ///< chr
@@ -33,6 +39,7 @@ struct BamRec{
     int32_t svid;        ///< sv id
     bool read1;          ///< read1 if true
     int32_t svrt;        ///< sv read type
+    std::string fsgene;  ///< fusion gene
     
     /** constructor */
     BamRec(){
@@ -41,6 +48,7 @@ struct BamRec{
         barcode = "-";
         lseq = "-";
         tseq = "-";
+        fsgene = "-";
     }
 
     /** destructor */
@@ -50,6 +58,7 @@ struct BamRec{
     inline std::string toStr(){
         std::ostringstream oss;
         oss << svid << "\t";
+        oss << fsgene << "\t";
         oss << chr  << "," << pos  << "," << strand  << "," << cigar  << "\t";
         oss << mchr << "," << mpos << "," << mstrand << "," << mcigar << "\t"; 
         oss << sa << "\t" << rbp << "\t" << sbp << "\t" << lseq << "\t" << tseq << "\t";
@@ -59,7 +68,7 @@ struct BamRec{
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\trmap\tmmap\tsa\trbp\tsbp\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
+        return "svid\tfsgene\trmap\tmmap\tsa\trbp\tsbp\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
     }
 
     /** compare two BamRec */
@@ -81,12 +90,14 @@ typedef std::vector<BamRec> BamRecVector;
 /** class to extract sv supporting bam to table */
 class BamToTable{
     public:
-        std::string svbam;          ///< sv supporting bam
-        std::string fstsv;          ///< fusion result tsv
-        std::vector<int32_t> usrid; ///< fusion id list
-        std::string bamtb;          ///< bam output table(excel format)
-        std::string bamtt;          ///< bam output txt(tsv format)
-        int32_t svidf = 29;         ///< svid column index in tsv
+        std::string svbam;               ///< sv supporting bam
+        std::string fstsv;               ///< fusion result tsv
+        std::vector<int32_t> usrid;      ///< fusion id list
+        std::string bamtb;               ///< bam output table(excel format)
+        std::string bamtt;               ///< bam output txt(tsv format)
+        std::vector<std::string> fsgene; ///< fusion gene of each svid
+        int32_t svidf = 29;              ///< svid column index in tsv
+        int32_t fsidf = 0;               ///< fusion column index in tsv
 
     /** BamToTable constructor */
     BamToTable(){}
@@ -100,7 +111,8 @@ class BamToTable{
     /** convert an bam record to BamRec*/
     void b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id);
 
-    /** get svids from fs/ss tsvs */
-    void getsvid(std::set<int32_t>& svids);
+    /** get sv info from fs tsvs */
+    void getFRExtraInfo(std::map<int32_t, FRExtraInfo>& fim);
 };
+
 #endif
