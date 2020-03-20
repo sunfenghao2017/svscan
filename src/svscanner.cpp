@@ -264,14 +264,14 @@ void SVScanner::scanDPandSR(){
         util::loginfo("End writing SVs to BCF file");
     }
     if((mOpt->bam2tb.size() || mOpt->bam2tt.size()) && mOpt->bamout.size()){
-        util::loginfo("Beg writing fusion supporting bam records to excel file");
+        util::loginfo("Beg writing fusion supporting bam records to file");
         BamToTable btt;
         btt.svbam = mOpt->bamout;
         btt.fstsv = mOpt->fuseOpt->mOutFile;
         btt.bamtb = mOpt->bam2tb;
         btt.bamtt = mOpt->bam2tt;
         btt.b2t();
-        util::loginfo("End writing fusion supporting bam records to excel file");
+        util::loginfo("End writing fusion supporting bam records to file");
     }
     delete covAnn;
     delete covStat;
