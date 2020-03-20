@@ -435,10 +435,67 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     // compute realnThreshold
     int32_t realnThreshold = std::max(mOpt->fuseOpt->mWhiteFilter.mMaxRepHit, mOpt->fuseOpt->mUsualFilter.mMaxRepHit) + 1;
     ReadSupportStatMap rssm;
+    std::set<int32_t> nosrssvs;
     getReadSupportStatus(mOpt->bamout, rssm, mOpt->realnf);
     std::map<std::string, int32_t> drec;
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
-        if(iter->second->mR1Hit > 2) svs[iter->second->mR1SVID]->mRealnRet = realnThreshold;
+        bool r1rpt = false , r2rpt = false;
+        // check r1 repeat region
+        if(iter->second->mR1Hit > 2){
+            // check r1
+            if(iter->second->mR1PHit > 1){
+                if(!mOpt->overlapRegs->overlap(iter->second->mR1PChr.c_str(), iter->second->mR1PBeg, iter->second->mR1PEnd)){// not in probe region
+                    r1rpt = true;
+                }
+            }
+            if(!r1rpt){
+                if(iter->second->mR1SHit > 1){
+                    if(!mOpt->overlapRegs->overlap(iter->second->mR1SChr.c_str(), iter->second->mR1SBeg, iter->second->mR1SEnd)){// not in probe region
+                        r1rpt = true;
+                    }
+                }
+            }
+            if(r1rpt){
+                sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
+                nosrssvs.insert(iter->second->mR1SVID);
+                if(iter->second->mR1SRT){
+                     sts->mSpnCnts[iter->second->mR1SVID].mAltCnt -= 1;
+                     sts->mSpnCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                 }else{
+                     sts->mJctCnts[iter->second->mR1SVID].mAltCnt -= 1;
+                     sts->mJctCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
+                 }
+                 drec[iter->first] = 3;
+            }
+        }
+        if(iter->second->mR2Hit > 2){
+            // check r2
+            if(iter->second->mR2PHit > 1){
+                if(!mOpt->overlapRegs->overlap(iter->second->mR2PChr.c_str(), iter->second->mR2PBeg, iter->second->mR2PEnd)){// not in probe region
+                    r2rpt = true;
+                }
+            }
+            if(!r2rpt){
+                if(iter->second->mR2SHit > 1){
+                    if(!mOpt->overlapRegs->overlap(iter->second->mR2SChr.c_str(), iter->second->mR2SBeg, iter->second->mR2SEnd)){// not in probe region
+                        r2rpt = true;
+                    }
+                }
+            }
+            if(r2rpt){
+                sts->mTotalAltCnts[iter->second->mR2SVID] -= 1;
+                nosrssvs.insert(iter->second->mR2SVID);
+                if(iter->second->mR2SRT){
+                     sts->mSpnCnts[iter->second->mR2SVID].mAltCnt -= 1;
+                     sts->mSpnCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
+                 }else{
+                     sts->mJctCnts[iter->second->mR2SVID].mAltCnt -= 1;
+                     sts->mJctCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
+                 }
+                 drec[iter->first] = 3;
+            }
+        }
+        if(r1rpt || r2rpt) continue;
         if(iter->second->mR2Hit > 2) svs[iter->second->mR2SVID]->mRealnRet = realnThreshold;
         if(iter->second->mR1MapQ && iter->second->mR2MapQ){
             if(iter->second->mR1SVID != iter->second->mR2SVID){
@@ -491,6 +548,23 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
                 sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
             }
         }
+    }
+    // second run, kick out all the rescued sr with seed cleared
+    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+        if(nosrssvs.find(iter->second->mR1SVID) != nosrssvs.end() ||
+           nosrssvs.find(iter->second->mR2SVID) != nosrssvs.end()){
+            drec[iter->first] = 3;
+        }
+    }
+    // clear invalid svs
+    for(auto& id: nosrssvs){
+        sts->mSpnCnts[id].mAltCnt = 0;
+        sts->mSpnCnts[id].mAltQual.clear();
+        sts->mJctCnts[id].mAltCnt = 0;
+        sts->mJctCnts[id].mAltQual.clear();
+        svs[id]->mSRSupport = 0;
+        svs[id]->mPESupport = 0;
+        svs[id]->mRealnRet = -4;
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
