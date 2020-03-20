@@ -40,6 +40,8 @@ struct BamRec{
     bool read1;          ///< read1 if true
     int32_t svrt;        ///< sv read type
     std::string fsgene;  ///< fusion gene
+    int32_t lhit;        ///< lseq hit times on genome
+    int32_t thit;        ///< tseq hit times on genome
     
     /** constructor */
     BamRec(){
@@ -49,6 +51,8 @@ struct BamRec{
         lseq = "-";
         tseq = "-";
         fsgene = "-";
+        lhit = 0;
+        thit = 0;
     }
 
     /** destructor */
@@ -61,14 +65,14 @@ struct BamRec{
         oss << fsgene << "\t";
         oss << chr  << "," << pos  << "," << strand  << "," << cigar  << "\t";
         oss << mchr << "," << mpos << "," << mstrand << "," << mcigar << "\t"; 
-        oss << sa << "\t" << rbp << "\t" << sbp << "\t" << lseq << "\t" << tseq << "\t";
+        oss << sa << "\t" << rbp << "\t" << sbp << "\t" << lhit << "\t" << thit << "\t" << lseq << "\t" << tseq << "\t";
         oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt << "\n";
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tfsgene\trmap\tmmap\tsa\trbp\tsbp\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
+        return "svid\tfsgene\trmap\tmmap\tsa\trbp\tsbp\tlhit\tthit\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
     }
 
     /** compare two BamRec */

@@ -433,78 +433,12 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
 void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
     // compute realnThreshold
+    int32_t realnThreshold = std::max(mOpt->fuseOpt->mWhiteFilter.mMaxRepHit, mOpt->fuseOpt->mUsualFilter.mMaxRepHit) + 1;
     ReadSupportStatMap rssm;
-    std::set<int32_t> nosrssvs;
     getReadSupportStatus(mOpt->bamout, rssm, mOpt->realnf);
     std::map<std::string, int32_t> drec;
+    // first run, resolve reads supporting multiple svs
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
-        bool r1rpt = false , r2rpt = false;
-        // check r1 repeat region
-        if(iter->second->mR1Hit > 2){
-            // check r1
-            if(iter->second->mR1PHit > 1){
-                if(!mOpt->overlapRegs->overlap(iter->second->mR1PChr.c_str(), iter->second->mR1PBeg, iter->second->mR1PEnd)){// not in probe region
-                    r1rpt = true;
-                    iter->second->mR1PTgt = 1;
-                    iter->second->mR1Seed = 0;
-                }
-            }
-            if(!r1rpt){
-                if(iter->second->mR1SHit > 1){
-                    if(!mOpt->overlapRegs->overlap(iter->second->mR1SChr.c_str(), iter->second->mR1SBeg, iter->second->mR1SEnd)){// not in probe region
-                        r1rpt = true;
-                        iter->second->mR1STgt = 1;
-                        iter->second->mR1Seed = 0;
-                    }
-                }
-            }
-            if(r1rpt){
-                sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
-                svs[iter->second->mR1SVID]->mSRSupport -= 1;
-                if(svs[iter->second->mR1SVID]->mSRSupport <= 0) nosrssvs.insert(iter->second->mR1SVID);
-                if(iter->second->mR1SRT){
-                     sts->mSpnCnts[iter->second->mR1SVID].mAltCnt -= 1;
-                     sts->mSpnCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
-                 }else{
-                     sts->mJctCnts[iter->second->mR1SVID].mAltCnt -= 1;
-                     sts->mJctCnts[iter->second->mR1SVID].mAltQual[iter->second->mR1MapQ] -= 1;
-                 }
-                 drec[iter->first] = 3;
-            }
-        }
-        if(iter->second->mR2Hit > 2){
-            // check r2
-            if(iter->second->mR2PHit > 1){
-                if(!mOpt->overlapRegs->overlap(iter->second->mR2PChr.c_str(), iter->second->mR2PBeg, iter->second->mR2PEnd)){// not in probe region
-                    r2rpt = true;
-                    iter->second->mR2PTgt = 1;
-                    iter->second->mR2Seed = 0;
-                }
-            }
-            if(!r2rpt){
-                if(iter->second->mR2SHit > 1){
-                    if(!mOpt->overlapRegs->overlap(iter->second->mR2SChr.c_str(), iter->second->mR2SBeg, iter->second->mR2SEnd)){// not in probe region
-                        r2rpt = true;
-                        iter->second->mR2STgt = 1;
-                        iter->second->mR2Seed = 0;
-                    }
-                }
-            }
-            if(r2rpt){
-                sts->mTotalAltCnts[iter->second->mR2SVID] -= 1;
-                svs[iter->second->mR2SVID]->mSRSupport -= 1;
-                if(svs[iter->second->mR2SVID]->mSRSupport <= 0) nosrssvs.insert(iter->second->mR2SVID);
-                if(iter->second->mR2SRT){
-                     sts->mSpnCnts[iter->second->mR2SVID].mAltCnt -= 1;
-                     sts->mSpnCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
-                 }else{
-                     sts->mJctCnts[iter->second->mR2SVID].mAltCnt -= 1;
-                     sts->mJctCnts[iter->second->mR2SVID].mAltQual[iter->second->mR2MapQ] -= 1;
-                 }
-                 drec[iter->first] = 3;
-            }
-        }
-        if(r1rpt || r2rpt) continue;
         if(iter->second->mR1MapQ && iter->second->mR2MapQ){
             if(iter->second->mR1SVID != iter->second->mR2SVID){
                 // find the one which is not in repeat region
@@ -547,63 +481,106 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
                 }
                 if(r1svrp && r2svrp){
                     drec[iter->first] = 3;
+                    iter->second->mR1Hit = 0;
+                    iter->second->mR2Hit = 0;
+                    iter->second->mR1Seed = 0;
+                    iter->second->mR2Seed = 0;
                 }else if(r1svrp){
                     drec[iter->first] = 1;
+                    iter->second->mR1Hit = 0;
+                    iter->second->mR1Seed = 0;
                 }else if(r2svrp){
                     drec[iter->first] = 2;
+                    iter->second->mR2Hit = 0;
+                    iter->second->mR2Seed = 0;
                 }
             }else{
                 sts->mTotalAltCnts[iter->second->mR1SVID] -= 1;
             }
         }
     }
+    // second run, stat one end multiple mapping status
+    std::map<int32_t, SeedStatus> mss;
+    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+        bool r1rpt = false , r2rpt = false;
+        if(iter->second->mR1Hit > 2){
+            // check r1
+            if(iter->second->mR1PHit > 1){
+                if(!mOpt->overlapRegs->overlap(iter->second->mR1PChr.c_str(), iter->second->mR1PBeg, iter->second->mR1PEnd)){// not in probe region
+                    r1rpt = true;
+                    iter->second->mR1PTgt = 1;
+                    iter->second->mR1Seed = 0;
+                }
+            }
+            if(!r1rpt){
+                if(iter->second->mR1SHit > 1){
+                    if(!mOpt->overlapRegs->overlap(iter->second->mR1SChr.c_str(), iter->second->mR1SBeg, iter->second->mR1SEnd)){// not in probe region
+                        r1rpt = true;
+                        iter->second->mR1STgt = 1;
+                        iter->second->mR1Seed = 0;
+                    }
+                }
+            }
+        }
+        if(iter->second->mR2Hit > 2){
+            // check r2
+            if(iter->second->mR2PHit > 1){
+                if(!mOpt->overlapRegs->overlap(iter->second->mR2PChr.c_str(), iter->second->mR2PBeg, iter->second->mR2PEnd)){// not in probe region
+                    r2rpt = true;
+                    iter->second->mR2PTgt = 1;
+                    iter->second->mR2Seed = 0;
+                }
+            }
+            if(!r2rpt){
+                if(iter->second->mR2SHit > 1){
+                    if(!mOpt->overlapRegs->overlap(iter->second->mR2SChr.c_str(), iter->second->mR2SBeg, iter->second->mR2SEnd)){// not in probe region
+                        r2rpt = true;
+                        iter->second->mR2STgt = 1;
+                        iter->second->mR2Seed = 0;
+                    }
+                }
+            }
+        }
+        if(iter->second->mR1SVID >= 0){
+            auto siter = mss.find(iter->second->mR1SVID);
+            if(siter == mss.end()){
+                SeedStatus ss;
+                ss.allsrt = iter->second->mR1Seed;
+                if(r1rpt) ss.mmapsrt = 1;
+                else ss.mmapsrt = 0;
+                mss[iter->second->mR1SVID] = ss;
+            }else{
+                if(r1rpt){
+                    siter->second.mmapsrt += 1;
+                    siter->second.allsrt += 1;
+                }else{
+                    siter->second.allsrt += iter->second->mR1Seed;
+                }
+            }
+        }
+        if(iter->second->mR2SVID >= 0){
+            auto siter = mss.find(iter->second->mR2SVID);
+            if(siter == mss.end()){
+                SeedStatus ss;
+                ss.allsrt = iter->second->mR2Seed;
+                if(r2rpt) ss.mmapsrt = 1;
+                else ss.mmapsrt = 0;
+                mss[iter->second->mR2SVID] = ss;
+            }else{
+                if(r2rpt){
+                    siter->second.mmapsrt += 1;
+                    siter->second.allsrt += 1;
+                }else{
+                    siter->second.allsrt += iter->second->mR2Seed;
+                }
+            }
+        }
+    }
     // stat sv event without any sr seed already
-    std::map<int32_t, int32_t> srcmp;
-    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
-        if(drec.find(iter->first) != drec.end()){
-            if(iter->second->mR1MapQ){
-                auto iter1 = srcmp.find(iter->second->mR1SVID);
-                if(iter1 == srcmp.end()){
-                    srcmp[iter->second->mR1SVID] = iter->second->mR1Seed;
-                }else{
-                    iter1->second += iter->second->mR1Seed;
-                }
-            }
-            if(iter->second->mR2MapQ){
-                auto iter2 = srcmp.find(iter->second->mR2SVID);
-                if(iter2 == srcmp.end()){
-                    srcmp[iter->second->mR2SVID] = iter->second->mR2Seed;
-                }else{
-                    iter2->second += iter->second->mR2Seed;
-                }
-            }
+    for(auto iter = mss.begin(); iter != mss.end(); ++iter){
+        if(iter->second.allsrt == iter->second.mmapsrt){
+            if(svs[iter->first]->mRealnRet >= 0) svs[iter->first]->mRealnRet = realnThreshold;
         }
-    }
-    // reset sr seed cnt
-    for(auto iter = srcmp.begin(); iter != srcmp.end(); ++iter){
-        if(svs[iter->first]->mSRSupport > 0){
-            svs[iter->first]->mSRSupport = iter->second;
-            if(iter->second == 0){
-                nosrssvs.insert(iter->first);
-            }
-        }
-    }
-    // second run, kick out all the rescued sr with seed cleared
-    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
-        if(nosrssvs.find(iter->second->mR1SVID) != nosrssvs.end() ||
-           nosrssvs.find(iter->second->mR2SVID) != nosrssvs.end()){
-            drec[iter->first] = 3;
-        }
-    }
-    // clear invalid svs
-    for(auto& id: nosrssvs){
-        sts->mSpnCnts[id].mAltCnt = 0;
-        sts->mSpnCnts[id].mAltQual.clear();
-        sts->mJctCnts[id].mAltCnt = 0;
-        sts->mJctCnts[id].mAltQual.clear();
-        svs[id]->mSRSupport = 0;
-        svs[id]->mPESupport = 0;
-        svs[id]->mRealnRet = -4;
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
@@ -613,7 +590,16 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     samFile* ofp = sam_open(tmpBam.c_str(), "wb");
     assert(sam_hdr_write(ofp, h) >= 0);
     while(sam_read1(ifp, h, b) >= 0){
-        auto iter = drec.find(bam_get_qname(b));
+        std::string qname = bamutil::getQName(b);
+        auto ritr = rssm.find(qname);
+        if(b->core.flag & BAM_FREAD1){
+            bam_aux_update_int(b, "PH", ritr->second->mR1PHit);
+            bam_aux_update_int(b, "SH", ritr->second->mR1SHit);
+        }else{
+            bam_aux_update_int(b, "PH", ritr->second->mR2PHit);
+            bam_aux_update_int(b, "SH", ritr->second->mR2SHit);
+        }
+        auto iter = drec.find(qname);
         if(iter == drec.end()){
             assert(sam_write1(ofp, h, b) >= 0);
         }else{

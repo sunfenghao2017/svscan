@@ -14,11 +14,13 @@ struct ReadSupport{
     int8_t mR1SRT = -1;
     int32_t mR1Hit = 0;
     int32_t mR1PHit = 0;
+    std::string mR1PSeq;
     std::string mR1PChr;
     int32_t mR1PBeg = -1;
     int32_t mR1PEnd = -1;
     int mR1PTgt = 0;
     int32_t mR1SHit = 0;
+    std::string mR1SSeq;
     std::string mR1SChr;
     int32_t mR1SBeg = -1;
     int32_t mR1SEnd = -1;
@@ -30,11 +32,13 @@ struct ReadSupport{
     int8_t mR2SRT = -1;
     int32_t mR2Hit = 0;
     int32_t mR2PHit = 0;
+    std::string mR2PSeq;
     std::string mR2PChr;
     int32_t mR2PBeg = -1;
     int32_t mR2PEnd = -1;
     int mR2PTgt = 0;
     int32_t mR2SHit = 0;
+    std::string mR2SSeq;
     std::string mR2SChr;
     int32_t mR2SBeg = -1;
     int32_t mR2SEnd = -1;
@@ -45,14 +49,16 @@ struct ReadSupport{
         os << "==========read1==========\n";
         os << "mR1SVID: " << rs.mR1SVID << "\n";
         os << "mR1MapQ: " << rs.mR1MapQ << "\n";
-        os << "mR1SRT:  " << rs.mR1SRT << "\n";
-        os << "mR1Hit:  " << rs.mR1Hit << "\n";
+        os << "mR1SRT:  " << rs.mR1SRT  << "\n";
+        os << "mR1Hit:  " << rs.mR1Hit  << "\n";
         os << "mR1PHit: " << rs.mR1PHit << "\n";
+        os << "mR1PSeq: " << rs.mR1PSeq << "\n";
         os << "mR1PChr: " << rs.mR1PChr << "\n";
         os << "mR1PBeg: " << rs.mR1PBeg << "\n";
         os << "mR1PEnd: " << rs.mR1PEnd << "\n";
         os << "mR1PTgt: " << rs.mR1PTgt << "\n";
         os << "mR1SHit: " << rs.mR1SHit << "\n";
+        os << "mR1SSeq: " << rs.mR1SSeq << "\n";
         os << "mR1SChr: " << rs.mR1SChr << "\n";
         os << "mR1SBeg: " << rs.mR1SBeg << "\n";
         os << "mR1SEnd: " << rs.mR1SEnd << "\n";
@@ -61,14 +67,16 @@ struct ReadSupport{
         os << "==========read2==========\n";
         os << "mR2SVID: " << rs.mR2SVID << "\n";
         os << "mR2MapQ: " << rs.mR2MapQ << "\n";
-        os << "mR2SRT:  " << rs.mR2SRT << "\n";
-        os << "mR2Hit:  " << rs.mR2Hit << "\n";
+        os << "mR2SRT:  " << rs.mR2SRT  << "\n";
+        os << "mR2Hit:  " << rs.mR2Hit  << "\n";
         os << "mR2PHit: " << rs.mR2PHit << "\n";
+        os << "mR2PSeq: " << rs.mR2PSeq << "\n";
         os << "mR2PChr: " << rs.mR2PChr << "\n";
         os << "mR2PBeg: " << rs.mR2PBeg << "\n";
         os << "mR2PEnd: " << rs.mR2PEnd << "\n";
         os << "mR2PTgt: " << rs.mR2PTgt << "\n";
         os << "mR2SHit: " << rs.mR2SHit << "\n";
+        os << "mR2SSeq: " << rs.mR2SSeq << "\n";
         os << "mR2SChr: " << rs.mR2SChr << "\n";
         os << "mR2SBeg: " << rs.mR2SBeg << "\n";
         os << "mR2SEnd: " << rs.mR2SEnd << "\n";
@@ -90,6 +98,7 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
         uint8_t* sdata = bam_aux_get(b, "ST");
         uint8_t* saval = bam_aux_get(b, "SA");
         int32_t phit = 0, pbeg = -1, pend = -1, shit = 0, sbeg = -1, send = -1;
+        std::string pseq, sseq;
         std::string pchr, schr;
         if(saval){
             int32_t sclen = 0;
@@ -104,17 +113,16 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             pchr = h->target_name[b->core.tid];
             pbeg = b->core.pos;
             pend = bam_endpos(b);
-            std::string qseq(b->core.l_qseq, '\0');
+            std::string rseq(b->core.l_qseq, '\0');
             for(int32_t i = 0; i < b->core.l_qseq; ++i){
-                qseq[i] = seq_nt16_str[bam_seqi(bam_get_seq(b), i)];
+                rseq[i] = seq_nt16_str[bam_seqi(bam_get_seq(b), i)];
             }
-            std::string pseq, sseq;
             if(leadsc){
-                sseq = qseq.substr(0, sclen);
-                pseq = qseq.substr(sclen);
+                pseq = rseq.substr(sclen);
+                sseq = rseq.substr(0, sclen);
             }else{
-                sseq = qseq.substr(sclen);
-                pseq = qseq.substr(0, sclen);
+                pseq = rseq.substr(0, b->core.l_qseq - sclen);
+                sseq = rseq.substr(b->core.l_qseq - sclen);
             }
             phit = rf->validSRSeq(pseq);
             shit = rf->validSRSeq(sseq);
@@ -149,6 +157,8 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         rs->mR1SBeg = sbeg;
                         rs->mR1SEnd = send;
                         rs->mR1Seed = 1;
+                        rs->mR1PSeq = pseq;
+                        rs->mR1SSeq = sseq;
                     }
                 }else{
                     rs->mR2SVID = svid;
@@ -163,7 +173,10 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         rs->mR2PBeg = pbeg;
                         rs->mR2PEnd = pend;
                         rs->mR2SBeg = sbeg;
+                        rs->mR2SEnd = send;
                         rs->mR2Seed = 1;
+                        rs->mR2PSeq = pseq;
+                        rs->mR2SSeq = sseq;
                     }
                 }
                 rssm[qname] = rs;
@@ -183,6 +196,8 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         iter->second->mR1SBeg = sbeg;
                         iter->second->mR1SEnd = send;
                         iter->second->mR1Seed = 1;
+                        iter->second->mR1PSeq = pseq;
+                        iter->second->mR1SSeq = sseq;
                     }
                 }else{
                     iter->second->mR2SVID = svid;
@@ -199,6 +214,8 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         iter->second->mR2SBeg = sbeg;
                         iter->second->mR2SEnd = send;
                         iter->second->mR2Seed = 1;
+                        iter->second->mR2PSeq = pseq;
+                        iter->second->mR2SSeq = sseq;
                     }
                 }
             }

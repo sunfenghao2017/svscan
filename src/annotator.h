@@ -7,6 +7,12 @@
 #include <htslib/tbx.h>
 #include <htslib/kstring.h>
 
+/** structure to store seed status of sv */
+struct SeedStatus{
+    int32_t allsrt = 0;
+    int32_t mmapsrt = 0;
+};
+
 /** SV breakpoint coverage annotator */
 class Annotator{
     public:

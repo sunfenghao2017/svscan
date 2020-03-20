@@ -25,6 +25,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
         }
         uint32_t* cigar = bam_get_cigar(b);
         int refpos = b->core.pos;
+        bool lsc = false;
         for(uint32_t i = 0; i < b->core.n_cigar; ++i){
             int opint = bam_cigar_op(cigar[i]);
             int oplen = bam_cigar_oplen(cigar[i]);
@@ -32,8 +33,16 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
                 refpos += oplen;
             }else if(opint == BAM_CSOFT_CLIP){
                 br.rbp = refpos;
+                if(i == 0) lsc = true;
                 break;
             }
+        }
+        if(lsc){
+            br.lhit = bamutil::getIntTag(b, "SH");
+            br.thit = bamutil::getIntTag(b, "PH");
+        }else{
+            br.lhit = bamutil::getIntTag(b, "PH");
+            br.thit = bamutil::getIntTag(b, "SH");
         }
     }
     if(br.sa.size()){

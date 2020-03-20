@@ -25,8 +25,16 @@ int32_t RealnFilter::validSRSeq(const std::string& seq){
     int32_t mpcnt = 0;
     for(auto& e: alnret){
         if(e->core.flag & BAM_FUNMAP) continue;
-        std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-        if(clip.first + clip.second == 0) ++mpcnt;
+        int mseq = 0;
+        uint32_t* cigar = bam_get_cigar(e);
+        for(uint32_t i = 0; i < e->core.n_cigar; ++i){
+            int opi = bam_cigar_op(cigar[i]);
+            int opl = bam_cigar_oplen(cigar[i]);
+            if(opi == BAM_CMATCH || opi == BAM_CDIFF || opi == BAM_CEQUAL){
+                mseq += opl;
+            }
+        }
+        if(mseq == e->core.l_qseq) ++mpcnt;
     }
     for(auto& e: alnret) bam_destroy1(e);
     return mpcnt;
@@ -40,15 +48,26 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     int32_t mpcnt = 0;
     for(auto& e: alnret){
         if(e->core.flag & BAM_FUNMAP) continue;
-         std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-         if(clip.first && clip.second) continue;
-         int32_t slen = clip.first + clip.second;
-         int32_t mlen = e->core.l_qseq - slen;
-         if(slen == 0){
-             retval = -1; // full match
-             break;
-         }
-         if(std::abs(mlen - fseq) < 10 || std::abs(slen - fseq) < 10) ++mpcnt;
+        uint32_t* cigar = bam_get_cigar(e);
+        std::pair<int32_t, int32_t> clip;
+        int32_t mlen = 0;
+        for(uint32_t i = 0; i < e->core.n_cigar; ++i){
+            int opi = bam_cigar_op(cigar[i]);
+            int opl = bam_cigar_oplen(cigar[i]);
+            if(opi == BAM_CSOFT_CLIP){
+                if(i == 0) clip.first = opl;
+                else clip.second = opl;
+            }else if(opi == BAM_CMATCH || opi == BAM_CDIFF || opi == BAM_CEQUAL){
+                mlen += opl;
+            }
+        }
+        if(clip.first && clip.second) continue;
+        int32_t slen = clip.first + clip.second;
+        if(mlen == e->core.l_qseq){
+            retval = -1; // full match
+            break;
+        }
+        if(std::abs(mlen - fseq) < 10 || std::abs(slen - fseq) < 10) ++mpcnt;
     }
     if(retval){
         for(auto& e: alnret) bam_destroy1(e);
