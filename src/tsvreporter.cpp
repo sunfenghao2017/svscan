@@ -28,6 +28,11 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.srRescued = mJctCnts[i].getAltDep();
         svr.dpRescued = mSpnCnts[i].getAltDep();
         svr.molRescued = mTotalAltCnts[i];
+        // srsrescued srsmalncnt srsmrate
+        svr.srRescued = svs[i]->mSRSResAllCnt;
+        svr.srsmalncnt = svs[i]->mSRSResMAlnCnt;
+        if(svr.srRescued > 0) svr.srsmrate = (double)(svr.srsmalncnt)/double(svr.srRescued);
+        else svr.srsmrate = 0;
         // srRefCount dpRefCount
         svr.srRefCount = mJctCnts[i].getRefDep();
         svr.dpRefCount = mSpnCnts[i].getRefDep();
@@ -441,6 +446,13 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.dprescued = mSpnCnts[svr->mID].getAltDep();           // dpRescued
     fsr.srrefcount = mJctCnts[svr->mID].getRefDep();          // srRefCount
     fsr.dprefcount = mSpnCnts[svr->mID].getRefDep();          // dpRefCount
+    fsr.srsrescued = svr->mSRSResAllCnt;                      // srSRescued
+    fsr.srsmalncnt = svr->mSRSResMAlnCnt;                     // srSResMaln
+    if(fsr.srrescued > 0){                                    // srSResMalnRate
+        fsr.srsmrate = (double)(fsr.srsmalncnt)/fsr.srrescued;
+    }else{
+        fsr.srsmrate = 0;
+    }
     fsr.insbp = svr->mBpInsSeq.length();                      // insBp
     if(svr->mBpInsSeq.empty()) fsr.insseq = "-";              // insSeq
     else fsr.insseq = svr->mBpInsSeq;

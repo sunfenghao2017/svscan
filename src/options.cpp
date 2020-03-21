@@ -1,4 +1,6 @@
 #include "options.h"
+#include "fuserec.h"
+#include "svrec.h"
 
 Options::Options(){
     madCutoff = 9;
@@ -175,33 +177,10 @@ void Options::getCregs(){
 void Options::writeEmptFile(){
     // tsv sv
     std::ofstream fw(tsvOut);
-    fw << "svType\tsvSize\tbpMark\t";//[0, 2]
-    fw << "fuseGene\t"; //[3];
-    fw << "hGene\thTrsEnd\thTrsStrand\t";//[4,6]
-    fw << "tGene\ttTrsEnd\ttTrsStrand\t";//[7,9]
-    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";//[10,12]
-    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";//[13,15]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";//[16,19]
-    fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";//[20,24]
-    fw << "bp1Trs\tbp2Trs\tsvSeq\tseqBp\tID\tsvtInt\tfsMask";//[25,31]
-    if(rnamode){
-        fw << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[32,35]
-    }else{
-        fw << "\n";
-    }
+    fw << SVRec::gethead(rnamode);
     fw.close();
     // fusion
-    std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
-    header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
-    header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
-    header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
-    header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
-    header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-29]
-    if(rnamode){
-        header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\n"); //[30-33]
-    }else{
-        header.append("\n");
-    }
+    std::string header = FusionRecord::gethead(rnamode);
     fw.open(fuseOpt->mOutFile.c_str());
     fw << header;
     fw.close();

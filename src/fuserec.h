@@ -35,6 +35,9 @@ struct FusionRecord{
     int32_t dprescued;          ///< all siscordant pair of reads supporting this fusion event
     int32_t srrefcount;         ///< all reads supporting ref type
     int32_t dprefcount;         ///< all paired reads supporting ref type
+    int32_t srsrescued;         ///< number of sr seed rescued
+    int32_t srsmalncnt;         ///< number of sr rescued seed with partner multiple realn
+    double srsmrate;            ///< rate of sr seeds with partner multiple realn
     int32_t insbp;              ///< inserted sequence length around breakpoint
     std::string insseq;         ///< inserted sequence
     int32_t svid;               ///< sv id
@@ -92,6 +95,7 @@ struct FusionRecord{
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
+        os << fsr.srrescued << "\t" << fsr.srsmalncnt << "\t" << fsr.srsmrate << "\t";
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos << "\t" << fsr.cigar;
@@ -113,7 +117,8 @@ struct FusionRecord{
         header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[12-16]
         header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[17-20]
         header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[21-26]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[27-32]
+        header.append("srSRescued\tsrSResMaln\tsrSResMalnRate\t"); //[27,29]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[30-35]
         if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
         else header.append("\texon1\texon2\n");
         return header;

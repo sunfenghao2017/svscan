@@ -22,6 +22,9 @@ struct SVRec{
     int32_t srRefCount;
     int32_t dpRefCount;
     int32_t molRescued;
+    int32_t srsrescued;
+    int32_t srsmalncnt;
+    double srsmrate;   
     double af;
     int32_t insBp;
     std::string insSeq;
@@ -52,6 +55,7 @@ struct SVRec{
         os << svr.srCount << "\t" << svr.dpCount << "\t";
         os << svr.srRescued << "\t" << svr.dpRescued << "\t" << svr.molRescued << "\t";
         os << svr.srRefCount << "\t" << svr.dpRefCount << "\t" << svr.af << "\t";
+        os << svr.srsrescued << "\t" << svr.srsmalncnt << "\t" << svr.srsmrate << "\t";
         os << svr.insBp << "\t" << svr.insSeq << "\t" << svr.svSeq << "\t" << svr.seqBp << "\t";
         os << svr.id << "\t" << svr.svInt << "\t";
         os << svr.bp1Gene << "\t" << svr.bp2Gene << "\t" << svr.fuseGene << "\t" << svr.fsMask << "\t" << svr.fsHits;
@@ -69,11 +73,12 @@ struct SVRec{
         oss << "srCount\tdpCount\t";// [7,8]
         oss << "srRescued\tdpRescued\tmolRescued\t"; // [9,11]
         oss << "srRefCount\tdpRefCount\tAF\t"; // [12,14]
-        oss << "insBp\tinsSeq\tsvSeq\tseqBp\t";// [15,18]
-        oss << "ID\tsvtInt\t"; // [19,20]
-        oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [21,25]
+        oss << "srSRescued\tsrSResMaln\tsrSResMalnRate\t"; // [15,17]
+        oss << "insBp\tinsSeq\tsvSeq\tseqBp\t";// [18,21]
+        oss << "ID\tsvtInt\t"; // [22,23]
+        oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [24,28]
         if(rnamode){
-            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[26,30]
+            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[29,33]
         }else{
             oss << "\n";
         }
@@ -97,23 +102,26 @@ struct SVRec{
         svr.molRescued = std::atoi(vstr[11].c_str());
         svr.srRefCount = std::atoi(vstr[12].c_str());
         svr.dpRefCount = std::atoi(vstr[13].c_str());
-        svr.af = std::atof(vstr[14].c_str());
-        svr.insBp = std::atoi(vstr[15].c_str());
-        svr.insSeq = vstr[16];
-        svr.svSeq = vstr[17];
-        svr.seqBp = std::atoi(vstr[18].c_str());
-        svr.id = std::atoi(vstr[19].c_str());
-        svr.svInt = std::atoi(vstr[20].c_str());
-        svr.bp1Gene = vstr[21];
-        svr.bp2Gene = vstr[22];
-        svr.fuseGene = vstr[23];
-        svr.fsMask = vstr[24];
-        svr.fsHits = std::atoi(vstr[25].c_str());
-        if(vstr.size() > 26){
-            svr.trs1Name = vstr[26];
-            svr.trs1Pos = std::atoi(vstr[27].c_str());
-            svr.trs2Name = vstr[28];
-            svr.trs2Pos = std::atoi(vstr[29].c_str());
+        svr.srRescued = std::atoi(vstr[14].c_str());
+        svr.srsmalncnt = std::atoi(vstr[15].c_str());
+        svr.srsmrate = std::atof(vstr[16].c_str());
+        svr.af = std::atof(vstr[17].c_str());
+        svr.insBp = std::atoi(vstr[18].c_str());
+        svr.insSeq = vstr[19];
+        svr.svSeq = vstr[20];
+        svr.seqBp = std::atoi(vstr[21].c_str());
+        svr.id = std::atoi(vstr[22].c_str());
+        svr.svInt = std::atoi(vstr[23].c_str());
+        svr.bp1Gene = vstr[24];
+        svr.bp2Gene = vstr[25];
+        svr.fuseGene = vstr[26];
+        svr.fsMask = vstr[27];
+        svr.fsHits = std::atoi(vstr[28].c_str());
+        if(vstr.size() > 29){
+            svr.trs1Name = vstr[29];
+            svr.trs1Pos = std::atoi(vstr[30].c_str());
+            svr.trs2Name = vstr[31];
+            svr.trs2Pos = std::atoi(vstr[32].c_str());
         }
     }
 };

@@ -232,6 +232,13 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.dprescued = svr.dpRescued;;                           // dpRescued
             fgr.srrefcount  = svr.srRefCount;                         // srRefCount
             fgr.dprefcount = svr.dpRefCount;                          // dpRefCount
+            fgr.srsrescued = svr.srsrescued;                          // srSRescued
+            fgr.srsmalncnt = svr.srsmalncnt;                          // srSResMaln
+            if(fgr.srrescued > 0){                                    // srSResMalnRate
+                fgr.srsmrate = (double)(fgr.srsmalncnt)/fgr.srrescued;
+            }else{
+                fgr.srsmrate = 0;
+            }
             fgr.insbp = svr.insBp;                                    // insBp
             fgr.insseq = svr.insSeq;                                  // insSeq
             fgr.svid = svr.id;                                        // svID

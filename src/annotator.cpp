@@ -576,7 +576,8 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     }
     // stat sr event rescued sr seed multiple mapping rate
     for(auto iter = mss.begin(); iter != mss.end(); ++iter){
-        svs[iter->first]->mResSSRMultRate = (double)(iter->second.mmapsrt)/(double)(iter->second.allsrt);
+        svs[iter->first]->mSRSResMAlnCnt = iter->second.mmapsrt;
+        svs[iter->first]->mSRSResAllCnt = iter->second.allsrt;
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");

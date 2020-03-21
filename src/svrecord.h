@@ -54,7 +54,8 @@ class SVRecord{
         bool mMerged = false;        ///< this SV has been merged if true
         bool mFromOneSR = false;     ///< this SV comes from one seed SR
         int32_t mRealnRet = 0;       ///< return value from realignment test
-        double mResSSRMultRate = 0;  ///< rescued seeding sr reads aligned in multiple place ratio(only consdering partner gene of probe design gene)
+        int32_t mSRSResMAlnCnt = 0;    ///< number of rescued seeding sr reads aligned on multiple place
+        int32_t mSRSResAllCnt = 0;      ///< number of rsccued seeding sr reads
 
     public:
         /** SVRecord constructor */
