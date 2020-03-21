@@ -432,8 +432,6 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
 
 void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
-    // compute realnThreshold
-    int32_t realnThreshold = std::max(mOpt->fuseOpt->mWhiteFilter.mMaxRepHit, mOpt->fuseOpt->mUsualFilter.mMaxRepHit) + 1;
     ReadSupportStatMap rssm;
     getReadSupportStatus(mOpt->bamout, rssm, mOpt->realnf);
     std::map<std::string, int32_t> drec;
@@ -576,11 +574,9 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             }
         }
     }
-    // stat sv event without any sr seed already
+    // stat sr event rescued sr seed multiple mapping rate
     for(auto iter = mss.begin(); iter != mss.end(); ++iter){
-        if(iter->second.allsrt == iter->second.mmapsrt){
-            if(svs[iter->first]->mRealnRet >= 0) svs[iter->first]->mRealnRet = realnThreshold;
-        }
+        svs[iter->first]->mResSSRMultRate = (double)(iter->second.mmapsrt)/(double)(iter->second.allsrt);
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
