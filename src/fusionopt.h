@@ -149,7 +149,7 @@ struct FusionOptions{
     ExtraAnno mExtraAnnotator;            ///< extra gene annotator
     uint32_t mFsMaskInclude;              ///< result must match this fusion mask;
     uint32_t mFsMaskExclude;              ///< result must not match this fusion mask;
-    int32_t mMaxBpOffset = 10;            ///< max breakpoint offset of an SV against background SV to be excluded
+    int32_t mMaxBpOffset = 300;           ///< max breakpoint offset of an SV against background SV to be excluded
     std::string mRef;                     ///< reference file used in alignment of bam
     std::string mBgBCF;                   ///< background BCF file
     std::string mWhiteList;               ///< fusion event which will keep always if found

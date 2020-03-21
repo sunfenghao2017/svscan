@@ -78,7 +78,7 @@ struct SVRec{
         oss << "ID\tsvtInt\t"; // [22,23]
         oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [24,28]
         if(rnamode){
-            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[29,33]
+            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[29,32]
         }else{
             oss << "\n";
         }
@@ -102,10 +102,10 @@ struct SVRec{
         svr.molRescued = std::atoi(vstr[11].c_str());
         svr.srRefCount = std::atoi(vstr[12].c_str());
         svr.dpRefCount = std::atoi(vstr[13].c_str());
-        svr.srRescued = std::atoi(vstr[14].c_str());
-        svr.srsmalncnt = std::atoi(vstr[15].c_str());
-        svr.srsmrate = std::atof(vstr[16].c_str());
-        svr.af = std::atof(vstr[17].c_str());
+        svr.af = std::atof(vstr[14].c_str());
+        svr.srsrescued = std::atoi(vstr[15].c_str());
+        svr.srsmalncnt = std::atoi(vstr[16].c_str());
+        svr.srsmrate = std::atof(vstr[17].c_str());
         svr.insBp = std::atoi(vstr[18].c_str());
         svr.insSeq = vstr[19];
         svr.svSeq = vstr[20];

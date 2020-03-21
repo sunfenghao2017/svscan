@@ -161,8 +161,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.chr1 = chr2;
             if(fgl[i].tfrom1) fgr.chr2 = chr1;
             else fgr.chr2 = chr2;
-            if(notinbg) fgr.fsmask &= (~FUSION_FFBG);
-            else fgr.fsmask |= FUSION_FFBG;
+            if(fuseOpt->mBgBCF.size()){
+                if(notinbg) fgr.fsmask &= (~FUSION_FFBG);
+                else fgr.fsmask |= FUSION_FFBG;
+            }
             if(fuseOpt->hasWhiteGene(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FHOTGENE;
             else fgr.fsmask &= (~FUSION_FHOTGENE);
             if(fuseOpt->inWhiteList(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FINDB;
@@ -234,8 +236,8 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.dprefcount = svr.dpRefCount;                          // dpRefCount
             fgr.srsrescued = svr.srsrescued;                          // srSRescued
             fgr.srsmalncnt = svr.srsmalncnt;                          // srSResMaln
-            if(fgr.srrescued > 0){                                    // srSResMalnRate
-                fgr.srsmrate = (double)(fgr.srsmalncnt)/fgr.srrescued;
+            if(fgr.srsrescued > 0){                                    // srSResMalnRate
+                fgr.srsmrate = (double)(fgr.srsmalncnt)/fgr.srsrescued;
             }else{
                 fgr.srsmrate = 0;
             }

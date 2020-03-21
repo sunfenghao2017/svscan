@@ -29,7 +29,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.dpRescued = mSpnCnts[i].getAltDep();
         svr.molRescued = mTotalAltCnts[i];
         // srsrescued srsmalncnt srsmrate
-        svr.srRescued = svs[i]->mSRSResAllCnt;
+        svr.srsrescued = svs[i]->mSRSResAllCnt;
         svr.srsmalncnt = svs[i]->mSRSResMAlnCnt;
         if(svr.srRescued > 0) svr.srsmrate = (double)(svr.srsmalncnt)/double(svr.srRescued);
         else svr.srsmrate = 0;
@@ -84,7 +84,6 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
-    mOpt->fuseOpt->mMaxBpOffset = std::max(mOpt->libInfo->mMaxNormalISize, 300);
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
         if(!mOpt->fuseOpt->mFsRptList.empty()){
@@ -448,8 +447,8 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.dprefcount = mSpnCnts[svr->mID].getRefDep();          // dpRefCount
     fsr.srsrescued = svr->mSRSResAllCnt;                      // srSRescued
     fsr.srsmalncnt = svr->mSRSResMAlnCnt;                     // srSResMaln
-    if(fsr.srrescued > 0){                                    // srSResMalnRate
-        fsr.srsmrate = (double)(fsr.srsmalncnt)/fsr.srrescued;
+    if(fsr.srsrescued > 0){                                    // srSResMalnRate
+        fsr.srsmrate = (double)(fsr.srsmalncnt)/fsr.srsrescued;
     }else{
         fsr.srsmrate = 0;
     }

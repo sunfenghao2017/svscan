@@ -543,9 +543,13 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             auto siter = mss.find(iter->second->mR1SVID);
             if(siter == mss.end()){
                 SeedStatus ss;
-                ss.allsrt = iter->second->mR1Seed;
-                if(r1rpt) ss.mmapsrt = 1;
-                else ss.mmapsrt = 0;
+                if(r1rpt){
+                    ss.mmapsrt = 1;
+                    ss.allsrt = 1;
+                }else{
+                    ss.mmapsrt = 0;
+                    ss.allsrt = iter->second->mR1Seed;
+                }
                 mss[iter->second->mR1SVID] = ss;
             }else{
                 if(r1rpt){
@@ -560,9 +564,13 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             auto siter = mss.find(iter->second->mR2SVID);
             if(siter == mss.end()){
                 SeedStatus ss;
-                ss.allsrt = iter->second->mR2Seed;
-                if(r2rpt) ss.mmapsrt = 1;
-                else ss.mmapsrt = 0;
+                if(r2rpt){
+                    ss.mmapsrt = 1;
+                    ss.allsrt = 1;
+                }else{
+                    ss.mmapsrt = 0;
+                    ss.allsrt = iter->second->mR2Seed;
+                }
                 mss[iter->second->mR2SVID] = ss;
             }else{
                 if(r2rpt){
