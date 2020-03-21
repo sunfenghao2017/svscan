@@ -138,7 +138,8 @@ struct FusionRecord{
 
     /** update seed/rescue/depth/.. determined fusion mask */
     inline void maskFusion(FusionOptions* fsopt){
-        fsmask &= (~(FUSION_FLOWSUPPORT | FUSION_FLOWAF | FUSION_FLOWDEPTH | FUSION_FINREPORTRNG)); //clear some mask
+        fsmask &= (~(FUSION_FLOWSUPPORT | FUSION_FLOWAF | FUSION_FLOWDEPTH | FUSION_FINREPORTRNG | FUSION_FSRSEEDERROR)); //clear some mask
+        if(srcount > 0 && srsrescued == srsmalncnt) fsmask |= FUSION_FSRSEEDERROR; // fusion srseed are err-prone
         if(fsmask & (FUSION_FINDB | FUSION_FMINDB)){ // fusion/mirror in public db
             if(fusionreads < fsopt->mWhiteFilter.mMinSupport){ // total molecule support
                 fsmask |= FUSION_FLOWSUPPORT;

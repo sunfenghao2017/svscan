@@ -185,11 +185,12 @@
 #define FUSION_FPRECISE                 0x40000              ///< this fusion event has precise breakpoint and concensus sequence
 #define FUSION_FCALLFROMRNASEQ          0x80000              ///< this fusion event is called from rna seq
 #define FUSION_FHTFLSWAPPED             0x100000             ///< this fusion event's h/t gene swapped against bp1/2 gene
-#define FUSION_FMULTREALN               0x200000             ///< this fusion event concensus sequence or supporting reads realigned in multiple compatible positions
-#define FUSION_FERRREALN                0x400000             ///< this fusion event concensus sequence and supporting reads realignment in good status
-#define FUSION_FPASSREALN               0x800000             ///< this fusion event concensus sequence supporting reads realignment in good status
+#define FUSION_FMULTREALN               0x200000             ///< this fusion event concensus sequence realigned in multiple compatible positions
+#define FUSION_FERRREALN                0x400000             ///< this fusion event concensus sequence realigned in invalid status
+#define FUSION_FPASSREALN               0x800000             ///< this fusion event concensus sequence realigned in good status
 #define FUSION_FINREPORTRNG             0x1000000            ///< this fusion event is in predefined report range
 #define FUSION_FWITHNCRNA               0x2000000            ///< this fusion event contains a non-coding rna partner
+#define FUSION_FSRSEEDERROR             0x4000000            ///< this fusion event split read seeds are error-prone
 
 /** fusion flag type */
 typedef uint64_t TFUSION_FLAG;

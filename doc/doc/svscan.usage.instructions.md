@@ -21,7 +21,7 @@ the svscan ```/share/work1/svpapp/gitlab/svpipe/bin/svscan``` is used for produc
 ### general example
 execute ```/share/work1/svpapp/gitlab/svpipe/bin/svscan -h``` for help and do whatever you can, each options or flag has detailed explanations which should be easily understood.
 
-### dna exmaple(with arguments used in production)
+### dna exmaple(with arguments used in production for gene set 86)
    
    ``` 
    /share/work1/svpapp/gitlab/svpipe/bin/svscan
@@ -56,7 +56,7 @@ execute ```/share/work1/svpapp/gitlab/svpipe/bin/svscan -h``` for help and do wh
    -n 8
    ```
   
-###  rna example(with arguments used in production)
+###  rna example(with arguments used in production for gene set 105)
    
    ```
    /share/work1/svpapp/gitlab/svpipe/bin/svscan
@@ -94,9 +94,30 @@ execute ```/share/work1/svpapp/gitlab/svpipe/bin/svscan -h``` for help and do wh
    -f /share/A30050T/OncDir/svpapp/wangx9211/WX0306/output/vori/08.sv/PYZB305R4000_B28.fr.tsv
    -n 8
    ```
+### database files
+You may need to do analysis with some other gene set of DNA or RNA library, all the DNA and RNA database files available are in ```/share/work1/wulj/database/svdb```, they are distributed in a standardized directory tree and follow regulary nomenclature rules. In fact, you just replace the geneset names with the other ones, such as 105 to 31 in ```RNA example``` or 457 to 655 in ```DNA example``` will generate the commands needed to do 31 gene set RNA svscan and 655 gene set svscan anslysis.
+
+All change history of database file can be tracked in its gitlab repo at [svdb](http://10.100.35.200:10080/wulj3253/svdb)
+
+### generate svscan sh file automatically
+Yeah, you can generate svscan bash script automatically. First put the bam paths in a plain text file with each path on one line, make sure no duplicated bam names appears in the same bamlist file.
+#### automatically generate batch svscan scripts for a DNA bamlist
+```/share/work1/wulj/programs/bin/prepDSV <in.list> <gset> <outdir> <optargs>```
+#### automatically generate batch svscan scripts for a RNA bamlist
+```/share/work1/wulj/programs/bin/prepRSV <in.list> <gset> <outdir> <optargs>```
+
+|positional arguments| explanations
+|--------------------|--------------
+|in.list|you input bamlist
+|gset|gene set of your bams in the input bamlist
+|outdir|where to output all the scripts of you svscan
+|optargs|optional arguments(does not needed)
+
+after execution, you will get all the scripts in the outdir, and you can execute theme or qsub to computation nodes to run. all the arguments used are the same as svscan used in production. make sure the right version svscan is in your environment variable, if not, export the proper one before execution each script.
+
 
 ## How to run svscan with svpapp
 
-get svpapp of for your system from some QQ group, or download them from server path ```/share/work1/wulj/database/release``` and install it.
+Get svpapp of for your system from shared files in QQ group```和瑞研发生信-北京-HYS-```, or download them from server path ```/share/work1/wulj/database/release``` and install it.
 
-open svpapp->Help->Manual for help, you are welcome to run svscan with svapapp, which will save you a lot of valuable lifetime.
+Open svpapp->Help->Manual for help, you are welcome to run svscan with svapapp, which will save you a lot of valuable lifetime.

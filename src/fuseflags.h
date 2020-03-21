@@ -28,11 +28,12 @@ struct FuseFlags{
         flagmap[FUSION_FCALLFROMRNASEQ] = "fusion event is called from rna seq";
         flagmap[FUSION_FMINDB] = "fusion event's mirror event is in public db";
         flagmap[FUSION_FHTFLSWAPPED] = "fusion event's h/t gene swapped against bp1/2 gene";
-        flagmap[FUSION_FPASSREALN] = "fusion consensus sequence and supporting reads realigned very well";
-        flagmap[FUSION_FMULTREALN] = "fusion concensus sequence or supporting reads realigned in multiple compatible positions";
-        flagmap[FUSION_FERRREALN] = "fusion concensus sequence or supporting reads realigned in invalid status";
+        flagmap[FUSION_FPASSREALN] = "fusion consensus sequence realigned very well";
+        flagmap[FUSION_FMULTREALN] = "fusion concensus sequence realigned in multiple compatible positions";
+        flagmap[FUSION_FERRREALN] = "fusion concensus sequence realigned in invalid status";
         flagmap[FUSION_FINREPORTRNG] = "fusion event is in predefined report range";
         flagmap[FUSION_FWITHNCRNA] = "fusion event contains NCRNA gene";
+        flagmap[FUSION_FSRSEEDERROR] = "fusion event split read seeds are error-prone";
     }
 
     ~FuseFlags(){}
