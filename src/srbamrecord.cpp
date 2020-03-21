@@ -118,7 +118,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
     util::loginfo("Beg clustering SRs for SV type " + std::to_string(svt) + ", all " + std::to_string(srs.size()) + " SRs ");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_Beg_clustering_SRs_for_SV_type:" << svt << std::endl;
+        std::cout << "DEBUG_BEG_CLUSTER_SRS_FOR_SV_TYPE:" << svt << std::endl;
     }
 #endif
     std::set<int32_t> clique; // component cluster
@@ -358,7 +358,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
+                    std::cout << "DEBUG_BPREFINED_FAILED_SV:\n" << svs[svid] << std::endl;
                 }
 #endif
                 svs[svid]->mConsensus = "";
@@ -489,7 +489,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
+                    std::cout << "DEBUG_BPREFINED_FAILED_SV:\n" << svs[svid] << std::endl;
                 }
 #endif
                 svs[svid]->mConsensus = "";

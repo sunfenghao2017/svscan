@@ -117,7 +117,7 @@ Stats* Annotator::covAnnotate(SVSet& svs){
     cr_merge_pre_index(crsv);
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FANNC){
-        std::cout << "debug_annc_cgrange_of_svs: " << std::endl;
+        std::cout << "DEBUG_ANNO_CGRANGE_OF_SVS: " << std::endl;
         cr_iter_usual(crsv, stdout);
     }
 #endif
@@ -133,7 +133,7 @@ Stats* Annotator::covAnnotate(SVSet& svs){
     util::loginfo("End construct SVs cgranges_t");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FANNC){
-        std::cout << "debug_sv_cgrantest_constructed: " << std::endl;
+        std::cout << "DEBUG_SV_CGRANGE_CONSTRUCTED: " << std::endl;
         for(uint32_t i = 0; i < svregs.size(); ++i){
             cr_iter_indexed(svregs[i], stdout);
         }
@@ -145,7 +145,7 @@ Stats* Annotator::covAnnotate(SVSet& svs){
     std::sort(ctgRng.begin(), ctgRng.end());
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FANNC){
-        std::cout << "debug_ctg_rng_list: " << std::endl;
+        std::cout << "DEBUG_SV_CONTIG_RANGE_LIST: " << std::endl;
         for(uint32_t i = 0; i < ctgRng.size(); ++i){
             std::cout << ctgRng[i] << std::endl;
         }

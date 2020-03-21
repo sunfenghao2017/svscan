@@ -365,7 +365,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     if(!frl.empty()) frl[frl.size() - 1].report = true;
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
-        std::cout << "debug_sorted_fs_event:" << std::endl;
+        std::cout << "DEBUG_SORTED_FUSION_EVENTS:" << std::endl;
         for(uint32_t i = 0; i < frl.size(); ++i){
             std::cout << std::boolalpha << frl[i].report << "\t" <<  frl[i] << std::endl;
         }

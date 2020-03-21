@@ -138,7 +138,7 @@ void SVScanner::scanDPandSR(){
     }
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_svRefID:";
+        std::cout << "DEBUG_ALL_SRS_REF_ID:";
         for(auto& srfid: mOpt->svRefID){
             std::cout << "\t" << srfid;
         }
@@ -149,7 +149,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End clustering SRs");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_SRSV_Cluster_result: " << std::endl;
+        std::cout << "DEBUG_SR_SUPPORT_SV_CLUSTER_RESULT: " << std::endl;
         std::cout << srs << std::endl;
     }
 #endif
@@ -164,7 +164,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End clustering DPs");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_DP_SV_Cluster_result: " << std::endl;
+        std::cout << "DEBUG_DP_SUPPORT_SV_CLUSTER_RESULT: " << std::endl;
         std::cout << dprSet << std::endl;
     }
 #endif
@@ -172,9 +172,9 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_DP_SVS_found: " << std::endl;
+        std::cout << "DEBUG_DP_SVS_FOUND: " << std::endl;
         std::cout << mDPSVs << std::endl;
-        std::cout << "debug_SR_SVS_found: " << std::endl;
+        std::cout << "DEBUG_SR_SVS_FOUND: " << std::endl;
         std::cout << mSRSVs << std::endl;
     }
 #endif
@@ -188,7 +188,7 @@ void SVScanner::scanDPandSR(){
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_ALL_SVS_found: " << std::endl;
+        std::cout << "DEBUG_ALL_SV_FOUND: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif
@@ -214,7 +214,7 @@ void SVScanner::scanDPandSR(){
     }
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
-        std::cout << "debug_final_merged_svs: " << std::endl;
+        std::cout << "DEBUG_FINAL_MERGED_SVS: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif
@@ -253,7 +253,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End writing Fusions to TSV file");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
-        std::cout << "debug_final_merged_svs: " << std::endl;
+        std::cout << "DEBUG_FINAL_MERGED_SVS: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif

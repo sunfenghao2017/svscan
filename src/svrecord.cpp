@@ -146,7 +146,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     if(!findSplit(alnResult, ad)){
 #ifdef DEBUG
         if(opt->debug & DEBUG_FCALL){
-            std::cout << "debug_find_split_fail_SVID: " << mID << std::endl;
+            std::cout << "DEBUG_CONSENSUS_SEQUENCE_SPLITALN_FAIL_SVID: " << mID << std::endl;
             std::cout << *alnResult << std::endl;
             std::cout << ad << std::endl;
         }
@@ -208,7 +208,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     util::loginfo("End online BWA realignment");
 #ifdef DEBUG
     if(opt->debug & DEBUG_FREAN){
-        std::cout << "\ndebug_realign_failed_sv_info:" << std::endl;
+        std::cout << "\nDEBUG_CONSENSUS_SEQ_OBWA_REALN_FAILED:" << std::endl;
         for(uint32_t i = 0; i < sr.size(); ++i){
             if(sr[i]->mRealnRet < 0 || sr[i]->mRealnRet > 4){
                 std::cout << sr[i] << std::endl;
@@ -228,7 +228,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     maxCI = std::max(opt->filterOpt->mMaxReadSep, maxCI);
 #ifdef DEBUG
     if(opt->debug & DEBUG_FCALL){
-        std::cout << "debug_maxCI_used_in_merge_SRSVS: " << maxCI << std::endl;
+        std::cout << "DEBUG_MAXCI_USED_IN_MERGE_SRSVS: " << maxCI << std::endl;
     }
 #endif
     int32_t totSV = sr.size();
@@ -268,7 +268,7 @@ void mergeSRSVs(SVSet& sr, SVSet& msr, Options* opt){
     util::loginfo("End merging SR supported SVs, got " + std::to_string(msr.size()));
 #ifdef DEBUG
     if(opt->debug & DEBUG_FCALL){
-        std::cout << "debug_Merged_SR_SV_IDs:";
+        std::cout << "DEBUG_MERGED_SR_SV_IDS:";
         for(uint32_t i = 0; i < sr.size(); ++i){
             if(sr[i]->mMerged){
                 std::cout << i << "\t";
@@ -331,7 +331,7 @@ void mergeDPSVs(SVSet& dp, SVSet& mdp, Options* opt){
     util::loginfo("End merging DP supported SVs, got " + std::to_string(mdp.size()));
 #ifdef DEBUG
     if(opt->debug & DEBUG_FCALL){
-        std::cout << "debug_Merged_DP_SV_IDs:";
+        std::cout << "DEBUG_MERGED_DP_SV_IDS:";
         for(uint32_t i = 0; i < dp.size(); ++i){
             if(dp[i]->mMerged){
                 std::cout << "\t" << i;

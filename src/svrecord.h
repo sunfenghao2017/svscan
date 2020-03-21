@@ -17,45 +17,45 @@
 /** class to store structural variant record */
 class SVRecord{
     public:
-        int32_t mChr1 = -1;          ///< chr on 5' end of SV | larger chr
-        int32_t mSVStart = -1;       ///< 5' starting position of SV | starting position of SV on larger chr
-        int32_t mChr2 = -1;          ///< chr on 3' end of SV | little chr
-        int32_t mSVEnd = -1;         ///< 3' ending position of SV | ending position on little chr
-        int32_t mCiPosLow = 0;       ///< smallest sv starting position is mSVStart + mCiPosLow(mCiPosLow is an negative value)
-        int32_t mCiPosHigh = 0;      ///< largest sv starting position is mSVStart + mCiPosHigh(mCiPosHigh is an positive value)
-        int32_t mCiEndLow = 0;       ///< smallest sv ending position is mSVEnd + mCiEndLow(mCiEndLow is an negative value)
-        int32_t mCiEndHigh = 0;      ///< largest sv ending position is mSVEnd + mCiEndHigh(mCiEndHigh is an positive value)
-        int32_t mPESupport = 0;      ///< number of Paired-end discordant reads supporting this SV
-        int32_t mSRSupport = 0;      ///< number of Split-reads supporting this SV(one split read consists two part)
-        int32_t mAlnInsLen = 0;      ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
-        std::string mBpInsSeq = "";  ///< insertion sequence after breakpoint position
-        float mBpInsFreq = 0;        ///< frequence of insertion sequence after breakpoint position 
-        int32_t mHomLen = 0;         ///< total homology length of left/right part of consensus seq out of gap range with their gap elonged partner
-        int32_t mSVT = -1;           ///< SV type[0-9]
-        int32_t mID = -1;            ///< SV ID, is just the index at which this SVRecord is stored in the vector
-        int32_t mSize = -1;          ///< SV size
-        float mSRAlignQuality = 0;   ///< identity percent outside of largest inner gap in consensus SR sequence aligned with SV ref
-        uint8_t mSRMapQuality = 0;   ///< median mapping quality of SR bam records that support this SV
-        uint8_t mPEMapQuality = 0;   ///< median mapping quality of DP bam records that support this SV
-        bool mPrecise = false;       ///< consensus sequence aligned with SV ref successfully and got a refined breakpoint evaluation
-        std::string mAlleles = "";   ///< standard vcf format allele representation of SV
-        std::string mConsensus = ""; ///< consensus sequence of SRs supporting this SV coming freom SRs MSA result
-        std::string mSVRef = "";     ///< reference sequence of this SV constructed which spanning starting and ending positions
-        int32_t mGapCoord[4] = {0};  ///< gap coordinates of split alignment of consensus sequence against reference[conGapBeg, conGapEnd, refGapBeg, refGapEnd]
-        std::string mNameChr1 = "";  ///< name of chr on 5' end of SV | larger chr
-        std::string mNameChr2 = "";  ///< name of chr on 3' end of SV | little chr
-        std::string mProbeBegC = ""; ///< an consensus sequence segment spanning the SV starting position
-        std::string mProbeEndC = ""; ///< an consensus sequence segment spanning the SV ending position
-        std::string mProbeBegA = ""; ///< an alternative consensus sequence segment spanning the SV starting position
-        std::string mProbeEndA = ""; ///< an alternative consensus sequence segment spanning the SV ending position
-        std::string mInsSeq = "";    ///< insertion sequence of insertion event
-        std::string mTraChr1Seq = "";///< larger chr reference sequence of translocation 
-        std::string mTraChr2Seq = "";///< little chr reference sequence of translocation
-        bool mMerged = false;        ///< this SV has been merged if true
-        bool mFromOneSR = false;     ///< this SV comes from one seed SR
-        int32_t mRealnRet = 0;       ///< return value from realignment test
-        int32_t mSRSResMAlnCnt = 0;    ///< number of rescued seeding sr reads aligned on multiple place
-        int32_t mSRSResAllCnt = 0;      ///< number of rsccued seeding sr reads
+        int32_t mChr1 = -1;           ///< chr on 5' end of SV | larger chr
+        int32_t mSVStart = -1;        ///< 5' starting position of SV | starting position of SV on larger chr
+        int32_t mChr2 = -1;           ///< chr on 3' end of SV | little chr
+        int32_t mSVEnd = -1;          ///< 3' ending position of SV | ending position on little chr
+        int32_t mCiPosLow = 0;        ///< smallest sv starting position is mSVStart + mCiPosLow(mCiPosLow is an negative value)
+        int32_t mCiPosHigh = 0;       ///< largest sv starting position is mSVStart + mCiPosHigh(mCiPosHigh is an positive value)
+        int32_t mCiEndLow = 0;        ///< smallest sv ending position is mSVEnd + mCiEndLow(mCiEndLow is an negative value)
+        int32_t mCiEndHigh = 0;       ///< largest sv ending position is mSVEnd + mCiEndHigh(mCiEndHigh is an positive value)
+        int32_t mPESupport = 0;       ///< number of Paired-end discordant reads supporting this SV
+        int32_t mSRSupport = 0;       ///< number of Split-reads supporting this SV(one split read consists two part)
+        int32_t mAlnInsLen = 0;       ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
+        std::string mBpInsSeq = "";   ///< insertion sequence after breakpoint position
+        float mBpInsFreq = 0;         ///< frequence of insertion sequence after breakpoint position
+        int32_t mHomLen = 0;          ///< total homology length of left/right part of consensus seq out of gap range with their gap elonged partner
+        int32_t mSVT = -1;            ///< SV type[0-9]
+        int32_t mID = -1;             ///< SV ID, is just the index at which this SVRecord is stored in the vector
+        int32_t mSize = -1;           ///< SV size
+        float mSRAlignQuality = 0;    ///< identity percent outside of largest inner gap in consensus SR sequence aligned with SV ref
+        uint8_t mSRMapQuality = 0;    ///< median mapping quality of SR bam records that support this SV
+        uint8_t mPEMapQuality = 0;    ///< median mapping quality of DP bam records that support this SV
+        bool mPrecise = false;        ///< consensus sequence aligned with SV ref successfully and got a refined breakpoint evaluation
+        std::string mAlleles = "";    ///< standard vcf format allele representation of SV
+        std::string mConsensus = "";  ///< consensus sequence of SRs supporting this SV coming freom SRs MSA result
+        std::string mSVRef = "";      ///< reference sequence of this SV constructed which spanning starting and ending positions
+        int32_t mGapCoord[4] = {0};   ///< gap coordinates of split alignment of consensus sequence against reference[conGapBeg, conGapEnd, refGapBeg, refGapEnd]
+        std::string mNameChr1 = "";   ///< name of chr on 5' end of SV | larger chr
+        std::string mNameChr2 = "";   ///< name of chr on 3' end of SV | little chr
+        std::string mProbeBegC = "";  ///< an consensus sequence segment spanning the SV starting position
+        std::string mProbeEndC = "";  ///< an consensus sequence segment spanning the SV ending position
+        std::string mProbeBegA = "";  ///< an alternative consensus sequence segment spanning the SV starting position
+        std::string mProbeEndA = "";  ///< an alternative consensus sequence segment spanning the SV ending position
+        std::string mInsSeq = "";     ///< insertion sequence of insertion event
+        std::string mTraChr1Seq = ""; ///< larger chr reference sequence of translocation
+        std::string mTraChr2Seq = ""; ///< little chr reference sequence of translocation
+        bool mMerged = false;         ///< this SV has been merged if true
+        bool mFromOneSR = false;      ///< this SV comes from one seed SR
+        int32_t mRealnRet = 0;        ///< return value from realignment test
+        int32_t mSRSResMAlnCnt = 0;   ///< number of rescued seeding sr reads aligned on multiple place
+        int32_t mSRSResAllCnt = 0;    ///< total number of rsccued seeding sr reads
 
     public:
         /** SVRecord constructor */
@@ -106,6 +106,8 @@ class SVRecord{
             os << "Translocation chr2Seq: " << sv.mTraChr2Seq << "\n";
             if(sv.mSVT == 4) os << "Inserted sequence: " << sv.mInsSeq << "\n";
             if(sv.mBpInsSeq.length() > 0) os << "Sequence inserted after break point: " << sv.mBpInsSeq << "\n";
+            os << "Number of split seed reads rescued: " << sv.mSRSResAllCnt << "\n";
+            os << "Number of rescued split seed reads mappable on multiple place: " << sv.mSRSResMAlnCnt << "\n";
             os << "======================================================================================================\n";
             return os;
         }
@@ -160,6 +162,8 @@ class SVRecord{
             ss << "Translocation chr2Seq: " << mTraChr2Seq << "\n";
             if(mSVT == 4) ss << "Inserted sequence: " << mInsSeq << "\n";
             if(mBpInsSeq.length() > 0) ss << "Sequence inserted after break point: " << mBpInsSeq << "\n";
+            ss << "Number of split seed reads rescued: " << mSRSResAllCnt << "\n";
+            ss << "Number of rescued split seed reads mappable on multiple place: " << mSRSResMAlnCnt << "\n";
             ss << "======================================================================================================\n";
             return ss.str();
         }
