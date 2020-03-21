@@ -22,22 +22,19 @@ int32_t RealnFilter::validSRSeq(const std::string& seq){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
     // first run, test repeat region
-    int32_t mpcnt = 0;
+    int32_t mscore = 0, mscnt = 0;
     for(auto& e: alnret){
         if(e->core.flag & BAM_FUNMAP) continue;
-        int mseq = 0;
-        uint32_t* cigar = bam_get_cigar(e);
-        for(uint32_t i = 0; i < e->core.n_cigar; ++i){
-            int opi = bam_cigar_op(cigar[i]);
-            int opl = bam_cigar_oplen(cigar[i]);
-            if(opi == BAM_CMATCH || opi == BAM_CDIFF || opi == BAM_CEQUAL){
-                mseq += opl;
-            }
+        uint8_t* data = bam_aux_get(e, "AS");
+        int score = bam_aux2i(data);
+        if(score > mscore){
+            mscnt = 1;
+            mscore = score;
+        }else if(score == mscore){
+            mscnt += 1;
         }
-        if(mseq == e->core.l_qseq) ++mpcnt;
     }
-    for(auto& e: alnret) bam_destroy1(e);
-    return mpcnt;
+    return mscnt;
 }
 
 int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq, int32_t inslen){
@@ -63,7 +60,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         }
         if(clip.first && clip.second) continue;
         int32_t slen = clip.first + clip.second;
-        if(mlen == e->core.l_qseq){
+        if(slen == 0){
             retval = -1; // full match
             break;
         }
