@@ -118,14 +118,27 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             }
             phit = rf->validSRSeq(pseq);
             shit = rf->validSRSeq(sseq);
-            std::string ss = bam_aux2Z(saval);
-            std::vector<std::string> vsas;
-            util::split(ss, vsas, ";");
-            std::vector<std::string> vstr;
-            util::split(vsas[0], vstr, ",");
-            schr = vstr[0];
-            sbeg = std::atoi(vstr[1].c_str());
-            send = sbeg + sclen;
+            std::string sastr = bam_aux2Z(saval);
+            // get optimal SA
+             std::vector<std::string> cvs;
+             std::vector<std::string> vstr;
+             util::split(sastr, cvs, ";");
+             if(cvs[1].empty()){
+                 util::split(cvs[0], vstr, ",");
+                 schr = vstr[0];
+                 sbeg = std::atoi(vstr[1].c_str());
+                 send = sbeg + sclen; // appoximate is ok
+             }else{
+                 for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
+                     util::split(cvs[cvidx], vstr, ",");
+                     if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                         schr = vstr[0];
+                         sbeg = std::atoi(vstr[1].c_str());
+                         send = sbeg + sclen; // appoximate is ok
+                         break;
+                     }
+                 }
+             }
         }
         if(idata && sdata){
             int svid = bam_aux2i(idata);

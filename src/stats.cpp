@@ -548,7 +548,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             }
         }
         // Read-count and spanning annotation
-        if(!(b->core.flag & BAM_FPAIRED)) continue;
+        if(sa || (!(b->core.flag & BAM_FPAIRED))) continue;
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
             if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
             // Spanning counting

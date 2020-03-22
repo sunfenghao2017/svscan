@@ -46,7 +46,21 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
         }
     }
     if(br.sa.size()){
+        // get optimal SA
+        std::vector<std::string> cvs;
         std::vector<std::string> vstr;
+        util::split(br.sa, cvs, ";");
+        if(cvs[1].empty()){
+            br.sa = cvs[0];
+        }else{
+            for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
+                util::split(cvs[cvidx], vstr, ",");
+                if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                    br.sa = cvs[cvidx];
+                    break;
+                }
+            }
+        }
         util::split(br.sa, vstr, ",");
         int32_t refpos = std::atoi(vstr[1].c_str());
         std::vector<std::pair<int32_t, char>> pcigar;

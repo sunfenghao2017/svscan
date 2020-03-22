@@ -2,7 +2,7 @@
 #include <bamutil.h>
 
 int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
-    // check whether SA available
+    // sa needed
     uint8_t* sa = bam_aux_get(b, "SA");
     if(!sa) return -2;
     // parse non-supplementary alignment record first

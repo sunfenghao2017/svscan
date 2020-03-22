@@ -29,7 +29,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
             if(!inValidReg(b, mOpt->bamheader)) continue; // skip reads which do not overlap with creg, neither does its mate
             int instat = jctMap->insertJunction(b, mOpt->bamheader); // only one softclip read can be SR candidates
-            if(instat == -1 || instat > 2) continue; // skip hardclip ones and read with head/tail sc
+            if(instat != -2) continue; // only use reads without sa as dp seed
             if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
             if(mScanRegs[b->core.mtid].empty()) continue;// skip invalid regions
