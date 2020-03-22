@@ -381,19 +381,24 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         std::string consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndC : svs[itbp->mID]->mProbeBegC;
                         if(readOri.empty()) readOri = bamutil::getSeq(b); // then fetch read to do realign
                         readSeq = readOri;
+                        std::string adjscseq;
                         bool recov = SRBamRecord::adjustOrientation(readSeq, itbp->mIsSVEnd, itbp->mSVT);
                         int adjbppos = 0;
                         if(leadingSC){
                             if(recov){
                                 adjbppos = readSeq.length() - leadingSC;
+                                adjscseq = readSeq.substr(adjbppos);
                             }else{
                                 adjbppos = leadingSC;
+                                adjscseq = readSeq.substr(0, leadingSC);
                             }
                         }else{
                             if(recov){
                                 adjbppos = tailingSC;
+                                adjscseq = readSeq.substr(0, tailingSC);
                             }else{
                                 adjbppos = readSeq.length() - tailingSC;
+                                adjscseq = readSeq.substr(adjbppos);
                             }
                         }
                         // Compute alignment to alternative haplotype
@@ -416,7 +421,9 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             // free previous resources
                             delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
                             // Any confident alignment?
-                            if(scoreAlt < mOpt->filterOpt->mMinSRResScore && svs[itbp->mID]->mProbeEndA.size()){
+                            if(scoreAlt < mOpt->filterOpt->mMinSRResScore &&
+                               svs[itbp->mID]->mProbeEndA.size() && 
+                               (leadingSC + tailingSC > svs[itbp->mID]->mBpInsSeq.size() + 0.6 * mOpt->filterOpt->mMinFlankSize)){
                                 consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndA : svs[itbp->mID]->mProbeBegA;
                                 Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
                                 Matrix2D<char>* secResult = new Matrix2D<char>();
@@ -432,6 +439,13 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                     }else{
                                         // just free resources
                                         delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
+                                        Aligner* ascAligner = new Aligner(adjscseq, svs[itbp->mID]->mConsensus, &alnCfg);
+                                        Matrix2D<char>* ascResult = new Matrix2D<char>();
+                                        double ascScore = ascAligner->needle(ascResult);
+                                        double ascMThre = mOpt->filterOpt->mFlankQuality * adjscseq.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * adjscseq.size() * alnCfg.mMisMatch;
+                                        double ascSAlt = ascScore/ascMThre;
+                                        if(ascSAlt < mOpt->filterOpt->mMinSRResScore) scoreAlt = 0.0;
+                                        delete ascAligner; ascAligner = NULL; delete ascResult; ascResult = NULL;
                                     }
                                 }else{
                                     delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
