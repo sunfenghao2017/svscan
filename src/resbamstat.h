@@ -126,14 +126,14 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
              if(cvs[1].empty()){
                  util::split(cvs[0], vstr, ",");
                  schr = vstr[0];
-                 sbeg = std::atoi(vstr[1].c_str());
+                 sbeg = std::atoi(vstr[1].c_str()) - 1;
                  send = sbeg + sclen; // appoximate is ok
              }else{
                  for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
                      util::split(cvs[cvidx], vstr, ",");
                      if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
                          schr = vstr[0];
-                         sbeg = std::atoi(vstr[1].c_str());
+                         sbeg = std::atoi(vstr[1].c_str()) - 1;
                          send = sbeg + sclen; // appoximate is ok
                          break;
                      }

@@ -62,7 +62,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             }
         }
         util::split(br.sa, vstr, ",");
-        int32_t refpos = std::atoi(vstr[1].c_str());
+        int32_t refpos = std::atoi(vstr[1].c_str()) - 1;
         std::vector<std::pair<int32_t, char>> pcigar;
         bamutil::parseCigar(vstr[3], pcigar);
         for(auto& e: pcigar){

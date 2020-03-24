@@ -227,7 +227,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
             else{
                 util::split(sastr, vstr, ",");
                 stid = bam_name2id(h, vstr[0].c_str());
-                irpos = std::atoi(vstr[1].c_str());
+                irpos = std::atoi(vstr[1].c_str()) - 1;
                 erpos = irpos;
                 safwd = (vstr[2][0] == '+');
                 char* scg = const_cast<char*>(vstr[3].c_str());

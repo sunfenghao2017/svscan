@@ -72,7 +72,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
         }
         util::split(sastr, vstr, ",");
         int32_t tid = bam_name2id(h, vstr[0].c_str());
-        refpos = std::atoi(vstr[1].c_str());
+        refpos = std::atoi(vstr[1].c_str()) - 1;
         fw = (vstr[2][0] == '+');
         readStart = -1;
         seqpos = 0, readpos = 0, seqmatch = 0;

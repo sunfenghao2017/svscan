@@ -64,7 +64,7 @@ class SVScanner{
                 std::vector<std::string> vstr;
                 for(uint32_t i = 0; i < vsas.size() - 1; ++i){
                     util::split(vsas[i], vstr, ",");
-                    int32_t refpos = std::atoi(vstr[1].c_str());
+                    int32_t refpos = std::atoi(vstr[1].c_str()) - 1;
                     if(mOpt->overlapRegs->overlap(vstr[0].c_str(), refpos - b->core.l_qseq, refpos + b->core.l_qseq)){
                         return true;
                     }
