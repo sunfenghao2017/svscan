@@ -412,7 +412,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
                         // check match range on read
                         if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
-                            if(!validAlignment(altResult, adjbppos, readSeq.length(), 0.6 * mOpt->filterOpt->mMinFlankSize)){
+                            if(!validAlignment(altResult, adjbppos, readSeq.length(), mOpt->filterOpt->mMinRealnFlkLen)){
                                 // free resouces and go to next round
                                 delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
                                 continue;
@@ -426,7 +426,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             // Any confident alignment?
                             if(scoreAlt < mOpt->filterOpt->mMinSRResScore &&
                                svs[itbp->mID]->mProbeEndA.size() && 
-                               (leadingSC + tailingSC > svs[itbp->mID]->mBpInsSeq.size() + 0.6 * mOpt->filterOpt->mMinFlankSize)){
+                               (leadingSC + tailingSC > (int32_t)(svs[itbp->mID]->mBpInsSeq.size() + mOpt->filterOpt->mMinRealnFlkLen))){
                                 consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndA : svs[itbp->mID]->mProbeBegA;
                                 Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
                                 Matrix2D<char>* secResult = new Matrix2D<char>();
@@ -435,7 +435,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 scoreAlt = (double)alnScore / (double)matchThreshold;
                                 // check match range on read
                                 if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
-                                    if(!validAlignment(secResult, adjbppos, readSeq.length(), 0.6 * mOpt->filterOpt->mMinFlankSize)){
+                                    if(!validAlignment(secResult, adjbppos, readSeq.length(), mOpt->filterOpt->mMinRealnFlkLen)){
                                         // free resouces and go to next round 
                                         delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
                                         continue;
@@ -540,7 +540,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     if(mOpt->fbamout){
                         bam_aux_update_int(b, "ZF", ixmx);
                         bam_aux_update_int(b, "ST", 0);
-                        if(sa && (!saseed)) bam_aux_del(b, sa);
+                        if(!saseed){
+                            uint8_t* sarray = bam_aux_get(b, "SA");
+                            if(sarray) bam_aux_del(b, sarray);
+                        }
                         assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                         sptids.insert(ixmx);
                     }
