@@ -412,13 +412,20 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         double scoreAlt = (double)alnScore / (double)matchThreshold;
                         // check match range on read
                         if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
-                            if(!validAlignment(altResult, adjbppos, readSeq.length(), mOpt->filterOpt->mMinRealnFlkLen)){
+                            if(!validAlignment(altResult, adjbppos, readSeq.length())){
                                 // free resouces and go to next round
                                 delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
                                 continue;
                             }else{
                                 // just free resources
                                 delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
+                                Aligner* ascAligner = new Aligner(adjscseq, svs[itbp->mID]->mConsensus, &alnCfg);
+                                Matrix2D<char>* ascResult = new Matrix2D<char>();
+                                double ascScore = ascAligner->needle(ascResult);
+                                double ascMThre = mOpt->filterOpt->mFlankQuality * adjscseq.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * adjscseq.size() * alnCfg.mMisMatch;
+                                double ascSAlt = ascScore/ascMThre;
+                                if(ascSAlt < mOpt->filterOpt->mMinSRResScore) scoreAlt = 0.0;
+                                delete ascAligner; ascAligner = NULL; delete ascResult; ascResult = NULL;
                             }
                         }else{
                             // free previous resources
@@ -435,7 +442,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 scoreAlt = (double)alnScore / (double)matchThreshold;
                                 // check match range on read
                                 if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
-                                    if(!validAlignment(secResult, adjbppos, readSeq.length(), mOpt->filterOpt->mMinRealnFlkLen)){
+                                    if(!validAlignment(secResult, adjbppos, readSeq.length())){
                                         // free resouces and go to next round 
                                         delete secAligner; secResult = NULL; delete secResult; secResult = NULL;
                                         continue;

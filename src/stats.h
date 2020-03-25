@@ -535,7 +535,7 @@ class Stats{
          * @param minoff minimum offset needed to spanning bppos
          * @return true if alnResult spanning bppos with at least minoff bps
          */
-        bool validAlignment(Matrix2D<char>* alnResult, int32_t bppos,  int32_t seqlen, int32_t minoff = 5);
+        bool validAlignment(Matrix2D<char>* alnResult, int32_t bppos,  int32_t seqlen, int32_t minoff = 0);
 
         /** test whether an bam record is met for the first time
          * @param b pointer to bam1_t struct
