@@ -344,7 +344,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             continue;
                         }
-                        if(leadingSC + tailingSC < mOpt->filterOpt->mMinFlankSize) continue; // skip reads with too short softclips
+                        if(leadingSC + tailingSC < mOpt->filterOpt->mMinRealnFlkLen) continue; // skip reads with too short softclips
                         bool seedgot = false;
                         int seedoff = 0;
                         if(sa && saseed){
