@@ -198,8 +198,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         if(tailingSC) bpapos = ep;
         bool assigned = false;
         uint8_t* sa = bam_aux_get(b, "SA");
-        int32_t stid = -1, irpos = -1, erpos = -1, sscl = 0, sscr = 0, bpbpos = -1, scsvt = -1;
-        bool safwd = false, orifwd = !(b->core.flag & BAM_FREVERSE), sahdc = false;
+        int32_t stid = -1, irpos = -1, erpos = -1, sscl = 0, sscr = 0, bpbpos = -1, scsvt = -1, seqmatch = 0;
+        bool safwd = false, orifwd = !(b->core.flag & BAM_FREVERSE), sahdc = false, saseed = false;
         std::string sastr;
         if(sa){ // skip reads with cliped part in repeat regions
             sastr = bam_aux2Z(sa);
@@ -232,6 +232,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 safwd = (vstr[2][0] == '+');
                 char* scg = const_cast<char*>(vstr[3].c_str());
                 int32_t stotlen = 0;
+                seqmatch = 0;
                 while(*scg && *scg != '*'){
                     long num = 0;
                     if(std::isdigit((int)*scg)){
@@ -248,6 +249,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             break;
                         case 'M': case '=': case 'X': case 'D': case 'N':
                             erpos += num;
+                            seqmatch += num;
                             break;
                         default:
                             break;
@@ -256,7 +258,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
                 bpbpos = irpos;
                 if(sscr) bpbpos = erpos;
-                if(stid == b->core.tid){
+                if(seqmatch > mOpt->filterOpt->mMinGoodSRLen || seqmatch <= (leadingSC + tailingSC)) saseed = true;
+                if(saseed && stid == b->core.tid){
                     if(bpapos < bpbpos){
                         scsvt = svutil::getSRSASVT(bpapos, leadingSC, orifwd, bpbpos, sscl, safwd, true,
                                                    mOpt->filterOpt->mMaxReadSep, mOpt->filterOpt->mMinRefSep);
@@ -341,10 +344,10 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             continue;
                         }
-                        if(leadingSC + tailingSC < 0.6 * mOpt->filterOpt->mMinFlankSize) continue; // skip reads with too short softclips
+                        if(leadingSC + tailingSC < mOpt->filterOpt->mMinFlankSize) continue; // skip reads with too short softclips
                         bool seedgot = false;
                         int seedoff = 0;
-                        if(sa){
+                        if(sa && saseed){
                             if((scsvt != itbp->mSVT) || sahdc) continue;
                             if(itbp->mIsSVEnd){
                                 if(std::abs(bpbpos - svs[itbp->mID]->mSVStart) >  mOpt->filterOpt->mMaxReadSep || svs[itbp->mID]->mChr1 != stid){
@@ -366,7 +369,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = {seedoff, itbp->mIsSVEnd};
                             continue;
                         }
-                        if(svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
+                        if(saseed && svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
                         // breakpoint check for rescue reads
                         if(itbp->mIsSVEnd){
                             if(std::abs(svs[itbp->mID]->mSVEnd - bpapos) >= mOpt->filterOpt->mMaxReadSep){
@@ -537,6 +540,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     if(mOpt->fbamout){
                         bam_aux_update_int(b, "ZF", ixmx);
                         bam_aux_update_int(b, "ST", 0);
+                        if(sa && (!saseed)) bam_aux_del(b, sa);
                         assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                         sptids.insert(ixmx);
                     }

@@ -9,7 +9,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     std::vector<Junction> jcvec;
     bool fw = !(b->core.flag & BAM_FREVERSE);
     int32_t refpos = b->core.pos;
-    int32_t seqpos = 0, readpos = 0, seqmatch = 0;
+    int32_t seqpos = 0, readpos = 0, seqmatch = 0, psc = 0;
     int32_t readStart = refpos;
     uint32_t* cigar = bam_get_cigar(b);
     int32_t seqlen = bamutil::getSeqLen(b);
@@ -34,6 +34,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             seqpos += oplen;
             readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
             seqmatch = seqlen - oplen;
+            psc = oplen;
             if(oplen > mOpt->filterOpt->minClipLen){
                 jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
             }
@@ -98,7 +99,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
                 seqpos += oplen;
                 readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
                 seqmatch = seqlen - oplen;
-                if(oplen > mOpt->filterOpt->minClipLen){
+                if((seqmatch > mOpt->filterOpt->mMinGoodSRLen || seqmatch <= psc) &&  oplen > mOpt->filterOpt->minClipLen){
                     jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
                 }
             }else if(opchr == BAM_CREF_SKIP) refpos += oplen;
