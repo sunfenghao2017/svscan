@@ -199,7 +199,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         bool assigned = false;
         uint8_t* sa = bam_aux_get(b, "SA");
         int32_t stid = -1, irpos = -1, erpos = -1, sscl = 0, sscr = 0, bpbpos = -1, scsvt = -1, seqmatch = 0;
-        bool safwd = false, orifwd = !(b->core.flag & BAM_FREVERSE), sahdc = false, saseed = false;
+        bool safwd = false, orifwd = !(b->core.flag & BAM_FREVERSE), sahdc = false;
         std::string sastr;
         if(sa){ // skip reads with cliped part in repeat regions
             sastr = bam_aux2Z(sa);
@@ -223,8 +223,14 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     sastr = "";
                 }
             }
-            if(sastr.empty()) continue;
-            else{
+            if(sastr.empty()){
+                if(leadingSC + tailingSC < mOpt->filterOpt->mMinGoodSRLen){
+                    bam_aux_del(b, sa);
+                    sa = NULL;
+                }else{
+                    continue;
+                }
+            }else{
                 util::split(sastr, vstr, ",");
                 stid = bam_name2id(h, vstr[0].c_str());
                 irpos = std::atoi(vstr[1].c_str()) - 1;
@@ -258,8 +264,11 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                 }
                 bpbpos = irpos;
                 if(sscr) bpbpos = erpos;
-                if(seqmatch > mOpt->filterOpt->mMinGoodSRLen || seqmatch <= (leadingSC + tailingSC)) saseed = true;
-                if(saseed && stid == b->core.tid){
+                if(seqmatch < mOpt->filterOpt->mMinGoodSRLen && seqmatch > (leadingSC + tailingSC)){
+                    bam_aux_del(b, sa);
+                    sa = NULL;
+                }
+                if(sa && stid == b->core.tid){
                     if(bpapos < bpbpos){
                         scsvt = svutil::getSRSASVT(bpapos, leadingSC, orifwd, bpbpos, sscl, safwd, true,
                                                    mOpt->filterOpt->mMaxReadSep, mOpt->filterOpt->mMinRefSep);
@@ -347,7 +356,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         if(leadingSC + tailingSC < mOpt->filterOpt->mMinRealnFlkLen) continue; // skip reads with too short softclips
                         bool seedgot = false;
                         int seedoff = 0;
-                        if(sa && saseed){
+                        if(sa){
                             if((scsvt != itbp->mSVT) || sahdc) continue;
                             if(itbp->mIsSVEnd){
                                 if(std::abs(bpbpos - svs[itbp->mID]->mSVStart) >  mOpt->filterOpt->mMaxReadSep || svs[itbp->mID]->mChr1 != stid){
@@ -369,7 +378,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = {seedoff, itbp->mIsSVEnd};
                             continue;
                         }
-                        if(saseed && svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
+                        if(svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
                         // breakpoint check for rescue reads
                         if(itbp->mIsSVEnd){
                             if(std::abs(svs[itbp->mID]->mSVEnd - bpapos) >= mOpt->filterOpt->mMaxReadSep){
@@ -547,10 +556,6 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                     if(mOpt->fbamout){
                         bam_aux_update_int(b, "ZF", ixmx);
                         bam_aux_update_int(b, "ST", 0);
-                        if(!saseed){
-                            uint8_t* sarray = bam_aux_get(b, "SA");
-                            if(sarray) bam_aux_del(b, sarray);
-                        }
                         assert(sam_write1(mOpt->fbamout, h, b) >= 0);
                         sptids.insert(ixmx);
                     }
