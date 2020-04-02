@@ -3,10 +3,12 @@
 void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.chr = h->target_name[b->core.tid];
     br.pos = b->core.pos;
-    br.mchr = h->target_name[b->core.mtid];
-    br.mpos = b->core.mpos;
     br.cigar = bamutil::getCigar(b);
-    br.mcigar = bamutil::getStrTag(b, "MC");
+    if(b->core.mtid >= 0){
+        br.mchr = h->target_name[b->core.mtid];
+        br.mpos = b->core.mpos;
+        br.mcigar = bamutil::getStrTag(b, "MC");
+    }
     br.sa = bamutil::getStrTag(b, "SA");
     br.barcode = bamutil::getStrTag(b, "BC");
     br.seq = bamutil::getSeq(b);
