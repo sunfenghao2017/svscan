@@ -199,6 +199,7 @@ int main(int argc, char** argv){
     }
     // svbam
     if(psvbam->parsed()){
+        svbamOpt->update(argc, argv);
         svbamOpt->getBam();
         delete svbamOpt;
     }
