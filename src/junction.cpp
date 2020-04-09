@@ -14,6 +14,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     uint32_t* cigar = bam_get_cigar(b);
     int32_t seqlen = bamutil::getSeqLen(b);
     int clpst = 0;
+    int sccnt = 0;
     for(uint32_t i = 0; i < b->core.n_cigar; ++i){
         int opint = bam_cigar_op(cigar[i]);
         int oplen = bam_cigar_oplen(cigar[i]);
@@ -25,6 +26,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
         }else if(opint == BAM_CINS){
             seqpos += oplen;
         }else if(opint == BAM_CSOFT_CLIP){
+            ++sccnt;
             int32_t lastSeqPos = seqpos;
             bool scleft = false;
             if(seqpos == 0){
@@ -42,6 +44,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             return -1;
         }else if(opint == BAM_CREF_SKIP) refpos += oplen;
     }
+    if(sccnt > 1) return sccnt;
     clpst = jcvec.size();
     if(clpst != 1) return clpst;
     // parse supplenmentary alignment record then
