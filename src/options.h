@@ -28,6 +28,7 @@ typedef int64_t BIGD_TYPE; ///< big data type
 #define DEBUG_FOUTF 0x8  ///< output debug mask
 #define DEBUG_FREAN 0x10 ///< realign debug mask
 #define DEBUG_FFINA 0x20 ///< check final mask
+#define DEBUG_FRESR 0x40 ///< check a read rescue status
 
 typedef uint32_t DEBUG_TYPE; ///< debug type
 
@@ -207,6 +208,7 @@ class Options{
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
         DEBUG_TYPE debug;             ///< debug mode
+        std::string qndbg;            ///< qname of read to debug
         std::string jsncfg;           ///< json config file
 
     public:

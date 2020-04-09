@@ -26,7 +26,8 @@ int main(int argc, char** argv){
     app.add_option("-f,--b2tsv", opt->bam2tt, "tsv file to output fusion event supporting bam records", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");
     app.add_option("-n,--nthread", opt->nthread, "number of threads used", true)->check(CLI::Range(1, 100))->group("General Options");
-    app.add_option("-d,--debug", opt->debug, "debug mask,1:call,2:cann,4:gann,8:out,16:realn,32:finsv", true)->group("General Options");
+    app.add_option("-d,--debug", opt->debug, "debug mask,1:call,2:cann,4:gann,8:out,16:realn,32:finsv:64:readrescue", true)->group("General Options");
+    app.add_option("-q,--qname", opt->qndbg, "qname of read to debug")->group("General Options");
     CLI::Option* prna = app.add_flag("--rna", opt->rnamode, "discovery structural variants from rna data if set")->group("General Options");
     app.add_option("--genome", opt->genome, "indexed genome fasta corresponding to the rna transcriptome")->needs(prna)->group("General Options");
     app.add_option("--ganno", opt->gannodb, "indexed genome fasta annotation database")->needs(prna)->group("General Options");

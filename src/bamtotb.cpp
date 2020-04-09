@@ -4,7 +4,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.chr = h->target_name[b->core.tid];
     br.pos = b->core.pos + 1;
     br.cigar = bamutil::getCigar(b);
-    if(b->core.mtid >= 0){
+    if(b->core.mtid >= 0 && (!(b->core.flag & BAM_FMUNMAP))){
         br.mchr = h->target_name[b->core.mtid];
         br.mpos = b->core.mpos + 1;
         br.mcigar = bamutil::getStrTag(b, "MC");

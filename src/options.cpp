@@ -21,7 +21,7 @@ Options::Options(){
     realnf = new RealnFilter();
     contigNum = 0;
     rnamode = false;
-    debug = false;
+    debug = 0;
 }
 
 Options::~Options(){
@@ -91,6 +91,15 @@ void Options::update(int argc, char** argv){
     samFile* fp = sam_open(bamfile.c_str(), "r");
     bamheader = sam_hdr_read(fp);
     sam_close(fp);
+    // print some debug info
+#ifdef DEBUG
+    if(qndbg.size()){
+        std::cout << "qname to debug: " << qndbg << std::endl;
+    }
+    if(debug){
+        std::cout << "debug mask: " << debug  << std::endl;
+    }
+#endif
 }
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){

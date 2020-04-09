@@ -147,7 +147,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     hts_itr_t* itr = sam_itr_queryi(idx, refIdx, chrBeg, chrEnd);
     bam1_t* b = bam_init1();
     AlignConfig alnCfg(5, -4, -4, -4, false, true);   
-    const uint16_t COV_STAT_SKIP_MASK = (BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP | BAM_FSUPPLEMENTARY | BAM_FUNMAP | BAM_FMUNMAP);
+    const uint16_t COV_STAT_SKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
     auto itbp = bpRegs[refIdx].begin();
     auto itspnr = spPts[refIdx].begin();
     auto itspna = spPts[refIdx].begin();
@@ -158,15 +158,45 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     int32_t lsprp = -1;
     int32_t lspap = -1;
     while(sam_itr_next(fp, itr, b) >= 0){
-        if(regInfo.mInterleved && b->core.pos < chrBeg) continue;
-        if(b->core.flag & COV_STAT_SKIP_MASK) continue;
-        if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue;
+#ifdef DEBUG
+        bool hitdbgr = false;
+        if(mOpt->debug & DEBUG_FRESR){
+            hitdbgr = (bam_get_qname(b) == mOpt->qndbg);
+            if(hitdbgr) std::cout << "target read visited" << std::endl;
+        }
+#endif
+        if(regInfo.mInterleved && b->core.pos < chrBeg){
+#ifdef DEBUG
+            if(hitdbgr) std::cout << "target interleaved and skip" << std::endl;
+#endif
+            continue;
+        }
+        if(b->core.flag & COV_STAT_SKIP_MASK){
+#ifdef DEBUG
+            if(hitdbgr) std::cout << "target skiped by coverage stat skip MASK: " << b->core.flag << ":" << COV_STAT_SKIP_MASK << std::endl;
+#endif
+            continue;
+        }
+        if(b->core.qual < mOpt->filterOpt->mMinGenoQual){
+#ifdef DEBUG
+            if(hitdbgr) std::cout << "target skiped by mapQ check: " << b->core.qual << ":" << mOpt->filterOpt->mMinGenoQual << std::endl;
+#endif
+            continue;
+        }
         if(!cr_isoverlap(ctgCgr, 
                          h->target_name[b->core.tid], 
                          std::max((BIGD_TYPE)0, b->core.pos - mOpt->libInfo->mMaxNormalISize), 
                          std::min((int32_t)(b->core.pos + mOpt->libInfo->mMaxNormalISize), (int32_t)h->target_len[b->core.tid]))){
+#ifdef DEBUG
+            if(hitdbgr){
+                std::cout << "target read region overlap failed" << std::endl;
+            }
+#endif
            continue;
         }
+#ifdef DEBUG
+        if((mOpt->debug & DEBUG_FRESR) && hitdbgr) std::cout << "target read passed qc and region overlap check" << std::endl;
+#endif
         // Count aligned basepair (small InDels)
         int32_t leadingSC = 0, leadingHC = 0;
         int32_t tailingSC = 0, tailingHC = 0;
@@ -357,6 +387,13 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         bool seedgot = false;
                         int seedoff = 0;
                         if(sa){
+#ifdef DEBUG
+                            if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                std::cout << "scsvt: " << scsvt << "\n";
+                                std::cout << "itbp->mSVT: " << scsvt << "\n";
+                                std::cout << "sahdc: " << sahdc << "\n";
+                            }
+#endif
                             if((scsvt != itbp->mSVT) || sahdc) continue;
                             if(itbp->mIsSVEnd){
                                 if(std::abs(bpbpos - svs[itbp->mID]->mSVStart) >  mOpt->filterOpt->mMaxReadSep || svs[itbp->mID]->mChr1 != stid){
@@ -568,6 +605,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         }
         // Read-count and spanning annotation
         if(sa || (!(b->core.flag & BAM_FPAIRED))) continue;
+        if(b->core.flag & BAM_FMUNMAP) continue; // mate unmapped, skip
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
             if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
             // Spanning counting
