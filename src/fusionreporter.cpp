@@ -225,7 +225,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             fgr.fusionsequence = svr.svSeq;                           // FusionSequence
             fgr.fseqbp = svr.seqBp;                                   // fseqBp
-            fgr.indb = ((fgr.fsmask & FUSION_FINDB) ? "Y" : "N");     // inDB
+            fgr.indb = ((fgr.fsmask & (FUSION_FINDB | FUSION_FMINDB)) ? "Y" : "N");     // inDB
             fgr.svt = svr.svType;                                     // svType
             fgr.svsize = svr.svSize;                                  // svSize
             fgr.srcount = svr.srCount;                                // srCount

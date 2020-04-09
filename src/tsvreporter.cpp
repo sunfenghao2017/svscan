@@ -434,7 +434,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.fusionsequence = svr->mConsensus;
         fsr.fseqbp = svr->mGapCoord[0];
     }
-    if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y"; // inDB
+    if(gi.mFuseGene[i].status & (FUSION_FINDB | FUSION_FMINDB)) fsr.indb = "Y"; // inDB
     else fsr.indb = "N";
     fsr.svt = svutil::addID(svr->mSVT);                       // svType
     if(svr->mSVT >= 5) fsr.svsize = -1;                       // svSize
