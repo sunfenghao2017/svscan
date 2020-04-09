@@ -90,15 +90,15 @@ struct FusionRecord{
     inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
         os << fsr.fusegene << "\t" << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
         os << fsr.indb << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
-        os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.jctpos1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
-        os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.jctpos2 << "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
+        os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.jctpos1 + 1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
+        os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.jctpos2 + 1<< "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
         os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.srsrescued << "\t" << fsr.srsmalncnt << "\t" << fsr.srsmrate << "\t";
         os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
-            os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos << "\t" << fsr.ts2name << "\t" << fsr.ts2pos << "\t" << fsr.cigar;
+            os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos + 1 << "\t" << fsr.ts2name << "\t" << fsr.ts2pos + 1 << "\t" << fsr.cigar;
         }else{
             os << "\t" << fsr.exon1 << "\t" << fsr.exon2;
         }

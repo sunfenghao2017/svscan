@@ -2,11 +2,11 @@
 
 void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.chr = h->target_name[b->core.tid];
-    br.pos = b->core.pos;
+    br.pos = b->core.pos + 1;
     br.cigar = bamutil::getCigar(b);
     if(b->core.mtid >= 0){
         br.mchr = h->target_name[b->core.mtid];
-        br.mpos = b->core.mpos;
+        br.mpos = b->core.mpos + 1;
         br.mcigar = bamutil::getStrTag(b, "MC");
     }
     br.sa = bamutil::getStrTag(b, "SA");
@@ -26,7 +26,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             br.tseq = br.seq.substr(br.seq.length() - scl.second);
         }
         uint32_t* cigar = bam_get_cigar(b);
-        int refpos = b->core.pos;
+        int refpos = b->core.pos + 1;
         bool lsc = false;
         for(uint32_t i = 0; i < b->core.n_cigar; ++i){
             int opint = bam_cigar_op(cigar[i]);
@@ -64,7 +64,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             }
         }
         util::split(br.sa, vstr, ",");
-        int32_t refpos = std::atoi(vstr[1].c_str()) - 1;
+        int32_t refpos = std::atoi(vstr[1].c_str());
         std::vector<std::pair<int32_t, char>> pcigar;
         bamutil::parseCigar(vstr[3], pcigar);
         for(auto& e: pcigar){
