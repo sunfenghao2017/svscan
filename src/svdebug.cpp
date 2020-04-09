@@ -252,7 +252,7 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
         write = false;
         qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
-        if(clips.first || clips.second){
+        if((clips.first > 0) ^ (clips.second > 0)){
             uint8_t* data = bam_aux_get(b, "SA");
             if(data){
                 char* val = bam_aux2Z(data);
@@ -301,7 +301,7 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
         qname.clear();
         write = false;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
-        if(clips.first || clips.second){
+        if((clips.first > 0) ^ (clips.second > 0)){
             uint8_t* data = bam_aux_get(b, "SA");
             if(data){
                 char* val = bam_aux2Z(data);
