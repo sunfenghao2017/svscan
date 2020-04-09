@@ -66,13 +66,18 @@ struct BamRec{
         oss << chr  << "," << pos  << "," << strand  << "," << cigar  << "\t";
         oss << mchr << "," << mpos << "," << mstrand << "," << mcigar << "\t"; 
         oss << sa << "\t" << rbp << "\t" << sbp << "\t" << lhit << "\t" << thit << "\t" << lseq << "\t" << tseq << "\t";
+        // aseq output beg
+        if(lseq != "-") oss << lseq;
+        if(tseq != "-") oss << tseq;
+        oss << "\t";
+        // aseq output end
         oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt << "\n";
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tfsgene\trmap\tmmap\tsa\trbp\tsbp\tlhit\tthit\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
+        return "svid\tfsgene\trmap\tmmap\tsa\trbp\tsbp\tlhit\tthit\tlseq\ttseq\taseq\tbarcode\tqname\tread1\tsvrt\n";
     }
 
     /** compare two BamRec */
