@@ -178,7 +178,7 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                 }
             }
             if(shit == 1){// check ins removed part
-                int inslen = sclen - (b->core.l_qseq - sascl);
+                int inslen = sseq.length() - (b->core.l_qseq - sascl);
                 if(inslen > 0){
                     shit = rf->validSRSeq(sseq.substr(inslen), sfm, sftid, sfb, sfe);
                 }
