@@ -123,7 +123,7 @@ typedef std::map<std::string, std::set<std::string>> FusePairs;
 
 /** filter options for fusion event */
 struct FilterOptions{
-    int32_t mMinIntraGeneSVSize = 2000; ///< min intra-gene SV size for a valid fusion
+    int32_t mMinIntraGeneSVSize = 2000; ///< min intra-gene(gene-nongene) SV size for a valid fusion
     int32_t mMinDepth = 10;             ///< min depth covering breakpoint needed
     int32_t mMinSRSupport = 3;          ///< min SR support for a valid fusion
     int32_t mMinDPSupport = 5;          ///< min DP support for a valid fusion

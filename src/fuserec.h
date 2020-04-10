@@ -161,6 +161,11 @@ struct FusionRecord{
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
             }
+            if(svint < 4 && (!(fsmask & FUSION_FALLGENE))){// size of gene->nongene
+                if(svsize < fsopt->mWhiteFilter.mMinIntraGeneSVSize){
+                    fsmask |= FUSION_FTOOSMALLSIZE;
+                }
+            }
         }else if(fsmask & FUSION_FHOTGENE){ // fusion only with gene in target region
             if(fsmask & FUSION_FPRECISE){
                 if(fusionreads < fsopt->mUsualFilter.mMinSupport){
@@ -186,6 +191,10 @@ struct FusionRecord{
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
             }
+            if(svint < 4 && (!(fsmask & FUSION_FALLGENE))){// size of gene->nongene
+                if(svsize < fsopt->mUsualFilter.mMinIntraGeneSVSize){
+                    fsmask |= FUSION_FTOOSMALLSIZE;
+                }
         }
         if(fsopt->mFsRptList.empty()){
             fsmask |= FUSION_FINREPORTRNG;
