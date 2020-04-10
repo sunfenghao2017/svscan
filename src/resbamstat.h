@@ -93,6 +93,29 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
         std::string pseq, sseq;
         std::string pchr, schr;
         if(saval){
+            // get optimal SA
+            std::string sastr = bam_aux2Z(saval);
+            std::vector<std::string> cvs;
+            std::vector<std::string> vstr;
+            util::split(sastr, cvs, ";");
+            std::string optsa;
+            if(cvs[1].empty()){
+                util::split(cvs[0], vstr, ",");
+                schr = vstr[0];
+                sbeg = std::atoi(vstr[1].c_str()) - 1;
+                optsa = vstr[3];
+            }else{
+                for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
+                    util::split(cvs[cvidx], vstr, ",");
+                    if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                        schr = vstr[0];
+                        sbeg = std::atoi(vstr[1].c_str()) - 1;
+                        optsa = vstr[3];
+                        break;
+                    }
+                }
+            }
+            // parse primary alignment length
             int32_t sclen = 0;
             bool leadsc = false;
             for(uint32_t i = 0; i < b->core.n_cigar; ++i){
@@ -102,6 +125,21 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     break;
                 }
             }
+            // parse supplementary alignment length
+            int32_t sascl = 0;
+            char* scg = const_cast<char*>(optsa.c_str());
+            while(*scg && *scg != '*'){
+                if(isdigit((int)*scg)){
+                    long num = strtol(scg, &scg, 10);
+                    if(*scg == 'S'){
+                        sascl = num;
+                        break;
+                    }
+                }
+                ++scg;
+            }
+            send = sbeg + (b->core.l_qseq - sascl);
+            // get seq
             pchr = h->target_name[b->core.tid];
             pbeg = b->core.pos;
             pend = bam_endpos(b);
@@ -111,34 +149,13 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             }
             if(leadsc){
                 pseq = rseq.substr(sclen);
-                sseq = rseq.substr(0, sclen);
+                sseq = rseq.substr(0, b->core.l_qseq - sascl);
             }else{
                 pseq = rseq.substr(0, b->core.l_qseq - sclen);
-                sseq = rseq.substr(b->core.l_qseq - sclen);
+                sseq = rseq.substr(b->core.l_qseq - sascl);
             }
             phit = rf->validSRSeq(pseq);
             shit = rf->validSRSeq(sseq);
-            std::string sastr = bam_aux2Z(saval);
-            // get optimal SA
-             std::vector<std::string> cvs;
-             std::vector<std::string> vstr;
-             util::split(sastr, cvs, ";");
-             if(cvs[1].empty()){
-                 util::split(cvs[0], vstr, ",");
-                 schr = vstr[0];
-                 sbeg = std::atoi(vstr[1].c_str()) - 1;
-                 send = sbeg + sclen; // appoximate is ok
-             }else{
-                 for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
-                     util::split(cvs[cvidx], vstr, ",");
-                     if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
-                         schr = vstr[0];
-                         sbeg = std::atoi(vstr[1].c_str()) - 1;
-                         send = sbeg + sclen; // appoximate is ok
-                         break;
-                     }
-                 }
-             }
         }
         if(idata && sdata){
             int svid = bam_aux2i(idata);

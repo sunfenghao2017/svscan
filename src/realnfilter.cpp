@@ -64,7 +64,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
             retval = -1; // full match
             break;
         }
-        if(std::abs(mlen - fseq) < 10 || std::abs(slen - fseq) < 10) ++mpcnt;
+        if(std::abs(mlen - fseq) == 0 || std::abs(slen - fseq) == 0) ++mpcnt;
     }
     if(retval){
         for(auto& e: alnret) bam_destroy1(e);
