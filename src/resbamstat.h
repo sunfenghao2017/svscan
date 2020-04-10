@@ -149,13 +149,40 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             }
             if(leadsc){
                 pseq = rseq.substr(sclen);
-                sseq = rseq.substr(0, b->core.l_qseq - sascl);
+                sseq = rseq.substr(0, b->core.l_qseq - sclen);
             }else{
                 pseq = rseq.substr(0, b->core.l_qseq - sclen);
-                sseq = rseq.substr(b->core.l_qseq - sascl);
+                sseq = rseq.substr(b->core.l_qseq - sclen);
             }
-            phit = rf->validSRSeq(pseq);
-            shit = rf->validSRSeq(sseq);
+            bool pfm = false, sfm = false;
+            int32_t pftid = -1, pfb = -1, pfe = -1, sftid = -1, sfb = -1, sfe = -1;
+            phit = rf->validSRSeq(pseq, pfm, pftid, pfb, pfe);
+            shit = rf->validSRSeq(sseq, sfm, sftid, sfb, sfe);
+            int32_t maxoff = std::max(10, b->core.l_qseq - sclen - sascl);
+            if(phit == 1 && pfm){// check fm
+                if(b->core.tid == pftid &&
+                   std::abs(b->core.pos - pfb) < maxoff &&
+                   std::abs(bam_endpos(b) - pfe) < maxoff){
+                    // donothing
+                }else{
+                    phit = 1000;
+                }
+            }
+            if(shit == 1 && sfm){// check fm
+                if(bam_name2id(h, schr.c_str()) == sftid &&
+                   std::abs(sbeg - sfb) < maxoff &&
+                   std::abs(send - sfe) < maxoff){
+                    // donothing
+                }else{
+                    shit = 1000;
+                }
+            }
+            if(shit == 1){// check ins removed part
+                int inslen = sclen - (b->core.l_qseq - sascl);
+                if(inslen > 0){
+                    shit = rf->validSRSeq(sseq.substr(inslen), sfm, sftid, sfb, sfe);
+                }
+            }
         }
         if(idata && sdata){
             int svid = bam_aux2i(idata);

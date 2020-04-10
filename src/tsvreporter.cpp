@@ -31,7 +31,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         // srsrescued srsmalncnt srsmrate
         svr.srsrescued = svs[i]->mSRSResAllCnt;
         svr.srsmalncnt = svs[i]->mSRSResMAlnCnt;
-        if(svr.srRescued > 0) svr.srsmrate = (double)(svr.srsmalncnt)/double(svr.srRescued);
+        if(svr.srRescued > 0) svr.srsmrate = (double)(svr.srsmalncnt)/double(svr.srsrescued);
         else svr.srsmrate = 0;
         // srRefCount dpRefCount
         svr.srRefCount = mJctCnts[i].getRefDep();

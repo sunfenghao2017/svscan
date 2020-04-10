@@ -54,8 +54,15 @@ class RealnFilter{
      */
     int32_t validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq, int32_t inslen);
 
-    /** realignment test of split read sequence */
-    int32_t validSRSeq(const std::string& seq);
+    /** realignment test of split read sequence
+     * @param seq sequence to validate
+     * @param fullm if the sequence fully matched, set it true
+     * @param ftid full match tid
+     * @param fbeg full match beg pos
+     * @param fend full match end pos
+     * @return highest score hit count
+     */
+    int32_t validSRSeq(const std::string& seq, bool& fullm, int& ftid, int& fbeg, int& fend);
 };
 
 #endif
