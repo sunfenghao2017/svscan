@@ -59,8 +59,8 @@ int main(int argc, char** argv){
     app.add_option("--usualminttr", opt->fuseOpt->mUsualFilter.mMinSupport, "min molecules for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--whiteminaf", opt->fuseOpt->mWhiteFilter.mMinVAF, "min VAF for an valid fusion in whitelist", true)->group("Fusion Options");
     app.add_option("--usualminaf", opt->fuseOpt->mUsualFilter.mMinVAF, "min VAF for an valid fusion not in whitelist", true)->group("Fusion Options");
-    app.add_option("--whiteminigs", opt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion in whitelist", true)->group("Fusion Options");
-    app.add_option("--usualminigs", opt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize, "min intra-gene sv size for an valid fusion not in whitelist", true)->group("Fusion Options");
+    app.add_option("--whiteminigs", opt->fuseOpt->mWhiteFilter.mMinIntraGeneSVSize, "min intra-gene(gene-nonegene) sv size for an valid fusion in whitelist", true)->group("Fusion Options");
+    app.add_option("--usualminigs", opt->fuseOpt->mUsualFilter.mMinIntraGeneSVSize, "min intra-gene(gene-nonegene) sv size for an valid fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--whitemaxrph", opt->fuseOpt->mWhiteFilter.mMaxRepHit, "max hits on reference allowed for partial seqs of fusion in whitelist", true)->group("Fusion Options");
     app.add_option("--usualmaxrph", opt->fuseOpt->mUsualFilter.mMaxRepHit, "max hits on reference allowed for partial seqs of fusion not in whitelist", true)->group("Fusion Options");
     app.add_option("--maxbpoffset", opt->fuseOpt->mMaxBpOffset, "max breakpoint offset allowed for an SV excluded from background SVs", true)->group("Fusion Options");

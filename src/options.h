@@ -122,6 +122,7 @@ struct SVFilter{
     uint32_t mMinSeedDP = 3;           ///< minimum discordant pair of reads used to compute SV
     int32_t mMinGoodSRLen = 25;        ///< minimum length of split read sc len which is "good"
     int32_t mMinRealnFlkLen = 6;       ///< minimum flank length of split read around breakpoint
+    int32_t mMinInsFlkLen = 15;        ///< minimum flank length around insertion sequence breakpoint
     float mMinDelRatio = 0.8;          ///< minimum deletion ratio of an exon to report 
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
     float mMinSRResScore = 0.99;       ///< minimal alignment score for SR rescued

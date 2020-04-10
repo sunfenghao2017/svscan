@@ -479,7 +479,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             // Any confident alignment?
                             if(scoreAlt < mOpt->filterOpt->mMinSRResScore &&
                                svs[itbp->mID]->mProbeEndA.size() && 
-                               (leadingSC + tailingSC > (int32_t)(svs[itbp->mID]->mBpInsSeq.size() + mOpt->filterOpt->mMinRealnFlkLen))){
+                               (leadingSC + tailingSC > (int32_t)(svs[itbp->mID]->mBpInsSeq.size() + mOpt->filterOpt->mMinInsFlkLen))){
                                 consProbe = itbp->mIsSVEnd ? svs[itbp->mID]->mProbeEndA : svs[itbp->mID]->mProbeBegA;
                                 Aligner* secAligner = new Aligner(consProbe, readSeq, &alnCfg);
                                 Matrix2D<char>* secResult = new Matrix2D<char>();
