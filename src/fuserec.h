@@ -195,6 +195,7 @@ struct FusionRecord{
                 if(svsize < fsopt->mUsualFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
+            }
         }
         if(fsopt->mFsRptList.empty()){
             fsmask |= FUSION_FINREPORTRNG;
