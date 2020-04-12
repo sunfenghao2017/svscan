@@ -343,6 +343,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 toFuseRec(fsr, svs[i], gl[i], j);
                 frl.push_back(fsr);
                 reported = true;
+                break;
             }
         }
         if(!reported){
@@ -351,6 +352,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                     FusionRecord fsr;
                     toFuseRec(fsr, svs[i], gl[i], j);
                     frl.push_back(fsr);
+                    break;
                 }
             }
         }

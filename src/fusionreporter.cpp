@@ -301,12 +301,14 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             if(frl[fi].fsmask & FUSION_FPRIMARY){
                 fsrl.push_back(frl[fi]);
                 reported = true;
+                break;
             }
         }
         if(!reported){
             for(uint32_t fi = 0; fi < frl.size(); ++fi){
                 if(frl[fi].fsmask & FUSION_FSUPPLEMENTARY){
                     fsrl.push_back(frl[fi]);
+                    break;
                 }
             }
         }
