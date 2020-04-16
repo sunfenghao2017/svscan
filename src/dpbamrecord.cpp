@@ -167,10 +167,9 @@ void DPBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<DPBamR
     }
     if(clique.size() >= mOpt->filterOpt->mMinSeedDP && validSVSize(svStart, svEnd, svt)){
         bool hotfusion = false;
-        if(mOpt->pairOlpRegs){
-            if(mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr1), svStart, svStart + 1) &&
-               mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr2), svEnd, svEnd + 1)){
-            }
+        if(mOpt->pairOlpRegs && 
+           mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr1), svStart, svStart + 1) &&
+           mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr2), svEnd, svEnd + 1)){
             hotfusion = true;
         }
         if((hotfusion && (int32_t)clique.size() >= mOpt->fuseOpt->mWhiteFilter.mMinDPSeed) ||
