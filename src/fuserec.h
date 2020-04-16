@@ -92,7 +92,7 @@ struct FusionRecord{
         os << fsr.indb << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
         os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.jctpos1 + 1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
         os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.jctpos2 + 1<< "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
-        os << fsr.fusionsequence << "\t" << fsr.fseqbp << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
+        os << fsr.fusionsequence << "\t" << fsr.fseqbp + 1 << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.srsrescued << "\t" << fsr.srsmalncnt << "\t" << fsr.srsmrate << "\t";
