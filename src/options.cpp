@@ -11,6 +11,7 @@ Options::Options(){
     bamout = "sv.bam";
     fbamout = NULL;
     overlapRegs = NULL;
+    pairOlpRegs = NULL;
     bamheader = NULL;
     filterOpt = new SVFilter();
     softEnv = new Software();
@@ -31,6 +32,7 @@ Options::~Options(){
     if(realnf) delete realnf;
     if(pool) delete pool;
     if(overlapRegs) delete overlapRegs;
+    if(pairOlpRegs) delete pairOlpRegs;
     if(bamheader) bam_hdr_destroy(bamheader);
 }
 
@@ -180,6 +182,10 @@ void Options::getCregs(){
     if(!creg.empty()){
         overlapRegs = new BedRegs();
         overlapRegs->loadBed(creg);
+    }
+    if(!preg.empty()){
+        pairOlpRegs = new BedRegs();
+        pairOlpRegs->loadBed(preg);
     }
 }
 

@@ -12,7 +12,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
     int32_t seqpos = 0, readpos = 0, seqmatch = 0, psc = 0;
     int32_t readStart = refpos;
     uint32_t* cigar = bam_get_cigar(b);
-    int32_t seqlen = bamutil::getSeqLen(b);
+    int32_t seqlen = bam_cigar2qlen(b->core.n_cigar, bam_get_cigar(b));
     int clpst = 0;
     int sccnt = 0;
     for(uint32_t i = 0; i < b->core.n_cigar; ++i){

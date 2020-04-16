@@ -173,27 +173,38 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
         pos2 += srs[srid].mPos2;
         inslen += srs[srid].mInslen;
     }
+
     if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
         int32_t svStart = pos1/clique.size();
         int32_t svEnd = pos2/clique.size();
-        int32_t svISize = inslen/clique.size();
-        int32_t svid = svs.size();
-        SVRecord* svr = new SVRecord();
-        svr->mChr1 = chr1;
-        svr->mSVStart = svStart;
-        svr->mChr2 = chr2;
-        svr->mSVEnd = svEnd;
-        svr->mCiPosLow = ciposlow - svStart;
-        svr->mCiPosHigh = ciposhigh - svStart;
-        svr->mCiEndLow = ciendlow - svEnd;
-        svr->mCiEndHigh = ciendhigh - svEnd;
-        svr->mAlnInsLen = svISize;
-        svr->mID = svid;
-        svr->mSVT = svt;
-        if(clique.size() == 1) svr->mFromOneSR = true;
-        svs.push_back(svr);
-        // Reads assigned
-        for(auto& e : clique) srs[e].mSVID = svid;
+        bool hotfusion = false;
+        if(mOpt->pairOlpRegs){
+            if(mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr1), svStart, svStart + 1) &&
+               mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr2), svEnd, svEnd + 1)){
+            }
+            hotfusion = true;
+        }
+        if((hotfusion && (int32_t)clique.size() >= mOpt->fuseOpt->mWhiteFilter.mMinSRSeed) ||
+           ((!hotfusion) && (int32_t)clique.size() >= mOpt->fuseOpt->mUsualFilter.mMinSRSeed)){
+            int32_t svISize = inslen/clique.size();
+            int32_t svid = svs.size();
+            SVRecord* svr = new SVRecord();
+            svr->mChr1 = chr1;
+            svr->mSVStart = svStart;
+            svr->mChr2 = chr2;
+            svr->mSVEnd = svEnd;
+            svr->mCiPosLow = ciposlow - svStart;
+            svr->mCiPosHigh = ciposhigh - svStart;
+            svr->mCiEndLow = ciendlow - svEnd;
+            svr->mCiEndHigh = ciendhigh - svEnd;
+            svr->mAlnInsLen = svISize;
+            svr->mID = svid;
+            svr->mSVT = svt;
+            if(clique.size() == 1) svr->mFromOneSR = true;
+            svs.push_back(svr);
+            // Reads assigned
+            for(auto& e : clique) srs[e].mSVID = svid;
+        }
     }
 }
 

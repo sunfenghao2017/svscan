@@ -19,6 +19,7 @@ int main(int argc, char** argv){
     app.add_option("-a,--anno", opt->annodb, "indexed annotation database file")->required(true)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-r,--sreg", opt->reg, "file of bed regions to scan bam")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-c,--creg", opt->creg, "file of bed regions sv must overlap")->required(false)->check(CLI::ExistingFile)->group("General Options");
+    app.add_option("-p,--preg", opt->preg, "file of bed regions of hot fusion pairs")->required(false)->check(CLI::ExistingFile)->group("General Options");
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->group("General Options");

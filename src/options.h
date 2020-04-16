@@ -180,6 +180,7 @@ class Options{
         std::string gannodb;          ///< genome annotation database file(rna mode)
         std::string reg;              ///< file to store regions to scanning bam in
         std::string creg;             ///< file to store regions that SV event must overlap
+        std::string preg;             ///< hot fusion pair regions
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
@@ -190,6 +191,7 @@ class Options{
         int32_t batchsvn;             ///< batch sv events to annotate coverage 
         RegionList scanRegs;          ///< regions to scan bam
         BedRegs* overlapRegs;         ///< regions sv must overlap
+        BedRegs* pairOlpRegs;         ///< regions hot fusion must overlap
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment

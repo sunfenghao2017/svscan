@@ -31,7 +31,7 @@ class DPBamRecord{
             mCurPos = b->core.pos;
             mMateTid = b->core.mtid;
             mMatePos = b->core.mpos;
-            mCurAlen = bamutil::getSeqLen(b);
+            mCurAlen = bam_cigar2qlen(b->core.n_cigar, bam_get_cigar(b));
             std::vector<std::pair<int32_t, char>> pcigar;
             uint8_t* mctag = bam_aux_get(b, "MC");
             if(mctag){

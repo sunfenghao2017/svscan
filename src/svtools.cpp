@@ -105,6 +105,7 @@ int main(int argc, char** argv){
     pfsw->add_option("-g,--glist", fwOpt->genelist, "gene and common fuse direction list")->required(true)->check(CLI::ExistingFile);
     pfsw->add_option("-f,--fsdb", fwOpt->fusedb, "fusion pair database from public database")->required(true)->check(CLI::ExistingFile);
     pfsw->add_option("-o,--wlist", fwOpt->whitelist, "fusion white list usef for svscan", true);
+    pfsw->add_option("-O,--allgs", fwOpt->allglist, "all gene in fusion white list", true);
     // flags
     FuseFlags* fuseflagOpt = new FuseFlags();
     CLI::App* pflags = app.add_subcommand("flags", "show fusion flags defined by svscan");
