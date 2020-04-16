@@ -28,6 +28,7 @@ class SVRecord{
         int32_t mPESupport = 0;       ///< number of Paired-end discordant reads supporting this SV
         int32_t mSRSupport = 0;       ///< number of Split-reads supporting this SV(one split read consists two part)
         int32_t mAlnInsLen = 0;       ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
+        int32_t mInsSeedCnt = 0;      ///< split read with insertion count
         std::string mBpInsSeq = "";   ///< insertion sequence after breakpoint position
         float mBpInsFreq = 0;         ///< frequence of insertion sequence after breakpoint position
         int32_t mHomLen = 0;          ///< total homology length of left/right part of consensus seq out of gap range with their gap elonged partner
@@ -39,7 +40,7 @@ class SVRecord{
         uint8_t mPEMapQuality = 0;    ///< median mapping quality of DP bam records that support this SV
         bool mPrecise = false;        ///< consensus sequence aligned with SV ref successfully and got a refined breakpoint evaluation
         std::string mAlleles = "";    ///< standard vcf format allele representation of SV
-        std::string mConsensus = "";  ///< consensus sequence of SRs supporting this SV coming freom SRs MSA result
+        std::string mConsensus = "";  ///< consensus sequence of SRs supporting this SV coming from SRs MSA result(ins removed)
         std::string mSVRef = "";      ///< reference sequence of this SV constructed which spanning starting and ending positions
         int32_t mGapCoord[4] = {0};   ///< gap coordinates of split alignment of consensus sequence against reference[conGapBeg, conGapEnd, refGapBeg, refGapEnd]
         std::string mNameChr1 = "";   ///< name of chr on 5' end of SV | larger chr
@@ -249,7 +250,7 @@ class SVRecord{
           * @param maxReadSep max inserted length allowed
           */
         inline void getSCIns(const bam1_t* b, std::string& rseq, std::string& iseq, int32_t inslen, int32_t maxReadSep){
-            if(mSVT == 4 || inslen < maxReadSep ){
+            if(mSVT == 4 || mInsSeedCnt == 0 || inslen < maxReadSep ){
                 rseq = bamutil::getSeq(b);
                 return;
             }

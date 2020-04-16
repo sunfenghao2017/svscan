@@ -159,7 +159,11 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
     int32_t ciendhigh = srs[srid].mPos2;
     uint64_t pos1 = srs[srid].mPos1;
     uint64_t pos2 = srs[srid].mPos2;
-    int32_t inslen = srs[srid].mInslen;
+    int32_t inslen = 0, inscnt = 0;
+    if(srs[srid].mInslen >= mOpt->filterOpt->mMinBpInsLen){
+        inslen += srs[srid].mInslen;
+        inscnt = 1;
+    }
     int32_t chr1 = srs[srid].mChr1;
     int32_t chr2 = srs[srid].mChr2;
     ++iter;
@@ -171,7 +175,10 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
         ciendhigh = std::max(srs[srid].mPos2, ciendhigh);
         pos1 += srs[srid].mPos1;
         pos2 += srs[srid].mPos2;
-        inslen += srs[srid].mInslen;
+        if(srs[srid].mInslen >= mOpt->filterOpt->mMinBpInsLen){
+            inslen += srs[srid].mInslen;
+            ++inscnt;
+        }
     }
 
     if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
@@ -185,7 +192,12 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
         }
         if((hotfusion && (int32_t)clique.size() >= mOpt->fuseOpt->mWhiteFilter.mMinSRSeed) ||
            ((!hotfusion) && (int32_t)clique.size() >= mOpt->fuseOpt->mUsualFilter.mMinSRSeed)){
-            int32_t svISize = inslen/clique.size();
+            int32_t svISize = 0;
+            int32_t svIScnt = 0;
+            if(inscnt > .3 * clique.size()){
+                svISize = inslen / inscnt; 
+                svIScnt = inscnt;
+            }
             int32_t svid = svs.size();
             SVRecord* svr = new SVRecord();
             svr->mChr1 = chr1;
@@ -197,6 +209,7 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
             svr->mCiEndLow = ciendlow - svEnd;
             svr->mCiEndHigh = ciendhigh - svEnd;
             svr->mAlnInsLen = svISize;
+            svr->mInsSeedCnt = svIScnt;
             svr->mID = svid;
             svr->mSVT = svt;
             if(clique.size() == 1) svr->mFromOneSR = true;
@@ -288,7 +301,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         if(r12mismatch) continue;
         std::string srseq = ""; // read sequence excluding insertiong after clip pos
         std::string siseq = ""; // inserted sequence after clip pos
-        svs[svid]->getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep / 2);
+        svs[svid]->getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMinBpInsLen);
         // Adjust orientation
         bool bpPoint = false;
         if(svt >= 5 && b->core.tid == svs[svid]->mChr2) bpPoint = true;
