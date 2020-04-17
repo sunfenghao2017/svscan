@@ -408,21 +408,57 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                             }
                             seedgot = true;
                         }
+#ifdef DEBUG
+                            if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                std::cout << "seedgot: " << seedgot << "\n";
+                                std::cout << "itbp->mSVT: " << scsvt << "\n";
+                                std::cout << "seedoff: " << seedoff << "\n";
+                            }
+#endif
                         if(seedgot){
                             assigned = true;
                             if(itbp->mSVT == 4) supportInsID.push_back(itbp->mID);
                             if(itbp->mSVT != 4) onlySupportIns = false;
                             if(b->core.qual >= mOpt->filterOpt->mMinGenoQual) supportSrsID[itbp->mID] = {seedoff, itbp->mIsSVEnd};
+#ifdef DEBUG
+                            if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                std::cout << "seed got good" << "\n";
+                            }
+#endif
                             continue;
                         }
-                        if(svt >= 0 && svt != itbp->mSVT) continue; // non-compatible svtype
+                        if(svt >= 0 && svt != itbp->mSVT){
+#ifdef DEBUG
+                            if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                std::cout << "non seed read with invalid svtype skipped" << "\n";
+                                std::cout << "svt: " << svt << "\n";
+                                std::cout << "bpsvt: " <<  svs[itbp->mID]->mSVT << "\n";
+                            }
+#endif
+
+                            continue; // non-compatible svtype
+                        }
                         // breakpoint check for rescue reads
                         if(itbp->mIsSVEnd){
                             if(std::abs(svs[itbp->mID]->mSVEnd - bpapos) >= mOpt->filterOpt->mMaxReadSep){
+#ifdef DEBUG
+                                if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                    std::cout << "non seed read at sv end, too farwary skipped" << "\n";
+                                    std::cout << "read svpos: " << bpapos << "\n";
+                                    std::cout << "distance: " << svs[itbp->mID]->mSVEnd - bpapos << "\n";
+                                }
+#endif
                                 continue;
                             }
                         }else{
                             if(std::abs(svs[itbp->mID]->mSVStart - bpapos) >= mOpt->filterOpt->mMaxReadSep){
+#ifdef DEBUG
+                                if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                    std::cout << "non seed read at sv beg, too farwary skipped" << "\n";
+                                    std::cout << "read svpos: " << bpapos << "\n";
+                                    std::cout << "distance: " << svs[itbp->mID]->mSVStart << "\n";
+                                }
+#endif
                                 continue;
                             }
                         }
@@ -459,10 +495,28 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         // check match range on read
                         if(scoreAlt >= mOpt->filterOpt->mMinSRResScore){
                             if(!validAlignment(altResult, adjbppos, readSeq.length())){
+#ifdef DEBUG
+                                if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                    std::cout << "non seed read invalid realignment on cns" << "\n";
+                                    std::cout << *altResult << "\n";
+                                    std::cout << "adjbppos: " << adjbppos << "\n";
+                                    std::cout << "distance: " << svs[itbp->mID]->mSVStart << "\n";
+                                }
+#endif
                                 // free resouces and go to next round
                                 delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
                                 continue;
                             }else{
+#ifdef DEBUG
+                                if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                    std::cout << "non seed read alignment good" << "\n";
+                                    std::cout << "scoreAlt: " << scoreAlt << "\n";
+                                    std::cout << "mathThr: " << matchThreshold << "\n";
+                                    std::cout << "scoreThr: " << mOpt->filterOpt->mMinSRResScore << "\n";
+                                    std::cout << "svsrpt: " << "\n";
+                                    std::cout << svs[itbp->mID] << std::endl;
+                                }
+#endif
                                 // just free resources
                                 delete altAligner; altAligner = NULL; delete altResult; altResult = NULL;
                                 Aligner* ascAligner = new Aligner(adjscseq, svs[itbp->mID]->mConsensus, &alnCfg);
@@ -470,7 +524,19 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                                 double ascScore = ascAligner->needle(ascResult);
                                 double ascMThre = mOpt->filterOpt->mFlankQuality * adjscseq.size() * alnCfg.mMatch + (1 - mOpt->filterOpt->mFlankQuality) * adjscseq.size() * alnCfg.mMisMatch;
                                 double ascSAlt = ascScore/ascMThre;
-                                if(ascSAlt < mOpt->filterOpt->mMinSRResScore) scoreAlt = 0.0;
+                                if(ascSAlt < mOpt->filterOpt->mMinSRResScore){
+#ifdef DEBUG
+                                    if((mOpt->debug & DEBUG_FRESR) &&  hitdbgr){
+                                        std::cout << "non seed read alignment to flank sequence bad" << "\n";
+                                        std::cout << "ascScore: " << ascScore << "\n";
+                                        std::cout << "ascMThre: " << ascMThre << "\n";
+                                        std::cout << "scoreThr: " << mOpt->filterOpt->mMinSRResScore << "\n";
+                                        std::cout << *ascResult << std::endl;
+                                        std::cout << svs[itbp->mID] << std::endl;
+                                    }
+#endif
+                                    scoreAlt = 0.0;
+                                }
                                 delete ascAligner; ascAligner = NULL; delete ascResult; ascResult = NULL;
                             }
                         }else{
@@ -605,6 +671,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
         }
         // Read-count and spanning annotation
         if(sa || (!(b->core.flag & BAM_FPAIRED))) continue;
+        if(leadingSC + tailingSC >= mOpt->filterOpt->mMinGoodSRLen) continue; // rubbish sequence in tail
         if(b->core.flag & BAM_FMUNMAP) continue; // mate unmapped, skip
         if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// Second read in pair
             if(b->core.qual < mOpt->filterOpt->mMinGenoQual) continue; // Low quality pair
@@ -699,6 +766,17 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         if(std::abs(svstart - svs[itspna->mID]->mSVStart) > mOpt->libInfo->mVarisize){
                             validDPE = false;
                         }
+                        if(svs[itspna->mID]->mConsensus.size() && (leadingSC + tailingSC)){
+                            if(itspna->mIsSVEnd){
+                                if(std::abs(bpapos - svs[itspna->mID]->mSVEnd) > mOpt->filterOpt->mMaxReadSep){
+                                    validDPE = false;
+                                }
+                            }else{
+                               if(std::abs(bpapos - svs[itspna->mID]->mSVStart) > mOpt->filterOpt->mMaxReadSep){
+                                   validDPE = false;
+                               }
+                            }
+                        }
                         if(validDPE){
                             supportSpnID[itspna->mID] = {std::abs(svend - svs[itspna->mID]->mSVEnd) + std::abs(svstart - svs[itspna->mID]->mSVStart),itspna->mIsSVEnd};
                         }
@@ -722,7 +800,7 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
                         }
                         // fix tie
                         if(ixmcnt > 1){
-                            // din non-repeat region svs
+                            // in non-repeat region svs
                             std::vector<int32_t> nrps;
                             for(iit = supportSpnID.begin(); iit != supportSpnID.end(); ++iit){
                                 if(iit->second.first == mmxhv &&

@@ -104,7 +104,7 @@ struct SVFilter{
     int32_t mMinRefSep = 50;           ///< minimal reference seperation needed for an split alignment used to compute SV
     int32_t mMaxReadSep = 10;          ///< maximal read split alignment position(both from 5') allowed to be used to compute SV
     int32_t mMinBpInsLen = 7;          ///< minimal insertion sequence length to consider
-    double mFlankQuality = 0.95;       ///< flank identity ratio...
+    double mFlankQuality = 0.91;       ///< flank identity ratio...
     int32_t mMinFlankSize = 10;        ///< minimal flank length needed for consensus split read length on each side of breakpoint
     int32_t minMapQual = 1;            ///< minimal paired-end(PE) mapping quality
     int32_t minClipLen = 20;           ///< minimal clipping length used to compute SV
@@ -124,6 +124,7 @@ struct SVFilter{
     int32_t mMinGoodSRLen = 25;        ///< minimum length of split read sc len which is "good"
     int32_t mMinRealnFlkLen = 6;       ///< minimum flank length of split read around breakpoint
     int32_t mMinInsFlkLen = 15;        ///< minimum flank length around insertion sequence breakpoint
+    int32_t mMaxSingSrSeedIns = 10;    ///< maximum insertion length in a single split read supporting sv
     float mMinDelRatio = 0.8;          ///< minimum deletion ratio of an exon to report 
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
     float mMinSRResScore = 0.99;       ///< minimal alignment score for SR rescued

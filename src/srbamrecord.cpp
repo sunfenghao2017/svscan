@@ -180,6 +180,11 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
             ++inscnt;
         }
     }
+    if(clique.size() == 1 && 
+       inscnt == 1 && 
+       inslen > mOpt->filterOpt->mMaxSingSrSeedIns){ // insertion length too long singleton sr seed, drop
+        return;
+    }
 
     if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
         int32_t svStart = pos1/clique.size();

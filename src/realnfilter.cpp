@@ -64,24 +64,24 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         if(e->core.flag & BAM_FUNMAP) continue;
         uint32_t* cigar = bam_get_cigar(e);
         std::pair<int32_t, int32_t> clip;
-        int32_t mlen = 0;
         for(uint32_t i = 0; i < e->core.n_cigar; ++i){
             int opi = bam_cigar_op(cigar[i]);
             int opl = bam_cigar_oplen(cigar[i]);
             if(opi == BAM_CSOFT_CLIP){
                 if(i == 0) clip.first = opl;
                 else clip.second = opl;
-            }else if(opi == BAM_CMATCH || opi == BAM_CDIFF || opi == BAM_CEQUAL){
-                mlen += opl;
             }
         }
+        uint8_t* sdat = bam_aux_get(e, "AS");
+        int32_t sval = bam_aux2i(sdat);
         if(clip.first && clip.second) continue;
         int32_t slen = clip.first + clip.second;
+        int32_t mlen = e->core.l_qseq - slen;
         if(slen == 0){
             retval = -1; // full match
             break;
         }
-        if(std::abs(mlen - fseq) == 10 || std::abs(slen - fseq) == 10) ++mpcnt;
+        if(sval == mlen && (std::abs(mlen - fseq) == 0 || std::abs(slen - fseq) == 0)) ++mpcnt;
     }
     if(retval){
         for(auto& e: alnret) bam_destroy1(e);
@@ -133,13 +133,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         for(uint32_t j = 0; j < palnret[i]->core.n_cigar; ++j){
             uint32_t oplen = bam_cigar_oplen(data[j]);
             int opmask = bam_cigar_op(data[j]);
-            switch(bam_cigar_type(opmask)){
-                case 2: case 3:
-                    r += oplen;
-                    break;
-                default:
-                    break; 
-            }
+            if(bam_cigar_type(opmask) & 2) r += oplen;
             if(opmask == BAM_CSOFT_CLIP){
                 if(j == 0) lsc = oplen;
             }
