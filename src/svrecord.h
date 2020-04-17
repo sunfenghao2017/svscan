@@ -40,7 +40,7 @@ class SVRecord{
         uint8_t mPEMapQuality = 0;    ///< median mapping quality of DP bam records that support this SV
         bool mPrecise = false;        ///< consensus sequence aligned with SV ref successfully and got a refined breakpoint evaluation
         std::string mAlleles = "";    ///< standard vcf format allele representation of SV
-        std::string mConsensus = "";  ///< consensus sequence of SRs supporting this SV coming from SRs MSA result(ins removed)
+        std::string mConsensus = "";  ///< consensus sequence of SRs supporting this SV coming from SRs MSA result
         std::string mSVRef = "";      ///< reference sequence of this SV constructed which spanning starting and ending positions
         int32_t mGapCoord[4] = {0};   ///< gap coordinates of split alignment of consensus sequence against reference[conGapBeg, conGapEnd, refGapBeg, refGapEnd]
         std::string mNameChr1 = "";   ///< name of chr on 5' end of SV | larger chr
