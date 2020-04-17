@@ -11,9 +11,9 @@
 struct FusionRecord{
     std::string fusegene;       ///< fusion gene hgene->tgene
     std::string fusepattern;    ///< fusion gene strand e.g., +->-, -->-, +->+
-    int32_t fusionreads;        ///< # of reads supporting fusion event
-    int32_t totalreads;         ///< # of reads supporting fusion event and refrence type
-    float fuserate;             ///< rate of fusionreads in totalreads
+    int32_t fusionmols;         ///< # of molecules supporting fusion event
+    int32_t totalmols;          ///< # of molecules supporting fusion event and refrence type
+    float fuserate;             ///< rate of fusionmols in totalmols
     std::string gene1;          ///< hgene
     std::string chr1;           ///< chr on which hgene situated
     int32_t jctpos1;            ///< junction position of hgene on chr1
@@ -88,7 +88,7 @@ struct FusionRecord{
      * @return reference of ostream
      */
     inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
-        os << fsr.fusegene << "\t" << fsr.fusionreads << "\t" << fsr.totalreads << "\t" << fsr.fuserate << "\t";
+        os << fsr.fusegene << "\t" << fsr.fusionmols << "\t" << fsr.totalmols << "\t" << fsr.fuserate << "\t";
         os << fsr.indb << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
         os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.jctpos1 + 1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
         os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.jctpos2 + 1<< "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
@@ -111,7 +111,7 @@ struct FusionRecord{
      * @return headline
      */
     static std::string gethead(bool rnamode = false){
-        std::string header = "FusionGene\tFusionReads\tTotalReads\tFusionRate\t"; //[0-3]
+        std::string header = "FusionGene\tFusionMols\tTotalMols\tFusionRate\t"; //[0-3]
         header.append("inDB\tstatus\tfpDist\t"); //[4-6]
         header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[7-11]
         header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[12-16]
@@ -141,7 +141,7 @@ struct FusionRecord{
         fsmask &= (~(FUSION_FLOWSUPPORT | FUSION_FLOWAF | FUSION_FLOWDEPTH | FUSION_FINREPORTRNG | FUSION_FSRSEEDERROR)); //clear some mask
         if(srcount > 0 && srsrescued == srsmalncnt) fsmask |= FUSION_FSRSEEDERROR; // fusion srseed are err-prone
         if(fsmask & (FUSION_FINDB | FUSION_FMINDB)){ // fusion/mirror in public db
-            if(fusionreads < fsopt->mWhiteFilter.mMinSupport){ // total molecule support
+            if(fusionmols < fsopt->mWhiteFilter.mMinSupport){ // total molecule support
                 fsmask |= FUSION_FLOWSUPPORT;
             }
             if(srcount < fsopt->mWhiteFilter.mMinSRSeed && dpcount < fsopt->mWhiteFilter.mMinDPSeed){ // seed 
@@ -153,7 +153,7 @@ struct FusionRecord{
             if(fuserate < fsopt->mWhiteFilter.mMinVAF){ // vaf
                 fsmask |= FUSION_FLOWAF;
             }
-            if(totalreads < fsopt->mWhiteFilter.mMinDepth){ // depth
+            if(totalmols < fsopt->mWhiteFilter.mMinDepth){ // depth
                 fsmask |= FUSION_FLOWDEPTH;
             }
             if(svint != 4 && (fsmask & FUSION_FINSAMEGENE) && (!(fsmask & FUSION_FCALLFROMRNASEQ))){ // size
@@ -168,7 +168,7 @@ struct FusionRecord{
             }
         }else if(fsmask & FUSION_FHOTGENE){ // fusion only with gene in target region
             if(fsmask & FUSION_FPRECISE){
-                if(fusionreads < fsopt->mUsualFilter.mMinSupport){
+                if(fusionmols < fsopt->mUsualFilter.mMinSupport){
                     fsmask |= FUSION_FLOWSUPPORT;
                 }
                 if(srcount < fsopt->mUsualFilter.mMinSRSeed && dpcount < fsopt->mUsualFilter.mMinDPSeed){
@@ -180,7 +180,7 @@ struct FusionRecord{
                 if(fuserate < fsopt->mUsualFilter.mMinVAF){
                     fsmask |= FUSION_FLOWAF;
                 }
-                if(totalreads < fsopt->mUsualFilter.mMinDepth){
+                if(totalmols < fsopt->mUsualFilter.mMinDepth){
                     fsmask |= FUSION_FLOWDEPTH;
                 }
             }else{
@@ -258,7 +258,7 @@ inline void markFusionMirrorFromMirrorSVEvent(FusionRecordList& frl){
                                 if(kf) frl[secidx].report = false;
                                 else frl[firidx].report = false;
                             }else{
-                                if(frl[firidx].fusionreads > frl[secidx].fusionreads){
+                                if(frl[firidx].fusionmols > frl[secidx].fusionmols){
                                     frl[secidx].report = false;
                                 }else{
                                     frl[firidx].report = false;

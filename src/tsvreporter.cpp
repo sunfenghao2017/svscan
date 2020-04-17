@@ -387,9 +387,9 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
 
 void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
-    fsr.fusionreads = mTotalAltCnts[svr->mID];
-    fsr.totalreads = std::max(mJctCnts[svr->mID].getRefDep(), mSpnCnts[svr->mID].getRefDep()) + fsr.fusionreads;
-    fsr.fuserate = (double)(fsr.fusionreads)/(double)(fsr.totalreads);
+    fsr.fusionmols = mTotalAltCnts[svr->mID];
+    fsr.totalmols = std::max(mJctCnts[svr->mID].getRefDep(), mSpnCnts[svr->mID].getRefDep()) + fsr.fusionmols;
+    fsr.fuserate = (double)(fsr.fusionmols)/(double)(fsr.totalmols);
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;

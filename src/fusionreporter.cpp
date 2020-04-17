@@ -193,13 +193,13 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 for(int32_t excnt = minExon; excnt <= maxExon; ++excnt) exonl.push_back(excnt);
                 if(fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask &= (~FUSION_FTOOSMALLSIZE);
             }
-            int32_t totalreads = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
+            int32_t totalmols = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].tidx].strand);
-            fgr.fusionreads = svr.molRescued;                         // FusionReads
-            fgr.totalreads = totalreads;                              // TotalReads
+            fgr.fusionmols = svr.molRescued;                         // FusionMols
+            fgr.totalmols = totalmols;                              // TotalMols
             fgr.fuserate = svr.af;                                    // FusionRate
             if(fgl[i].hfrom1){
                 fgr.jctpos1 = svr.bp1Pos;                             // JunctionPosition1

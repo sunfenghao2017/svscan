@@ -160,7 +160,7 @@ void BamToTable::b2t(){
         lxw_format* format = workbook_add_format(workbook);
         format_set_align(format, LXW_ALIGN_LEFT);
         format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
-        lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
+        lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionMols");
         int ttl = lxwutil::lines2sheet(rsheet, oss.str(), format);
         worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
         workbook_close(workbook);
