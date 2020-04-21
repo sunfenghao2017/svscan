@@ -498,94 +498,96 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         }
     }
     // second run, stat one end multiple mapping status
-    std::map<int32_t, SeedStatus> mss;
-    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
-        bool r1rpt = false , r2rpt = false;
-        if(iter->second->mR1Hit > 2){
-            // check r1
-            if(iter->second->mR1PHit > 1){
-                if(!mOpt->overlapRegs->overlap(iter->second->mR1PChr.c_str(), iter->second->mR1PBeg, iter->second->mR1PEnd)){// not in probe region
-                    r1rpt = true;
-                    iter->second->mR1PTgt = 1;
-                    iter->second->mR1Seed = 0;
-                }
-            }
-            if(!r1rpt){
-                if(iter->second->mR1SHit > 1){
-                    if(!mOpt->overlapRegs->overlap(iter->second->mR1SChr.c_str(), iter->second->mR1SBeg, iter->second->mR1SEnd)){// not in probe region
+    if(mOpt->overlapRegs){
+        std::map<int32_t, SeedStatus> mss;
+        for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+            bool r1rpt = false , r2rpt = false;
+            if(iter->second->mR1Hit > 2){
+                // check r1
+                if(iter->second->mR1PHit > 1){
+                    if(!mOpt->overlapRegs->overlap(iter->second->mR1PChr.c_str(), iter->second->mR1PBeg, iter->second->mR1PEnd)){// not in probe region
                         r1rpt = true;
-                        iter->second->mR1STgt = 1;
+                        iter->second->mR1PTgt = 1;
                         iter->second->mR1Seed = 0;
                     }
                 }
-            }
-        }
-        if(iter->second->mR2Hit > 2){
-            // check r2
-            if(iter->second->mR2PHit > 1){
-                if(!mOpt->overlapRegs->overlap(iter->second->mR2PChr.c_str(), iter->second->mR2PBeg, iter->second->mR2PEnd)){// not in probe region
-                    r2rpt = true;
-                    iter->second->mR2PTgt = 1;
-                    iter->second->mR2Seed = 0;
+                if(!r1rpt){
+                    if(iter->second->mR1SHit > 1){
+                        if(!mOpt->overlapRegs->overlap(iter->second->mR1SChr.c_str(), iter->second->mR1SBeg, iter->second->mR1SEnd)){// not in probe region
+                            r1rpt = true;
+                            iter->second->mR1STgt = 1;
+                            iter->second->mR1Seed = 0;
+                        }
+                    }
                 }
             }
-            if(!r2rpt){
-                if(iter->second->mR2SHit > 1){
-                    if(!mOpt->overlapRegs->overlap(iter->second->mR2SChr.c_str(), iter->second->mR2SBeg, iter->second->mR2SEnd)){// not in probe region
+            if(iter->second->mR2Hit > 2){
+                // check r2
+                if(iter->second->mR2PHit > 1){
+                    if(!mOpt->overlapRegs->overlap(iter->second->mR2PChr.c_str(), iter->second->mR2PBeg, iter->second->mR2PEnd)){// not in probe region
                         r2rpt = true;
-                        iter->second->mR2STgt = 1;
+                        iter->second->mR2PTgt = 1;
                         iter->second->mR2Seed = 0;
+                    }
+                }
+                if(!r2rpt){
+                    if(iter->second->mR2SHit > 1){
+                        if(!mOpt->overlapRegs->overlap(iter->second->mR2SChr.c_str(), iter->second->mR2SBeg, iter->second->mR2SEnd)){// not in probe region
+                            r2rpt = true;
+                            iter->second->mR2STgt = 1;
+                            iter->second->mR2Seed = 0;
+                        }
+                    }
+                }
+            }
+            if(iter->second->mR1SVID >= 0){
+                auto siter = mss.find(iter->second->mR1SVID);
+                if(siter == mss.end()){
+                    SeedStatus ss;
+                    if(r1rpt){
+                        ss.mmapsrt = 1;
+                        ss.allsrt = 1;
+                    }else{
+                        ss.mmapsrt = 0;
+                        ss.allsrt = iter->second->mR1Seed;
+                    }
+                    mss[iter->second->mR1SVID] = ss;
+                }else{
+                    if(r1rpt){
+                        siter->second.mmapsrt += 1;
+                        siter->second.allsrt += 1;
+                    }else{
+                        siter->second.allsrt += iter->second->mR1Seed;
+                    }
+                }
+            }
+            if(iter->second->mR2SVID >= 0){
+                auto siter = mss.find(iter->second->mR2SVID);
+                if(siter == mss.end()){
+                    SeedStatus ss;
+                    if(r2rpt){
+                        ss.mmapsrt = 1;
+                        ss.allsrt = 1;
+                    }else{
+                        ss.mmapsrt = 0;
+                        ss.allsrt = iter->second->mR2Seed;
+                    }
+                    mss[iter->second->mR2SVID] = ss;
+                }else{
+                    if(r2rpt){
+                        siter->second.mmapsrt += 1;
+                        siter->second.allsrt += 1;
+                    }else{
+                        siter->second.allsrt += iter->second->mR2Seed;
                     }
                 }
             }
         }
-        if(iter->second->mR1SVID >= 0){
-            auto siter = mss.find(iter->second->mR1SVID);
-            if(siter == mss.end()){
-                SeedStatus ss;
-                if(r1rpt){
-                    ss.mmapsrt = 1;
-                    ss.allsrt = 1;
-                }else{
-                    ss.mmapsrt = 0;
-                    ss.allsrt = iter->second->mR1Seed;
-                }
-                mss[iter->second->mR1SVID] = ss;
-            }else{
-                if(r1rpt){
-                    siter->second.mmapsrt += 1;
-                    siter->second.allsrt += 1;
-                }else{
-                    siter->second.allsrt += iter->second->mR1Seed;
-                }
-            }
+        // stat sr event rescued sr seed multiple mapping rate
+        for(auto iter = mss.begin(); iter != mss.end(); ++iter){
+            svs[iter->first]->mSRSResMAlnCnt = iter->second.mmapsrt;
+            svs[iter->first]->mSRSResAllCnt = iter->second.allsrt;
         }
-        if(iter->second->mR2SVID >= 0){
-            auto siter = mss.find(iter->second->mR2SVID);
-            if(siter == mss.end()){
-                SeedStatus ss;
-                if(r2rpt){
-                    ss.mmapsrt = 1;
-                    ss.allsrt = 1;
-                }else{
-                    ss.mmapsrt = 0;
-                    ss.allsrt = iter->second->mR2Seed;
-                }
-                mss[iter->second->mR2SVID] = ss;
-            }else{
-                if(r2rpt){
-                    siter->second.mmapsrt += 1;
-                    siter->second.allsrt += 1;
-                }else{
-                    siter->second.allsrt += iter->second->mR2Seed;
-                }
-            }
-        }
-    }
-    // stat sr event rescued sr seed multiple mapping rate
-    for(auto iter = mss.begin(); iter != mss.end(); ++iter){
-        svs[iter->first]->mSRSResMAlnCnt = iter->second.mmapsrt;
-        svs[iter->first]->mSRSResAllCnt = iter->second.allsrt;
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
