@@ -53,6 +53,9 @@ class SVScanner{
             if(mOpt->overlapRegs->overlap(h->target_name[b->core.tid], b->core.pos - b->core.l_qseq, b->core.pos + b->core.l_qseq)){
                 return true;
             }
+            if((b->core.flag & BAM_FMUNMAP) || b->core.mtid < 0){
+                return false;
+            }
             if(mOpt->overlapRegs->overlap(h->target_name[b->core.mtid], b->core.mpos - b->core.l_qseq - mOpt->libInfo->mReadLen, b->core.mpos + b->core.l_qseq + mOpt->libInfo->mReadLen)){
                 return true;
             }
