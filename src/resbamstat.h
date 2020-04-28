@@ -149,7 +149,7 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             }
             if(leadsc){
                 pseq = rseq.substr(sclen);
-                sseq = rseq.substr(0, b->core.l_qseq - sclen);
+                sseq = rseq.substr(0, sclen);
             }else{
                 pseq = rseq.substr(0, b->core.l_qseq - sclen);
                 sseq = rseq.substr(b->core.l_qseq - sclen);
