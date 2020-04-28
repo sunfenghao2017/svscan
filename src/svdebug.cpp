@@ -93,8 +93,10 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
                 std::vector<std::string> cvs;
                 std::vector<std::string> vstr;
                 util::split(sastr, cvs, ";");
-                if(cvs[1].empty()) sastr = cvs[0];
-                else{
+                if(cvs[1].empty()){
+                    if(cvs[0].find_first_of("SH") == cvs[0].find_last_of("SH")) sastr = cvs[0];
+                    else sastr = "";
+                }else{
                     std::vector<int32_t> mvidx;
                     for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
                         util::split(cvs[cvidx], vstr, ",");
@@ -157,8 +159,10 @@ void SVDebug::debugOnePairDNA(FusionDetail& ft){
                 std::vector<std::string> cvs;
                 std::vector<std::string> vstr;
                 util::split(sastr, cvs, ";");
-                if(cvs[1].empty()) sastr = cvs[0];
-                else{
+                if(cvs[1].empty()){
+                    if(cvs[0].find_first_of("SH") == cvs[0].find_last_of("SH")) sastr = cvs[0];
+                    else sastr = "";
+                }else{
                     std::vector<int32_t> mvidx;
                     for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
                         util::split(cvs[cvidx], vstr, ",");
@@ -248,7 +252,7 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
         write = false;
         qname.clear();
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
-        if(clips.first || clips.second){
+        if((clips.first > 0) ^ (clips.second > 0)){
             uint8_t* data = bam_aux_get(b, "SA");
             if(data){
                 char* val = bam_aux2Z(data);
@@ -297,7 +301,7 @@ void SVDebug::debugOnePairRNA(FusionDetail& ft){
         qname.clear();
         write = false;
         std::pair<int32_t, int32_t> clips = bamutil::getSoftClipLength(b);
-        if(clips.first || clips.second){
+        if((clips.first > 0) ^ (clips.second > 0)){
             uint8_t* data = bam_aux_get(b, "SA");
             if(data){
                 char* val = bam_aux2Z(data);

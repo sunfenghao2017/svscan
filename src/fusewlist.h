@@ -13,6 +13,7 @@ struct FuseWOpt{
     std::string genelist;
     std::string fusedb;
     std::string whitelist;
+    std::string allglist;
     Software* softEnv;
 
     FuseWOpt(){
@@ -20,6 +21,7 @@ struct FuseWOpt{
         softEnv->cmp += "version: " + softEnv->ver + "\n";
         softEnv->cmp += "updated: " + std::string(__TIME__) + " " + std::string(__DATE__);
         whitelist = "./gwhite.tsv";
+        allglist = "./gall.tsv";
     }
 
     ~FuseWOpt(){}

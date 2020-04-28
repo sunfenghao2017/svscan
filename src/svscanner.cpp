@@ -29,7 +29,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
             if(b->core.qual < mOpt->filterOpt->minMapQual || b->core.tid < 0) continue;// skip quality poor read
             if(!inValidReg(b, mOpt->bamheader)) continue; // skip reads which do not overlap with creg, neither does its mate
             int instat = jctMap->insertJunction(b, mOpt->bamheader); // only one softclip read can be SR candidates
-            if(instat == -1 || instat > 2) continue; // skip hardclip ones and read with head/tail sc
+            if(instat != -2) continue; // only use reads without sa as dp seed
             if(mOpt->libInfo->mMedian == 0) continue; // skip SE library from DP collecting
             if(b->core.flag & BAM_FMUNMAP) continue;// skip invalid reads
             if(mScanRegs[b->core.mtid].empty()) continue;// skip invalid regions
@@ -59,6 +59,7 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
                     ++c;
                 }
                 if(leadingSC && tailingSC) continue; // skip mate with both leading/tailing clips
+                if(leadingSC + tailingSC >= mOpt->filterOpt->mMinGoodSRLen) continue; // tailing rubbish sequence
             }
             if(b->core.tid > b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos > b->core.mpos)){// read last met in pair
                 dprSet->insertDP(b, svt);
@@ -138,7 +139,7 @@ void SVScanner::scanDPandSR(){
     }
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_svRefID:";
+        std::cout << "DEBUG_ALL_SRS_REF_ID:";
         for(auto& srfid: mOpt->svRefID){
             std::cout << "\t" << srfid;
         }
@@ -149,7 +150,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End clustering SRs");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_SRSV_Cluster_result: " << std::endl;
+        std::cout << "DEBUG_SR_SUPPORT_SV_CLUSTER_RESULT: " << std::endl;
         std::cout << srs << std::endl;
     }
 #endif
@@ -164,7 +165,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End clustering DPs");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_DP_SV_Cluster_result: " << std::endl;
+        std::cout << "DEBUG_DP_SUPPORT_SV_CLUSTER_RESULT: " << std::endl;
         std::cout << dprSet << std::endl;
     }
 #endif
@@ -172,9 +173,9 @@ void SVScanner::scanDPandSR(){
     util::loginfo("Found DPSV Candidates: " + std::to_string(mDPSVs.size()));
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_DP_SVS_found: " << std::endl;
+        std::cout << "DEBUG_DP_SVS_FOUND: " << std::endl;
         std::cout << mDPSVs << std::endl;
-        std::cout << "debug_SR_SVS_found: " << std::endl;
+        std::cout << "DEBUG_SR_SVS_FOUND: " << std::endl;
         std::cout << mSRSVs << std::endl;
     }
 #endif
@@ -188,7 +189,7 @@ void SVScanner::scanDPandSR(){
     mergeAndSortSVSet(mSRSVs, mDPSVs, mergedSVs, mOpt);
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_ALL_SVS_found: " << std::endl;
+        std::cout << "DEBUG_ALL_SV_FOUND: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif
@@ -214,7 +215,7 @@ void SVScanner::scanDPandSR(){
     }
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
-        std::cout << "debug_final_merged_svs: " << std::endl;
+        std::cout << "DEBUG_FINAL_MERGED_SVS: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif
@@ -253,7 +254,7 @@ void SVScanner::scanDPandSR(){
     util::loginfo("End writing Fusions to TSV file");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FFINA){
-        std::cout << "debug_final_merged_svs: " << std::endl;
+        std::cout << "DEBUG_FINAL_MERGED_SVS: " << std::endl;
         std::cout << mergedSVs << std::endl;
     }
 #endif
@@ -264,14 +265,15 @@ void SVScanner::scanDPandSR(){
         util::loginfo("End writing SVs to BCF file");
     }
     if((mOpt->bam2tb.size() || mOpt->bam2tt.size()) && mOpt->bamout.size()){
-        util::loginfo("Beg writing fusion supporting bam records to excel file");
+        util::loginfo("Beg writing fusion supporting bam records to file");
         BamToTable btt;
         btt.svbam = mOpt->bamout;
+        btt.svidf = 32;
         btt.fstsv = mOpt->fuseOpt->mOutFile;
         btt.bamtb = mOpt->bam2tb;
         btt.bamtt = mOpt->bam2tt;
         btt.b2t();
-        util::loginfo("End writing fusion supporting bam records to excel file");
+        util::loginfo("End writing fusion supporting bam records to file");
     }
     delete covAnn;
     delete covStat;

@@ -1,4 +1,6 @@
 #include "options.h"
+#include "fuserec.h"
+#include "svrec.h"
 
 Options::Options(){
     madCutoff = 9;
@@ -9,6 +11,7 @@ Options::Options(){
     bamout = "sv.bam";
     fbamout = NULL;
     overlapRegs = NULL;
+    pairOlpRegs = NULL;
     bamheader = NULL;
     filterOpt = new SVFilter();
     softEnv = new Software();
@@ -19,7 +22,7 @@ Options::Options(){
     realnf = new RealnFilter();
     contigNum = 0;
     rnamode = false;
-    debug = false;
+    debug = 0;
 }
 
 Options::~Options(){
@@ -29,6 +32,7 @@ Options::~Options(){
     if(realnf) delete realnf;
     if(pool) delete pool;
     if(overlapRegs) delete overlapRegs;
+    if(pairOlpRegs) delete pairOlpRegs;
     if(bamheader) bam_hdr_destroy(bamheader);
 }
 
@@ -89,6 +93,15 @@ void Options::update(int argc, char** argv){
     samFile* fp = sam_open(bamfile.c_str(), "r");
     bamheader = sam_hdr_read(fp);
     sam_close(fp);
+    // print some debug info
+#ifdef DEBUG
+    if(qndbg.size()){
+        std::cout << "qname to debug: " << qndbg << std::endl;
+    }
+    if(debug){
+        std::cout << "debug mask: " << debug  << std::endl;
+    }
+#endif
 }
 
 LibraryInfo* Options::getLibInfo(const std::string& bam){
@@ -170,38 +183,19 @@ void Options::getCregs(){
         overlapRegs = new BedRegs();
         overlapRegs->loadBed(creg);
     }
+    if(!preg.empty()){
+        pairOlpRegs = new BedRegs();
+        pairOlpRegs->loadBed(preg);
+    }
 }
 
 void Options::writeEmptFile(){
     // tsv sv
     std::ofstream fw(tsvOut);
-    fw << "svType\tsvSize\tbpMark\t";//[0, 2]
-    fw << "fuseGene\t"; //[3];
-    fw << "hGene\thTrsEnd\thTrsStrand\t";//[4,6]
-    fw << "tGene\ttTrsEnd\ttTrsStrand\t";//[7,9]
-    fw << "bp1Chr\tbp1Pos\tbp1Gene\t";//[10,12]
-    fw << "bp2Chr\tbp2Pos\tbp2Gene\t";//[13,15]
-    fw << "srCount\tdpCount\tsrRescued\tdpRescued\t";//[16,19]
-    fw << "srRefCount\tdpRefCount\tAF\tinsBp\tinsSeq\t";//[20,24]
-    fw << "bp1Trs\tbp2Trs\tsvSeq\tseqBp\tID\tsvtInt\tfsMask";//[25,31]
-    if(rnamode){
-        fw << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[32,35]
-    }else{
-        fw << "\n";
-    }
+    fw << SVRec::gethead(rnamode);
     fw.close();
     // fusion
-    std::string header = "FusionGene\tFusionPattern\tFusionReads\tTotalReads\tFusionRate\t"; //[0-4]
-    header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t");//[5-9]
-    header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t");//[10-14]
-    header.append("FusionSequence\tfseqBp\tinDB\tsvType\tsvSize\t"); //[15-19]
-    header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[20-25]
-    header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask"); //[26-29]
-    if(rnamode){
-        header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\n"); //[30-33]
-    }else{
-        header.append("\n");
-    }
+    std::string header = FusionRecord::gethead(rnamode);
     fw.open(fuseOpt->mOutFile.c_str());
     fw << header;
     fw.close();

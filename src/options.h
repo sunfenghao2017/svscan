@@ -28,6 +28,7 @@ typedef int64_t BIGD_TYPE; ///< big data type
 #define DEBUG_FOUTF 0x8  ///< output debug mask
 #define DEBUG_FREAN 0x10 ///< realign debug mask
 #define DEBUG_FFINA 0x20 ///< check final mask
+#define DEBUG_FRESR 0x40 ///< check a read rescue status
 
 typedef uint32_t DEBUG_TYPE; ///< debug type
 
@@ -102,7 +103,8 @@ struct LibraryInfo{
 struct SVFilter{
     int32_t mMinRefSep = 50;           ///< minimal reference seperation needed for an split alignment used to compute SV
     int32_t mMaxReadSep = 10;          ///< maximal read split alignment position(both from 5') allowed to be used to compute SV
-    double mFlankQuality = 0.95;       ///< flank identity ratio...
+    int32_t mMinBpInsLen = 7;          ///< minimal insertion sequence length to consider
+    double mFlankQuality = 0.91;       ///< flank identity ratio...
     int32_t mMinFlankSize = 10;        ///< minimal flank length needed for consensus split read length on each side of breakpoint
     int32_t minMapQual = 1;            ///< minimal paired-end(PE) mapping quality
     int32_t minClipLen = 20;           ///< minimal clipping length used to compute SV
@@ -119,6 +121,10 @@ struct SVFilter{
     int32_t mMinInsRpt = 15;           ///< minimum insertion size to repor
     uint32_t mMinSeedSR = 3;           ///< minimum seed split reads used to compute SV
     uint32_t mMinSeedDP = 3;           ///< minimum discordant pair of reads used to compute SV
+    int32_t mMinGoodSRLen = 25;        ///< minimum length of split read sc len which is "good"
+    int32_t mMinRealnFlkLen = 6;       ///< minimum flank length of split read around breakpoint
+    int32_t mMinInsFlkLen = 15;        ///< minimum flank length around insertion sequence breakpoint
+    int32_t mMaxSingSrSeedIns = 10;    ///< maximum insertion length in a single split read supporting sv
     float mMinDelRatio = 0.8;          ///< minimum deletion ratio of an exon to report 
     float mMaxFPIns = 0.5;             ///< maximum ratio of reads supporting both INS and other type SVs allowed for an valid insertion
     float mMinSRResScore = 0.99;       ///< minimal alignment score for SR rescued
@@ -176,6 +182,7 @@ class Options{
         std::string gannodb;          ///< genome annotation database file(rna mode)
         std::string reg;              ///< file to store regions to scanning bam in
         std::string creg;             ///< file to store regions that SV event must overlap
+        std::string preg;             ///< hot fusion pair regions
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
@@ -186,6 +193,7 @@ class Options{
         int32_t batchsvn;             ///< batch sv events to annotate coverage 
         RegionList scanRegs;          ///< regions to scan bam
         BedRegs* overlapRegs;         ///< regions sv must overlap
+        BedRegs* pairOlpRegs;         ///< regions hot fusion must overlap
         std::vector<int32_t> svtypes; ///< sv types to discovery(for commandline argument parsing)
         std::set<int32_t> SVTSet;     ///< predefined sv types to compute [INV, DEL, DUP, INS, BND]
         int32_t nthread;              ///< threads used to process REF/ALT read/pair assignment
@@ -205,6 +213,7 @@ class Options{
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
         DEBUG_TYPE debug;             ///< debug mode
+        std::string qndbg;            ///< qname of read to debug
         std::string jsncfg;           ///< json config file
 
     public:

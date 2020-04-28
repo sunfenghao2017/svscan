@@ -1,50 +1,22 @@
 #include "bamtotb.h"
 
-int BamToTable::lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt){
-    int row = 0, col = 0;
-    std::vector<size_t> vclen;
-    std::vector<std::string> vline;
-    util::split(buf, vline, "\n");
-    std::vector<std::string> vrec;
-    size_t maxcol = 0;
-    for(auto& line: vline){
-        util::split(line, vrec, "\t");
-        maxcol = std::max(maxcol, vrec.size());
-    }
-    vclen.resize(maxcol, 0);
-    for(auto& line: vline){
-         if(line.empty()){
-             ++row;
-             continue;
-         }
-         util::split(line, vrec, "\t");
-         col = 0;
-         for(size_t i = 0; i < vrec.size(); ++i){
-            vclen[i] = std::max(vclen[i], vrec[i].length());
-            char* p = NULL;
-            float val = std::strtof(vrec[i].c_str(), &p);
-            if(*p) worksheet_write_string(sheet, row, col++, vrec[i].c_str(), NULL);
-            else worksheet_write_number(sheet, row, col++, val, NULL);
-         }
-         ++row;
-     }
-     for(size_t i = 0; i < vclen.size(); ++i) worksheet_set_column(sheet, i, i, vclen[i], fmt);
-     return row;
-}
-
 void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.chr = h->target_name[b->core.tid];
-    br.pos = b->core.pos;
-    br.mchr = h->target_name[b->core.mtid];
-    br.mpos = b->core.mpos;
+    br.pos = b->core.pos + 1;
     br.cigar = bamutil::getCigar(b);
-    br.mcigar = bamutil::getStrTag(b, "MC");
+    if(b->core.mtid >= 0 && (!(b->core.flag & BAM_FMUNMAP))){
+        br.mchr = h->target_name[b->core.mtid];
+        br.mpos = b->core.mpos + 1;
+        br.mcigar = bamutil::getStrTag(b, "MC");
+    }
     br.sa = bamutil::getStrTag(b, "SA");
     br.barcode = bamutil::getStrTag(b, "BC");
     br.seq = bamutil::getSeq(b);
     std::pair<int32_t, int32_t> scl = bamutil::getSoftClipLength(b);
-    if(scl.first + scl.second == 0) br.lseq = br.seq;
-    else if((scl.first > 0) ^ (scl.second > 0)){
+    if(scl.first + scl.second == 0){
+        br.lseq = br.seq;
+        br.rbp = -1;
+    }else if((scl.first > 0) ^ (scl.second > 0)){
         if(scl.first){
             br.lseq = br.seq.substr(0, scl.first);
             br.tseq = br.seq.substr(scl.first);
@@ -53,6 +25,60 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             br.lseq = br.seq.substr(0, br.seq.length() - scl.second);
             br.tseq = br.seq.substr(br.seq.length() - scl.second);
         }
+        uint32_t* cigar = bam_get_cigar(b);
+        int refpos = b->core.pos + 1;
+        bool lsc = false;
+        for(uint32_t i = 0; i < b->core.n_cigar; ++i){
+            int opint = bam_cigar_op(cigar[i]);
+            int oplen = bam_cigar_oplen(cigar[i]);
+            if(opint == BAM_CMATCH || opint == BAM_CEQUAL || opint == BAM_CDIFF || opint == BAM_CDEL || opint == BAM_CREF_SKIP){
+                refpos += oplen;
+            }else if(opint == BAM_CSOFT_CLIP){
+                br.rbp = refpos;
+                if(i == 0) lsc = true;
+                break;
+            }
+        }
+        if(lsc){
+            br.lhit = bamutil::getIntTag(b, "SH");
+            br.thit = bamutil::getIntTag(b, "PH");
+        }else{
+            br.lhit = bamutil::getIntTag(b, "PH");
+            br.thit = bamutil::getIntTag(b, "SH");
+        }
+    }
+    if(br.sa.size()){
+        // get optimal SA
+        std::vector<std::string> cvs;
+        std::vector<std::string> vstr;
+        util::split(br.sa, cvs, ";");
+        if(cvs[1].empty()){
+            br.sa = cvs[0];
+        }else{
+            for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
+                util::split(cvs[cvidx], vstr, ",");
+                if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
+                    br.sa = cvs[cvidx];
+                    break;
+                }
+            }
+        }
+        util::split(br.sa, vstr, ",");
+        int32_t refpos = std::atoi(vstr[1].c_str());
+        std::vector<std::pair<int32_t, char>> pcigar;
+        bamutil::parseCigar(vstr[3], pcigar);
+        for(auto& e: pcigar){
+            char opchr = e.second;
+            int oplen = e.first;
+            if(opchr == 'M' || opchr == '=' || opchr == 'X' || opchr == 'D' || opchr == BAM_CREF_SKIP){
+                refpos += oplen;
+            }else if(opchr == 'S'){
+                br.sbp = refpos;
+                break;
+            }
+        }
+    }else{
+        br.sbp = -1;
     }
     br.svid = id;
     br.qname = bamutil::getQName(b);
@@ -64,7 +90,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     else br.mstrand = '+';
 }
 
-void BamToTable::getsvid(std::set<int32_t>& svids){
+void BamToTable::getFRExtraInfo(std::map<int32_t, FRExtraInfo>& fim){
     if(!fstsv.empty()){
         std::ifstream fr(fstsv);
         std::string line;
@@ -72,20 +98,31 @@ void BamToTable::getsvid(std::set<int32_t>& svids){
         std::vector<std::string> vstr;
         while(std::getline(fr, line)){
             util::split(line, vstr, "\t");
-            svids.insert(std::atoi(vstr[svidf].c_str()));
+            FRExtraInfo fi;
+            fi.svid = std::atoi(vstr[svidf].c_str());
+            fi.fsgene = vstr[fsidf];
+            fim[fi.svid] = fi;
         }
         fr.close();
     }
-    for(auto& e: usrid){
-        svids.insert(e);
+
+    for(uint32_t i = 0; i < usrid.size(); ++i){
+        FRExtraInfo fi;
+        fi.svid = usrid[i];
+        if(usrid.size() == fsgene.size()){
+            fi.fsgene = fsgene[i];
+        }else{
+            fi.fsgene = "-";
+        }
+        fim[usrid[i]] = fi;
     }
 }
 
 void BamToTable::b2t(){
     if(bamtt.empty() && bamtb.empty()) return; // return if both types of output does not needed
     // fetch svids
-    std::set<int32_t> svids;
-    getsvid(svids);
+    std::map<int32_t, FRExtraInfo> fim;
+    getFRExtraInfo(fim);
     // fetch bam records
     BamRecVector brecs;
     samFile* fp = sam_open(svbam.c_str(), "r");
@@ -95,10 +132,11 @@ void BamToTable::b2t(){
         uint8_t* data = bam_aux_get(b, "ZF");
         if(data){
             int32_t id= bam_aux2i(data);
-            auto iter = svids.find(id);
-            if(iter != svids.end()){
+            auto iter = fim.find(id);
+            if(iter != fim.end()){
                 BamRec br;
                 b2r(b, h, br, id);
+                br.fsgene = iter->second.fsgene;
                 brecs.push_back(br);
             }
         }
@@ -122,8 +160,8 @@ void BamToTable::b2t(){
         lxw_format* format = workbook_add_format(workbook);
         format_set_align(format, LXW_ALIGN_LEFT);
         format_set_align(format, LXW_ALIGN_VERTICAL_BOTTOM);
-        lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionReads");
-        int ttl = lines2sheet(rsheet, oss.str(), format);
+        lxw_worksheet* rsheet = workbook_add_worksheet(workbook, "FusionMols");
+        int ttl = lxwutil::lines2sheet(rsheet, oss.str(), format);
         worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
         workbook_close(workbook);
     }

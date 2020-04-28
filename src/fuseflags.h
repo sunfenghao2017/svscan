@@ -33,6 +33,7 @@ struct FuseFlags{
         flagmap[FUSION_FERRREALN] = "fusion concensus sequence realigned in invalid status";
         flagmap[FUSION_FINREPORTRNG] = "fusion event is in predefined report range";
         flagmap[FUSION_FWITHNCRNA] = "fusion event contains NCRNA gene";
+        flagmap[FUSION_FSRSEEDERROR] = "fusion event split read seeds are error-prone";
     }
 
     ~FuseFlags(){}

@@ -19,7 +19,7 @@ void FuseWOpt::prepWlist(){
     // parse fusedb to get whitelist as subset
     fr.open(fusedb.c_str());
     std::string hgene, tgene;
-    std::set<std::string> recs;
+    std::set<std::string> recs, allgs;
     while(std::getline(fr, tmpStr)){
         util::split(tmpStr, vstr, "\t");
         hgene = vstr[0];
@@ -51,12 +51,15 @@ void FuseWOpt::prepWlist(){
             }else hotStr.append("-\n");
             // hgene tgene hgene_in_hot tgene_in_hot hgene_in_right_dir t_gene_in_right_dir
             recs.insert(hgene + "\t" + tgene + "\t" + hotStr);
+            allgs.insert(hgene);
+            allgs.insert(tgene);
         }
     }
+    std::ofstream fwa(allglist);
+    for(auto& e: allgs) fwa << e << "\n";
+    fwa.close();
     std::ofstream fw(whitelist);
-    for(auto& e: recs){
-        fw << e;
-    }
+    for(auto& e: recs) fw << e;
     // print warning information about hot gene not found in db
     for(auto& e: gset){
         if(!(e.second & 4)){

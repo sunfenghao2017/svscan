@@ -28,6 +28,11 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
         svr.srRescued = mJctCnts[i].getAltDep();
         svr.dpRescued = mSpnCnts[i].getAltDep();
         svr.molRescued = mTotalAltCnts[i];
+        // srsrescued srsmalncnt srsmrate
+        svr.srsrescued = svs[i]->mSRSResAllCnt;
+        svr.srsmalncnt = svs[i]->mSRSResMAlnCnt;
+        if(svr.srsrescued > 0) svr.srsmrate = (double)(svr.srsmalncnt)/double(svr.srsrescued);
+        else svr.srsmrate = 0;
         // srRefCount dpRefCount
         svr.srRefCount = mJctCnts[i].getRefDep();
         svr.dpRefCount = mSpnCnts[i].getRefDep();
@@ -79,7 +84,6 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
 
 void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     mOpt->fuseOpt->init();
-    mOpt->fuseOpt->mMaxBpOffset = std::max(mOpt->libInfo->mMaxNormalISize, 300);
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
         if(!mOpt->fuseOpt->mFsRptList.empty()){
@@ -339,6 +343,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 toFuseRec(fsr, svs[i], gl[i], j);
                 frl.push_back(fsr);
                 reported = true;
+                break;
             }
         }
         if(!reported){
@@ -347,6 +352,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                     FusionRecord fsr;
                     toFuseRec(fsr, svs[i], gl[i], j);
                     frl.push_back(fsr);
+                    break;
                 }
             }
         }
@@ -361,7 +367,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     if(!frl.empty()) frl[frl.size() - 1].report = true;
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FOUTF){
-        std::cout << "debug_sorted_fs_event:" << std::endl;
+        std::cout << "DEBUG_SORTED_FUSION_EVENTS:" << std::endl;
         for(uint32_t i = 0; i < frl.size(); ++i){
             std::cout << std::boolalpha << frl[i].report << "\t" <<  frl[i] << std::endl;
         }
@@ -381,9 +387,9 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
 
 void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int32_t i){
     std::stringstream oss;
-    fsr.fusionreads = mTotalAltCnts[svr->mID];
-    fsr.totalreads = std::max(mJctCnts[svr->mID].getRefDep(), mSpnCnts[svr->mID].getRefDep()) + fsr.fusionreads;
-    fsr.fuserate = (double)(fsr.fusionreads)/(double)(fsr.totalreads);
+    fsr.fusionmols = mTotalAltCnts[svr->mID];
+    fsr.totalmols = std::max(mJctCnts[svr->mID].getRefDep(), mSpnCnts[svr->mID].getRefDep()) + fsr.fusionmols;
+    fsr.fuserate = (double)(fsr.fusionmols)/(double)(fsr.totalmols);
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;
@@ -430,7 +436,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.fusionsequence = svr->mConsensus;
         fsr.fseqbp = svr->mGapCoord[0];
     }
-    if(gi.mFuseGene[i].status & FUSION_FINDB) fsr.indb = "Y"; // inDB
+    if(gi.mFuseGene[i].status & (FUSION_FINDB | FUSION_FMINDB)) fsr.indb = "Y"; // inDB
     else fsr.indb = "N";
     fsr.svt = svutil::addID(svr->mSVT);                       // svType
     if(svr->mSVT >= 5) fsr.svsize = -1;                       // svSize
@@ -441,6 +447,13 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.dprescued = mSpnCnts[svr->mID].getAltDep();           // dpRescued
     fsr.srrefcount = mJctCnts[svr->mID].getRefDep();          // srRefCount
     fsr.dprefcount = mSpnCnts[svr->mID].getRefDep();          // dpRefCount
+    fsr.srsrescued = svr->mSRSResAllCnt;                      // srSRescued
+    fsr.srsmalncnt = svr->mSRSResMAlnCnt;                     // srSResMaln
+    if(fsr.srsrescued > 0){                                    // srSResMalnRate
+        fsr.srsmrate = (double)(fsr.srsmalncnt)/fsr.srsrescued;
+    }else{
+        fsr.srsmrate = 0;
+    }
     fsr.insbp = svr->mBpInsSeq.length();                      // insBp
     if(svr->mBpInsSeq.empty()) fsr.insseq = "-";              // insSeq
     else fsr.insseq = svr->mBpInsSeq;

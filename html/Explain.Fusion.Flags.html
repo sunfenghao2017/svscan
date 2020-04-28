@@ -486,7 +486,8 @@
         ["fusion concensus sequence realigned in invalid status", 0x400000],
         ["fusion consensus sequence realigned very well", 0x800000],
         ["fusion event is in predefined report range", 0x1000000],
-        ["fusion event contains NCRNA gene", 0x2000000]];
+        ["fusion event contains NCRNA gene", 0x2000000],
+        ["fusion event split read seeds are error-prone", 0x4000000]];
     function explainFlags() {
         var flagValue = parseInt(document.getElementById('tb').value); //returns 0 or NaN if can't parse
         var summary  = ""; 
@@ -585,6 +586,7 @@
                     <br><input type="checkbox" name="cb23" id="cb23" onclick="checkboxClicked();"> &nbsp; fusion consensus sequence realigned very well
                     <br><input type="checkbox" name="cb24" id="cb24" onclick="checkboxClicked();"> &nbsp; fusion event is in predefined report range
                     <br><input type="checkbox" name="cb25" id="cb25" onclick="checkboxClicked();"> &nbsp; fusion event contains NCRNA gene
+                    <br><input type="checkbox" name="cb26" id="cb26" onclick="checkboxClicked();"> &nbsp; fusion event split read seeds are error-prone
                 </td>
                 <td style="text-align: left; vertical-align: top; width: 50%">
                     <strong>Summary:</strong><br>

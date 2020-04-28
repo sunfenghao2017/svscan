@@ -118,7 +118,7 @@ void SRBamRecordSet::cluster(std::vector<SRBamRecord>& srs, SVSet& svs, int32_t 
     util::loginfo("Beg clustering SRs for SV type " + std::to_string(svt) + ", all " + std::to_string(srs.size()) + " SRs ");
 #ifdef DEBUG
     if(mOpt->debug & DEBUG_FCALL){
-        std::cout << "debug_Beg_clustering_SRs_for_SV_type:" << svt << std::endl;
+        std::cout << "DEBUG_BEG_CLUSTER_SRS_FOR_SV_TYPE:" << svt << std::endl;
     }
 #endif
     std::set<int32_t> clique; // component cluster
@@ -159,7 +159,11 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
     int32_t ciendhigh = srs[srid].mPos2;
     uint64_t pos1 = srs[srid].mPos1;
     uint64_t pos2 = srs[srid].mPos2;
-    int32_t inslen = srs[srid].mInslen;
+    int32_t inslen = 0, inscnt = 0;
+    if(srs[srid].mInslen >= mOpt->filterOpt->mMinBpInsLen){
+        inslen += srs[srid].mInslen;
+        inscnt = 1;
+    }
     int32_t chr1 = srs[srid].mChr1;
     int32_t chr2 = srs[srid].mChr2;
     ++iter;
@@ -171,29 +175,53 @@ void SRBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<SRBamR
         ciendhigh = std::max(srs[srid].mPos2, ciendhigh);
         pos1 += srs[srid].mPos1;
         pos2 += srs[srid].mPos2;
-        inslen += srs[srid].mInslen;
+        if(srs[srid].mInslen >= mOpt->filterOpt->mMinBpInsLen){
+            inslen += srs[srid].mInslen;
+            ++inscnt;
+        }
     }
+    if(clique.size() == 1 && 
+       inscnt == 1 && 
+       inslen > mOpt->filterOpt->mMaxSingSrSeedIns){ // insertion length too long singleton sr seed, drop
+        return;
+    }
+
     if(clique.size() >= mOpt->filterOpt->mMinSeedSR){
         int32_t svStart = pos1/clique.size();
         int32_t svEnd = pos2/clique.size();
-        int32_t svISize = inslen/clique.size();
-        int32_t svid = svs.size();
-        SVRecord* svr = new SVRecord();
-        svr->mChr1 = chr1;
-        svr->mSVStart = svStart;
-        svr->mChr2 = chr2;
-        svr->mSVEnd = svEnd;
-        svr->mCiPosLow = ciposlow - svStart;
-        svr->mCiPosHigh = ciposhigh - svStart;
-        svr->mCiEndLow = ciendlow - svEnd;
-        svr->mCiEndHigh = ciendhigh - svEnd;
-        svr->mAlnInsLen = svISize;
-        svr->mID = svid;
-        svr->mSVT = svt;
-        if(clique.size() == 1) svr->mFromOneSR = true;
-        svs.push_back(svr);
-        // Reads assigned
-        for(auto& e : clique) srs[e].mSVID = svid;
+        bool hotfusion = false;
+        if(mOpt->pairOlpRegs &&
+           mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr1), svStart, svStart + 1) &&
+           mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr2), svEnd, svEnd + 1)){
+            hotfusion = true;
+        }
+        if((hotfusion && (int32_t)clique.size() >= mOpt->fuseOpt->mWhiteFilter.mMinSRSeed) ||
+           ((!hotfusion) && (int32_t)clique.size() >= mOpt->fuseOpt->mUsualFilter.mMinSRSeed)){
+            int32_t svISize = 0;
+            int32_t svIScnt = 0;
+            if(inscnt > .3 * clique.size()){
+                svISize = inslen / inscnt; 
+                svIScnt = inscnt;
+            }
+            int32_t svid = svs.size();
+            SVRecord* svr = new SVRecord();
+            svr->mChr1 = chr1;
+            svr->mSVStart = svStart;
+            svr->mChr2 = chr2;
+            svr->mSVEnd = svEnd;
+            svr->mCiPosLow = ciposlow - svStart;
+            svr->mCiPosHigh = ciposhigh - svStart;
+            svr->mCiEndLow = ciendlow - svEnd;
+            svr->mCiEndHigh = ciendhigh - svEnd;
+            svr->mAlnInsLen = svISize;
+            svr->mInsSeedCnt = svIScnt;
+            svr->mID = svid;
+            svr->mSVT = svt;
+            if(clique.size() == 1) svr->mFromOneSR = true;
+            svs.push_back(svr);
+            // Reads assigned
+            for(auto& e : clique) srs[e].mSVID = svid;
+        }
     }
 }
 
@@ -278,7 +306,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
         if(r12mismatch) continue;
         std::string srseq = ""; // read sequence excluding insertiong after clip pos
         std::string siseq = ""; // inserted sequence after clip pos
-        svs[svid]->getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMaxReadSep / 2);
+        svs[svid]->getSCIns(b, srseq, siseq, bpInslen, mOpt->filterOpt->mMinBpInsLen);
         // Adjust orientation
         bool bpPoint = false;
         if(svt >= 5 && b->core.tid == svs[svid]->mChr2) bpPoint = true;
@@ -358,7 +386,7 @@ void SRBamRecordSet::assembleOneContig(SVSet& svs, int32_t refIdx){
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
+                    std::cout << "DEBUG_BPREFINED_FAILED_SV:\n" << svs[svid] << std::endl;
                 }
 #endif
                 svs[svid]->mConsensus = "";
@@ -489,7 +517,7 @@ void SRBamRecordSet::assembleCrossChr(SVSet& svs, AlignConfig* alnCfg, const std
             if(!bpRefined){
 #ifdef DEBUG
                 if(mOpt->debug & DEBUG_FCALL){
-                    std::cout << "debug_bpRefined_failed_SV:\n" << svs[svid] << std::endl;
+                    std::cout << "DEBUG_BPREFINED_FAILED_SV:\n" << svs[svid] << std::endl;
                 }
 #endif
                 svs[svid]->mConsensus = "";

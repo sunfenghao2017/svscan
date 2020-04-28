@@ -166,31 +166,40 @@ void DPBamRecordSet::searchCliques(std::set<int32_t>& clique, std::vector<DPBamR
         maxEnd = std::max(svEnd, maxEnd);
     }
     if(clique.size() >= mOpt->filterOpt->mMinSeedDP && validSVSize(svStart, svEnd, svt)){
-        SVRecord* svr = new SVRecord();
-        svr->mChr1 = chr1;
-        svr->mChr2 = chr2;
-        svr->mSVStart = svStart;
-        svr->mSVEnd = svEnd;
-        svr->mPESupport = clique.size();
-        int32_t posVar = std::max(std::abs(maxStart - minStart), 50);
-        int32_t endVar = std::max(std::abs(maxEnd - minEnd), 50);
-        svr->mCiPosLow = -posVar;
-        svr->mCiPosHigh = posVar;
-        svr->mCiEndLow = -endVar;
-        svr->mCiEndHigh = endVar;
-        std::vector<uint8_t> mapQV(clique.size(), 0);
-        int qIdx = 0;
-        for(auto& e : clique) mapQV[qIdx++] = dps[e].mMapQual;
-        svr->mPEMapQuality = statutil::median(mapQV);
-        svr->mSRSupport = 0;
-        svr->mSRAlignQuality = 0;
-        svr->mPrecise = 0;
-        svr->mSVT = svt;
-        svr->mAlnInsLen = 0;
-        svr->mHomLen = 0;
-        svs.push_back(svr);
-        int32_t svid = svs.size();
-        for(auto& e: clique) dps[e].mSVID = svid;
+        bool hotfusion = false;
+        if(mOpt->pairOlpRegs && 
+           mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr1), svStart, svStart + 1) &&
+           mOpt->pairOlpRegs->overlap(sam_hdr_tid2name(mOpt->bamheader, chr2), svEnd, svEnd + 1)){
+            hotfusion = true;
+        }
+        if((hotfusion && (int32_t)clique.size() >= mOpt->fuseOpt->mWhiteFilter.mMinDPSeed) ||
+           ((!hotfusion) && (int32_t)clique.size() >= mOpt->fuseOpt->mUsualFilter.mMinDPSeed)){
+            SVRecord* svr = new SVRecord();
+            svr->mChr1 = chr1;
+            svr->mChr2 = chr2;
+            svr->mSVStart = svStart;
+            svr->mSVEnd = svEnd;
+            svr->mPESupport = clique.size();
+            int32_t posVar = std::max(std::abs(maxStart - minStart), 50);
+            int32_t endVar = std::max(std::abs(maxEnd - minEnd), 50);
+            svr->mCiPosLow = -posVar;
+            svr->mCiPosHigh = posVar;
+            svr->mCiEndLow = -endVar;
+            svr->mCiEndHigh = endVar;
+            std::vector<uint8_t> mapQV(clique.size(), 0);
+            int qIdx = 0;
+            for(auto& e : clique) mapQV[qIdx++] = dps[e].mMapQual;
+            svr->mPEMapQuality = statutil::median(mapQV);
+            svr->mSRSupport = 0;
+            svr->mSRAlignQuality = 0;
+            svr->mPrecise = 0;
+            svr->mSVT = svt;
+            svr->mAlnInsLen = 0;
+            svr->mHomLen = 0;
+            svs.push_back(svr);
+            int32_t svid = svs.size();
+            for(auto& e: clique) dps[e].mSVID = svid;
+            }
     }
 }
 

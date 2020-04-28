@@ -123,7 +123,7 @@ typedef std::map<std::string, std::set<std::string>> FusePairs;
 
 /** filter options for fusion event */
 struct FilterOptions{
-    int32_t mMinIntraGeneSVSize = 2000; ///< min intra-gene SV size for a valid fusion
+    int32_t mMinIntraGeneSVSize = 2000; ///< min intra-gene(gene-nongene) SV size for a valid fusion
     int32_t mMinDepth = 10;             ///< min depth covering breakpoint needed
     int32_t mMinSRSupport = 3;          ///< min SR support for a valid fusion
     int32_t mMinDPSupport = 5;          ///< min DP support for a valid fusion
@@ -149,7 +149,7 @@ struct FusionOptions{
     ExtraAnno mExtraAnnotator;            ///< extra gene annotator
     uint32_t mFsMaskInclude;              ///< result must match this fusion mask;
     uint32_t mFsMaskExclude;              ///< result must not match this fusion mask;
-    int32_t mMaxBpOffset = 10;            ///< max breakpoint offset of an SV against background SV to be excluded
+    int32_t mMaxBpOffset = 300;           ///< max breakpoint offset of an SV against background SV to be excluded
     std::string mRef;                     ///< reference file used in alignment of bam
     std::string mBgBCF;                   ///< background BCF file
     std::string mWhiteList;               ///< fusion event which will keep always if found
@@ -191,9 +191,9 @@ struct FusionOptions{
         mUsualFilter.mMinSRSeed = 5;
         mUsualFilter.mMinDPSeed = 5;
         mUsualFilter.mMaxRepHit = 4;
-        mNDBDropMask = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE |
+        mNDBDropMask = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FLOWCOMPLEX | FUSION_FINSAMEGENE | FUSION_FSRSEEDERROR |
                         FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FERRREALN | FUSION_FMULTREALN);
-        mIDBDropMask = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FINSAMEGENE |
+        mIDBDropMask = (FUSION_FBLACKGENE | FUSION_FBLACKPAIR  | FUSION_FFBG | FUSION_FINSAMEGENE | FUSION_FSRSEEDERROR |
                         FUSION_FTOOSMALLSIZE | FUSION_FLOWAF | FUSION_FLOWSUPPORT | FUSION_FLOWDEPTH | FUSION_FERRREALN);
         mKeepMasks = {(FUSION_FHOTGENE | FUSION_FPASSREALN | FUSION_FINREPORTRNG),
                       (FUSION_FHOTGENE | FUSION_FINDB | FUSION_FINREPORTRNG),

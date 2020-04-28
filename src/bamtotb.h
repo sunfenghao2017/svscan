@@ -2,12 +2,20 @@
 #define BAMTOETB_H
 
 #include <map>
+#include <regex>
 #include <string>
 #include <fstream>
 #include <htslib/sam.h>
 #include <xlsxwriter.h>
 #include <bamutil.h>
+#include <lxwutil.h>
 #include <util.h>
+
+/** fusion information corresponding to a svid */
+struct FRExtraInfo{
+    int32_t svid;
+    std::string fsgene;
+};
 
 /** bam record items to output */
 struct BamRec{
@@ -26,9 +34,14 @@ struct BamRec{
     std::string barcode; ///< barcode
     std::string qname;   ///< read name
     std::string sname;   ///< sample name
+    int32_t rbp;         ///< read breakpoint position
+    int32_t sbp;         ///< supplementary read breakpoint position
     int32_t svid;        ///< sv id
     bool read1;          ///< read1 if true
     int32_t svrt;        ///< sv read type
+    std::string fsgene;  ///< fusion gene
+    int32_t lhit;        ///< lseq hit times on genome
+    int32_t thit;        ///< tseq hit times on genome
     
     /** constructor */
     BamRec(){
@@ -37,6 +50,9 @@ struct BamRec{
         barcode = "-";
         lseq = "-";
         tseq = "-";
+        fsgene = "-";
+        lhit = 0;
+        thit = 0;
     }
 
     /** destructor */
@@ -46,16 +62,22 @@ struct BamRec{
     inline std::string toStr(){
         std::ostringstream oss;
         oss << svid << "\t";
-        oss << chr << "\t" << pos << "\t" << strand << "\t";
-        oss << mchr << "\t" << mpos << "\t" << mstrand << "\t";
-        oss << cigar << "\t" << mcigar << "\t" << sa << "\t" << lseq << "\t" << tseq << "\t";
+        oss << fsgene << "\t";
+        oss << chr  << "," << pos  << "," << strand  << "," << cigar  << "\t";
+        oss << mchr << "," << mpos << "," << mstrand << "," << mcigar << "\t"; 
+        oss << sa << "\t" << rbp << "\t" << sbp << "\t" << lhit << "\t" << thit << "\t" << lseq << "\t" << tseq << "\t";
+        // aseq output beg
+        if(lseq != "-") oss << lseq;
+        if(tseq != "-") oss << tseq;
+        oss << "\t";
+        // aseq output end
         oss << barcode << "\t" << qname << "\t" << std::boolalpha << read1 << "\t" << svrt << "\n";
         return oss.str();
     }
 
     /** get header items of str rec */
     static std::string getHeader(){
-        return "svid\tchr\tpos\tstrand\tmchr\tmpos\tmstrand\tcigar\tmcigar\tsa\tlseq\ttseq\tbarcode\tqname\tread1\tsvrt\n";
+        return "svid\tfsgene\trmap\tmmap\tsa\trbp\tsbp\tlhit\tthit\tlseq\ttseq\taseq\tbarcode\tqname\tread1\tsvrt\n";
     }
 
     /** compare two BamRec */
@@ -77,12 +99,14 @@ typedef std::vector<BamRec> BamRecVector;
 /** class to extract sv supporting bam to table */
 class BamToTable{
     public:
-        std::string svbam;          ///< sv supporting bam
-        std::string fstsv;          ///< fusion result tsv
-        std::vector<int32_t> usrid; ///< fusion id list
-        std::string bamtb;          ///< bam output table(excel format)
-        std::string bamtt;          ///< bam output txt(tsv format)
-        int32_t svidf = 29;         ///< svid column index in tsv
+        std::string svbam;               ///< sv supporting bam
+        std::string fstsv;               ///< fusion result tsv
+        std::vector<int32_t> usrid;      ///< fusion id list
+        std::string bamtb;               ///< bam output table(excel format)
+        std::string bamtt;               ///< bam output txt(tsv format)
+        std::vector<std::string> fsgene; ///< fusion gene of each svid
+        int32_t svidf = 32;              ///< svid column index in tsv
+        int32_t fsidf = 0;               ///< fusion column index in tsv
 
     /** BamToTable constructor */
     BamToTable(){}
@@ -96,10 +120,8 @@ class BamToTable{
     /** convert an bam record to BamRec*/
     void b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id);
 
-    /** get svids from fs/ss tsvs */
-    void getsvid(std::set<int32_t>& svids);
-
-    /** output line buffers to a sheet */
-    static int lines2sheet(lxw_worksheet* sheet, const std::string& buf, lxw_format* fmt = NULL);
+    /** get sv info from fs tsvs */
+    void getFRExtraInfo(std::map<int32_t, FRExtraInfo>& fim);
 };
+
 #endif

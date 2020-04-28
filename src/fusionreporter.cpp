@@ -161,8 +161,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             else fgr.chr1 = chr2;
             if(fgl[i].tfrom1) fgr.chr2 = chr1;
             else fgr.chr2 = chr2;
-            if(notinbg) fgr.fsmask &= (~FUSION_FFBG);
-            else fgr.fsmask |= FUSION_FFBG;
+            if(fuseOpt->mBgBCF.size()){
+                if(notinbg) fgr.fsmask &= (~FUSION_FFBG);
+                else fgr.fsmask |= FUSION_FFBG;
+            }
             if(fuseOpt->hasWhiteGene(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FHOTGENE;
             else fgr.fsmask &= (~FUSION_FHOTGENE);
             if(fuseOpt->inWhiteList(fgr.gene1, fgr.gene2)) fgr.fsmask |= FUSION_FINDB;
@@ -191,13 +193,13 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 for(int32_t excnt = minExon; excnt <= maxExon; ++excnt) exonl.push_back(excnt);
                 if(fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask &= (~FUSION_FTOOSMALLSIZE);
             }
-            int32_t totalreads = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
+            int32_t totalmols = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
             if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
             if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
             else fgr.fusepattern.append(trsl2[fgl[i].tidx].strand);
-            fgr.fusionreads = svr.molRescued;                         // FusionReads
-            fgr.totalreads = totalreads;                              // TotalReads
+            fgr.fusionmols = svr.molRescued;                         // FusionMols
+            fgr.totalmols = totalmols;                              // TotalMols
             fgr.fuserate = svr.af;                                    // FusionRate
             if(fgl[i].hfrom1){
                 fgr.jctpos1 = svr.bp1Pos;                             // JunctionPosition1
@@ -223,7 +225,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             }
             fgr.fusionsequence = svr.svSeq;                           // FusionSequence
             fgr.fseqbp = svr.seqBp;                                   // fseqBp
-            fgr.indb = ((fgr.fsmask & FUSION_FINDB) ? "Y" : "N");     // inDB
+            fgr.indb = ((fgr.fsmask & (FUSION_FINDB | FUSION_FMINDB)) ? "Y" : "N");     // inDB
             fgr.svt = svr.svType;                                     // svType
             fgr.svsize = svr.svSize;                                  // svSize
             fgr.srcount = svr.srCount;                                // srCount
@@ -232,6 +234,13 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             fgr.dprescued = svr.dpRescued;;                           // dpRescued
             fgr.srrefcount  = svr.srRefCount;                         // srRefCount
             fgr.dprefcount = svr.dpRefCount;                          // dpRefCount
+            fgr.srsrescued = svr.srsrescued;                          // srSRescued
+            fgr.srsmalncnt = svr.srsmalncnt;                          // srSResMaln
+            if(fgr.srsrescued > 0){                                    // srSResMalnRate
+                fgr.srsmrate = (double)(fgr.srsmalncnt)/fgr.srsrescued;
+            }else{
+                fgr.srsmrate = 0;
+            }
             fgr.insbp = svr.insBp;                                    // insBp
             fgr.insseq = svr.insSeq;                                  // insSeq
             fgr.svid = svr.id;                                        // svID
@@ -292,12 +301,14 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
             if(frl[fi].fsmask & FUSION_FPRIMARY){
                 fsrl.push_back(frl[fi]);
                 reported = true;
+                break;
             }
         }
         if(!reported){
             for(uint32_t fi = 0; fi < frl.size(); ++fi){
                 if(frl[fi].fsmask & FUSION_FSUPPLEMENTARY){
                     fsrl.push_back(frl[fi]);
+                    break;
                 }
             }
         }

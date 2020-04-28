@@ -18,6 +18,42 @@ bool BpPair::agree(const BpPair& other){
     return true;
 }
 
+int32_t RealnFilter::validSRSeq(const std::string& seq, bool& fullm, int& ftid, int& fbeg, int& fend){
+    std::vector<bam1_t*> alnret;
+    mBWA->alignSeq("seq", seq, alnret);
+    // first run, test repeat region
+    int32_t mscore = 0, mscnt = 0;
+    for(auto& e: alnret){
+        if(e->core.flag & BAM_FUNMAP) continue;
+        uint32_t* cigar = bam_get_cigar(e);
+        uint8_t* data = bam_aux_get(e, "AS");
+        int score = bam_aux2i(data);
+        if(score >= mscore){
+            uint32_t mlen = 0;
+            for(uint32_t i = 0; i < e->core.n_cigar; ++i){
+                switch(bam_cigar_op(cigar[i])){
+                    case BAM_CMATCH: case BAM_CDIFF: case BAM_CEQUAL:
+                        mlen += bam_cigar_oplen(cigar[i]);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            fullm = (mlen == seq.length());
+            ftid = e->core.tid;
+            fbeg = e->core.pos;
+            fend = bam_endpos(e);
+        }
+        if(score > mscore){
+            mscnt = 1;
+            mscore = score;
+        }else if(score == mscore){
+            mscnt += 1;
+        }
+    }
+    return mscnt;
+}
+
 int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1, int32_t& pos1, const std::string& chr2, int32_t& pos2, int32_t fseq, int32_t inslen){
     std::vector<bam1_t*> alnret;
     mBWA->alignSeq("seq", seq, alnret);
@@ -26,15 +62,26 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
     int32_t mpcnt = 0;
     for(auto& e: alnret){
         if(e->core.flag & BAM_FUNMAP) continue;
-         std::pair<int32_t, int32_t> clip = bamutil::getSoftClipLength(e);
-         if(clip.first && clip.second) continue;
-         int32_t slen = clip.first + clip.second;
-         int32_t mlen = e->core.l_qseq - slen;
-         if(slen == 0){
-             retval = -1; // full match
-             break;
-         }
-         if(std::abs(mlen - fseq) < 10 || std::abs(slen - fseq) < 10) ++mpcnt;
+        uint32_t* cigar = bam_get_cigar(e);
+        std::pair<int32_t, int32_t> clip;
+        for(uint32_t i = 0; i < e->core.n_cigar; ++i){
+            int opi = bam_cigar_op(cigar[i]);
+            int opl = bam_cigar_oplen(cigar[i]);
+            if(opi == BAM_CSOFT_CLIP){
+                if(i == 0) clip.first = opl;
+                else clip.second = opl;
+            }
+        }
+        uint8_t* sdat = bam_aux_get(e, "AS");
+        int32_t sval = bam_aux2i(sdat);
+        if(clip.first && clip.second) continue;
+        int32_t slen = clip.first + clip.second;
+        int32_t mlen = e->core.l_qseq - slen;
+        if(slen == 0){
+            retval = -1; // full match
+            break;
+        }
+        if(sval == mlen && (std::abs(mlen - fseq) == 0 || std::abs(slen - fseq) == 0)) ++mpcnt;
     }
     if(retval){
         for(auto& e: alnret) bam_destroy1(e);
@@ -86,13 +133,7 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         for(uint32_t j = 0; j < palnret[i]->core.n_cigar; ++j){
             uint32_t oplen = bam_cigar_oplen(data[j]);
             int opmask = bam_cigar_op(data[j]);
-            switch(bam_cigar_type(opmask)){
-                case 2: case 3:
-                    r += oplen;
-                    break;
-                default:
-                    break; 
-            }
+            if(bam_cigar_type(opmask) & 2) r += oplen;
             if(opmask == BAM_CSOFT_CLIP){
                 if(j == 0) lsc = oplen;
             }
@@ -100,11 +141,11 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         if(i){
             nbp.tid1 = palnret[i]->core.tid;
             if(lsc) nbp.pos1 = palnret[i]->core.pos;
-            else nbp.pos1 = r - 1;
+            else nbp.pos1 = r;
         }else{
             nbp.tid2 = palnret[i]->core.tid;
             if(lsc) nbp.pos2 = palnret[i]->core.pos;
-            else nbp.pos2 = r - 1;
+            else nbp.pos2 = r;
         }
     }
     nbp.adjustpt();
