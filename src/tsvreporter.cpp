@@ -473,4 +473,5 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         }
     }
     fsr.distance = mOpt->fuseOpt->geneNear(fsr.gene1, fsr.chr1, fsr.jctpos1, fsr.gene2, fsr.chr2); // distance
+    fsr.getInterGeneInfo(mOpt->fuseOpt);
 }

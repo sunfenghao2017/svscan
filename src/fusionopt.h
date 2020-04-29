@@ -13,6 +13,33 @@
 #include "svutil.h"
 #include <util.h>
 
+struct InterGeneInfo{
+    std::string upgene;
+    std::string dngene;
+    int32_t updist;
+    int32_t dndist;
+    std::string fsgene;
+    std::string fsinfo;
+
+    InterGeneInfo(){}
+
+    ~InterGeneInfo(){}
+
+    inline void getFuseInfo(){
+        std::stringstream ss;
+        ss << "inside_[intergenic_between_";
+        ss << upgene << "(";
+        ss << updist << "_bp_downstream)_and_";
+        ss << dngene << "(";
+        ss << dndist << "_bp_upstream)]";
+        fsinfo = ss.str();
+    }
+
+    inline void getFuseGeneName(){
+        fsgene = "[" + upgene + "," + dngene + "]";
+    }
+};
+
 struct GeneRange{
     std::string mGene;
     std::string mChr;
@@ -220,6 +247,13 @@ struct FusionOptions{
      * @return positive distance of two near gene, negative if overlap, 0 if same gene or not near, positive if near(1 may be h->t)
      */
     int32_t geneNear(const std::string& g1, const std::string& chr1, int32_t pos1, const std::string& g2, const std::string& chr2);
+
+    /** get inter-gene region information
+     * @param igi result storer
+     * @param chr chromosome
+     * @param pos position
+     */
+    void getInterGeneInfo(InterGeneInfo& igi, const std::string& chr, int32_t pos);
 
     /** initialize fusion report range */
     void initFusionRptRange();

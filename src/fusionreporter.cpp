@@ -291,6 +291,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.ts2name = svr.trs2Name; // ts2Name
                 fgr.ts2pos = svr.trs2Pos;   // ts2Pos
             }
+            fgr.getInterGeneInfo(fuseOpt);
 #ifdef DEBUG
             if(debug) std::cout << fgr << std::endl;
 #endif

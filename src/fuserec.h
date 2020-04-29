@@ -222,6 +222,27 @@ struct FusionRecord{
         if((fsmask & FUSION_FPRECISE) && srrescued == 0) fsmask |= FUSION_FLOWSUPPORT; // rescue failed fusion drop
         if(util::startsWith(transcript1, "NR") || util::startsWith(transcript2, "NR")) fsmask |= FUSION_FWITHNCRNA; // ncrna participated
     }
+
+    /** get inter gene nomenclature */
+    inline void getInterGeneInfo(FusionOptions* fsopt){
+        if(fsmask & FUSION_FALLGENE) return;
+        InterGeneInfo ig1, ig2;
+        ig1.fsgene = gene1; ig1.fsinfo = gene1;
+        ig2.fsgene = gene2; ig2.fsinfo = gene2;
+        if(gene1 == "-"){
+            fsopt->getInterGeneInfo(ig1, chr1, jctpos1);
+            ig1.getFuseInfo();
+            ig1.getFuseGeneName();
+        }
+        if(gene2 == "-"){
+            fsopt->getInterGeneInfo(ig2, chr2, jctpos2);
+            ig2.getFuseInfo();
+            ig2.getFuseGeneName();
+        }
+        fusegene = ig1.fsgene + "->" + ig2.fsgene;
+        gene1 = ig1.fsinfo;
+        gene2 = ig2.fsinfo;
+    }
 };
 
 /** class to store a list of FusionRecords */

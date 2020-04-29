@@ -254,6 +254,35 @@ void FusionOptions::initGeneCrdRange(){
     }
     std::sort(mGeneRangeVec.begin(), mGeneRangeVec.end());
 }
+void FusionOptions::getInterGeneInfo(InterGeneInfo& igi, const std::string& chr, int32_t pos){
+    if(mGeneRangeVec.empty()) return;
+    if(!mInitialized) init();
+    GeneRange gr;
+    gr.mChr = chr;
+    gr.mStart = pos;
+    gr.mEnd = pos + 1;
+    auto iter = std::lower_bound(mGeneRangeVec.begin(), mGeneRangeVec.end(), gr);
+    if(iter == mGeneRangeVec.end() || iter->mChr != chr){ // reach end
+        igi.dngene = "-";
+        igi.dndist = 0;
+    }else{
+        igi.dngene = iter->mGene;
+        igi.dndist = iter->mStart - pos;
+    }
+    if(iter == mGeneRangeVec.begin()){
+        igi.upgene = "-";
+        igi.updist = 0;
+    }else{
+        --iter;
+        if(iter->mChr != chr){
+            igi.upgene = "-";
+            igi.updist = 0;
+        }else{
+            igi.upgene = iter->mGene;
+            igi.updist = pos - iter->mEnd;
+        }
+    }
+}
 
 int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, int32_t pos1, const std::string& g2, const std::string& chr2){
     if(chr1 != chr2) return 0;
