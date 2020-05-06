@@ -26,7 +26,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             br.tseq = br.seq.substr(br.seq.length() - scl.second);
         }
         uint32_t* cigar = bam_get_cigar(b);
-        int refpos = b->core.pos + 1;
+        int refpos = b->core.pos;
         bool lsc = false;
         for(uint32_t i = 0; i < b->core.n_cigar; ++i){
             int opint = bam_cigar_op(cigar[i]);
@@ -34,8 +34,12 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
             if(opint == BAM_CMATCH || opint == BAM_CEQUAL || opint == BAM_CDIFF || opint == BAM_CDEL || opint == BAM_CREF_SKIP){
                 refpos += oplen;
             }else if(opint == BAM_CSOFT_CLIP){
-                br.rbp = refpos;
-                if(i == 0) lsc = true;
+                if(i == 0){
+                    br.rbp = refpos + 1;
+                    lsc = true;
+                }else{
+                    br.rbp = refpos;
+                }
                 break;
             }
         }
@@ -67,13 +71,17 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
         int32_t refpos = std::atoi(vstr[1].c_str());
         std::vector<std::pair<int32_t, char>> pcigar;
         bamutil::parseCigar(vstr[3], pcigar);
-        for(auto& e: pcigar){
-            char opchr = e.second;
-            int oplen = e.first;
+        for(uint32_t si = 0; si < pcigar.size(); ++si){
+            char opchr = pcigar[si].second;
+            int oplen = pcigar[si].first;
             if(opchr == 'M' || opchr == '=' || opchr == 'X' || opchr == 'D' || opchr == BAM_CREF_SKIP){
                 refpos += oplen;
             }else if(opchr == 'S'){
-                br.sbp = refpos;
+                if(si == 0){
+                    br.sbp = refpos;
+                }else{
+                    br.sbp = refpos-1;
+                }
                 break;
             }
         }
