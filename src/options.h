@@ -121,7 +121,7 @@ struct SVFilter{
     int32_t mMinInsRpt = 15;           ///< minimum insertion size to repor
     uint32_t mMinSeedSR = 3;           ///< minimum seed split reads used to compute SV
     uint32_t mMinSeedDP = 3;           ///< minimum discordant pair of reads used to compute SV
-    int32_t mMinGoodSRLen = 25;        ///< minimum length of split read sc len which is "good"
+    int32_t mMinGoodSRLen = 28;        ///< minimum length of split read sc len which is "good"
     int32_t mMinRealnFlkLen = 6;       ///< minimum flank length of split read around breakpoint
     int32_t mMinInsFlkLen = 15;        ///< minimum flank length around insertion sequence breakpoint
     int32_t mMaxSingSrSeedIns = 10;    ///< maximum insertion length in a single split read supporting sv
