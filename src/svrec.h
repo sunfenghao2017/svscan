@@ -124,8 +124,10 @@ struct SVRec{
             svr.trs1Pos = std::atoi(vstr[30].c_str());
             svr.trs2Name = vstr[31];
             svr.trs2Pos = std::atoi(vstr[32].c_str());
+            svr.rsPeak = vstr[33];
+        }else{
+            svr.rsPeak = vstr[29];
         }
-        svr.rsPeak = vstr[33];
     }
 };
 
