@@ -119,7 +119,7 @@ struct SVRec{
         svr.fuseGene = vstr[26];
         svr.fsMask = vstr[27];
         svr.fsHits = std::atoi(vstr[28].c_str());
-        if(vstr.size() > 29){
+        if(vstr.size() > 30){
             svr.trs1Name = vstr[29];
             svr.trs1Pos = std::atoi(vstr[30].c_str());
             svr.trs2Name = vstr[31];
