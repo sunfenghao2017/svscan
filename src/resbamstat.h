@@ -8,7 +8,7 @@
 #include <map>
 
 // fusion reads pattern count index map
-std::map<std::string, int> FsPatMatIdx = {{"++", 0}, {"+-", 1}, {"--", 2}, {"-+", 3}};
+const std::map<std::string, int> FsPatMatIdx = {{"++", 0}, {"+-", 1}, {"--", 2}, {"-+", 3}};
 
 /** class to store a read supporting status */
 struct ReadSupport{
@@ -99,7 +99,7 @@ struct ReadSupport{
     inline void countPattern(int32_t chr1, int32_t pos1, int& r1p, int& r2p){
         r1p = -1; r2p = -1; // initialize to invalid pattern
         bool phitpos1 = false;
-        if(mR1Seed == 1 || mR1SRT){
+        if(mR1Seed == 1){
             if(mR1PTid == chr1){
                 if(mR1STid != chr1){
                     phitpos1 = true;
@@ -109,12 +109,26 @@ struct ReadSupport{
             }
             std::string pat;
             if(phitpos1) pat = mR1PStrand + mR1SStrand;
-            else pat = mR1SStrand + mR1PStrand;
-            r1p = FsPatMatIdx[pat];
+            else pat = mR2PStrand + mR1PStrand; 
+            auto iter = FsPatMatIdx.find(pat);
+            r1p = iter->second;
+        }else if(mR1SRT){
+            if(mR1PTid == chr1){
+                if(mR2PTid != chr1){
+                    phitpos1 = true;
+                }else{
+                    if(std::abs(mR1PSPos - pos1) < std::abs(mR2PSPos - pos1)) phitpos1 = true;
+                }
+            }
+            std::string pat;
+            if(phitpos1) pat = mR1PStrand + mR2PStrand;
+            else pat = mR2PStrand + mR1PStrand;
+            auto iter = FsPatMatIdx.find(pat);
+            r1p = iter->second;
         }
 
         phitpos1 = false;
-        if(mR2Seed == 1 || mR2SRT){
+        if(mR2Seed == 1){
             if(mR2PTid == chr1){
                 if(mR2STid != chr1){
                     phitpos1 = true;
@@ -125,9 +139,22 @@ struct ReadSupport{
             std::string pat;
             if(phitpos1) pat = mR2PStrand + mR2SStrand;
             else pat = mR2SStrand + mR2PStrand;
-            r2p = FsPatMatIdx[pat];
+            auto iter = FsPatMatIdx.find(pat);
+            r2p = iter->second;
+        }else if(mR2SRT && (!mR1SRT)){
+            if(mR2PTid != chr1){
+                phitpos1 = true;
+                }else{
+                    if(std::abs(mR1PSPos - pos1) < std::abs(mR2PSPos - pos1)) phitpos1 = true;
+                }
+            }
+            std::string pat;
+            if(phitpos1) pat = mR1PStrand + mR2PStrand;
+            else pat = mR2PStrand + mR1PStrand;
+            auto iter = FsPatMatIdx.find(pat);
+            r1p = iter->second;
         }
-    }
+
 };
 
 /** type to store read supporting statistics */
