@@ -141,11 +141,11 @@ int32_t RealnFilter::validCCSeq(const std::string& seq, const std::string& chr1,
         if(i){
             nbp.tid1 = palnret[i]->core.tid;
             if(lsc) nbp.pos1 = palnret[i]->core.pos;
-            else nbp.pos1 = r;
+            else nbp.pos1 = r - 1;
         }else{
             nbp.tid2 = palnret[i]->core.tid;
             if(lsc) nbp.pos2 = palnret[i]->core.pos;
-            else nbp.pos2 = r;
+            else nbp.pos2 = r - 1;
         }
     }
     nbp.adjustpt();
