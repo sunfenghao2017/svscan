@@ -91,7 +91,7 @@ void FusionReporter::report(){
     }
     if(!fuseList.empty()) fuseList[fuseList.size() - 1].report = true;
     // mark mirror fusion to keep optimal one in output
-    markMirrorFusionEvent(fuseList);
+    // markMirrorFusionEvent(fuseList);
     // output valid fusions
     std::string header = FusionRecord::gethead(rnamode);
     std::ofstream fw(fuseOpt->mOutFile);
