@@ -4,36 +4,36 @@
 template<typename TBreakPoint>
 bool SVRecord::coordTransform(TBreakPoint& bp, AlignDescriptor& ad, int32_t& finalGapStart, int32_t& finalGapEnd){
     if(mSVT == 0 || mSVT == 5){// 5to5
-        int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg;
+        int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg + 1;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
-        finalGapStart = bp.mSVStartBeg + ad.mRefStart;
+        finalGapStart = bp.mSVStartBeg + ad.mRefStart - 1;
         finalGapEnd = bp.mSVEndBeg + mSVRef.size() - ad.mRefEnd;
         return true;
     }
     if(mSVT == 1 || mSVT == 6){// 3to3
-        int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg;
+        int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg + 1;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
         finalGapStart = bp.mSVStartBeg + (annealed - ad.mRefStart);
-        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed);
+        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed) - 1;
         return true;
     }
     if(mSVT == 2 || mSVT == 7){// 5to3
-        int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg;
+        int32_t annealed = bp.mSVStartEnd - bp.mSVStartBeg + 1;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
-        finalGapStart = bp.mSVStartBeg + ad.mRefStart;
-        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed);
+        finalGapStart = bp.mSVStartBeg + ad.mRefStart - 1;
+        finalGapEnd = bp.mSVEndBeg + (ad.mRefEnd - annealed) - 1;
         return true;
     }
     if(mSVT == 3 || mSVT == 8){// 3to5
-        int32_t annealed = bp.mSVEndEnd - bp.mSVEndBeg;
+        int32_t annealed = bp.mSVEndEnd - bp.mSVEndBeg + 1;
         if(ad.mRefStart >= annealed || (ad.mRefEnd < annealed)) return false;
-        finalGapStart = bp.mSVStartBeg + (ad.mRefEnd - annealed);
-        finalGapEnd = bp.mSVEndBeg + ad.mRefStart;
+        finalGapStart = bp.mSVStartBeg + (ad.mRefEnd - annealed) - 1;
+        finalGapEnd = bp.mSVEndBeg + ad.mRefStart -1;
         return true;
     }
     if(mSVT == 4){// insertion
-        finalGapStart = bp.mSVStartBeg + ad.mRefStart;
-        finalGapEnd = bp.mSVStartBeg + ad.mRefStart;
+        finalGapStart = bp.mSVStartBeg + ad.mRefStart - 1;
+        finalGapEnd = bp.mSVStartBeg + ad.mRefStart - 1;
         return true;
     }
     return false;
