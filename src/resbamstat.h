@@ -104,7 +104,7 @@ struct ReadSupport{
         return os;
     }
 
-    inline void countPattern(int32_t chr1, int32_t pos1, int& r1p, int& r2p){
+    inline void countPattern(int32_t chr1, int32_t pos1, int& r1p, int& r2p, bool issrsv){
         r1p = -1; r2p = -1; // initialize to invalid pattern
         bool phitpos1 = false;
         if(mR1Seed == 1){
@@ -117,10 +117,10 @@ struct ReadSupport{
             }
             std::string pat;
             if(phitpos1) pat = mR1PStrand + mR1SStrand;
-            else pat = mR2PStrand + mR1PStrand; 
+            else pat = mR1SStrand + mR1PStrand; 
             auto iter = FsPatMatIdx.find(pat);
             r1p = iter->second;
-        }else if(mR1SRT){
+        }else if(mR1SRT == 1 && (!issrsv)){
             if(mR1PTid == chr1){
                 if(mR2PTid != chr1){
                     phitpos1 = true;
@@ -149,19 +149,19 @@ struct ReadSupport{
             else pat = mR2SStrand + mR2PStrand;
             auto iter = FsPatMatIdx.find(pat);
             r2p = iter->second;
-        }else if(mR2SRT && (!mR1SRT)){
+        }else if(mR2SRT == 1 && (mR1SRT != 1) && (!issrsv)){
             if(mR2PTid != chr1){
                 phitpos1 = true;
-                }else{
-                    if(std::abs(mR1PSPos - pos1) < std::abs(mR2PSPos - pos1)) phitpos1 = true;
-                }
+            }else{
+                if(std::abs(mR1PSPos - pos1) < std::abs(mR2PSPos - pos1)) phitpos1 = true;
             }
             std::string pat;
             if(phitpos1) pat = mR1PStrand + mR2PStrand;
             else pat = mR2PStrand + mR1PStrand;
             auto iter = FsPatMatIdx.find(pat);
-            r1p = iter->second;
+            r2p = iter->second;
         }
+    }
 
 };
 

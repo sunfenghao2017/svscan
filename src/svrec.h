@@ -63,7 +63,7 @@ struct SVRec{
         if(svr.rnamode){
             os << "\t" << svr.trs1Name << "\t" << svr.trs1Pos << "\t" << svr.trs2Name << "\t" << svr.trs2Pos;
         }
-        os << svr.rsPeak << "\n";
+        os << "\t" << svr.rsPeak << "\n";
         return os;
     }
 

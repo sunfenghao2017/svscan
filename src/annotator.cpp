@@ -596,7 +596,7 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         if(iter->second->mR1SVID >= 0) svid = iter->second->mR1SVID;
         else if(iter->second->mR2SVID >= 0) svid =iter->second->mR2SVID;
         if(svid >= 0){
-            iter->second->countPattern(svs[svid]->mChr1, svs[svid]->mSVStart, r1pt, r2pt);
+            iter->second->countPattern(svs[svid]->mChr1, svs[svid]->mSVStart, r1pt, r2pt, svs[svid]->mSRSupport > 0);
             if(r1pt >= 0) svs[svid]->mFsPattern[r1pt] += 1;
             if(r2pt >= 0) svs[svid]->mFsPattern[r2pt] += 1;
         }
