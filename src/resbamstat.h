@@ -65,12 +65,16 @@ struct ReadSupport{
         os << "mR1PHit: " << rs.mR1PHit << "\n";
         os << "mR1PTid: " << rs.mR1PTid << "\n";
         os << "mR1PChr: " << rs.mR1PChr << "\n";
+        os << "mR1PSPos:" << rs.mR1PSPos << "\n";
+        os << "mR1PStrd:" << rs.mR1PStrand << "\n";
         os << "mR1PBeg: " << rs.mR1PBeg << "\n";
         os << "mR1PEnd: " << rs.mR1PEnd << "\n";
         os << "mR1PTgt: " << rs.mR1PTgt << "\n";
         os << "mR1SHit: " << rs.mR1SHit << "\n";
         os << "mR1STid: " << rs.mR1STid << "\n";
         os << "mR1SChr: " << rs.mR1SChr << "\n";
+        os << "mR1SSPos:" << rs.mR1SSPos << "\n";
+        os << "mR1SStrd:" << rs.mR1SStrand << "\n";
         os << "mR1SBeg: " << rs.mR1SBeg << "\n";
         os << "mR1SEnd: " << rs.mR1SEnd << "\n";
         os << "mR1STgt: " << rs.mR1STgt << "\n";
@@ -83,12 +87,16 @@ struct ReadSupport{
         os << "mR2PHit: " << rs.mR2PHit << "\n";
         os << "mR2PTid: " << rs.mR2PTid << "\n";
         os << "mR2PChr: " << rs.mR2PChr << "\n";
+        os << "mR2PSPos:" << rs.mR2PSPos << "\n";
+        os << "mR2PStrd:" << rs.mR2PStrand << "\n";
         os << "mR2PBeg: " << rs.mR2PBeg << "\n";
         os << "mR2PEnd: " << rs.mR2PEnd << "\n";
         os << "mR2PTgt: " << rs.mR2PTgt << "\n";
         os << "mR2SHit: " << rs.mR2SHit << "\n";
         os << "mR2STid: " << rs.mR2STid << "\n";
         os << "mR2SChr: " << rs.mR2SChr << "\n";
+        os << "mR2SSPos:" << rs.mR2SSPos << "\n";
+        os << "mR2SStrd:" << rs.mR2SStrand << "\n";
         os << "mR2SBeg: " << rs.mR2SBeg << "\n";
         os << "mR2SEnd: " << rs.mR2SEnd << "\n";
         os << "mR2STgt: " << rs.mR2STgt << "\n";
@@ -321,6 +329,16 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         rs->mR2PTid = b->core.mtid;
                         rs->mR1PSPos = b->core.pos;
                         rs->mR2PSPos = b->core.mpos;
+                        if(b->core.flag & BAM_FREVERSE){
+                            rs->mR1PStrand = "-";
+                        }else{
+                            rs->mR1PStrand = "+";
+                        }
+                        if(b->core.flag & BAM_FMREVERSE){
+                            rs->mR2PStrand = "-";
+                        }else{
+                            rs->mR2PStrand = "+";
+                        }
                     }
                 }else{
                     rs->mR2SVID = svid;
@@ -348,6 +366,16 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         rs->mR1PTid = b->core.mtid;
                         rs->mR2PSPos = b->core.pos;
                         rs->mR1PSPos = b->core.mpos;
+                        if(b->core.flag & BAM_FREVERSE){
+                            rs->mR2PStrand = "-";
+                        }else{
+                            rs->mR2PStrand = "+";
+                        }
+                        if(b->core.flag & BAM_FMREVERSE){
+                            rs->mR1PStrand = "-";
+                        }else{
+                            rs->mR1PStrand = "+";
+                        }
                     }
                 }
                 rssm[qname] = rs;
@@ -378,6 +406,16 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         iter->second->mR2PTid = b->core.mtid;
                         iter->second->mR1PSPos = b->core.pos;
                         iter->second->mR2PSPos = b->core.mpos;
+                        if(b->core.flag & BAM_FREVERSE){
+                            iter->second->mR1PStrand = "-";
+                        }else{
+                            iter->second->mR1PStrand = "+";
+                        }
+                        if(b->core.flag & BAM_FMREVERSE){
+                            iter->second->mR2PStrand = "-";
+                        }else{
+                            iter->second->mR2PStrand = "+";
+                        }
                     }
                 }else{
                     iter->second->mR2SVID = svid;
@@ -405,6 +443,16 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         iter->second->mR1PTid = b->core.mtid;
                         iter->second->mR2PSPos = b->core.pos;
                         iter->second->mR1PSPos = b->core.mpos;
+                        if(b->core.flag & BAM_FREVERSE){
+                            iter->second->mR2PStrand = "-";
+                        }else{
+                            iter->second->mR2PStrand = "+";
+                        }
+                        if(b->core.flag & BAM_FMREVERSE){
+                            iter->second->mR1PStrand = "-";
+                        }else{
+                            iter->second->mR1PStrand = "+";
+                        }
                     }
                 }
             }

@@ -105,7 +105,7 @@ class BamToTable{
         std::string bamtb;               ///< bam output table(excel format)
         std::string bamtt;               ///< bam output txt(tsv format)
         std::vector<std::string> fsgene; ///< fusion gene of each svid
-        int32_t svidf = 32;              ///< svid column index in tsv
+        int32_t svidf = 33;              ///< svid column index in tsv
         int32_t fsidf = 0;               ///< fusion column index in tsv
 
     /** BamToTable constructor */
