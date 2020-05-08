@@ -18,7 +18,7 @@ class Junction{
         int32_t mSCLen;    ///< softclip length of this junction alignment record
         int32_t mRefidx;   ///< junction record alignment reference tid (b->core.tid)
         int32_t mRstart;   ///< junction record alignment starting position on reference(b->core.pos)
-        int32_t mRefpos;   ///< b->core.pos + reference length consumed before junction point
+        int32_t mRefpos;   ///< 0 based break point (b->core.pos/(+rlen-1))
         int32_t mSeqpos;   ///< sequence length consumed before junction point(count from read 5'->3')
         int32_t mSeqmatch; ///< sequence length consumed before junction point(count from read alignment direction)
     public:
@@ -28,7 +28,7 @@ class Junction{
          * @param sclen softclip length
          * @param refidx junction record alignment reference tid (b->core.tid)
          * @param rstart junction record alignment starting position on reference(b->core.pos)
-         * @param refpos b->core.pos + reference length consumed before junction point
+         * @param refpos 0 based break point (b->core.pos/(+rlen-1))
          * @param seqpos sequence length consumed before junction point(count from read 5'->3')
          * @param seqmatch sequence length consumed before junction point(count from read alignment direction)
          * @param rd1 if true Junction read is from read1 of pair
