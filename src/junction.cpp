@@ -38,7 +38,11 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
             seqmatch = seqlen - oplen;
             psc = oplen;
             if(oplen >= mOpt->filterOpt->minClipLen){
-                jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
+                if(refpos != b->core.pos){
+                    jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos-1, readpos, seqmatch, b->core.flag & BAM_FREAD1));
+                }else{
+                    jcvec.push_back(Junction(fw, scleft, oplen, b->core.tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
+                }
             }
         }else if(opint == BAM_CHARD_CLIP){
             return -1;
@@ -77,6 +81,7 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
         util::split(sastr, vstr, ",");
         int32_t tid = bam_name2id(h, vstr[0].c_str());
         refpos = std::atoi(vstr[1].c_str()) - 1;
+        int32_t oripos = refpos;
         fw = (vstr[2][0] == '+');
         readStart = -1;
         seqpos = 0, readpos = 0, seqmatch = 0;
@@ -103,7 +108,11 @@ int JunctionMap::insertJunction(const bam1_t* b, bam_hdr_t* h){
                 readpos = (lastSeqPos <= seqlen && !fw) ? seqlen - lastSeqPos : lastSeqPos;
                 seqmatch = seqlen - oplen;
                 if((seqmatch > mOpt->filterOpt->mMinGoodSRLen || seqmatch == psc) &&  oplen >= mOpt->filterOpt->minClipLen){
-                    jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
+                    if(refpos != oripos){
+                        jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos-1, readpos, seqmatch, b->core.flag & BAM_FREAD1));
+                    }else{
+                        jcvec.push_back(Junction(fw, scleft, oplen, tid, readStart, refpos, readpos, seqmatch, b->core.flag & BAM_FREAD1));
+                    }
                 }
             }else if(opchr == BAM_CREF_SKIP) refpos += oplen;
         }
