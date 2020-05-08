@@ -76,6 +76,7 @@ void Stats::reportSVTSV(SVSet& svs, GeneInfoList& gl){
             svr.trs2Pos = svs[i]->mSVEnd;
             svr.rnamode = true;
         }
+        svr.rsPeak = svs[i]->getFsPat(false);
         // output
         fw << svr;
     }
@@ -392,10 +393,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.fuserate = (double)(fsr.fusionmols)/(double)(fsr.totalmols);
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
-    if(gi.mFuseGene[i].hfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].hidx].strand;
-    else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].hidx].strand;
-    if(gi.mFuseGene[i].tfrom1) fsr.fusepattern += gi.mGene1[gi.mFuseGene[i].tidx].strand;
-    else fsr.fusepattern += gi.mGene2[gi.mFuseGene[i].tidx].strand;
+    fsr.fusepattern = svr->getFsPat(gi.mFuseGene[i].status & FUSION_FHTFLSWAPPED);
     // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
     if(gi.mFuseGene[i].hfrom1){
         fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;

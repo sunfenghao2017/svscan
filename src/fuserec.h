@@ -89,7 +89,7 @@ struct FusionRecord{
      */
     inline friend std::ostream& operator<<(std::ostream& os, const FusionRecord& fsr){
         os << fsr.fusegene << "\t" << fsr.fusionmols << "\t" << fsr.totalmols << "\t" << fsr.fuserate << "\t";
-        os << fsr.indb << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
+        os << fsr.indb << "\t" << fsr.fusepattern << "\t" << fsr.getStatus() << "\t" << fsr.distance << "\t";
         os << fsr.gene1 << "\t" << fsr.chr1 << "\t" << fsr.jctpos1 + 1 << "\t" << fsr.strand1 << "\t" << fsr.transcript1 << "\t";
         os << fsr.gene2 << "\t" << fsr.chr2 << "\t" << fsr.jctpos2 + 1<< "\t" << fsr.strand2 << "\t" << fsr.transcript2 << "\t";
         os << fsr.fusionsequence << "\t" << fsr.fseqbp + 1 << "\t" << fsr.svt << "\t" << fsr.svsize << "\t";
@@ -112,13 +112,13 @@ struct FusionRecord{
      */
     static std::string gethead(bool rnamode = false){
         std::string header = "FusionGene\tFusionMols\tTotalMols\tFusionRate\t"; //[0-3]
-        header.append("inDB\tstatus\tfpDist\t"); //[4-6]
-        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[7-11]
-        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[12-16]
-        header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[17-20]
-        header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[21-26]
-        header.append("srSRescued\tsrSResMaln\tsrSResMalnRate\t"); //[27,29]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[30-35]
+        header.append("inDB\tfsPattern\tstatus\tfpDist\t"); //[4-7]
+        header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[8-12]
+        header.append("Gene2\tChr2\tJunctionPosition2\tStrand2\tTranscript2\t"); //[13-17]
+        header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[18-21]
+        header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[22-27]
+        header.append("srSRescued\tsrSResMaln\tsrSResMalnRate\t"); //[28,30]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[31-36]
         if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
         else header.append("\texon1\texon2\n");
         return header;

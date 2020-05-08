@@ -194,13 +194,20 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 if(fuseOpt->inSameSVRngMap(gname, exonl, fgr.svint)) fgr.fsmask &= (~FUSION_FTOOSMALLSIZE);
             }
             int32_t totalmols = svr.molRescued + std::max(svr.dpRefCount, svr.srRefCount);
-            if(fgl[i].hfrom1) fgr.fusepattern.append(trsl1[fgl[i].hidx].strand);
-            else fgr.fusepattern.append(trsl2[fgl[i].hidx].strand);
-            if(fgl[i].tfrom1) fgr.fusepattern.append(trsl1[fgl[i].tidx].strand);
-            else fgr.fusepattern.append(trsl2[fgl[i].tidx].strand);
+            if(svr.rsPeak == "++" || svr.rsPeak == "--"){
+                fgr.fusepattern = svr.rsPeak;
+            }else{
+                if(svr.rsPeak == "+-"){
+                    if(fgl[i].status & FUSION_FHTFLSWAPPED) fgr.fusepattern = "-+";
+                    else fgr.fusepattern = "+-";
+                }else if(svr.rsPeak == "-+"){
+                    if(fgl[i].status & FUSION_FHTFLSWAPPED) fgr.fusepattern = "+-";
+                    else fgr.fusepattern = "-+";
+                }
+            }
             fgr.fusionmols = svr.molRescued;                         // FusionMols
-            fgr.totalmols = totalmols;                              // TotalMols
-            fgr.fuserate = svr.af;                                    // FusionRate
+            fgr.totalmols = totalmols;                               // TotalMols
+            fgr.fuserate = svr.af;                                   // FusionRate
             if(fgl[i].hfrom1){
                 fgr.jctpos1 = svr.bp1Pos;                             // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;              // Strand1;

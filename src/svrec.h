@@ -42,6 +42,7 @@ struct SVRec{
     std::string trs2Name;
     int32_t trs2Pos;
     bool rnamode;
+    std::string rsPeak;
 
     SVRec(){
         rnamode = false;
@@ -62,7 +63,7 @@ struct SVRec{
         if(svr.rnamode){
             os << "\t" << svr.trs1Name << "\t" << svr.trs1Pos << "\t" << svr.trs2Name << "\t" << svr.trs2Pos;
         }
-        os << "\n";
+        os << svr.rsPeak << "\n";
         return os;
     }
 
@@ -78,10 +79,11 @@ struct SVRec{
         oss << "ID\tsvtInt\t"; // [22,23]
         oss << "bp1Gene\tbp2Gene\tfuseGene\tfsMask\tfsHits"; // [24,28]
         if(rnamode){
-            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\n"; //[29,32]
+            oss << "\tts1Name\tts1Pos\tts2Name\tts2Pos\t"; //[29,32]
         }else{
-            oss << "\n";
+            oss << "\t";
         }
+        oss << "rsPeak\n";// 33
         return oss.str();
     }
 
@@ -123,6 +125,7 @@ struct SVRec{
             svr.trs2Name = vstr[31];
             svr.trs2Pos = std::atoi(vstr[32].c_str());
         }
+        svr.rsPeak = vstr[33];
     }
 };
 

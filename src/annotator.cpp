@@ -589,6 +589,18 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             svs[iter->first]->mSRSResAllCnt = iter->second.allsrt;
         }
     }
+    // third run, stat fusion read pattern
+    for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
+        int r1pt = -1, r2pt = -1;
+        int svid = -1;
+        if(iter->second->mR1SVID >= 0) svid = iter->second->mR1SVID;
+        else if(iter->second->mR2SVID >= 0) svid =iter->second->mR2SVID;
+        if(svid >= 0){
+            iter->second->countPattern(svs[svid]->mChr1, svs[svid]->mSVStart, r1pt, r2pt);
+            if(r1pt >= 0) svs[svid]->mFsPattern[r1pt] += 1;
+            if(r2pt >= 0) svs[svid]->mFsPattern[r2pt] += 1;
+        }
+    }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(ifp);

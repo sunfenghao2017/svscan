@@ -57,6 +57,8 @@ class SVRecord{
         int32_t mRealnRet = 0;        ///< return value from realignment test
         int32_t mSRSResMAlnCnt = 0;   ///< number of rescued seeding sr reads aligned on multiple place
         int32_t mSRSResAllCnt = 0;    ///< total number of rsccued seeding sr reads
+        int32_t mGoodSRS = 0;         ///< good split read seed count
+        int32_t mFsPattern[4] = {0};  ///< [++], [+-], [--], [-+] pattern reads count
 
     public:
         /** SVRecord constructor */
@@ -66,6 +68,32 @@ class SVRecord{
         ~SVRecord() {}
 
     public:
+        /** get fusion pattern with most support */
+        inline std::string getFsPat(bool seswapped) const {
+            int mi = 0;
+            int mv = mFsPattern[0];
+            for(int i = 1; i < 4; ++i){
+                if(mFsPattern[i] >= mv){
+                    mi = i;
+                    mv = mFsPattern[i];
+                }
+            }
+            if(mi == 0){
+                return "++";
+            }else if(mi == 2){
+                return "--";
+            }else if(mi == 1){
+                if(seswapped) return "-+";
+                else return "+-";
+            }else{
+                if(seswapped){
+                    return "+-";
+                }else{
+                    return "-+";
+                }
+            }
+        }
+
         /** operator to output SVRecord to ostream
          * @param os reference of ostream object
          * @param sv reference of SVRecord object

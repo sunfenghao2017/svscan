@@ -7,6 +7,9 @@
 #include <string>
 #include <map>
 
+// fusion reads pattern count index map
+std::map<std::string, int> FsPatMatIdx = {{"++", 0}, {"+-", 1}, {"--", 2}, {"-+", 3}};
+
 /** class to store a read supporting status */
 struct ReadSupport{
     int32_t mR1SVID = -1;
@@ -14,12 +17,18 @@ struct ReadSupport{
     int8_t mR1SRT = -1;
     int32_t mR1Hit = 0;
     int32_t mR1PHit = 0;
+    int32_t mR1PSPos = -1;
+    int32_t mR1PTid = -1;
     std::string mR1PChr;
+    std::string mR1PStrand = "-";
     int32_t mR1PBeg = -1;
     int32_t mR1PEnd = -1;
     int mR1PTgt = 0;
     int32_t mR1SHit = 0;
+    int32_t mR1SSPos = -1;
+    int32_t mR1STid = -1;
     std::string mR1SChr;
+    std::string mR1SStrand = "-";
     int32_t mR1SBeg = -1;
     int32_t mR1SEnd = -1;
     int mR1STgt = 0;
@@ -30,12 +39,18 @@ struct ReadSupport{
     int8_t mR2SRT = -1;
     int32_t mR2Hit = 0;
     int32_t mR2PHit = 0;
+    int32_t mR2PSPos = -1;
+    int32_t mR2PTid = -1;
     std::string mR2PChr;
+    std::string mR2PStrand = "-";
     int32_t mR2PBeg = -1;
     int32_t mR2PEnd = -1;
     int mR2PTgt = 0;
     int32_t mR2SHit = 0;
+    int32_t mR2SSPos = -1;
+    int32_t mR2STid = -1;
     std::string mR2SChr;
+    std::string mR2SStrand = "-";
     int32_t mR2SBeg = -1;
     int32_t mR2SEnd = -1;
     int mR2STgt = 0;
@@ -48,11 +63,13 @@ struct ReadSupport{
         os << "mR1SRT:  " << rs.mR1SRT  << "\n";
         os << "mR1Hit:  " << rs.mR1Hit  << "\n";
         os << "mR1PHit: " << rs.mR1PHit << "\n";
+        os << "mR1PTid: " << rs.mR1PTid << "\n";
         os << "mR1PChr: " << rs.mR1PChr << "\n";
         os << "mR1PBeg: " << rs.mR1PBeg << "\n";
         os << "mR1PEnd: " << rs.mR1PEnd << "\n";
         os << "mR1PTgt: " << rs.mR1PTgt << "\n";
         os << "mR1SHit: " << rs.mR1SHit << "\n";
+        os << "mR1STid: " << rs.mR1STid << "\n";
         os << "mR1SChr: " << rs.mR1SChr << "\n";
         os << "mR1SBeg: " << rs.mR1SBeg << "\n";
         os << "mR1SEnd: " << rs.mR1SEnd << "\n";
@@ -64,17 +81,52 @@ struct ReadSupport{
         os << "mR2SRT:  " << rs.mR2SRT  << "\n";
         os << "mR2Hit:  " << rs.mR2Hit  << "\n";
         os << "mR2PHit: " << rs.mR2PHit << "\n";
+        os << "mR2PTid: " << rs.mR2PTid << "\n";
         os << "mR2PChr: " << rs.mR2PChr << "\n";
         os << "mR2PBeg: " << rs.mR2PBeg << "\n";
         os << "mR2PEnd: " << rs.mR2PEnd << "\n";
         os << "mR2PTgt: " << rs.mR2PTgt << "\n";
         os << "mR2SHit: " << rs.mR2SHit << "\n";
+        os << "mR2STid: " << rs.mR2STid << "\n";
         os << "mR2SChr: " << rs.mR2SChr << "\n";
         os << "mR2SBeg: " << rs.mR2SBeg << "\n";
         os << "mR2SEnd: " << rs.mR2SEnd << "\n";
         os << "mR2STgt: " << rs.mR2STgt << "\n";
         os << "mR2Seed: " << rs.mR2Seed << "\n";
         return os;
+    }
+
+    inline void countPattern(int32_t chr1, int32_t pos1, int& r1p, int& r2p){
+        r1p = -1; r2p = -1; // initialize to invalid pattern
+        bool phitpos1 = false;
+        if(mR1Seed == 1 || mR1SRT){
+            if(mR1PTid == chr1){
+                if(mR1STid != chr1){
+                    phitpos1 = true;
+                }else{
+                    if(std::abs(mR1PSPos - pos1) < std::abs(mR1SSPos - pos1)) phitpos1 = true;
+                }
+            }
+            std::string pat;
+            if(phitpos1) pat = mR1PStrand + mR1SStrand;
+            else pat = mR1SStrand + mR1PStrand;
+            r1p = FsPatMatIdx[pat];
+        }
+
+        phitpos1 = false;
+        if(mR2Seed == 1 || mR2SRT){
+            if(mR2PTid == chr1){
+                if(mR2STid != chr1){
+                    phitpos1 = true;
+                }else{
+                    if(std::abs(mR2PSPos - pos1) < std::abs(mR2SSPos - pos1)) phitpos1 = true;
+                }
+            }
+            std::string pat;
+            if(phitpos1) pat = mR2PStrand + mR2SStrand;
+            else pat = mR2SStrand + mR2PStrand;
+            r2p = FsPatMatIdx[pat];
+        }
     }
 };
 
@@ -89,10 +141,15 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
         uint8_t* idata = bam_aux_get(b, "ZF");
         uint8_t* sdata = bam_aux_get(b, "ST");
         uint8_t* saval = bam_aux_get(b, "SA");
-        int32_t phit = 0, pbeg = -1, pend = -1, shit = 0, sbeg = -1, send = -1;
+        int32_t phit = 0, pbeg = -1, pend = -1, shit = 0, sbeg = -1, send = -1, pspos = -1, sspos = -1;
+        int32_t ptid = -1, stid = -1;
         std::string pseq, sseq;
         std::string pchr, schr;
+        std::string pstd, sstd;
         if(saval){
+            ptid = b->core.tid;
+            if(b->core.flag & BAM_FREVERSE) pstd = "-";
+            else pstd = "+";
             // get optimal SA
             std::string sastr = bam_aux2Z(saval);
             std::vector<std::string> cvs;
@@ -102,14 +159,22 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             if(cvs[1].empty()){
                 util::split(cvs[0], vstr, ",");
                 schr = vstr[0];
+                stid = sam_hdr_name2tid(h, schr.c_str());
                 sbeg = std::atoi(vstr[1].c_str()) - 1;
+                sspos = sbeg;
+                send = sbeg;
+                sstd = vstr[2];
                 optsa = vstr[3];
             }else{
                 for(uint32_t cvidx = 0; cvidx < cvs.size() - 1; ++cvidx){
                     util::split(cvs[cvidx], vstr, ",");
                     if(vstr[3].find_first_of("SH") == vstr[3].find_last_of("SH")){
                         schr = vstr[0];
+                        stid = sam_hdr_name2tid(h, schr.c_str());
                         sbeg = std::atoi(vstr[1].c_str()) - 1;
+                        sspos = sbeg;
+                        send = sbeg;
+                        sstd = vstr[2];
                         optsa = vstr[3];
                         break;
                     }
@@ -125,6 +190,13 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     break;
                 }
             }
+            if(leadsc){
+                pspos = b->core.pos;
+                pend = bam_endpos(b) - 1;
+            }else{
+                pspos = bam_endpos(b) - 1;
+                pend = pspos;
+            }
             // parse supplementary alignment length
             int32_t sascl = 0;
             char* scg = const_cast<char*>(optsa.c_str());
@@ -133,16 +205,21 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     long num = strtol(scg, &scg, 10);
                     if(*scg == 'S'){
                         sascl = num;
+                        if(send != sbeg){
+                            --send;
+                            --sspos;
+                        }
                         break;
+                    }else if(*scg == 'M' || *scg == 'X' || *scg == '=' || *scg == 'D'){
+                        sspos += num;
+                        send += num;
                     }
                 }
                 ++scg;
             }
-            send = sbeg + (b->core.l_qseq - sascl);
             // get seq
             pchr = h->target_name[b->core.tid];
             pbeg = b->core.pos;
-            pend = bam_endpos(b);
             std::string rseq(b->core.l_qseq, '\0');
             for(int32_t i = 0; i < b->core.l_qseq; ++i){
                 rseq[i] = seq_nt16_str[bam_seqi(bam_get_seq(b), i)];
@@ -162,14 +239,14 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             if(phit == 1 && pfm){// check fm
                 if(b->core.tid == pftid &&
                    std::abs(b->core.pos - pfb) < maxoff &&
-                   std::abs(bam_endpos(b) - pfe) < maxoff){
+                   std::abs(pend - pfe) < maxoff){
                     // donothing
                 }else{
                     phit = 1000;
                 }
             }
             if(shit == 1 && sfm){// check fm
-                if(bam_name2id(h, schr.c_str()) == sftid &&
+                if(stid == sftid &&
                    std::abs(sbeg - sfb) < maxoff &&
                    std::abs(send - sfe) < maxoff){
                     // donothing
@@ -199,13 +276,24 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     if(saval){
                         rs->mR1PHit = phit;
                         rs->mR1SHit = shit;
+                        rs->mR1PSPos = pspos;
+                        rs->mR1SSPos = sspos;
+                        rs->mR1PTid = ptid;
+                        rs->mR1STid = stid;
                         rs->mR1PChr = pchr;
                         rs->mR1SChr = schr;
+                        rs->mR1PStrand = pstd;
+                        rs->mR1SStrand = sstd;
                         rs->mR1PBeg = pbeg;
                         rs->mR1PEnd = pend;
                         rs->mR1SBeg = sbeg;
                         rs->mR1SEnd = send;
                         rs->mR1Seed = 1;
+                    }else if(srst){ // dp type
+                        rs->mR1PTid = b->core.tid;
+                        rs->mR2PTid = b->core.mtid;
+                        rs->mR1PSPos = b->core.pos;
+                        rs->mR2PSPos = b->core.mpos;
                     }
                 }else{
                     rs->mR2SVID = svid;
@@ -215,13 +303,24 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     if(saval){
                         rs->mR2PHit = phit;
                         rs->mR2SHit = shit;
+                        rs->mR2PSPos = pspos;
+                        rs->mR2SSPos = sspos;
+                        rs->mR2PTid = ptid;
+                        rs->mR2STid = stid;
                         rs->mR2PChr = pchr;
                         rs->mR2SChr = schr;
+                        rs->mR2PStrand = pstd;
+                        rs->mR2SStrand = sstd;
                         rs->mR2PBeg = pbeg;
                         rs->mR2PEnd = pend;
                         rs->mR2SBeg = sbeg;
                         rs->mR2SEnd = send;
                         rs->mR2Seed = 1;
+                    }else if(srst){
+                        rs->mR2PTid = b->core.tid;
+                        rs->mR1PTid = b->core.mtid;
+                        rs->mR2PSPos = b->core.pos;
+                        rs->mR1PSPos = b->core.mpos;
                     }
                 }
                 rssm[qname] = rs;
@@ -234,13 +333,24 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     if(saval){
                         iter->second->mR1PHit = phit;
                         iter->second->mR1SHit = shit;
+                        iter->second->mR1PSPos = pspos;
+                        iter->second->mR1SSPos = sspos;
+                        iter->second->mR1PTid = ptid;
+                        iter->second->mR1STid = stid;
                         iter->second->mR1PChr = pchr;
                         iter->second->mR1SChr = schr;
+                        iter->second->mR1PStrand = pstd;
+                        iter->second->mR1SStrand = sstd;
                         iter->second->mR1PBeg = pbeg;
                         iter->second->mR1PEnd = pend;
                         iter->second->mR1SBeg = sbeg;
                         iter->second->mR1SEnd = send;
                         iter->second->mR1Seed = 1;
+                    }else if(srst){
+                        iter->second->mR1PTid = b->core.tid;
+                        iter->second->mR2PTid = b->core.mtid;
+                        iter->second->mR1PSPos = b->core.pos;
+                        iter->second->mR2PSPos = b->core.mpos;
                     }
                 }else{
                     iter->second->mR2SVID = svid;
@@ -250,13 +360,24 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     if(saval){
                         iter->second->mR2PHit = phit;
                         iter->second->mR2SHit = shit;
+                        iter->second->mR2PSPos = pspos;
+                        iter->second->mR2SSPos = sspos;
+                        iter->second->mR2PTid = ptid;
+                        iter->second->mR2STid = stid;
                         iter->second->mR2PChr = pchr;
                         iter->second->mR2SChr = schr;
+                        iter->second->mR2PStrand = pstd;
+                        iter->second->mR2SStrand = sstd;
                         iter->second->mR2PBeg = pbeg;
                         iter->second->mR2PEnd = pend;
                         iter->second->mR2SBeg = sbeg;
                         iter->second->mR2SEnd = send;
                         iter->second->mR2Seed = 1;
+                    }else if(srst){
+                        iter->second->mR2PTid = b->core.tid;
+                        iter->second->mR1PTid = b->core.mtid;
+                        iter->second->mR2PSPos = b->core.pos;
+                        iter->second->mR1PSPos = b->core.mpos;
                     }
                 }
             }
