@@ -181,7 +181,7 @@ bool SVRecord::refineSRBp(const Options* opt, const bam_hdr_t* hdr, const char* 
     mProbeEndC = mConsensus.substr(std::max(0, ad.mCSEnd - 1 - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
     // Get probe sequences used for allele fraction computation
     if(mBpInsSeq.length() > 0){// Put inserted sequence after breakpoint back if possible
-        mConsensus = mConsensus.substr(0, ad.mCSStart + 1) + mBpInsSeq + mConsensus.substr(ad.mCSStart + 1);
+        mConsensus = mConsensus.substr(0, ad.mCSStart) + mBpInsSeq + mConsensus.substr(ad.mCSEnd-1);
         ad.mCSEnd += mBpInsSeq.length();
         mProbeBegA = mConsensus.substr(std::max(0, ad.mCSStart - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
         mProbeEndA = mConsensus.substr(std::max(0, ad.mCSEnd - opt->filterOpt->mMinFlankSize), 2 * opt->filterOpt->mMinFlankSize);
