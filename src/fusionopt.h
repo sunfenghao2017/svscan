@@ -277,9 +277,9 @@ struct FusionOptions{
     /** test whether an fusion event contains hot gene partner
      * @param hgene head gene
      * @param tgene tail gene
-     * @return true if fusion event contains hot gene partner
+     * @return 1 if hgene is hot, 2 if tgene is hot, 3 if both hot
      */
-    bool hasWhiteGene(const std::string& hgene, const std::string& tgene);
+    int hasWhiteGene(const std::string& hgene, const std::string& tgene);
 
     /** test whether an fusion event contains black gene partner
      * @param hgene head gene

@@ -103,13 +103,15 @@ bool FusionOptions::matchHotDirec(const std::string& hgene, const std::string& t
     return false;
 }
 
-bool FusionOptions::hasWhiteGene(const std::string& hgene, const std::string& tgene){
+int FusionOptions::hasWhiteGene(const std::string& hgene, const std::string& tgene){
     if(!mInitialized) init();
     if(mWhiteGenes.empty()) return true;
     auto hiter = mWhiteGenes.find(hgene);
     auto titer = mWhiteGenes.find(tgene);
-    if(hiter != mWhiteGenes.end() || titer != mWhiteGenes.end()) return true;
-    return false;
+    int ret = 0;
+    if(hiter != mWhiteGenes.end()) ret |= 1;
+    if(titer != mWhiteGenes.end()) ret |= 2;
+    return ret;
 }
 
 bool FusionOptions::hasBlackGene(const std::string& hgene, const std::string& tgene){

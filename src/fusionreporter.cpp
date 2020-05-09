@@ -75,7 +75,8 @@ void FusionReporter::str2fsgs(FuseGeneList& fsgl, const std::string& fsStr, cons
             if((!fg.hfrom1) && bp2trs[b2].gene == fg.hgene) fg.hidx = b2;
             if((!fg.tfrom1) && bp2trs[b2].gene == fg.tgene) fg.tidx = b2;
         }
-        if(fvstr.size() > 3) fg.cigar = fvstr[3];
+        fg.hotflag = std::atoi(fvstr[3].c_str());
+        if(fvstr.size() > 4) fg.cigar = fvstr[4];
         fsgl.push_back(fg);
     }
 }
@@ -205,6 +206,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     else fgr.fusepattern = "-+";
                 }
             }
+            fgr.fusepattern = adjustPattern(fgl[i].hotflag, fgr.fusepattern);
             fgr.fusionmols = svr.molRescued;                         // FusionMols
             fgr.totalmols = totalmols;                               // TotalMols
             fgr.fuserate = svr.af;                                   // FusionRate

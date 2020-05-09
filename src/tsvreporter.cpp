@@ -151,11 +151,10 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
     for(uint32_t i = 0; i < gl.size(); ++i){
         for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
             if(mOpt->rnamode) gl[i].mFuseGene[j].status |= FUSION_FCALLFROMRNASEQ; // mask rna/dna calling
-            if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
-                gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
-                if(mOpt->fuseOpt->matchHotDirec(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
-                    gl[i].mFuseGene[j].status |= FUSION_FCOMMONHOTDIRECT;
-                }
+            gl[i].mFuseGene[j].hotflag = mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene);
+            if(gl[i].mFuseGene[j].hotflag) gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
+            if(mOpt->fuseOpt->matchHotDirec(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
+                gl[i].mFuseGene[j].status |= FUSION_FCOMMONHOTDIRECT;
             }
             if(gl[i].mFuseGene[j].hgene != gl[i].mFuseGene[j].tgene){
                 fpairs[gl[i].mFuseGene[j].hgene].insert(gl[i].mFuseGene[j].tgene);
@@ -196,9 +195,6 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
             }
             if(mOpt->fuseOpt->inWhiteList(gl[i].mFuseGene[j].tgene, gl[i].mFuseGene[j].hgene)){
                 gl[i].mFuseGene[j].status |= FUSION_FMINDB;
-            }
-            if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
-                gl[i].mFuseGene[j].status |= FUSION_FHOTGENE;
             }
             if(gl[i].mFuseGene[j].status & FUSION_FINSAMEGENE){
                 int32_t minExon = -1, maxExon = -2;
@@ -271,6 +267,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                 std::swap(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene);
                 std::swap(gl[i].mFuseGene[j].hidx, gl[i].mFuseGene[j].tidx);
                 std::swap(gl[i].mFuseGene[j].hstrand, gl[i].mFuseGene[j].tstrand);
+                gl[i].mFuseGene[j].hotflag  -= 3;
                 gl[i].mFuseGene[j].status |= FUSION_FCOMMONHOTDIRECT;
                 if(gl[i].mFuseGene[j].status & FUSION_FHTFLSWAPPED){
                     gl[i].mFuseGene[j].status &= (~FUSION_FHTFLSWAPPED);
@@ -394,6 +391,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     fsr.fusepattern = svr->getFsPat(gi.mFuseGene[i].status & FUSION_FHTFLSWAPPED);
+    fsr.fusepattern = adjustPattern(gi.mFuseGene[i].hotflag, fsr.fusepattern);
     // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
     if(gi.mFuseGene[i].hfrom1){
         fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;

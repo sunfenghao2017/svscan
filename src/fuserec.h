@@ -309,4 +309,25 @@ inline void markMirrorFusionEvent(FusionRecordList& frl){
         }
     }
 }
+
+inline std::string adjustPattern(const int& mask, const std::string& pat){
+    bool needSwapt = false;
+    if(mask & 1){//h is hot
+        if(pat[0] == '-'){
+            needSwapt = true;
+        }
+    }else if(mask & 2){//t is hot
+        if(pat[1] == '-'){
+            needSwapt = true;
+        }
+    }
+    if(needSwapt){
+        if(pat == "++") return pat;
+        if(pat == "+-") return "-+";
+        if(pat == "-+") return "+-";
+        if(pat == "--") return "++";
+    }
+    return pat;
+}
+
 #endif

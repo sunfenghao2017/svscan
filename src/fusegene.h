@@ -206,6 +206,7 @@ struct FuseGene{
     int32_t hidx;        ///< hgene index
     bool hfrom1;         ///< hgene is from breakpoint1
     bool tfrom1;         ///< tgene is from breakpoint1
+    int hotflag;         ///< hot gene status;
     int32_t tidx;        ///< tgene index
     std::string cigar;   ///< cigar string to describe breakpoint(rna only)
     TFUSION_FLAG status; ///< mask to show fusion status 1:gene,2:normal,4:hot,8:common,16:indb,32:mirror
@@ -223,6 +224,7 @@ struct FuseGene{
         tidx = -1;
         hfrom1 = false;
         tfrom1 = false;
+        hotflag=  0;
     }
 
     /** FuseGene destructor */
@@ -235,7 +237,8 @@ struct FuseGene{
         std::stringstream ss;
         ss << hgene << "->" << tgene << "|";
         ss << hgene << "," << hend << "," << hstrand << "|";
-        ss << tgene << "," << tend << "," << tstrand;
+        ss << tgene << "," << tend << "," << tstrand << "|";
+        ss << hotflag;
         if(!cigar.empty()) ss << "|" << cigar;
         return ss.str();
     }
@@ -266,6 +269,7 @@ struct FuseGene{
         oss << "hfrom1:  " << std::boolalpha << hfrom1 << "\n";
         oss << "tfrom1:  " << std::boolalpha << tfrom1 << "\n";
         oss << "cigar:   " << cigar << "\n";
+        oss << "hotflat: " << hotflag << "\n";
         oss << "status:  " << status << "\n";
         return oss.str();
     }
