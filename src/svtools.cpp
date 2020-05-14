@@ -160,7 +160,7 @@ int main(int argc, char** argv){
     ScopeRptOpt* scRptOpt = new ScopeRptOpt();
     CLI::App* pscrpt = app.add_subcommand("scrpt", "generate scope report");
     pscrpt->add_option("-i,--infs", scRptOpt->infs, "input fusion result")->required(true)->check(CLI::ExistingFile);
-    pscrpt->add_option("-o,--outfs", scRptOpt->outfs, "output fusion result")->required(true)->check(CLI::ExistingFile);
+    pscrpt->add_option("-o,--outfs", scRptOpt->outfs, "output fusion result")->required(true);
     pscrpt->add_flag("-r,--rnamode", scRptOpt->fromrna, "from rna seq if set");
     // parse arguments
     CLI11_PARSE(app, argc, argv);

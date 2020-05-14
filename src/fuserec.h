@@ -46,11 +46,13 @@ struct FusionRecSchema{
     int svint = 34;
     int fsmask = 35;
     int fsHits = 36;
-    int ts1name = 37;
-    int ts1pos = 38;
-    int ts2name = 39;
-    int ts2pos = 40;
-    int cigar = 41;
+    int exon1 = 37;
+    int exon2 = 38;
+    int ts1name = 39;
+    int ts1pos = 40;
+    int ts2name = 41;
+    int ts2pos = 42;
+    int cigar = 43;
 };
 
 /** class to store an fusion record */
@@ -340,9 +342,11 @@ struct FusionRecord{
             ts2name = vstr[s.ts2name];
             ts2pos = std::atoi(vstr[s.ts2pos].c_str());
             cigar = vstr[s.cigar];
+        }else{
+            exon1 = std::atoi(vstr[s.exon1].c_str());
+            exon2 = std::atoi(vstr[s.exon2].c_str());
         }
     }
-
 };
 
 /** class to store a list of FusionRecords */
@@ -424,7 +428,7 @@ inline std::string adjustPattern(const int& mask, const std::string& pat, const 
         }
     }
     if(needSwapt){
-        if(pat == "++") return pat;
+        if(pat == "++") return "--";
         if(pat == "+-") return "-+";
         if(pat == "-+") return "+-";
         if(pat == "--") return "++";

@@ -439,7 +439,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
             rev = true;
         }
         if(iter != mOpt->fuseOpt->mHotPartnerMap.end()){
-            iter->second->adjexon(fsr.ie1, fsr.ie2, rev);
+            iter->second->adjexon(fsr.ie1, fsr.ie2, fsr.exon1, fsr.exon2, rev);
         }
     }
     // FusinSequence fseqBp

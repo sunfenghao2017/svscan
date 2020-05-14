@@ -23,18 +23,6 @@ struct ScopeRptOpt{
         fr.close();
         // choose to output
         for(auto iter= fm.begin(); iter != fm.end(); ++iter){
-            // skip mirror indb
-            bool norpt = false;
-            for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if(iter->second[i].fsmask & FUSION_FINDB){
-                    for(uint32_t j = 0; j < iter->second.size(); ++j){
-                        iter->second[i].report = false;
-                    }
-                    norpt = true;
-                    break;
-                }
-            }
-            if(norpt) continue;
             // get highest af one
             double maxaf = iter->second[0].fuserate;
             int maxfr = iter->second[0].fusionmols;

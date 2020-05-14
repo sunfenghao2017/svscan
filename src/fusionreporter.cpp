@@ -247,7 +247,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     rev = true;
                 }
                 if(iter != fuseOpt->mHotPartnerMap.end()){
-                    iter->second->adjexon(fgr.ie1, fgr.ie2, rev);
+                    iter->second->adjexon(fgr.ie1, fgr.ie2, fgr.exon1, fgr.exon2, rev);
                 }
             }
             fgr.fusionsequence = svr.svSeq;                           // FusionSequence
