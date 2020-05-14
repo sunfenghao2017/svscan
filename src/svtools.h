@@ -13,6 +13,7 @@
 #include "svdnadb.h"
 #include "svdebug.h"
 #include "svfilter.h"
+#include "scoperpt.h"
 #include "fusewlist.h"
 #include "fusionreporter.h"
 

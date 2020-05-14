@@ -156,6 +156,12 @@ int main(int argc, char** argv){
     prsvg->add_option("-i,--incfg", rsvgOpt->incfg, "input fusion gene info")->required(true)->check(CLI::ExistingFile);
     prsvg->add_option("-o,--outcfg", rsvgOpt->outcfg, "output fusion construct info", true);
     prsvg->add_option("-f,--outfa", rsvgOpt->outfa, "output fasta file of fusion seqs", true);
+    // scope rpt
+    ScopeRptOpt* scRptOpt = new ScopeRptOpt();
+    CLI::App* pscrpt = app.add_subcommand("scrpt", "generate scope report");
+    pscrpt->add_option("-i,--infs", scRptOpt->infs, "input fusion result")->required(true)->check(CLI::ExistingFile);
+    pscrpt->add_option("-o,--outfs", scRptOpt->outfs, "output fusion result")->required(true)->check(CLI::ExistingFile);
+    pscrpt->add_flag("-r,--rnamode", scRptOpt->fromrna, "from rna seq if set");
     // parse arguments
     CLI11_PARSE(app, argc, argv);
     // merge
@@ -238,5 +244,9 @@ int main(int argc, char** argv){
     if(prsvg->parsed()){
         rsvgOpt->init();
         rsvgOpt->gensv();
+    }
+    // scope rpt
+    if(pscrpt->parsed()){
+        scRptOpt->out();
     }
 }

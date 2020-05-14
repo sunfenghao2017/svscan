@@ -7,6 +7,52 @@
 #include "svutil.h"
 #include "fusionopt.h"
 
+/** class to store fusion record schema */
+struct FusionRecSchema{
+    int fusegene = 0;
+    int fusionmols = 1;
+    int totalmols = 2;
+    int fuserate = 3;
+    int indb = 4;
+    int fusepattern = 5;
+    int status = 6;
+    int distance = 7;
+    int gene1 = 8;
+    int chr1 = 9;
+    int jctpos1 = 10;
+    int strand1 = 11;
+    int transcript1 = 12;
+    int gene2 = 13;
+    int chr2 = 14;
+    int jctpos2 = 15;
+    int strand2 = 16;
+    int transcript2 = 17;
+    int fusionsequence = 18;
+    int fseqbp = 19;
+    int svt = 20;
+    int svsize = 21;
+    int srcount = 22;
+    int dpcount = 23;
+    int srrescued = 24;
+    int dprescued = 25;
+    int srrefcount = 26;
+    int dprefcount = 27;
+    int srsrescued = 28;
+    int srsmalncnt = 29;
+    int srsmrate = 30;
+    int insbp = 31;
+    int insseq = 32;
+    int svid = 33;
+    int svint = 34;
+    int fsmask = 35;
+    int fsHits = 36;
+    int ts1name = 37;
+    int ts1pos = 38;
+    int ts2name = 39;
+    int ts2pos = 40;
+    int cigar = 41;
+};
+
 /** class to store an fusion record */
 struct FusionRecord{
     std::string fusegene;       ///< fusion gene hgene->tgene
@@ -14,6 +60,7 @@ struct FusionRecord{
     int32_t fusionmols;         ///< # of molecules supporting fusion event
     int32_t totalmols;          ///< # of molecules supporting fusion event and refrence type
     float fuserate;             ///< rate of fusionmols in totalmols
+    std::string status;         ///< status str
     std::string gene1;          ///< hgene
     std::string chr1;           ///< chr on which hgene situated
     int32_t jctpos1;            ///< junction position of hgene on chr1
@@ -245,6 +292,57 @@ struct FusionRecord{
         gene1 = ig1.fsinfo;
         gene2 = ig2.fsinfo;
     }
+
+    /** line2rec */
+    void line2rec(const std::string& line, const FusionRecSchema& s){
+        std::vector<std::string> vstr;
+        util::split(line, vstr, "\t");
+        fusegene = vstr[s.fusegene];
+        fusionmols = std::atoi(vstr[s.fusionmols].c_str());
+        totalmols = std::atoi(vstr[s.totalmols].c_str());
+        fuserate = std::atof(vstr[s.fuserate].c_str());
+        indb = vstr[s.indb];
+        fusepattern = vstr[s.fusepattern];
+        status = vstr[s.status];
+        distance = std::atoi(vstr[s.distance].c_str());
+        gene1 = vstr[s.gene1];
+        chr1 = vstr[s.chr1];
+        jctpos1 = std::atoi(vstr[s.jctpos1].c_str());
+        strand1 = vstr[s.strand1];
+        transcript1 = vstr[s.transcript1];
+        gene2 = vstr[s.gene2];
+        chr2 = vstr[s.chr2];
+        jctpos2 = std::atoi(vstr[s.jctpos2].c_str());
+        strand2 = vstr[s.strand2];
+        transcript2 = vstr[s.transcript2];
+        fusionsequence = vstr[s.fusionsequence];
+        fseqbp = std::atoi(vstr[s.fseqbp].c_str());
+        svt = vstr[s.svt];
+        svsize = std::atoi(vstr[s.svsize].c_str());
+        srcount = std::atoi(vstr[s.srcount].c_str());
+        dpcount = std::atoi(vstr[s.dpcount].c_str());
+        srrescued = std::atoi(vstr[s.srrescued].c_str());
+        dprescued = std::atoi(vstr[s.dprescued].c_str());
+        srrefcount = std::atoi(vstr[s.srrefcount].c_str());
+        dprefcount = std::atoi(vstr[s.dprefcount].c_str());
+        srsrescued = std::atoi(vstr[s.srsrescued].c_str());
+        srsmalncnt = std::atoi(vstr[s.srsmalncnt].c_str());
+        srsmrate = std::atof(vstr[s.srsmrate].c_str());
+        insbp = std::atoi(vstr[s.insbp].c_str());
+        insseq = vstr[s.insseq];
+        svid = std::atoi(vstr[s.svid].c_str());
+        svint = std::atoi(vstr[s.svint].c_str());
+        fsmask = std::atoi(vstr[s.fsmask].c_str());
+        fsHits = std::atoi(vstr[s.fsHits].c_str());
+        if(fsmask & FUSION_FCALLFROMRNASEQ){
+            ts1name = vstr[s.ts1name];
+            ts1pos = std::atoi(vstr[s.ts1pos].c_str());
+            ts2name = vstr[s.ts2name];
+            ts2pos = std::atoi(vstr[s.ts2pos].c_str());
+            cigar = vstr[s.cigar];
+        }
+    }
+
 };
 
 /** class to store a list of FusionRecords */
