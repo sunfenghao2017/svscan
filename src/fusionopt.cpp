@@ -92,6 +92,7 @@ void FusionOptions::init(){
     if(!mExtraAnnoList.empty()) mExtraAnnotator.init(mExtraAnnoList);
     if(!mFsRptList.empty()) initFusionRptRange();
     if(!mGeneCrdList.empty()) initGeneCrdRange();
+    if(!mHotPartnerList.empty()) initHotPartner();
     mInitialized = true;
 }
 
@@ -321,4 +322,22 @@ int32_t FusionOptions::geneNear(const std::string& g1, const std::string& chr1, 
         }
     }
     return 0;
+}
+
+void FusionOptions::initHotPartner(){
+    if(mHotPartnerList.empty()) return;
+    std::ifstream fr(mHotPartnerList);
+    std::string line;
+    std::vector<std::string> vstr, hvs, ivs;
+    while(std::getline(fr, line)){
+        util::split(line, vstr, "\t");
+        std::string fsgene = vstr[0] + "->" + vstr[1];
+        HotPartner *hp = new HotPartner();
+        util::split(vstr[2], hvs, ";");
+        for(auto& e: hvs){
+            util::split(e, ivs, ",");
+            hp->hotpairs.push_back({std::atoi(ivs[0].c_str()), std::atoi(ivs[1].c_str())});
+        }
+        mHotPartnerMap[fsgene] = hp;
+    }
 }

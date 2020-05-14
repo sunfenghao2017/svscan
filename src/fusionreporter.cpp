@@ -215,22 +215,40 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;              // Strand1;
                 fgr.transcript1 = trsl1[fgl[i].hidx].getTrsWithVer(); // Transcript2
                 fgr.exon1 = trsl1[fgl[i].hidx].exon;                  // exon1
+                fgr.ie1 = std::atoi(trsl1[fgl[i].hidx].number.c_str()); // ie1
             }else{
                 fgr.jctpos1 = svr.bp2Pos;                             // JunctionPosition1
                 fgr.strand1 = trsl2[fgl[i].hidx].strand;              // Strand1;
                 fgr.transcript1 = trsl2[fgl[i].hidx].getTrsWithVer(); // Transcript1
                 fgr.exon1 = trsl2[fgl[i].hidx].exon;                  // exon1
+                fgr.ie1 = std::atoi(trsl2[fgl[i].hidx].number.c_str()); // ie1
             }
             if(fgl[i].tfrom1){
                 fgr.jctpos2 = svr.bp1Pos;                             // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;              // Strand2
                 fgr.transcript2 = trsl1[fgl[i].tidx].getTrsWithVer(); // Transcript2
                 fgr.exon2 = trsl1[fgl[i].tidx].exon;                  // exon2
+                fgr.ie2 = std::atoi(trsl1[fgl[i].tidx].number.c_str()); // ie2
             }else{
                 fgr.jctpos2 = svr.bp2Pos;                             // JunctionPosition2
                 fgr.strand2 = trsl2[fgl[i].tidx].strand;              // Strand2
                 fgr.transcript2 = trsl2[fgl[i].tidx].getTrsWithVer(); // Transcript2
                 fgr.exon2 = trsl2[fgl[i].tidx].exon;                  // exon2
+                fgr.ie2 = std::atoi(trsl2[fgl[i].tidx].number.c_str()); // ie2
+            }
+            // adjust exon
+            if(fuseOpt){
+                std::string key = fgr.gene1 + "->" + fgr.gene2;
+                bool rev = false;
+                auto iter = fuseOpt->mHotPartnerMap.find(key);
+                if(iter == fuseOpt->mHotPartnerMap.end()){
+                    key = fgr.gene2 + "->" + fgr.gene1;
+                    iter = fuseOpt->mHotPartnerMap.find(key);
+                    rev = true;
+                }
+                if(iter != fuseOpt->mHotPartnerMap.end()){
+                    iter->second->adjexon(fgr.ie1, fgr.ie2, rev);
+                }
             }
             fgr.fusionsequence = svr.svSeq;                           // FusionSequence
             fgr.fseqbp = svr.seqBp;                                   // fseqBp

@@ -76,6 +76,7 @@ int main(int argc, char** argv){
     pfsrpt->add_option("--ndbdropmask", fuserptOpt->fuseOpt->mNDBDropMask, "fusion not in db drop bit mask", true);
     pfsrpt->add_option("--keepmasks", fuserptOpt->fuseOpt->mKeepMasks, "fusion keep masks", true);
     pfsrpt->add_option("--primarymask", fuserptOpt->fuseOpt->mPrimaryMask, "primary fusion mask", true);
+    pfsrpt->add_option("--hotfspartner", fuserptOpt->fuseOpt->mHotPartnerList, "hot fusion partner exon list")->check(CLI::ExistingFile);
     // dna annodb
     SVDNADBOpt* annDBOpt = new SVDNADBOpt();
     CLI::App* panndb = app.add_subcommand("dnadb", "prepare DNA sv annotation database for svscan");

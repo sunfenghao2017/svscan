@@ -400,6 +400,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.strand1 = gi.mGene1[gi.mFuseGene[i].hidx].strand;
         fsr.transcript1 = gi.mGene1[gi.mFuseGene[i].hidx].getTrs();
         fsr.exon1 = gi.mGene1[gi.mFuseGene[i].hidx].exon;
+        fsr.ie1 = std::atoi(gi.mGene1[gi.mFuseGene[i].hidx].number.c_str());
     }else{
         fsr.gene1 = gi.mGene2[gi.mFuseGene[i].hidx].gene;
         fsr.chr1 = gi.mGene2[gi.mFuseGene[i].hidx].chr;
@@ -407,6 +408,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.strand1 = gi.mGene2[gi.mFuseGene[i].hidx].strand;
         fsr.transcript1 = gi.mGene2[gi.mFuseGene[i].hidx].getTrs();
         fsr.exon1 = gi.mGene2[gi.mFuseGene[i].hidx].exon;
+        fsr.ie1 = std::atoi(gi.mGene2[gi.mFuseGene[i].hidx].number.c_str());
     }
     // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
     if(gi.mFuseGene[i].tfrom1){
@@ -416,6 +418,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.strand2 = gi.mGene1[gi.mFuseGene[i].tidx].strand;
         fsr.transcript2 = gi.mGene1[gi.mFuseGene[i].tidx].getTrs();
         fsr.exon2 = gi.mGene1[gi.mFuseGene[i].tidx].exon;
+        fsr.ie2 = std::atoi(gi.mGene1[gi.mFuseGene[i].tidx].number.c_str());
     }else{
         fsr.gene2 = gi.mGene2[gi.mFuseGene[i].tidx].gene;
         fsr.chr2 = gi.mGene2[gi.mFuseGene[i].tidx].chr;
@@ -423,6 +426,21 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.strand2 = gi.mGene2[gi.mFuseGene[i].tidx].strand;
         fsr.transcript2 = gi.mGene2[gi.mFuseGene[i].tidx].getTrs();
         fsr.exon2 = gi.mGene2[gi.mFuseGene[i].tidx].exon;
+        fsr.ie2 = std::atoi(gi.mGene2[gi.mFuseGene[i].tidx].number.c_str());
+    }
+    // adjust exon
+    if(mOpt->fuseOpt){
+        std::string key = fsr.gene1 + "->" + fsr.gene2;
+        bool rev = false;
+        auto iter = mOpt->fuseOpt->mHotPartnerMap.find(key);
+        if(iter == mOpt->fuseOpt->mHotPartnerMap.end()){
+            key = fsr.gene2 + "->" + fsr.gene1;
+            iter = mOpt->fuseOpt->mHotPartnerMap.find(key);
+            rev = true;
+        }
+        if(iter != mOpt->fuseOpt->mHotPartnerMap.end()){
+            iter->second->adjexon(fsr.ie1, fsr.ie2, rev);
+        }
     }
     // FusinSequence fseqBp
     if(svr->mSVT == 4 || (!svr->mPrecise)){

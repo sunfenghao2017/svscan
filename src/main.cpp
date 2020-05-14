@@ -77,6 +77,7 @@ int main(int argc, char** argv){
     app.add_option("--ndbdropmask", opt->fuseOpt->mNDBDropMask, "fusion not in db drop bit mask", true)->group("Fusion Options");
     app.add_option("--keepmasks", opt->fuseOpt->mKeepMasks, "fusion keep masks", true)->group("Fusion Options");
     app.add_option("--primarymask", opt->fuseOpt->mPrimaryMask, "primary fusion mask", true)->group("Fusion Options");
+    app.add_option("--hotfspartner", opt->fuseOpt->mHotPartnerList, "hot fusion partner exon list")->check(CLI::ExistingFile)->group("Fusion Options");
     // parse arguments
     CLI11_PARSE(app, argc, argv);
     // validate arguments

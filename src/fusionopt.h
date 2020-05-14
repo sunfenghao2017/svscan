@@ -13,6 +13,38 @@
 #include "svutil.h"
 #include <util.h>
 
+// exon adjust
+struct HotPartner{
+    std::vector<std::pair<int, int>> hotpairs;
+    
+    void adjexon(int32_t& ie1, int32_t& ie2, bool rev){
+        int mi = 0;
+        int mv = std::abs(hotpairs[0].first - ie1) + std::abs(hotpairs[0].second - ie2);
+        if(rev) mv = std::abs(hotpairs[0].first - ie2) + std::abs(hotpairs[0].second - ie1);
+        for(uint32_t i = 1; i < hotpairs.size(); ++i){
+            int tmv = std::abs(hotpairs[i].first - ie1) + std::abs(hotpairs[i].second - ie2);
+            if(rev) tmv = std::abs(hotpairs[i].first - ie2) + std::abs(hotpairs[i].second - ie1);
+            if(tmv < mv){
+                mi = i;
+                mv = tmv;
+            }
+        }
+        if(mv <= 2){
+            if(rev){
+                ie1 = hotpairs[mi].second;
+                ie2 = hotpairs[mi].first;
+            }else{
+                ie1 = hotpairs[mi].first;
+                ie2 = hotpairs[mi].second;
+            }
+        }
+    }
+};
+
+// type to store hot partner map
+typedef std::map<std::string, HotPartner*> HotPartnerMap;
+
+// inter gene annotation 
 struct InterGeneInfo{
     std::string upgene;
     std::string dngene;
@@ -36,7 +68,7 @@ struct InterGeneInfo{
     }
 
     inline void getFuseGeneName(){
-        fsgene = "[" + upgene + "," + dngene + "]";
+        fsgene = "intergenic[" + upgene + "," + dngene + "]";
     }
 };
 
@@ -185,6 +217,7 @@ struct FusionOptions{
     std::string mGeneCrdList;             ///< gene coordinate range list
     std::string mSameGeneSVList;          ///< fusion event in same gene to be reported
     std::string mExtraAnnoList;           ///< fusion gene which should be annotated seperately
+    std::string mHotPartnerList;          ///< fusion hotpartner list file
     std::string mInfile;                  ///< input file of svscan sv tsv format result file
     std::string mOutFile = "fs.tsv";      ///< output file of reported fusion
     std::string mSVModFile;               ///< output sv tsv file with fsmask updated
@@ -202,6 +235,7 @@ struct FusionOptions{
     TFUSION_FLAG mNDBDropMask;            ///< fusion not in db will be dropped if any bit met
     TFUSION_FLAG mIDBDropMask;            ///< fusion(mirror) in db will be dropped  any bit met
     std::vector<TFUSION_FLAG> mKeepMasks; ///< fusion do not drop must satisify any one mask satisfied in all bits to keep
+    HotPartnerMap mHotPartnerMap;         ///< hot fusion partner map
     TFUSION_FLAG mPrimaryMask;            ///< fusion will be mask as primary and output always, others will drop if mirror 
 
     /** FusionOptions constructor */
@@ -234,6 +268,9 @@ struct FusionOptions{
 
     /** initialize filter options */
     void init();
+
+    /** initialize hotpartner map */
+    void initHotPartner();
 
     /** initialize gene coordinate range list */
     void initGeneCrdRange();

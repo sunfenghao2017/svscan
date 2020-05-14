@@ -45,6 +45,8 @@ struct FusionRecord{
     TFUSION_FLAG fsmask;        ///< fusion mask
     int32_t exon1;              ///< approximate gene1 exon(DNA only)
     int32_t exon2;              ///< approximate gene2 exon(DNA only)
+    int32_t ie1;                ///< intron/exon count 
+    int32_t ie2;                ///< intron/exon count
     std::string ts1name;        ///< transcript1 name(RNA only)
     int32_t ts1pos;             ///< transcript1 breakpoint(RNA only)
     std::string ts2name;        ///< transcript2 name(RNA only)
