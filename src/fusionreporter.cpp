@@ -206,7 +206,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     else fgr.fusepattern = "-+";
                 }
             }
-            fgr.fusepattern = adjustPattern(fgl[i].hotflag, fgr.fusepattern);
+            fgr.fusepattern = adjustPattern(fgl[i].hotflag, fgr.fusepattern, fgl[i].hstrand+fgl[i].tstrand);
             fgr.fusionmols = svr.molRescued;                         // FusionMols
             fgr.totalmols = totalmols;                               // TotalMols
             fgr.fuserate = svr.af;                                   // FusionRate

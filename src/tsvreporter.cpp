@@ -391,7 +391,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     fsr.fusepattern = svr->getFsPat(gi.mFuseGene[i].status & FUSION_FHTFLSWAPPED);
-    fsr.fusepattern = adjustPattern(gi.mFuseGene[i].hotflag, fsr.fusepattern);
+    fsr.fusepattern = adjustPattern(gi.mFuseGene[i].hotflag, fsr.fusepattern,  gi.mFuseGene[i].hstrand+gi.mFuseGene[i].tstrand);
     // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
     if(gi.mFuseGene[i].hfrom1){
         fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;
