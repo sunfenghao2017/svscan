@@ -267,7 +267,7 @@ void Stats::makeFuseRec(const SVSet& svs, GeneInfoList& gl){
                 std::swap(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene);
                 std::swap(gl[i].mFuseGene[j].hidx, gl[i].mFuseGene[j].tidx);
                 std::swap(gl[i].mFuseGene[j].hstrand, gl[i].mFuseGene[j].tstrand);
-                gl[i].mFuseGene[j].hotflag  -= 3;
+                if(gl[i].mFuseGene[j].hotflag != 3) gl[i].mFuseGene[j].hotflag  -= 3;
                 gl[i].mFuseGene[j].status |= FUSION_FCOMMONHOTDIRECT;
                 if(gl[i].mFuseGene[j].status & FUSION_FHTFLSWAPPED){
                     gl[i].mFuseGene[j].status &= (~FUSION_FHTFLSWAPPED);
@@ -391,7 +391,7 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
     fsr.fusegene = gi.mFuseGene[i].hgene + "->" + gi.mFuseGene[i].tgene; // FusionGene
     // FusionPattern
     fsr.fusepattern = svr->getFsPat(gi.mFuseGene[i].status & FUSION_FHTFLSWAPPED);
-    fsr.fusepattern = adjustPattern(gi.mFuseGene[i].hotflag, fsr.fusepattern,  gi.mFuseGene[i].hstrand+gi.mFuseGene[i].tstrand);
+    std::string gspat = "";
     // Gene1 Chr1 JunctionPosition1 Strand1 Transcript1
     if(gi.mFuseGene[i].hfrom1){
         fsr.gene1 = gi.mGene1[gi.mFuseGene[i].hidx].gene;
@@ -409,7 +409,9 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.transcript1 = gi.mGene2[gi.mFuseGene[i].hidx].getTrs();
         fsr.exon1 = gi.mGene2[gi.mFuseGene[i].hidx].exon;
         fsr.ie1 = std::atoi(gi.mGene2[gi.mFuseGene[i].hidx].number.c_str());
+        if(gi.mFuseGene[i].hotflag != 3) gi.mFuseGene[i].hotflag = 3 - gi.mFuseGene[i].hotflag;
     }
+    gspat.append(fsr.strand1);
     // Gene2 Chr2 JunctionPosition2 Strand2 Transcript2
     if(gi.mFuseGene[i].tfrom1){
         fsr.gene2 = gi.mGene1[gi.mFuseGene[i].tidx].gene;
@@ -428,6 +430,8 @@ void Stats::toFuseRec(FusionRecord& fsr, const SVRecord* svr, GeneInfo& gi, int3
         fsr.exon2 = gi.mGene2[gi.mFuseGene[i].tidx].exon;
         fsr.ie2 = std::atoi(gi.mGene2[gi.mFuseGene[i].tidx].number.c_str());
     }
+    gspat.append(fsr.strand2);
+    fsr.fusepattern = adjustPattern(gi.mFuseGene[i].hotflag, fsr.fusepattern,  gspat);
     // adjust exon
     if(mOpt->fuseOpt){
         std::string key = fsr.gene1 + "->" + fsr.gene2;

@@ -18,10 +18,24 @@ struct HotPartner{
     std::vector<std::pair<int, int>> hotpairs;
     
     void adjexon(const int32_t& ie1, const int32_t& ie2, int32_t& e1, int32_t& e2, bool rev){
-        int mi = 0;
-        int mv = std::abs(hotpairs[0].first - ie1) + std::abs(hotpairs[0].second - ie2);
-        if(rev) mv = std::abs(hotpairs[0].first - ie2) + std::abs(hotpairs[0].second - ie1);
-        for(uint32_t i = 1; i < hotpairs.size(); ++i){
+        uint32_t mi = 0;
+        while(mi < hotpairs.size()){
+            if(rev){
+                if(std::abs(hotpairs[mi].first - ie2) < 2 && std::abs(hotpairs[mi].second - ie1) < 2) break;
+            }else{
+                if(std::abs(hotpairs[mi].first - ie1) < 2 && std::abs(hotpairs[mi].second - ie2) < 2) break;
+            }
+            ++mi;
+        }
+        if(mi == hotpairs.size()) return;
+        int mv = std::abs(hotpairs[mi].first - ie1) + std::abs(hotpairs[mi].second - ie2);
+        if(rev) mv = std::abs(hotpairs[mi].first - ie2) + std::abs(hotpairs[mi].second - ie1);
+        for(uint32_t i = mi + 1; i < hotpairs.size(); ++i){
+            if(rev){
+                if(std::abs(hotpairs[mi].first - ie2) > 1 || std::abs(hotpairs[mi].second - ie1) > 1) continue;
+            }else{
+                if(std::abs(hotpairs[mi].first - ie1) > 1 || std::abs(hotpairs[mi].second - ie2) > 1) continue;
+            }
             int tmv = std::abs(hotpairs[i].first - ie1) + std::abs(hotpairs[i].second - ie2);
             if(rev) tmv = std::abs(hotpairs[i].first - ie2) + std::abs(hotpairs[i].second - ie1);
             if(tmv < mv){

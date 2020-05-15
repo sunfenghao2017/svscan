@@ -206,10 +206,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     else fgr.fusepattern = "-+";
                 }
             }
-            fgr.fusepattern = adjustPattern(fgl[i].hotflag, fgr.fusepattern, fgl[i].hstrand+fgl[i].tstrand);
             fgr.fusionmols = svr.molRescued;                         // FusionMols
             fgr.totalmols = totalmols;                               // TotalMols
             fgr.fuserate = svr.af;                                   // FusionRate
+            std::string gspat = "";
             if(fgl[i].hfrom1){
                 fgr.jctpos1 = svr.bp1Pos;                             // JunctionPosition1
                 fgr.strand1 = trsl1[fgl[i].hidx].strand;              // Strand1;
@@ -222,7 +222,9 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.transcript1 = trsl2[fgl[i].hidx].getTrsWithVer(); // Transcript1
                 fgr.exon1 = trsl2[fgl[i].hidx].exon;                  // exon1
                 fgr.ie1 = std::atoi(trsl2[fgl[i].hidx].number.c_str()); // ie1
+                if(fgl[i].hotflag != 3) fgl[i].hotflag = 3 - fgl[i].hotflag;
             }
+            gspat.append(fgr.strand1);
             if(fgl[i].tfrom1){
                 fgr.jctpos2 = svr.bp1Pos;                             // JunctionPosition2
                 fgr.strand2 = trsl1[fgl[i].tidx].strand;              // Strand2
@@ -236,6 +238,8 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 fgr.exon2 = trsl2[fgl[i].tidx].exon;                  // exon2
                 fgr.ie2 = std::atoi(trsl2[fgl[i].tidx].number.c_str()); // ie2
             }
+            gspat.append(fgr.strand2);
+            fgr.fusepattern = adjustPattern(fgl[i].hotflag, fgr.fusepattern, gspat);
             // adjust exon
             if(fuseOpt){
                 std::string key = fgr.gene1 + "->" + fgr.gene2;

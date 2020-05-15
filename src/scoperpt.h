@@ -43,6 +43,9 @@ struct ScopeRptOpt{
         for(auto iter= fm.begin(); iter != fm.end(); ++iter){
             for(uint32_t i = 0; i < iter->second.size(); ++i){
                 if(iter->second[i].report){
+                    // remove intron info
+                    iter->second[i].transcript1 = iter->second[i].transcript1.substr(0, iter->second[i].transcript1.find_first_of(","));
+                    iter->second[i].transcript2 = iter->second[i].transcript2.substr(0, iter->second[i].transcript2.find_first_of(","));
                     fw << iter->second[i];
                 }
             }
