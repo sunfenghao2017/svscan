@@ -1,3 +1,6 @@
+#ifndef SCRPT_H
+#define SCRPT_H
+
 #include "fuserec.h"
 
 struct ScopeRptOpt{
@@ -54,3 +57,5 @@ struct ScopeRptOpt{
         fw.close();
     }
 };
+
+#endif

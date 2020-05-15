@@ -162,6 +162,13 @@ int main(int argc, char** argv){
     pscrpt->add_option("-i,--infs", scRptOpt->infs, "input fusion result")->required(true)->check(CLI::ExistingFile);
     pscrpt->add_option("-o,--outfs", scRptOpt->outfs, "output fusion result")->required(true);
     pscrpt->add_flag("-r,--rnamode", scRptOpt->fromrna, "from rna seq if set");
+    // prod rpt
+    ProdRptOpt* prRptOpt = new ProdRptOpt();
+    CLI::App* pprrpt = app.add_subcommand("scrpt", "generate prod report");
+    pprrpt->add_option("-i,--infs", prRptOpt->infs, "input fusion result")->required(true)->check(CLI::ExistingFile);
+    pprrpt->add_option("-o,--outfs", prRptOpt->outfs, "output fusion result")->required(true);
+    pprrpt->add_option("-g,--hgl", prRptOpt->hotgene, "hot gene list")->required(true);
+    pprrpt->add_flag("-r,--rnamode", prRptOpt->fromrna, "from rna seq if set");
     // parse arguments
     CLI11_PARSE(app, argc, argv);
     // merge
@@ -248,5 +255,9 @@ int main(int argc, char** argv){
     // scope rpt
     if(pscrpt->parsed()){
         scRptOpt->out();
+    }
+    // prod rpt
+    if(pprrpt->parsed()){
+        prRptOpt->out();
     }
 }

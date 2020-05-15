@@ -14,6 +14,7 @@
 #include "svdebug.h"
 #include "svfilter.h"
 #include "scoperpt.h"
+#include "prodrpt.h"
 #include "fusewlist.h"
 #include "fusionreporter.h"
 
