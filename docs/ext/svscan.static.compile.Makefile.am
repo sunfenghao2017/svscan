@@ -1,4 +1,4 @@
-bin_PROGRAMS = svscan svtools bedsolp
+bin_PROGRAMS = svscan svtools
 
 svscan_LDADD = $(LDFLAGS) -lz -lpthread -llzma -lcurl \
 	       ${prefix}/lib/libhts.a \
