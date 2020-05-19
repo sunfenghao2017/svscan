@@ -23,6 +23,7 @@ int main(int argc, char** argv){
     app.add_option("-o,--bcfout", opt->bcfOut, "output sv bcf file", true)->required(false)->group("General Options");
     app.add_option("-t,--tsvout", opt->tsvOut, "output sv tsv file", true)->required(false)->group("General Options");
     app.add_option("-v,--bamout", opt->bamout, "output sv bam file, non-providing will disable it", true)->group("General Options");
+    app.add_option("-V,--fsbam", opt->fsbamo, "output fusion bam file, non-providing will disable it", true)->group("General Options");
     app.add_option("-e,--b2excel", opt->bam2tb, "excel file to output fusion event supporting bam records", true)->required(false)->group("General Options");
     app.add_option("-f,--b2tsv", opt->bam2tt, "tsv file to output fusion event supporting bam records", true)->required(false)->group("General Options");
     app.add_option("-s,--svtype", opt->svtypes, "SV types to discover,0:INV,1:DEL,2:DUP,3:INS,4:BND")->check(CLI::Range(0, 4))->group("General Options");

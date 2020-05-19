@@ -9,6 +9,7 @@ Options::Options(){
     tsvOut = "sv.tsv";
     pool = NULL;
     bamout = "sv.bam";
+    fsbamo = "fs.bam";
     fbamout = NULL;
     overlapRegs = NULL;
     pairOlpRegs = NULL;

@@ -8,6 +8,7 @@
 #include <htslib/sam.h>
 #include "software.h"
 #include "onlinebwa.h"
+#include "bamsorter.h"
 #include <util.h>
 #include <bamutil.h>
 

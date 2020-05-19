@@ -268,6 +268,8 @@ void SVScanner::scanDPandSR(){
         util::loginfo("Beg writing fusion supporting bam records to file");
         BamToTable btt;
         btt.svbam = mOpt->bamout;
+        btt.ttbam = mOpt->bamfile;
+        btt.newbam = mOpt->fsbamo;
         btt.svidf = 33;
         btt.fstsv = mOpt->fuseOpt->mOutFile;
         btt.bamtb = mOpt->bam2tb;

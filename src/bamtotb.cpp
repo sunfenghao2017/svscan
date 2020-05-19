@@ -128,18 +128,20 @@ void BamToTable::getFRExtraInfo(std::map<int32_t, FRExtraInfo>& fim){
 
 void BamToTable::b2t(){
     if(bamtt.empty() && bamtb.empty()) return; // return if both types of output does not needed
+    regs = new BedRegs();
     // fetch svids
     std::map<int32_t, FRExtraInfo> fim;
     getFRExtraInfo(fim);
-    // fetch bam records
+    // fetch all bam records
     BamRecVector brecs;
     samFile* fp = sam_open(svbam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
+    std::vector<bam1_t*> bamrecs;
     bam1_t* b = bam_init1();
     while(sam_read1(fp, h, b) >= 0){
         uint8_t* data = bam_aux_get(b, "ZF");
         if(data){
-            int32_t id= bam_aux2i(data);
+            int32_t id = bam_aux2i(data);
             auto iter = fim.find(id);
             if(iter != fim.end()){
                 BamRec br;
@@ -147,7 +149,68 @@ void BamToTable::b2t(){
                 br.fsgene = iter->second.fsgene;
                 brecs.push_back(br);
             }
+            uint8_t *svtd = bam_aux_get(b, "ST");
+            if(svtd){
+                int svtv = bam_aux2i(svtd);
+                if(svtv){
+                    int64_t mask = id;
+                    mask = mask << 32;
+                    if(b->core.flag & BAM_FREAD1) mask |= BAM_FREAD2;
+                    else mask |= BAM_FREAD1;
+                    r2get[bam_get_qname(b)] = mask;
+                    if(!(b->core.flag & BAM_FUNMAP)){
+                        cr_add(regs->mCR, sam_hdr_tid2name(h, b->core.mtid), b->core.mpos, b->core.mpos + 2, 0);
+                    }
+                }
+            }
+            bamrecs.push_back(b);
+            b = bam_init1();
         }
+    }
+    sam_close(fp);
+    // fetch other pe supporting reads
+    fp = sam_open(ttbam.c_str(), "r");
+    hts_idx_t *idx = sam_index_load(fp, ttbam.c_str());
+    cr_sort(regs->mCR);
+    cgranges_t *cr = regs->mCR;
+    for(int32_t ctg_id = 0; ctg_id < cr->n_ctg; ++ctg_id){
+        int64_t i, *xb = 0, max_b = 0, n = 0;
+        n = cr_overlap_int(cr, ctg_id, 0, INT_MAX, &xb, &max_b);
+        for(i = 0; i < n; ++i){
+            const char* chr = cr->ctg[ctg_id].name;
+            int32_t beg = cr_start(cr, xb[i]), end = cr_end(cr, xb[i]);
+            hts_itr_t *itr = sam_itr_queryi(idx, sam_hdr_name2tid(h, chr), beg, end);
+            while(sam_itr_next(fp, itr, b) >= 0){
+                auto iter = r2get.find(bam_get_qname(b));
+                if(iter != r2get.end()){
+                    if(b->core.flag & (iter->second & 0xffff)){
+                        int32_t id = iter->second >> 32;
+                        bam_aux_update_int(b, "SZ", id);
+                        bam_aux_update_int(b, "ST", 1);
+                        for(uint32_t k = 0; k < brecs.size(); ++k){
+                            if(brecs[k].svid == id && brecs[k].qname == bam_get_qname(b)){
+                                brecs[k].rbp = -1;
+                                brecs[k].tseq = bamutil::getSeq(b);
+                                brecs[k].mcigar = bamutil::getCigar(b);
+                                bamrecs.push_back(b);
+                                b = bam_init1();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    sam_close(fp);
+    bam_destroy1(b);
+    // sort bam
+    samFile* of = sam_open(newbam.c_str(), "w");
+    assert(sam_hdr_write(of, h) >= 0);
+    std::sort(bamrecs.begin(), bamrecs.end(), BamComp());
+    for(auto& e: bamrecs){
+        assert(sam_write1(of, h, e) >= 0);
+        bam_destroy1(e);
     }
     std::sort(brecs.begin(), brecs.end());
     // bam records to string buffer
@@ -173,8 +236,4 @@ void BamToTable::b2t(){
         worksheet_autofilter(rsheet, 0, 0, std::max(0, ttl - 2), 0);
         workbook_close(workbook);
     }
-    // release memory
-    sam_close(fp);
-    bam_hdr_destroy(h);
-    bam_destroy1(b);
 }

@@ -1,17 +1,16 @@
 #include "svbam.h"
 
 void SVBAMOpt::getBam(){
-    std::string tobam = obam + ".tmp.unsorted.bam";
-    std::string tobam2 = obam2 + ".tmp.unsorted.bam";
+    std::vector<bam1_t*> brso, brso2;
     const char* idt = "ZF";
     samFile* ifp = sam_open(ibam.c_str(), "r");
-    samFile* ofp = sam_open(tobam.c_str(), "w");
+    samFile* ofp = sam_open(obam.c_str(), "w");
     samFile* ofp2 = NULL;
     bam_hdr_t* h = sam_hdr_read(ifp);
     bam_hdr_t* h2 = NULL;
     assert(sam_hdr_write(ofp, h) >= 0);
     if(outalt){
-        ofp2 = sam_open(tobam2.c_str(), "w");
+        ofp2 = sam_open(obam2.c_str(), "w");
         h2 = obwa->getBamHeader();
         assert(sam_hdr_write(ofp2, h2) >= 0);
     }
@@ -19,7 +18,7 @@ void SVBAMOpt::getBam(){
     std::vector<bam1_t*> realn;
     while(sam_read1(ifp, h, b) >= 0){
         if(bam_aux2i(bam_aux_get(b, idt)) == svid){
-            assert(sam_write1(ofp, h, b) >= 0);
+            brso.push_back(b);
             if(outalt){
                 UnalignedSeq us;
                 us.mName = bamutil::getQName(b);
@@ -27,26 +26,31 @@ void SVBAMOpt::getBam(){
                 realn.clear();
                 obwa->alignSeq(us, realn);
                 for(auto& e: realn){
-                    assert(sam_write1(ofp2, h2, e) >= 0);
-                    bam_destroy1(e);
+                    if(!(e->core.flag& BAM_FSECONDARY)) brso2.push_back(e);
+                    else bam_destroy1(e);
                 }
             }
+            b = bam_init1();
         }
     }
     sam_close(ifp);
-    sam_close(ofp);
-    bam_hdr_destroy(h);
     bam_destroy1(b);
-    std::string sortCMD = "samtools sort -o " + obam + " " + tobam;
-    system(sortCMD.c_str());
-    remove(tobam.c_str());
-    if(outalt){
-        sam_close(ofp2);
-        bam_hdr_destroy(h2);
-        sortCMD = "samtools sort -o " + obam2 + " " + tobam2;
-        system(sortCMD.c_str());
-        remove(tobam2.c_str());
-        assert(sam_index_build(obam2.c_str(), 14) == 0);
+    // sort
+    std::sort(brso.begin(), brso.end(), BamComp());
+    for(auto& e: brso){
+        assert(sam_write1(ofp, h, e) >= 0);
+        bam_destroy1(e);
     }
-    assert(sam_index_build(obam.c_str(), 14) == 0);
+    sam_close(ofp);
+    assert(sam_index_build(obam.c_str(), 0) == 0);
+    if(outalt){
+        std::sort(brso2.begin(), brso2.end(), BamComp());
+        for(auto& e: brso2){
+            assert(sam_write1(ofp2, h, e) >= 0);
+            bam_destroy1(e);
+        }
+        sam_close(ofp2);
+        assert(sam_index_build(obam2.c_str(), 0) == 0);
+    }
+    sam_hdr_destroy(h);
 }

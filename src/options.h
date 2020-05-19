@@ -186,6 +186,7 @@ class Options{
         std::string bcfOut;           ///< output SV bcf result file
         std::string tsvOut;           ///< output SV tab seperated values file
         std::string bamout;           ///< output SV supporting bam record file
+        std::string fsbamo;           ///< output fusion supporting bam record file
         std::string bam2tb;           ///< fusion event supporting reads excel file
         std::string bam2tt;           ///< fusion event supporting reads tsv file
         samFile* fbamout;             ///< file pointer of sv bam output
