@@ -117,6 +117,9 @@ class BamToTable{
     /** BamToTable constructor */
     BamToTable(){
         regs = NULL;
+        newbam = "fs.bam";
+        bamtb = "bt.xlsx";
+        bamtt = "bt.tsv";
     }
 
     /** BamToTable destructor */

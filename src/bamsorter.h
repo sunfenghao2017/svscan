@@ -1,7 +1,10 @@
+#ifndef BAMSORTER_H
+#define BAMSORTER_H
+
 #include <htslib/sam.h>
 
 struct BamComp{
-    bool operator()(const bam1_t* b1, const bam1_t* b2) const {
+    inline bool operator()(const bam1_t* b1, const bam1_t* b2) const {
         if(b1->core.tid >= 0) {        // b1 is mapped
             if(b2->core.tid<0 )
                 return true;
@@ -29,3 +32,5 @@ struct BamComp{
         }
     }
 };
+
+#endif
