@@ -434,21 +434,30 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
     ReadSupportStatMap rssm;
     PePtnMap pem;
+    util::loginfo("Beg collect SV supporting reads info");
     getReadSupportStatus(mOpt->bamout, rssm, pem, mOpt->realnf);
+    util::loginfo("End collect SV supporting reads info");
+    util::loginfo("Beg collect PE partner reads");
+    // refine pem
+    for(auto iter = pem.begin(); iter != pem.end(); ++iter){
+        auto itrs = rssm.find(iter->first);
+        if(itrs->second->mR1SRT == 0 || itrs->second->mR2SRT == 0) iter->second->skip = true;
+    }
     // temporary out bam
-    std::string tmpPeBam = mOpt->bamout + ".tmp.pe.bam";
-    samFile *tosam = sam_open(tmpPeBam.c_str(), "wb");
+    std::string tmpBam = mOpt->bamout + ".tmp.bam";
+    samFile *tmpSamFp = sam_open(tmpBam.c_str(), "wb");
     // rescue and stat PE
     BedRegs *br = new BedRegs();
+    br->mCR = cr_init();
     for(auto& e: pem){
-        cr_add(br->mCR, e.second->chr.c_str(), e.second->mpos, e.second->mpos + 2, 0);
+        if(!e.second->skip) cr_add(br->mCR, e.second->chr.c_str(), e.second->mpos, e.second->mpos + 1, 0);
     }
     cr_index2(br->mCR, 1);
-    samFile *tsam = sam_open(mOpt->bamfile.c_str(), "r");
-    bam_hdr_t *h = sam_hdr_read(tsam);
-    hts_idx_t *idx = sam_index_load(tsam, mOpt->bamfile.c_str());
+    samFile *ttSamFp = sam_open(mOpt->bamfile.c_str(), "r");
+    bam_hdr_t *h = sam_hdr_read(ttSamFp);
+    hts_idx_t *idx = sam_index_load(ttSamFp, mOpt->bamfile.c_str());
     cgranges_t *cr = br->mCR;
-    assert(sam_hdr_write(tosam, h) >= 0);
+    assert(sam_hdr_write(tmpSamFp, h) >= 0);
     bam1_t *b = bam_init1();
     for(int32_t ctg_id = 0; ctg_id < cr->n_ctg; ++ctg_id){
         int64_t i, *xb = 0, max_b = 0, n = 0;
@@ -457,37 +466,44 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             const char* chr = cr->ctg[ctg_id].name;
             int32_t beg = cr_start(cr, xb[i]), end = cr_end(cr, xb[i]);
             hts_itr_t *itr = sam_itr_queryi(idx, sam_hdr_name2tid(h, chr), beg, end);
-            while(sam_itr_next(tsam, itr, b) >= 0){
-                auto iter = pem.find(bam_get_qname(b));
-                if(iter != pem.end()){
-                    if((iter->second->is_read1 && b->core.flag & BAM_FREAD1) ||
-                       (!iter->second->is_read1 && b->core.flag & BAM_FREAD2)){
-                        if(b->core.qual > mOpt->filterOpt->minMapQual){
-                            iter->second->valid = true;
-                            iter->second->found = true;
-                            iter->second->mapq = b->core.qual;
-                            bam_aux_update_int(b, "ZF", iter->second->svid);
-                            bam_aux_update_int(b, "ST", 1);
-                            assert(sam_write1(tosam, h, b) >= 0);
+            while(sam_itr_next(ttSamFp, itr, b) >= 0){
+                if(b->core.tid < b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos <= b->core.mpos)){
+                    auto iter = pem.find(bam_get_qname(b));
+                    if((iter != pem.end()) && (!iter->second->skip)){
+                        if((iter->second->is_read1 && b->core.flag & BAM_FREAD1) ||
+                           (!iter->second->is_read1 && b->core.flag & BAM_FREAD2)){
+                            if(b->core.qual > mOpt->filterOpt->minMapQual){
+                                iter->second->valid = true;
+                                iter->second->found = true;
+                                bam_aux_update_int(b, "ZF", iter->second->svid);
+                                bam_aux_update_int(b, "ST", 1);
+                                assert(sam_write1(tmpSamFp, h, b) >= 0);
+                            }
                         }
                     }
                 }
             }
+            sam_itr_destroy(itr);
         }
-        free(b);
+        free(xb);
     }
-    sam_close(tosam);
-    sam_close(tsam);
+    hts_idx_destroy(idx);
+    bam_destroy1(b);
+    bam_hdr_destroy(h);
+    sam_close(ttSamFp);
     delete br;
     // pop invalid dp support
     for(auto& e: pem){
-        if(!e.second->valid){
+        if((!e.second->valid) && (!e.second->skip)){
             svs[e.second->svid]->mPESupport -= 1;
             sts->mTotalAltCnts[e.second->svid] -= 1;
             sts->mSpnCnts[e.second->svid].mAltCnt -= 1;
             sts->mSpnCnts[e.second->svid].mAltQual[e.second->mq] -= 1;
         }
+        delete e.second;
     }
+    util::loginfo("End collect PE partner reads");
+    util::loginfo("Beg resolve reads supporting multiple SV");
     // go on
     std::map<std::string, int32_t> drec;
     // first run, resolve reads supporting multiple svs
@@ -552,6 +568,8 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             }
         }
     }
+    util::loginfo("End resolve reads supporting multiple SV");
+    util::loginfo("Beg estimate reads in repeat region");
     // second run, stat one end multiple mapping status
     if(mOpt->overlapRegs){
         std::map<int32_t, SeedStatus> mss;
@@ -656,11 +674,12 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             if(r2pt >= 0) svs[svid]->mFsPattern[r2pt] += 1;
         }
     }
+    util::loginfo("End estimate reads in repeat region");
+    util::loginfo("Beg write final sv supporting bam");
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
-    std::string tmpBam = mOpt->bamout + ".tmp.bam";
-    samFile* ofp = sam_open(tmpBam.c_str(), "wb");
-    assert(sam_hdr_write(ofp, h) >= 0);
+    h = sam_hdr_read(ifp);
+    b = bam_init1();
     while(sam_read1(ifp, h, b) >= 0){
         std::string qname = bamutil::getQName(b);
         auto ritr = rssm.find(qname);
@@ -673,23 +692,21 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         }
         auto iter = drec.find(qname);
         if(iter == drec.end()){
-            assert(sam_write1(ofp, h, b) >= 0);
+            assert(sam_write1(tmpSamFp, h, b) >= 0);
         }else{
             if(iter->second == 1 && (b->core.flag & BAM_FREAD2)){
-                assert(sam_write1(ofp, h, b) >= 0);
+                assert(sam_write1(tmpSamFp, h, b) >= 0);
             }else if(iter->second == 2 && (b->core.flag & BAM_FREAD1)){
-                assert(sam_write1(ofp, h, b) >= 0);
+                assert(sam_write1(tmpSamFp, h, b) >= 0);
             }
         }
     }
     sam_close(ifp);
-    ifp = sam_open(tmpPeBam.c_str(), "r");
-    while(sam_read1(ifp, h, b) >= 0){
-        assert(sam_write1(ofp, h, b) >= 0);
-    }
+    sam_close(tmpSamFp);
+    // rename
     rename(tmpBam.c_str(), mOpt->bamout.c_str());
-    sam_close(ifp);
-    sam_close(ofp);
+    // release mem
     bam_hdr_destroy(h);
     bam_destroy1(b);
+    util::loginfo("End write final sv supporting bam");
 }

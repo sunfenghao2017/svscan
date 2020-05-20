@@ -49,14 +49,15 @@ struct FusionRecSchema{
     int svint = 34;
     int fsmask = 35;
     int fsHits = 36;
-    int url = 37;
-    int exon1 = 38;
-    int exon2 = 39;
-    int ts1name = 38;
-    int ts1pos = 49;
-    int ts2name = 40;
-    int ts2pos = 41;
-    int cigar = 42;
+    int exon1 = 37;
+    int exon2 = 38;
+    int ts1name = 37;
+    int ts1pos = 38;
+    int ts2name = 39;
+    int ts2pos = 40;
+    int cigar = 41;
+    int urld = 39;
+    int urlr = 42;
 };
 
 /** class to store an fusion record */
@@ -163,13 +164,13 @@ struct FusionRecord{
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.srsrescued << "\t" << fsr.srsmalncnt << "\t" << fsr.srsmrate << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits << "\t" << fsr.url;
+        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos + 1 << "\t" << fsr.ts2name << "\t" << fsr.ts2pos + 1 << "\t" << fsr.cigar;
         }else{
             os << "\t" << fsr.exon1 << "\t" << fsr.exon2;
         }
-        os << "\n";
+        os << fsr.url << "\n";
        return os;
     }
 
@@ -185,9 +186,10 @@ struct FusionRecord{
         header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[18-21]
         header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[22-27]
         header.append("srSRescued\tsrSResMaln\tsrSResMalnRate\t"); //[28,30]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits\tURL"); //[31-37]
-        if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
-        else header.append("\texon1\texon2\n");
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[31-36]
+        if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\t");
+        else header.append("\texon1\texon2\t");
+        header.append("URL\n");
         return header;
     }
 
@@ -358,9 +360,11 @@ struct FusionRecord{
             ts2name = vstr[s.ts2name];
             ts2pos = std::atoi(vstr[s.ts2pos].c_str());
             cigar = vstr[s.cigar];
+            url = vstr[s.urlr];
         }else{
             exon1 = std::atoi(vstr[s.exon1].c_str());
             exon2 = std::atoi(vstr[s.exon2].c_str());
+            url = vstr[s.urld];
         }
     }
 };

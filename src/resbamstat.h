@@ -12,7 +12,7 @@ struct PePtnStat{
     bool is_read1 = false;
     int32_t svid = -1;
     bool found = false;
-    int mapq = 0;
+    bool skip = false;
     int mq = 0;
     std::string chr;
     int32_t mpos = -1;
@@ -473,6 +473,7 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
             if(srst == 1){//collect pe
                 PePtnStat *pps = new PePtnStat();
                 pps->found = false;
+                pps->skip = false;
                 pps->svid = svid;
                 if(b->core.flag & BAM_FREAD1) pps->is_read1 = false;
                 else pps->is_read1 = true;

@@ -47,6 +47,9 @@ void Options::validate(){
 void Options::update(int argc, char** argv){
     // update software environment records
     softEnv->update(argc, argv);
+    // update paths
+    if(bamout.size()) bamout = util::abspath(bamout);
+    if(fsbamo.size()) fsbamo = util::abspath(fsbamo);
     // get library information
     libInfo = getLibInfo(bamfile);
     // update SV types to discover

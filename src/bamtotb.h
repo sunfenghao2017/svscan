@@ -55,8 +55,8 @@ struct BamRec{
         sa = '-';
         mcigar = "-";
         barcode = "-";
-        lseq = "-";
-        tseq = "-";
+        lseq = "";
+        tseq = "";
         fsgene = "-";
         lhit = 0;
         thit = 0;
@@ -67,6 +67,8 @@ struct BamRec{
 
     /** convert BamRec to string */
     inline std::string toStr(){
+        if(lseq.empty()) lseq = "-";
+        if(tseq.empty()) tseq = "-";
         std::ostringstream oss;
         oss << svid << "\t";
         oss << fsgene << "\t";
