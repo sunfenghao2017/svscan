@@ -7,6 +7,9 @@
 #include "svutil.h"
 #include "fusionopt.h"
 
+/** web URI prefix */
+const std::string URI_PRE = "http://10.100.2.10:9999/igv/?";
+
 /** class to store fusion record schema */
 struct FusionRecSchema{
     int fusegene = 0;
@@ -46,13 +49,14 @@ struct FusionRecSchema{
     int svint = 34;
     int fsmask = 35;
     int fsHits = 36;
-    int exon1 = 37;
-    int exon2 = 38;
-    int ts1name = 39;
-    int ts1pos = 40;
-    int ts2name = 41;
-    int ts2pos = 42;
-    int cigar = 43;
+    int url = 37;
+    int exon1 = 38;
+    int exon2 = 39;
+    int ts1name = 38;
+    int ts1pos = 49;
+    int ts2name = 40;
+    int ts2pos = 41;
+    int cigar = 42;
 };
 
 /** class to store an fusion record */
@@ -104,15 +108,27 @@ struct FusionRecord{
     int32_t distance;           ///< distance of two gene
     int32_t fsHits;             ///< fusion seq hits int mask
     bool report;                ///< this fusion will be reported if true
+    std::string url;            ///< fusion event online igv address
 
     /** construct an FusionRecord */
     FusionRecord(){
         fsmask = 0;
+        url = "-";
         report = false;
     }
 
     /** destroy an FusionRecord */
     ~FusionRecord(){}
+
+    /** update url */
+    void get_url(const std::string& bam){
+        std::stringstream ss;
+        ss << URI_PRE;
+        ss << "b=" << bam << "&r=" << chr1 << ":" << jctpos1 + 1 << "-" << jctpos1 + 1 << ",";
+        ss << chr2 << ":" << jctpos2 + 1 << "-" << jctpos2 + 2;
+        ss << "&fsid=" << svid;
+        url = ss.str();
+    }
 
     /** operator to compare two FusionRecord */
     inline bool operator<(const FusionRecord& other) const {
@@ -147,7 +163,7 @@ struct FusionRecord{
         os << fsr.srcount << "\t" << fsr.dpcount << "\t" << fsr.srrescued << "\t" << fsr.dprescued << "\t";
         os << fsr.srrefcount << "\t" << fsr.dprefcount << "\t";
         os << fsr.srsrescued << "\t" << fsr.srsmalncnt << "\t" << fsr.srsmrate << "\t";
-        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits;
+        os << fsr.insbp << "\t" << fsr.insseq << "\t" << fsr.svid << "\t" << fsr.svint << "\t" << fsr.fsmask << "\t" << fsr.fsHits << "\t" << fsr.url;
         if(fsr.fsmask & FUSION_FCALLFROMRNASEQ){
             os << "\t" << fsr.ts1name << "\t" << fsr.ts1pos + 1 << "\t" << fsr.ts2name << "\t" << fsr.ts2pos + 1 << "\t" << fsr.cigar;
         }else{
@@ -169,7 +185,7 @@ struct FusionRecord{
         header.append("FusionSequence\tfseqBp\tsvType\tsvSize\t"); //[18-21]
         header.append("srCount\tdpCount\tsrRescued\tdpRescued\tsrRefCount\tdpRefCount\t"); //[22-27]
         header.append("srSRescued\tsrSResMaln\tsrSResMalnRate\t"); //[28,30]
-        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[31-36]
+        header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits\tURL"); //[31-37]
         if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\n");
         else header.append("\texon1\texon2\n");
         return header;

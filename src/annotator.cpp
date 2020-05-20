@@ -433,7 +433,62 @@ void Annotator::rangeGeneAnnoRNA(SVSet& svs, GeneInfoList& gl, int32_t begIdx, i
 void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     if(mOpt->bamout.empty()) return;
     ReadSupportStatMap rssm;
-    getReadSupportStatus(mOpt->bamout, rssm, mOpt->realnf);
+    PePtnMap pem;
+    getReadSupportStatus(mOpt->bamout, rssm, pem, mOpt->realnf);
+    // temporary out bam
+    std::string tmpPeBam = mOpt->bamout + ".tmp.pe.bam";
+    samFile *tosam = sam_open(tmpPeBam.c_str(), "wb");
+    // rescue and stat PE
+    BedRegs *br = new BedRegs();
+    for(auto& e: pem){
+        cr_add(br->mCR, e.second->chr.c_str(), e.second->mpos, e.second->mpos + 2, 0);
+    }
+    cr_index2(br->mCR, 1);
+    samFile *tsam = sam_open(mOpt->bamfile.c_str(), "r");
+    bam_hdr_t *h = sam_hdr_read(tsam);
+    hts_idx_t *idx = sam_index_load(tsam, mOpt->bamfile.c_str());
+    cgranges_t *cr = br->mCR;
+    assert(sam_hdr_write(tosam, h) >= 0);
+    bam1_t *b = bam_init1();
+    for(int32_t ctg_id = 0; ctg_id < cr->n_ctg; ++ctg_id){
+        int64_t i, *xb = 0, max_b = 0, n = 0;
+        n = cr_overlap_int(cr, ctg_id, 0, INT_MAX, &xb, &max_b);
+        for(i = 0; i < n; ++i){
+            const char* chr = cr->ctg[ctg_id].name;
+            int32_t beg = cr_start(cr, xb[i]), end = cr_end(cr, xb[i]);
+            hts_itr_t *itr = sam_itr_queryi(idx, sam_hdr_name2tid(h, chr), beg, end);
+            while(sam_itr_next(tsam, itr, b) >= 0){
+                auto iter = pem.find(bam_get_qname(b));
+                if(iter != pem.end()){
+                    if((iter->second->is_read1 && b->core.flag & BAM_FREAD1) ||
+                       (!iter->second->is_read1 && b->core.flag & BAM_FREAD2)){
+                        if(b->core.qual > mOpt->filterOpt->minMapQual){
+                            iter->second->valid = true;
+                            iter->second->found = true;
+                            iter->second->mapq = b->core.qual;
+                            bam_aux_update_int(b, "ZF", iter->second->svid);
+                            bam_aux_update_int(b, "ST", 1);
+                            assert(sam_write1(tosam, h, b) >= 0);
+                        }
+                    }
+                }
+            }
+        }
+        free(b);
+    }
+    sam_close(tosam);
+    sam_close(tsam);
+    delete br;
+    // pop invalid dp support
+    for(auto& e: pem){
+        if(!e.second->valid){
+            svs[e.second->svid]->mPESupport -= 1;
+            sts->mTotalAltCnts[e.second->svid] -= 1;
+            sts->mSpnCnts[e.second->svid].mAltCnt -= 1;
+            sts->mSpnCnts[e.second->svid].mAltQual[e.second->mq] -= 1;
+        }
+    }
+    // go on
     std::map<std::string, int32_t> drec;
     // first run, resolve reads supporting multiple svs
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
@@ -603,8 +658,6 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     }
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
-    bam_hdr_t* h = sam_hdr_read(ifp);
-    bam1_t* b = bam_init1();
     std::string tmpBam = mOpt->bamout + ".tmp.bam";
     samFile* ofp = sam_open(tmpBam.c_str(), "wb");
     assert(sam_hdr_write(ofp, h) >= 0);
@@ -628,6 +681,11 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
                 assert(sam_write1(ofp, h, b) >= 0);
             }
         }
+    }
+    sam_close(ifp);
+    ifp = sam_open(tmpPeBam.c_str(), "r");
+    while(sam_read1(ifp, h, b) >= 0){
+        assert(sam_write1(ofp, h, b) >= 0);
     }
     rename(tmpBam.c_str(), mOpt->bamout.c_str());
     sam_close(ifp);

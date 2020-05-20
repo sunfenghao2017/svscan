@@ -7,6 +7,20 @@
 #include <string>
 #include <map>
 
+/** structure to store pe partner support status */
+struct PePtnStat{
+    bool is_read1 = false;
+    int32_t svid = -1;
+    bool found = false;
+    int mapq = 0;
+    int mq = 0;
+    std::string chr;
+    int32_t mpos = -1;
+    bool valid = false;
+};
+
+typedef std::map<std::string, PePtnStat*> PePtnMap;
+
 // fusion reads pattern count index map
 const std::map<std::string, int> FsPatMatIdx = {{"++", 0}, {"+-", 1}, {"--", 2}, {"-+", 3}};
 
@@ -168,7 +182,7 @@ struct ReadSupport{
 /** type to store read supporting statistics */
 typedef std::map<std::string, ReadSupport*> ReadSupportStatMap;
 
-inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rssm, RealnFilter* rf){
+inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rssm, PePtnMap& pem,  RealnFilter* rf){
     samFile* fp = sam_open(bam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
@@ -455,6 +469,18 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                         }
                     }
                 }
+            }
+            if(srst == 1){//collect pe
+                PePtnStat *pps = new PePtnStat();
+                pps->found = false;
+                pps->svid = svid;
+                if(b->core.flag & BAM_FREAD1) pps->is_read1 = false;
+                else pps->is_read1 = true;
+                pps->chr = sam_hdr_tid2name(h, b->core.mtid);
+                pps->mpos = b->core.mpos;
+                pps->mq = b->core.qual;
+                pps->valid = false;
+                pem[bam_get_qname(b)] = pps;
             }
         }
     }

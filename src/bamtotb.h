@@ -10,8 +10,13 @@
 #include <bamutil.h>
 #include <lxwutil.h>
 #include <util.h>
-#include "bed.h"
 #include "bamsorter.h"
+
+/** hit got */
+struct HitPat{
+    bool isread1;
+    int32_t index;
+};
 
 /** fusion information corresponding to a svid */
 struct FRExtraInfo{
@@ -101,7 +106,6 @@ typedef std::vector<BamRec> BamRecVector;
 /** class to extract sv supporting bam to table */
 class BamToTable{
     public:
-        std::string ttbam;                 ///< total bam
         std::string svbam;                 ///< sv supporting bam
         std::string newbam;                ///< newly updated sv supporting bam
         std::string fstsv;                 ///< fusion result tsv
@@ -109,14 +113,12 @@ class BamToTable{
         std::string bamtb;                 ///< bam output table(excel format)
         std::string bamtt;                 ///< bam output txt(tsv format)
         std::vector<std::string> fsgene;   ///< fusion gene of each svid
-        std::map<std::string, int64_t> r2get; ///< reads to get from total bam
-        BedRegs *regs;                     ///< regions to get other bam records
+        std::map<std::string, HitPat> peout; ///< reads output pe support records
         int32_t svidf = 33;                ///< svid column index in tsv
         int32_t fsidf = 0;                 ///< fusion column index in tsv
 
     /** BamToTable constructor */
     BamToTable(){
-        regs = NULL;
         newbam = "fs.bam";
         bamtb = "bt.xlsx";
         bamtt = "bt.tsv";
@@ -124,7 +126,6 @@ class BamToTable{
 
     /** BamToTable destructor */
     ~BamToTable(){
-        if(regs) delete regs;
     }
 
     /** extract sv supporting sv bam records into excel */
