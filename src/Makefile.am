@@ -12,7 +12,7 @@ svtools_LDADD = $(LDFLAGS) -lhts -lz -lpthread -lxlsxwriter -lbwa
 svtools_SOURCES = svtools.cpp svbam.cpp svdnadb.cpp fusewlist.cpp fusionreporter.cpp \
 		  svmerge.cpp svfilter.cpp fusionopt.cpp svrnadb.cpp svdebug.cpp \
 		  cgranges.cpp svcreg.cpp bamtotb.cpp realnfilter.cpp extanno.cpp \
-		  rsvg.cpp bed.cpp
+		  rsvg.cpp
 
 clean:
 	rm -rf .deps Makefile.in Makefile *.o ${bin_PROGRAMS}
