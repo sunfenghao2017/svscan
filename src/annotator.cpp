@@ -436,7 +436,6 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     PePtnMap pem;
     util::loginfo("Beg collect SV supporting reads info");
     getReadSupportStatus(mOpt->bamout, svs, rssm, pem, mOpt->realnf);
-    std::map<std::string, int32_t> drec;
     util::loginfo("End collect SV supporting reads info");
     util::loginfo("Beg collect PE partner reads");
     // temporary out bam
@@ -493,6 +492,7 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     }
     util::loginfo("End collect PE partner reads");
     util::loginfo("Beg resolve reads supporting multiple SV");
+    std::map<std::string, int32_t> drec;
     // first run, resolve reads supporting multiple svs
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
         if(iter->second->mR1MapQ && iter->second->mR2MapQ){
@@ -661,14 +661,15 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             if(r2pt >= 0) svs[svid]->mFsPattern[r2pt] += 1;
         }
     }
+    util::loginfo("End estimate reads in repeat region");
     // forth run, update dprescue and dpcount
     for(uint32_t i = 0; i < svs.size(); ++i){
         if(svs[i]->mSRSupport == 0){
             svs[i]->mPESupport = std::min(svs[i]->mPEWithPtn, svs[i]->mPESupport);
-            sts[i].mSpnCnts[i].mAltCnt = std::min(sts[i].mSpnCnts[i].mAltCnt, svs[i]->mPESupport);
+            sts->mSpnCnts[svs[i]->mID].mAltCnt = std::min(sts->mSpnCnts[svs[i]->mID].mAltCnt, svs[i]->mPESupport);
+            sts->mTotalAltCnts[svs[i]->mID] =  std::min(sts->mSpnCnts[svs[i]->mID].mAltCnt, sts->mTotalAltCnts[svs[i]->mID]);
         }
     }
-    util::loginfo("End estimate reads in repeat region");
     util::loginfo("Beg write final sv supporting bam");
     // write to result
     samFile* ifp = sam_open(mOpt->bamout.c_str(), "r");
