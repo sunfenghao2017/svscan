@@ -461,6 +461,7 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             hts_itr_t *itr = sam_itr_queryi(idx, sam_hdr_name2tid(h, chr), beg, end);
             while(sam_itr_next(ttSamFp, itr, b) >= 0){
                 if(b->core.tid < b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos <= b->core.mpos)){
+                    if(bam_aux_get(b, "SA")) continue; // skip
                     auto iter = pem.find(bam_get_qname(b));
                     if(iter != pem.end()){
                         if((iter->second->is_read1 && b->core.flag & BAM_FREAD1) ||
