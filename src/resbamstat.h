@@ -258,7 +258,6 @@ inline void getReadSupportStatus(const std::string& bam, const SVSet& svs, ReadS
                             --send;
                             --sspos;
                         }
-                        break;
                     }else if(*scg == 'M' || *scg == 'X' || *scg == '=' || *scg == 'D'){
                         sspos += num;
                         send += num;
