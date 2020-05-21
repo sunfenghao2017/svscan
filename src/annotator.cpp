@@ -467,12 +467,13 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             int32_t beg = cr_start(cr, xb[i]), end = cr_end(cr, xb[i]);
             hts_itr_t *itr = sam_itr_queryi(idx, sam_hdr_name2tid(h, chr), beg, end);
             while(sam_itr_next(ttSamFp, itr, b) >= 0){
+                if(bam_aux_get(b, "SA")) continue; // skip anyone with SA
                 if(b->core.tid < b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos <= b->core.mpos)){
                     auto iter = pem.find(bam_get_qname(b));
                     if((iter != pem.end()) && (!iter->second->skip)){
                         if((iter->second->is_read1 && b->core.flag & BAM_FREAD1) ||
                            (!iter->second->is_read1 && b->core.flag & BAM_FREAD2)){
-                            if(b->core.qual > mOpt->filterOpt->minMapQual){
+                            if(!iter->second->found && b->core.qual > mOpt->filterOpt->minMapQual){
                                 iter->second->valid = true;
                                 iter->second->found = true;
                                 bam_aux_update_int(b, "ZF", iter->second->svid);

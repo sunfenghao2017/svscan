@@ -481,7 +481,11 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                 pps->mpos = b->core.mpos;
                 pps->mq = b->core.qual;
                 pps->valid = false;
-                pem[bam_get_qname(b)] = pps;
+                auto iter = pem.find(qname);
+                if(iter == pem.end()) pem[qname] = pps;
+                else{// FIX ME, IS IT POSSBLE?
+                    delete pps;
+                }
             }
         }
     }
