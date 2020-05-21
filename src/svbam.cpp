@@ -4,13 +4,13 @@ void SVBAMOpt::getBam(){
     std::vector<bam1_t*> brso, brso2;
     const char* idt = "ZF";
     samFile* ifp = sam_open(ibam.c_str(), "r");
-    samFile* ofp = sam_open(obam.c_str(), "w");
+    samFile* ofp = sam_open(obam.c_str(), "wb");
     samFile* ofp2 = NULL;
     bam_hdr_t* h = sam_hdr_read(ifp);
     bam_hdr_t* h2 = NULL;
     assert(sam_hdr_write(ofp, h) >= 0);
     if(outalt){
-        ofp2 = sam_open(obam2.c_str(), "w");
+        ofp2 = sam_open(obam2.c_str(), "wb");
         h2 = obwa->getBamHeader();
         assert(sam_hdr_write(ofp2, h2) >= 0);
     }
