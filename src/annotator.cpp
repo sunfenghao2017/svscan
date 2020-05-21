@@ -435,24 +435,17 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     ReadSupportStatMap rssm;
     PePtnMap pem;
     util::loginfo("Beg collect SV supporting reads info");
-    getReadSupportStatus(mOpt->bamout, rssm, pem, mOpt->realnf);
+    getReadSupportStatus(mOpt->bamout, svs, rssm, pem, mOpt->realnf);
     std::map<std::string, int32_t> drec;
     util::loginfo("End collect SV supporting reads info");
     util::loginfo("Beg collect PE partner reads");
-    // refine pem
-    for(auto iter = pem.begin(); iter != pem.end(); ++iter){
-        auto itrs = rssm.find(iter->first);
-        if(itrs->second->mR1SRT == 0 || itrs->second->mR2SRT == 0) iter->second->skip = true;
-    }
     // temporary out bam
     std::string tmpBam = mOpt->bamout + ".tmp.bam";
     samFile *tmpSamFp = sam_open(tmpBam.c_str(), "wb");
     // rescue and stat PE
     BedRegs *br = new BedRegs();
     br->mCR = cr_init();
-    for(auto& e: pem){
-        if(!e.second->skip) cr_add(br->mCR, e.second->chr.c_str(), e.second->mpos, e.second->mpos + 1, 0);
-    }
+    for(auto& e: pem) cr_add(br->mCR, e.second->chr.c_str(), e.second->mpos, e.second->mpos + 1, 0);
     cr_index2(br->mCR, 1);
     samFile *ttSamFp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t *h = sam_hdr_read(ttSamFp);
@@ -468,10 +461,9 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             int32_t beg = cr_start(cr, xb[i]), end = cr_end(cr, xb[i]);
             hts_itr_t *itr = sam_itr_queryi(idx, sam_hdr_name2tid(h, chr), beg, end);
             while(sam_itr_next(ttSamFp, itr, b) >= 0){
-                if(bam_aux_get(b, "SA")) continue; // skip anyone with SA
                 if(b->core.tid < b->core.mtid || (b->core.tid == b->core.mtid && b->core.pos <= b->core.mpos)){
                     auto iter = pem.find(bam_get_qname(b));
-                    if((iter != pem.end()) && (!iter->second->skip)){
+                    if(iter != pem.end()){
                         if((iter->second->is_read1 && b->core.flag & BAM_FREAD1) ||
                            (!iter->second->is_read1 && b->core.flag & BAM_FREAD2)){
                             if(!iter->second->found && b->core.qual > mOpt->filterOpt->minMapQual){
@@ -494,32 +486,9 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     bam_hdr_destroy(h);
     sam_close(ttSamFp);
     delete br;
-    // pop invalid dp support
+    // update mPEWithPtn
     for(auto& e: pem){
-        if((!e.second->valid) && (!e.second->skip)){
-            svs[e.second->svid]->mPESupport -= 1;
-            sts->mTotalAltCnts[e.second->svid] -= 1;
-            sts->mSpnCnts[e.second->svid].mAltCnt -= 1;
-            sts->mSpnCnts[e.second->svid].mAltQual[e.second->mq] -= 1;
-            auto itrs = rssm.find(e.first);
-            if(itrs != rssm.end()){
-                if(e.second->is_read1){
-                    itrs->second->mR2SVID = -1;
-                    itrs->second->mR2MapQ = 0;
-                    itrs->second->mR2SRT = -1;
-                    itrs->second->mR2Hit = 0;
-                    itrs->second->mR2Seed = 0;
-                    drec[e.first] = 2;
-                }else{
-                    itrs->second->mR1SVID = -1;
-                    itrs->second->mR1MapQ = 0;
-                    itrs->second->mR1SRT = -1;
-                    itrs->second->mR1Hit = 0;
-                    itrs->second->mR1Seed = 0;
-                    drec[e.first] = 1;
-                }
-            }
-        }
+        if(e.second->valid) svs[e.second->svid]->mPEWithPtn += 1;
         delete e.second;
     }
     util::loginfo("End collect PE partner reads");
@@ -690,6 +659,13 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             iter->second->countPattern(svs[svid]->mChr1, svs[svid]->mSVStart, r1pt, r2pt, svs[svid]->mSRSupport > 0);
             if(r1pt >= 0) svs[svid]->mFsPattern[r1pt] += 1;
             if(r2pt >= 0) svs[svid]->mFsPattern[r2pt] += 1;
+        }
+    }
+    // forth run, update dprescue and dpcount
+    for(uint32_t i = 0; i < svs.size(); ++i){
+        if(svs[i]->mSRSupport == 0){
+            svs[i]->mPESupport = std::min(svs[i]->mPEWithPtn, svs[i]->mPESupport);
+            sts[i].mSpnCnts[i].mAltCnt = std::min(sts[i].mSpnCnts[i].mAltCnt, svs[i]->mPESupport);
         }
     }
     util::loginfo("End estimate reads in repeat region");

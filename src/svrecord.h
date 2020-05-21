@@ -26,6 +26,7 @@ class SVRecord{
         int32_t mCiEndLow = 0;        ///< smallest sv ending position is mSVEnd + mCiEndLow(mCiEndLow is an negative value)
         int32_t mCiEndHigh = 0;       ///< largest sv ending position is mSVEnd + mCiEndHigh(mCiEndHigh is an positive value)
         int32_t mPESupport = 0;       ///< number of Paired-end discordant reads supporting this SV
+        int32_t mPEWithPtn = 0;       ///< number of Paired-end discordant reads with valid partners
         int32_t mSRSupport = 0;       ///< number of Split-reads supporting this SV(one split read consists two part)
         int32_t mAlnInsLen = 0;       ///< insertion size of this SV event due to Split-reads split alignment(absolute difference of seqpos of two part of SR)
         int32_t mInsSeedCnt = 0;      ///< split read with insertion count

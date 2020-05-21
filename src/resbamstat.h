@@ -2,6 +2,7 @@
 #define RES_BAM_STAT_H
 
 #include "realnfilter.h"
+#include "svrecord.h"
 #include <htslib/sam.h>
 #include <cstdint>
 #include <string>
@@ -12,7 +13,6 @@ struct PePtnStat{
     bool is_read1 = false;
     int32_t svid = -1;
     bool found = false;
-    bool skip = false;
     int mq = 0;
     std::string chr;
     int32_t mpos = -1;
@@ -182,7 +182,7 @@ struct ReadSupport{
 /** type to store read supporting statistics */
 typedef std::map<std::string, ReadSupport*> ReadSupportStatMap;
 
-inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rssm, PePtnMap& pem,  RealnFilter* rf){
+inline void getReadSupportStatus(const std::string& bam, const SVSet& svs, ReadSupportStatMap& rssm, PePtnMap& pem,  RealnFilter* rf){
     samFile* fp = sam_open(bam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     bam1_t* b = bam_init1();
@@ -470,10 +470,9 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                     }
                 }
             }
-            if(srst == 1){//collect pe
+            if(srst == 1 && svs[svid]->mSRSupport == 0){//collect pe and only pe
                 PePtnStat *pps = new PePtnStat();
                 pps->found = false;
-                pps->skip = false;
                 pps->svid = svid;
                 if(b->core.flag & BAM_FREAD1) pps->is_read1 = false;
                 else pps->is_read1 = true;
@@ -481,11 +480,7 @@ inline void getReadSupportStatus(const std::string& bam, ReadSupportStatMap& rss
                 pps->mpos = b->core.mpos;
                 pps->mq = b->core.qual;
                 pps->valid = false;
-                auto iter = pem.find(qname);
-                if(iter == pem.end()) pem[qname] = pps;
-                else{// FIX ME, IS IT POSSBLE?
-                    delete pps;
-                }
+                pem[qname] = pps;
             }
         }
     }
