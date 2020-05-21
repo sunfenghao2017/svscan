@@ -436,6 +436,7 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     PePtnMap pem;
     util::loginfo("Beg collect SV supporting reads info");
     getReadSupportStatus(mOpt->bamout, rssm, pem, mOpt->realnf);
+    std::map<std::string, int32_t> drec;
     util::loginfo("End collect SV supporting reads info");
     util::loginfo("Beg collect PE partner reads");
     // refine pem
@@ -500,13 +501,29 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
             sts->mTotalAltCnts[e.second->svid] -= 1;
             sts->mSpnCnts[e.second->svid].mAltCnt -= 1;
             sts->mSpnCnts[e.second->svid].mAltQual[e.second->mq] -= 1;
+            auto itrs = rssm.find(e.first);
+            if(itrs != rssm.end()){
+                if(e.second->is_read1){
+                    itrs->second->mR2SVID = -1;
+                    itrs->second->mR2MapQ = 0;
+                    itrs->second->mR2SRT = -1;
+                    itrs->second->mR2Hit = 0;
+                    itrs->second->mR2Seed = 0;
+                    drec[e.first] = 2;
+                }else{
+                    itrs->second->mR1SVID = -1;
+                    itrs->second->mR1MapQ = 0;
+                    itrs->second->mR1SRT = -1;
+                    itrs->second->mR1Hit = 0;
+                    itrs->second->mR1Seed = 0;
+                    drec[e.first] = 1;
+                }
+            }
         }
         delete e.second;
     }
     util::loginfo("End collect PE partner reads");
     util::loginfo("Beg resolve reads supporting multiple SV");
-    // go on
-    std::map<std::string, int32_t> drec;
     // first run, resolve reads supporting multiple svs
     for(auto iter = rssm.begin(); iter != rssm.end(); ++iter){
         if(iter->second->mR1MapQ && iter->second->mR2MapQ){
