@@ -170,7 +170,7 @@ struct FusionRecord{
         }else{
             os << "\t" << fsr.exon1 << "\t" << fsr.exon2;
         }
-        os << fsr.url << "\n";
+        os << "\t" << fsr.url << "\n";
        return os;
     }
 
