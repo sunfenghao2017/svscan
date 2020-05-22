@@ -16,6 +16,7 @@ void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     if(br.svrt == 1){
         br.lseq = br.seq;
         br.rbp = -1;
+        br.sbp = -1;
     }else{
         std::pair<int32_t, int32_t> scl = bamutil::getSoftClipLength(b);
         if(scl.first + scl.second == 0){
@@ -203,6 +204,7 @@ void BamToTable::b2t(){
     std::stringstream oss;
     oss << BamRec::getHeader();
     for(uint32_t i = 0; i < brecs.size(); ++i){
+        if(brecs[i].svrt == 1 && (brecs[i].tseq.empty() || brecs[i].lseq.empty())) continue;
         oss << brecs[i].toStr();
     }
     // store into txt if needed
