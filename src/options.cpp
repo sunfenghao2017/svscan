@@ -22,6 +22,7 @@ Options::Options(){
     libInfo = NULL;
     realnf = new RealnFilter();
     contigNum = 0;
+    refinedp = false;
     rnamode = false;
     debug = 0;
 }

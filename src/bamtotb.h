@@ -118,12 +118,14 @@ class BamToTable{
         std::map<std::string, HitPat> peout; ///< reads output pe support records
         int32_t svidf = 33;                ///< svid column index in tsv
         int32_t fsidf = 0;                 ///< fusion column index in tsv
+        bool refinedp = false;             ///< refine dp if true
 
     /** BamToTable constructor */
     BamToTable(){
         newbam = "fs.bam";
         bamtb = "bt.xlsx";
         bamtt = "bt.tsv";
+        refinedp = false;
     }
 
     /** BamToTable destructor */

@@ -128,6 +128,7 @@ int main(int argc, char** argv){
     pb2t->add_option("-g,--fsgene", bam2tb->fsgene, "fusion gene of each sv id")->required(false);
     pb2t->add_option("-c,--column", bam2tb->svidf, "svid column index in tsv[0-based]", true)->required(false);
     pb2t->add_option("-e,--outexcel", bam2tb->bamtb, "output excel path(ignore output if not provided)", true)->required(false);
+    pb2t->add_flag("-r,--refinedp", bam2tb->refinedp, "refine dp if true");
     pb2t->add_option("-v,--outtsv", bam2tb->bamtt, "output tsv path(ignore output if not provided)", true)->required(false);
     // svcreg
     SVCreg* crgOpt = new SVCreg();

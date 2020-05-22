@@ -663,12 +663,14 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
         }
     }
     util::loginfo("End estimate reads in repeat region");
-    // forth run, update dprescue and dpcount
-    for(uint32_t i = 0; i < svs.size(); ++i){
-        if(svs[i]->mSRSupport == 0){
-            svs[i]->mPESupport = std::min(svs[i]->mPEWithPtn, svs[i]->mPESupport);
-            sts->mSpnCnts[svs[i]->mID].mAltCnt = std::min(sts->mSpnCnts[svs[i]->mID].mAltCnt, svs[i]->mPESupport);
-            sts->mTotalAltCnts[svs[i]->mID] =  std::min(sts->mSpnCnts[svs[i]->mID].mAltCnt, sts->mTotalAltCnts[svs[i]->mID]);
+    if(mOpt->refinedp){
+        // forth run, update dprescue and dpcount
+        for(uint32_t i = 0; i < svs.size(); ++i){
+            if(svs[i]->mSRSupport == 0){
+                svs[i]->mPESupport = std::min(svs[i]->mPEWithPtn, svs[i]->mPESupport);
+                sts->mSpnCnts[svs[i]->mID].mAltCnt = std::min(sts->mSpnCnts[svs[i]->mID].mAltCnt, svs[i]->mPESupport);
+                sts->mTotalAltCnts[svs[i]->mID] =  std::min(sts->mSpnCnts[svs[i]->mID].mAltCnt, sts->mTotalAltCnts[svs[i]->mID]);
+            }
         }
     }
     util::loginfo("Beg write final sv supporting bam");

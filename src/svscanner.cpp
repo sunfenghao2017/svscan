@@ -270,6 +270,7 @@ void SVScanner::scanDPandSR(){
         btt.svbam = mOpt->bamout;
         btt.newbam = mOpt->fsbamo;
         btt.svidf = 33;
+        btt.refinedp = mOpt->refinedp;
         btt.fstsv = mOpt->fuseOpt->mOutFile;
         btt.bamtb = mOpt->bam2tb;
         btt.bamtt = mOpt->bam2tt;

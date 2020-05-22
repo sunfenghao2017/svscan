@@ -213,6 +213,7 @@ class Options{
         RealnFilter* realnf;          ///< realign filter
         bool rnamode;                 ///< find rna structural variants
         bool writebcf;                ///< write bcf if true
+        bool refinedp;                ///< refine dp reads if true
         DEBUG_TYPE debug;             ///< debug mode
         std::string qndbg;            ///< qname of read to debug
         std::string jsncfg;           ///< json config file
