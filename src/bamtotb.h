@@ -136,7 +136,7 @@ class BamToTable{
     void b2t();
 
     /** convert an bam record to BamRec*/
-    void b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id);
+    void b2r(const bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id);
 
     /** get sv info from fs tsvs */
     void getFRExtraInfo(std::map<int32_t, FRExtraInfo>& fim);

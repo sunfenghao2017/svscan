@@ -1,6 +1,6 @@
 #include "bamtotb.h"
 
-void BamToTable::b2r(bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
+void BamToTable::b2r(const bam1_t* b, bam_hdr_t* h, BamRec& br, int32_t id){
     br.chr = h->target_name[b->core.tid];
     br.pos = b->core.pos + 1;
     br.cigar = bamutil::getCigar(b);
@@ -141,7 +141,7 @@ void BamToTable::b2t(){
     samFile* fp = sam_open(svbam.c_str(), "r");
     bam_hdr_t* h = sam_hdr_read(fp);
     BamRecVector brecs;
-    std::vector<bam1_t*> bamrecs;
+    std::set<bam1_t*, BamComp> bamrecs;
     bam1_t* b = bam_init1();
     while(sam_read1(fp, h, b) >= 0){
         uint8_t* data = bam_aux_get(b, "ZF");
@@ -159,7 +159,7 @@ void BamToTable::b2t(){
                             if(brecs[qit->second.index].tseq.empty()){
                                 brecs[qit->second.index].tseq = bamutil::getSeq(b);
                                 brecs[qit->second.index].mcigar = bamutil::getCigar(b);
-                                bamrecs.push_back(b);
+                                bamrecs.insert(b);
                                 b = bam_init1();
                             }
                         }
@@ -173,7 +173,7 @@ void BamToTable::b2t(){
                         else hp.isread1 = false;
                         peout[qname] = hp;
                         brecs.push_back(br);
-                        bamrecs.push_back(b);
+                        bamrecs.insert(b);
                         b = bam_init1();
                     }
                 }else{// sr
@@ -181,7 +181,7 @@ void BamToTable::b2t(){
                     b2r(b, h, br, id);
                     br.fsgene = iter->second.fsgene;
                     brecs.push_back(br);
-                    bamrecs.push_back(b);
+                    bamrecs.insert(b);
                     b = bam_init1();
                 }
             }
@@ -192,11 +192,9 @@ void BamToTable::b2t(){
     // sort bam
     samFile* of = sam_open(newbam.c_str(), "wb");
     assert(sam_hdr_write(of, h) >= 0);
-    std::sort(bamrecs.begin(), bamrecs.end(), BamComp());
     for(auto& e: bamrecs){
         assert(sam_write1(of, h, e) >= 0);
         bam_destroy1(e);
-        e = NULL;
     }
     sam_close(of);
     assert(sam_index_build(newbam.c_str(), 0) == 0);

@@ -20,12 +20,12 @@ struct BamComp{
                 if(b2->core.isize > b1->core.isize)
                     return true;
                 else
-                    return (long)b2->data > (long)b1->data;
+                    return b2->data > b1->data;
             } else
                 return false;
         } else {         // b1 is unmapped
             if(b2->core.tid<0) { // both are unmapped
-                return (long)b2->data > (long)b1->data;
+                return b2->data > b1->data;
             }
             else
                 return false;
