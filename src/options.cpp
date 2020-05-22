@@ -8,8 +8,8 @@ Options::Options(){
     batchsvn = 1000;
     tsvOut = "sv.tsv";
     pool = NULL;
-    bamout = "sv.bam";
-    fsbamo = "fs.bam";
+    bamout = "";
+    fsbamo = "";
     fbamout = NULL;
     overlapRegs = NULL;
     pairOlpRegs = NULL;
