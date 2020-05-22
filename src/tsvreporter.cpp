@@ -374,7 +374,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
     // mark mirror fusion to keep optimal one in output
     // markMirrorFusionEvent(frl);
     // output valid fusions
-    std::string header = FusionRecord::gethead(mOpt->rnamode);
+    std::string header = FusionRecord::gethead(true, mOpt->rnamode);
     std::ofstream fw(mOpt->fuseOpt->mOutFile);
     fw << header;
     for(uint32_t i = 0; i < frl.size(); ++i){

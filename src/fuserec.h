@@ -110,12 +110,14 @@ struct FusionRecord{
     int32_t fsHits;             ///< fusion seq hits int mask
     bool report;                ///< this fusion will be reported if true
     std::string url;            ///< fusion event online igv address
+    bool outurl;                ///< output url if true
 
     /** construct an FusionRecord */
     FusionRecord(){
         fsmask = 0;
         url = "-";
         report = false;
+        outurl = true;
     }
 
     /** destroy an FusionRecord */
@@ -170,15 +172,17 @@ struct FusionRecord{
         }else{
             os << "\t" << fsr.exon1 << "\t" << fsr.exon2;
         }
-        os << "\t" << fsr.url << "\n";
+        if(fsr.outurl) os << "\t" << fsr.url << "\n";
+        else os << "\n";
        return os;
     }
 
     /** get headline of final output
+     * @param outurl if true
      * @param rnamode rnamode or not
      * @return headline
      */
-    static std::string gethead(bool rnamode = false){
+    static std::string gethead(bool outurl, bool rnamode = false){
         std::string header = "FusionGene\tFusionMols\tTotalMols\tFusionRate\t"; //[0-3]
         header.append("inDB\tfsPattern\tstatus\tfpDist\t"); //[4-7]
         header.append("Gene1\tChr1\tJunctionPosition1\tStrand1\tTranscript1\t"); //[8-12]
@@ -189,7 +193,8 @@ struct FusionRecord{
         header.append("insBp\tinsSeq\tsvID\tsvtInt\tfsMask\tfsHits"); //[31-36]
         if(rnamode) header.append("\tts1Name\tts1Pos\tts2Name\tts2Pos\tfsCigar\t");
         else header.append("\texon1\texon2\t");
-        header.append("URL\n");
+        if(outurl) header.append("URL\n");
+        else header.append("\n");
         return header;
     }
 

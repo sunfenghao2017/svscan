@@ -25,7 +25,7 @@ struct ProdRptOpt{
     void out(){
         // write out head
         std::ofstream fw(outfs);
-        fw << FusionRecord::gethead(fromrna);
+        fw << FusionRecord::gethead(true, fromrna);
         // collect fs
         std::ifstream fr(infs);
         std::string line;
@@ -48,7 +48,7 @@ struct ProdRptOpt{
             // test YY
             std::set<uint32_t> yyf;
             for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if(iter->second[i].status == "Y" && iter->second[i].indb == "Y") yyf.insert(i);
+                if(iter->second[i].status == "Y" && iter->second[i].indb == "Y" && iter->second[i].srcount > 0) yyf.insert(i);
             }
             if(yyf.empty()){// no yy, output all
                for(uint32_t i = 0; i < iter->second.size(); ++i){
@@ -68,6 +68,7 @@ struct ProdRptOpt{
                     // remove exon info
                     iter->second[i].transcript1 = iter->second[i].transcript1.substr(0, iter->second[i].transcript1.find_last_of(","));
                     iter->second[i].transcript2 = iter->second[i].transcript2.substr(0, iter->second[i].transcript2.find_last_of(","));
+                    iter->second[i].outurl = true;
                     fw << iter->second[i];
                 }
             }

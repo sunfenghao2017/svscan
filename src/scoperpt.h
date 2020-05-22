@@ -11,7 +11,7 @@ struct ScopeRptOpt{
     void out(){
         // write out head
         std::ofstream fw(outfs);
-        fw << FusionRecord::gethead(fromrna);
+        fw << FusionRecord::gethead(false, fromrna);
         // collect fs
         std::ifstream fr(infs);
         std::string line;
@@ -49,6 +49,7 @@ struct ScopeRptOpt{
                     // remove exon info
                     iter->second[i].transcript1 = iter->second[i].transcript1.substr(0, iter->second[i].transcript1.find_last_of(","));
                     iter->second[i].transcript2 = iter->second[i].transcript2.substr(0, iter->second[i].transcript2.find_last_of(","));
+                    iter->second[i].outurl = false;
                     fw << iter->second[i];
                 }
             }
