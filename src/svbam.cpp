@@ -1,7 +1,7 @@
 #include "svbam.h"
 
 void SVBAMOpt::getBam(){
-    std::vector<bam1_t*> brso, brso2;
+    std::set<bam1_t*, BamComp> brso, brso2;
     const char* idt = "ZF";
     samFile* ifp = sam_open(ibam.c_str(), "r");
     samFile* ofp = sam_open(obam.c_str(), "wb");
@@ -18,7 +18,7 @@ void SVBAMOpt::getBam(){
     std::vector<bam1_t*> realn;
     while(sam_read1(ifp, h, b) >= 0){
         if(bam_aux2i(bam_aux_get(b, idt)) == svid){
-            brso.push_back(b);
+            brso.insert(b);
             if(outalt){
                 UnalignedSeq us;
                 us.mName = bamutil::getQName(b);
@@ -26,7 +26,7 @@ void SVBAMOpt::getBam(){
                 realn.clear();
                 obwa->alignSeq(us, realn);
                 for(auto& e: realn){
-                    if(!(e->core.flag& BAM_FSECONDARY)) brso2.push_back(e);
+                    if(!(e->core.flag& BAM_FSECONDARY)) brso2.insert(e);
                     else bam_destroy1(e);
                 }
             }
@@ -36,7 +36,6 @@ void SVBAMOpt::getBam(){
     sam_close(ifp);
     bam_destroy1(b);
     // sort
-    std::sort(brso.begin(), brso.end(), BamComp());
     for(auto& e: brso){
         assert(sam_write1(ofp, h, e) >= 0);
         bam_destroy1(e);
@@ -44,7 +43,6 @@ void SVBAMOpt::getBam(){
     sam_close(ofp);
     assert(sam_index_build(obam.c_str(), 0) == 0);
     if(outalt){
-        std::sort(brso2.begin(), brso2.end(), BamComp());
         for(auto& e: brso2){
             assert(sam_write1(ofp2, h, e) >= 0);
             bam_destroy1(e);
