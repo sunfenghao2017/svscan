@@ -26,20 +26,22 @@ struct ScopeRptOpt{
         fr.close();
         // choose to output
         for(auto iter= fm.begin(); iter != fm.end(); ++iter){
-            // get highest af one
-            double maxaf = iter->second[0].fuserate;
-            int maxfr = iter->second[0].fusionmols;
-            uint32_t maxai = 0;
+            // get exon-exon groups
+            std::map<std::string, uint32_t> eecnt;
             for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if(iter->second[i].fuserate > maxaf && iter->second[i].fusionmols > maxfr){
-                    maxaf = iter->second[i].fuserate;
-                    maxfr = iter->second[i].fusionmols;
-                    maxai = i;
+                std::string exstr = std::to_string(iter->second[i].exon1) + "," + std::to_string(iter->second[i].exon2);
+                auto eit = eecnt.find(exstr);
+                if(eit == eecnt.end()){
+                    eecnt[exstr] = i;
+                }else{
+                    if(iter->second[i].fusionmols > iter->second[eit->second].fusionmols && iter->second[i].fuserate > iter->second[eit->second].fuserate && iter->second[i].srcount > 0){
+                        eit->second = i;
+                    }
                 }
+                iter->second[i].report = false;
             }
-            for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if(i != maxai) iter->second[i].report = false;
-                else iter->second[i].report = true;
+            for(auto& e: eecnt){
+                iter->second[e.second].report = true;
             }
         }
         // output

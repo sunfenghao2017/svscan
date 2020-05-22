@@ -196,6 +196,7 @@ void BamToTable::b2t(){
     for(auto& e: bamrecs){
         assert(sam_write1(of, h, e) >= 0);
         bam_destroy1(e);
+        e = NULL;
     }
     sam_close(of);
     assert(sam_index_build(newbam.c_str(), 0) == 0);

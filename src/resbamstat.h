@@ -478,7 +478,12 @@ inline void getReadSupportStatus(const std::string& bam, const SVSet& svs, ReadS
                 pps->mpos = b->core.mpos;
                 pps->mq = b->core.qual;
                 pps->valid = false;
-                pem[qname] = pps;
+                auto iter = pem.find(qname);
+                if(iter != pem.end()) pem[qname] = pps;
+                else{
+                    delete iter->second;
+                    iter->second = pps;
+                }
             }
         }
     }
