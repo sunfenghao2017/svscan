@@ -444,7 +444,12 @@ void Annotator::refineCovAnno(Stats* sts, const SVSet& svs){
     // rescue and stat PE
     BedRegs *br = new BedRegs();
     br->mCR = cr_init();
-    for(auto& e: pem) cr_add(br->mCR, e.second->chr.c_str(), e.second->mpos, e.second->mpos + 1, 0);
+    for(auto& e: pem){
+        cr_add(br->mCR, 
+               e.second->chr.c_str(),
+               std::max(0, e.second->mpos - mOpt->libInfo->mReadLen), 
+               e.second->mpos + mOpt->libInfo->mReadLen, 0);
+    }
     cr_index2(br->mCR, 1);
     samFile *ttSamFp = sam_open(mOpt->bamfile.c_str(), "r");
     bam_hdr_t *h = sam_hdr_read(ttSamFp);
