@@ -343,10 +343,34 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 reported = true;
                 break;
             }
+
         }
         if(!reported){
             for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
                 if(gl[i].mFuseGene[j].status & FUSION_FSUPPLEMENTARY){
+                    FusionRecord fsr;
+                    toFuseRec(fsr, svs[i], gl[i], j);
+                    frl.push_back(fsr);
+                    reported = true;
+                    break;
+                }
+            }
+        }
+        if(!reported){
+            for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
+                bool keep_as_well = false;
+                TFUSION_FLAG af = gl[i].mFuseGene[j].status & (~FUSION_FLOWAF);
+                TFUSION_FLAG df = gl[i].mFuseGene[j].status & (~FUSION_FLOWDEPTH);
+                if((gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB))){
+                   if(!(af & mOpt->fuseOpt->mIDBDropMask) || !(df & mOpt->fuseOpt->mIDBDropMask)){
+                       keep_as_well = true;
+                   }
+                }else{
+                    if(!(af & mOpt->fuseOpt->mNDBDropMask) || !(df & mOpt->fuseOpt->mNDBDropMask)){
+                        keep_as_well = true;
+                    }
+                }
+                if(keep_as_well){
                     FusionRecord fsr;
                     toFuseRec(fsr, svs[i], gl[i], j);
                     frl.push_back(fsr);

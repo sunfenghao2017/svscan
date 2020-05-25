@@ -48,7 +48,8 @@ struct ProdRptOpt{
             // test YY
             std::set<uint32_t> yyf;
             for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if(iter->second[i].status == "Y" && iter->second[i].indb == "Y" && iter->second[i].srcount > 0) yyf.insert(i);
+                if((iter->second[i].status.find_first_of("M") != std::string::npos || 
+                    iter->second[i].indb == "Y") && iter->second[i].srcount > 0) yyf.insert(i);
             }
             if(yyf.empty()){// no yy, output all
                for(uint32_t i = 0; i < iter->second.size(); ++i){
