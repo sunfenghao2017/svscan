@@ -365,7 +365,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                    if(!(af & mOpt->fuseOpt->mIDBDropMask) || !(df & mOpt->fuseOpt->mIDBDropMask)){
                        if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
                           svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
-                          mJctCnts[i].getAltDep() > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSupport){
+                          mJctCnts[i].getAltDep() > 1.5 * mOpt->fuseOpt->mWhiteFilter.mMinSRSupport){
                            keep_as_well = true;
                        }
                    }
@@ -373,7 +373,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                     if(!(af & mOpt->fuseOpt->mNDBDropMask) || !(df & mOpt->fuseOpt->mNDBDropMask)){
                        if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
                           svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
-                          mJctCnts[i].getAltDep() > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSupport){
+                          mJctCnts[i].getAltDep() > 1.5 * mOpt->fuseOpt->mUsualFilter.mMinSRSupport){
                            keep_as_well = true;
                        }
                     }

@@ -353,7 +353,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                      if(!(af & fuseOpt->mIDBDropMask) || !(df & fuseOpt->mIDBDropMask)){
                        if(frl[fi].srcount > 2 * fuseOpt->mWhiteFilter.mMinSRSeed &&
                           frl[fi].srrescued > 2 * fuseOpt->mWhiteFilter.mMinSRSeed &&
-                          frl[fi].fusionmols > 2 * fuseOpt->mWhiteFilter.mMinSRSupport){
+                          frl[fi].fusionmols > 1.5 * fuseOpt->mWhiteFilter.mMinSRSupport){
                            keep_as_well = true;
                        }
                    }
@@ -361,7 +361,7 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                     if(!(af & fuseOpt->mNDBDropMask) || !(df & fuseOpt->mNDBDropMask)){
                        if(frl[fi].srcount > 2 * fuseOpt->mUsualFilter.mMinSRSeed &&
                           frl[fi].srrescued > 2 * fuseOpt->mUsualFilter.mMinSRSeed &&
-                          frl[fi].fusionmols > 2 * fuseOpt->mUsualFilter.mMinSRSupport){
+                          frl[fi].fusionmols > 1.5 * fuseOpt->mUsualFilter.mMinSRSupport){
                            keep_as_well = true;
                        }
                     }
