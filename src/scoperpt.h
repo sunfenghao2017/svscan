@@ -43,6 +43,20 @@ struct ScopeRptOpt{
             for(auto& e: eecnt){
                 iter->second[e.second].report = true;
             }
+            // check whether primary reported
+            int pridx = -1;
+            for(uint32_t i = 0; i < iter->second.size(); ++i){
+                if((iter->second[i].fsmask & FUSION_FPRIMARY) && iter->second[i].report){
+                    pridx = i;
+                }
+            }
+            if(pridx >= 0){// drop all others
+                for(uint32_t i = 0; i < iter->second.size(); ++i){
+                    if(iter->second[i].report && !(iter->second[i].fsmask & FUSION_FPRIMARY)){
+                        iter->second[i].report = false;
+                    }
+                }
+            }
         }
         // output
         for(auto iter= fm.begin(); iter != fm.end(); ++iter){
