@@ -344,6 +344,34 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                 }
             }
         }
+        if(!reported){
+            for(uint32_t fi = 0; fi < frl.size(); ++fi){
+                bool keep_as_well = false;
+                 TFUSION_FLAG af = frl[fi].fsmask & (~FUSION_FLOWAF);
+                 TFUSION_FLAG df = frl[fi].fsmask & (~FUSION_FLOWDEPTH);
+                 if(frl[fi].fsmask & (FUSION_FINDB | FUSION_FMINDB)){
+                     if(!(af & fuseOpt->mIDBDropMask) || !(df & fuseOpt->mIDBDropMask)){
+                       if(frl[fi].srcount > 2 * fuseOpt->mWhiteFilter.mMinSRSeed &&
+                          frl[fi].srrescued > 2 * fuseOpt->mWhiteFilter.mMinSRSeed &&
+                          frl[fi].fusionmols > 2 * fuseOpt->mWhiteFilter.mMinSRSupport){
+                           keep_as_well = true;
+                       }
+                   }
+                }else{
+                    if(!(af & fuseOpt->mNDBDropMask) || !(df & fuseOpt->mNDBDropMask)){
+                       if(frl[fi].srcount > 2 * fuseOpt->mUsualFilter.mMinSRSeed &&
+                          frl[fi].srrescued > 2 * fuseOpt->mUsualFilter.mMinSRSeed &&
+                          frl[fi].fusionmols > 2 * fuseOpt->mUsualFilter.mMinSRSupport){
+                           keep_as_well = true;
+                       }
+                    }
+                }
+                 if(keep_as_well){
+                     fsrl.push_back(frl[fi]);
+                     break;
+                 }
+            }
+        }
         if(!fuseOpt->mSVModFile.empty()){
             std::vector<std::string> nfmsk;
             for(uint32_t fk = 0; fk < frl.size(); ++fk){

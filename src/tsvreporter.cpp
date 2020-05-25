@@ -363,11 +363,19 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 TFUSION_FLAG df = gl[i].mFuseGene[j].status & (~FUSION_FLOWDEPTH);
                 if((gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB))){
                    if(!(af & mOpt->fuseOpt->mIDBDropMask) || !(df & mOpt->fuseOpt->mIDBDropMask)){
-                       keep_as_well = true;
+                       if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
+                          svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
+                          mJctCnts[i].getAltDep() > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSupport){
+                           keep_as_well = true;
+                       }
                    }
                 }else{
                     if(!(af & mOpt->fuseOpt->mNDBDropMask) || !(df & mOpt->fuseOpt->mNDBDropMask)){
-                        keep_as_well = true;
+                       if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
+                          svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
+                          mJctCnts[i].getAltDep() > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSupport){
+                           keep_as_well = true;
+                       }
                     }
                 }
                 if(keep_as_well){
