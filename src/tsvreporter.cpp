@@ -361,28 +361,30 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 bool keep_as_well = false;
                 TFUSION_FLAG af = gl[i].mFuseGene[j].status & (~FUSION_FLOWAF);
                 TFUSION_FLAG df = gl[i].mFuseGene[j].status & (~FUSION_FLOWDEPTH);
-                if((gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB))){
-                   if(!(af & mOpt->fuseOpt->mIDBDropMask) || !(df & mOpt->fuseOpt->mIDBDropMask)){
-                       if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
-                          svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
-                          mJctCnts[i].getAltDep() > 1.5 * mOpt->fuseOpt->mWhiteFilter.mMinSRSupport){
-                           keep_as_well = true;
+                if(gl[i].mFuseGene[j].status & FUSION_FNORMALCATDIRECT){
+                    if((gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB))){
+                       if(!(af & mOpt->fuseOpt->mIDBDropMask) || !(df & mOpt->fuseOpt->mIDBDropMask)){
+                           if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
+                              svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
+                              mJctCnts[i].getAltDep() > 1.5 * mOpt->fuseOpt->mWhiteFilter.mMinSRSupport){
+                               keep_as_well = true;
+                           }
                        }
-                   }
-                }else{
-                    if(!(af & mOpt->fuseOpt->mNDBDropMask) || !(df & mOpt->fuseOpt->mNDBDropMask)){
-                       if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
-                          svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
-                          mJctCnts[i].getAltDep() > 1.5 * mOpt->fuseOpt->mUsualFilter.mMinSRSupport){
-                           keep_as_well = true;
-                       }
+                    }else{
+                        if(!(af & mOpt->fuseOpt->mNDBDropMask) || !(df & mOpt->fuseOpt->mNDBDropMask)){
+                           if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
+                              svs[i]->mSRSResAllCnt > 2 * mOpt->fuseOpt->mUsualFilter.mMinSRSeed &&
+                              mJctCnts[i].getAltDep() > 1.5 * mOpt->fuseOpt->mUsualFilter.mMinSRSupport){
+                               keep_as_well = true;
+                           }
+                        }
                     }
-                }
-                if(keep_as_well){
-                    FusionRecord fsr;
-                    toFuseRec(fsr, svs[i], gl[i], j);
-                    frl.push_back(fsr);
-                    break;
+                    if(keep_as_well){
+                        FusionRecord fsr;
+                        toFuseRec(fsr, svs[i], gl[i], j);
+                        frl.push_back(fsr);
+                        break;
+                    }
                 }
             }
         }
