@@ -168,7 +168,8 @@ int main(int argc, char** argv){
     ProdRptOpt* prRptOpt = new ProdRptOpt();
     CLI::App* pprrpt = app.add_subcommand("prrpt", "generate prod report");
     pprrpt->add_option("-i,--infs", prRptOpt->infs, "input fusion result")->required(true)->check(CLI::ExistingFile);
-    pprrpt->add_option("-o,--outfs", prRptOpt->outfs, "output fusion result")->required(true);
+    pprrpt->add_option("-p,--outfp", prRptOpt->outfp, "output fusion result for product department")->required(true);
+    pprrpt->add_option("-m,--outfm", prRptOpt->outfm, "output fusion result for medcine department")->required(true);
     pprrpt->add_option("-g,--hgl", prRptOpt->hlist, "hot gene list")->required(true);
     pprrpt->add_flag("-r,--rnamode", prRptOpt->fromrna, "from rna seq if set");
     // parse arguments

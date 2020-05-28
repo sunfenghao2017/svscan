@@ -5,7 +5,8 @@
 
 struct ProdRptOpt{
     std::string infs;
-    std::string outfs;
+    std::string outfp;
+    std::string outfm;
     std::string hlist;
     bool fromrna = false;
     std::set<std::string> hotgene;
@@ -24,8 +25,10 @@ struct ProdRptOpt{
 
     void out(){
         // write out head
-        std::ofstream fw(outfs);
-        fw << FusionRecord::gethead(true, fromrna);
+        std::ofstream fwp(outfp);
+        fwp << FusionRecord::gethead(true, fromrna);
+        std::ofstream fwm(outfm);
+        fwm << FusionRecord::gethead(true, fromrna);
         // collect fs
         std::ifstream fr(infs);
         std::string line;
@@ -48,8 +51,7 @@ struct ProdRptOpt{
             // test YY
             std::set<uint32_t> yyf;
             for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if((iter->second[i].status.find_first_of("M") != std::string::npos || 
-                    iter->second[i].indb == "Y") && iter->second[i].srcount > 0) yyf.insert(i);
+                if(iter->second[i].indb == "Y" && iter->second[i].status.find_first_of("CD") == std::string::npos) yyf.insert(i);
             }
             if(yyf.empty()){// no yy, output all
                for(uint32_t i = 0; i < iter->second.size(); ++i){
@@ -65,17 +67,17 @@ struct ProdRptOpt{
         // output
         for(auto iter= fm.begin(); iter != fm.end(); ++iter){
             for(uint32_t i = 0; i < iter->second.size(); ++i){
-                if(iter->second[i].report){
-                    // remove exon info
-                    iter->second[i].transcript1 = iter->second[i].transcript1.substr(0, iter->second[i].transcript1.find_last_of(","));
-                    iter->second[i].transcript2 = iter->second[i].transcript2.substr(0, iter->second[i].transcript2.find_last_of(","));
-                    iter->second[i].outurl = true;
-                    fw << iter->second[i];
-                }
+                // remove exon info
+                iter->second[i].transcript1 = iter->second[i].transcript1.substr(0, iter->second[i].transcript1.find_last_of(","));
+                iter->second[i].transcript2 = iter->second[i].transcript2.substr(0, iter->second[i].transcript2.find_last_of(","));
+                iter->second[i].outurl = true;
+                fwm << iter->second[i];
+                if(iter->second[i].report) fwp << iter->second[i];
             }
         }
         // close file
-        fw.close();
+        fwp.close();
+        fwm.close();
     }
 };
 
