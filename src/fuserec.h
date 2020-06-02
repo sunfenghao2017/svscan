@@ -126,10 +126,18 @@ struct FusionRecord{
     /** update url */
     void get_url(const std::string& bam){
         std::stringstream ss;
-        ss << URI_PRE;
-        ss << "b=" << bam << "&r=" << chr1 << ":" << jctpos1 + 1 << "-" << jctpos1 + 1 << ",";
-        ss << chr2 << ":" << jctpos2 + 1 << "-" << jctpos2 + 2;
-        ss << "&fsid=" << svid;
+        if(fsmask & FUSION_FCALLFROMRNASEQ){
+            ss << URI_PRE;
+            ss << "b=" << bam << "&r=" << ts1name << ":" << ts1pos + 1 << "-" << ts1pos + 1 << ",";
+            ss << ts2name << ":" << ts2pos + 1 << "-" << ts2pos + 1;
+            ss << "&fsid=" << svid;
+            ss << "&rg=on";
+        }else{
+            ss << URI_PRE;
+            ss << "b=" << bam << "&r=" << chr1 << ":" << jctpos1 + 1 << "-" << jctpos1 + 1 << ",";
+            ss << chr2 << ":" << jctpos2 + 1 << "-" << jctpos2 + 1;
+            ss << "&fsid=" << svid;
+        }
         url = ss.str();
     }
 
