@@ -9,7 +9,8 @@ void SVScanner::scanDPandSROne(int32_t tid, JunctionMap* jctMap, DPBamRecordSet*
     hts_idx_t* idx = sam_index_load(fp, mOpt->bamfile.c_str());
     hts_set_fai_filename(fp, mOpt->alnref.c_str());
     bam1_t* b = bam_init1();
-    const uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
+    uint16_t BAM_SRSKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
+    if(mOpt->rnamode) BAM_SRSKIP_MASK |= BAM_FMUNMAP;
     // Iterate bam contig by contig
     uint64_t mapped = 0;
     uint64_t unmapped = 0;

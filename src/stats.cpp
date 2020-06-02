@@ -147,7 +147,8 @@ void Stats::stat(const SVSet& svs, const ContigBpRegions& bpRegs, const ContigSp
     hts_itr_t* itr = sam_itr_queryi(idx, refIdx, chrBeg, chrEnd);
     bam1_t* b = bam_init1();
     AlignConfig alnCfg(5, -4, -4, -4, false, true);   
-    const uint16_t COV_STAT_SKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
+    uint16_t COV_STAT_SKIP_MASK = (BAM_FQCFAIL | BAM_FDUP | BAM_FUNMAP | BAM_FSECONDARY | BAM_FSUPPLEMENTARY);
+    if(mOpt->rnamode) COV_STAT_SKIP_MASK |= BAM_FMUNMAP;
     auto itbp = bpRegs[refIdx].begin();
     auto itspnr = spPts[refIdx].begin();
     auto itspna = spPts[refIdx].begin();

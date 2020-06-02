@@ -271,6 +271,11 @@ struct FusionRecord{
                 }
             }
         }
+        if((fsmask & FUSION_FCALLFROMRNASEQ) && (fsmask & FUSION_FINSAMEGENE)){// rna specific
+            if(srcount < fsopt->mUsualFilter.mMinSRSeed || srrescued < fsopt->mUsualFilter.mMinSRSupport){
+                fsmask |= FUSION_FLOWSUPPORT;
+            }
+        }
         if(fsopt->mFsRptList.empty()){
             fsmask |= FUSION_FINREPORTRNG;
         }else{
