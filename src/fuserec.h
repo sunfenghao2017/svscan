@@ -243,7 +243,7 @@ struct FusionRecord{
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
             }
-            if(svint < 4 && (!(fsmask & FUSION_FALLGENE))){// size of gene->nongene
+            if(svint < 4 && (!(fsmask & FUSION_FCALLFROMRNASEQ))){// size of gene->nongene
                 if(svsize < fsopt->mWhiteFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
@@ -273,7 +273,7 @@ struct FusionRecord{
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
             }
-            if(svint < 4 && (!(fsmask & FUSION_FALLGENE))){// size of gene->nongene
+            if(svint < 4 && (!(fsmask & FUSION_FCALLFROMRNASEQ))){// size of gene->nongene
                 if(svsize < fsopt->mUsualFilter.mMinIntraGeneSVSize){
                     fsmask |= FUSION_FTOOSMALLSIZE;
                 }
