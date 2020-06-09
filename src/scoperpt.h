@@ -21,6 +21,8 @@ struct ScopeRptOpt{
         FusionRecSchema s;
         while(std::getline(fr, line)){
             f.line2rec(line, s);
+            f.jctpos1 -= 1;
+            f.jctpos2 -= 1;
             fm[f.fusegene].push_back(f);
         }
         fr.close();

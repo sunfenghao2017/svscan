@@ -38,6 +38,8 @@ struct ProdRptOpt{
         FusionRecSchema s;
         while(std::getline(fr, line)){
             f.line2rec(line, s);
+            f.jctpos1 -= 1;
+            f.jctpos2 -= 1;
             auto iter = hotgene.find(f.gene1);
             if(iter != hotgene.end()) fm[f.gene1].push_back(f);
             else{
