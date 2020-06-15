@@ -150,39 +150,42 @@ void BamToTable::b2t(){
             auto iter = fim.find(id);
             if(iter != fim.end()){
                 uint8_t *svtd = bam_aux_get(b, "ST");
-                if(svtd){// dp
-                    std::string qname = bam_get_qname(b);
-                    auto qit = peout.find(qname);
-                    if(qit != peout.end()){// update other one
-                        if((b->core.flag & BAM_FREAD1 && (!qit->second.isread1)) ||
-                           (b->core.flag & BAM_FREAD2 && qit->second.isread1)){
-                            if(brecs[qit->second.index].tseq.empty()){
-                                brecs[qit->second.index].tseq = bamutil::getSeq(b);
-                                brecs[qit->second.index].mcigar = bamutil::getCigar(b);
-                                bamrecs.insert(b);
-                                b = bam_init1();
+                if(svtd){
+                    int svtv = bam_aux2i(svtd);
+                    if(svtv){// dp
+                        std::string qname = bam_get_qname(b);
+                        auto qit = peout.find(qname);
+                        if(qit != peout.end()){// update other one
+                            if((b->core.flag & BAM_FREAD1 && (!qit->second.isread1)) ||
+                               (b->core.flag & BAM_FREAD2 && qit->second.isread1)){
+                                if(brecs[qit->second.index].tseq.empty()){
+                                    brecs[qit->second.index].tseq = bamutil::getSeq(b);
+                                    brecs[qit->second.index].mcigar = bamutil::getCigar(b);
+                                    bamrecs.insert(b);
+                                    b = bam_init1();
+                                }
                             }
+                        }else{
+                            BamRec br;
+                            b2r(b, h, br, id);
+                            br.fsgene = iter->second.fsgene;
+                            HitPat hp;
+                            hp.index = brecs.size();
+                            if(b->core.flag & BAM_FREAD1) hp.isread1 = true;
+                            else hp.isread1 = false;
+                            peout[qname] = hp;
+                            brecs.push_back(br);
+                            bamrecs.insert(b);
+                            b = bam_init1();
                         }
-                    }else{
+                    }else{// sr
                         BamRec br;
                         b2r(b, h, br, id);
                         br.fsgene = iter->second.fsgene;
-                        HitPat hp;
-                        hp.index = brecs.size();
-                        if(b->core.flag & BAM_FREAD1) hp.isread1 = true;
-                        else hp.isread1 = false;
-                        peout[qname] = hp;
                         brecs.push_back(br);
                         bamrecs.insert(b);
                         b = bam_init1();
                     }
-                }else{// sr
-                    BamRec br;
-                    b2r(b, h, br, id);
-                    br.fsgene = iter->second.fsgene;
-                    brecs.push_back(br);
-                    bamrecs.insert(b);
-                    b = bam_init1();
                 }
             }
         }
