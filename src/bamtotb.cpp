@@ -205,10 +205,7 @@ void BamToTable::b2t(){
     // bam records to string buffer
     std::stringstream oss;
     oss << BamRec::getHeader();
-    for(uint32_t i = 0; i < brecs.size(); ++i){
-        if(refinedp && brecs[i].svrt == 1 && (brecs[i].tseq.empty() || brecs[i].lseq.empty())) continue;
-        oss << brecs[i].toStr();
-    }
+    for(uint32_t i = 0; i < brecs.size(); ++i) oss << brecs[i].toStr();
     // store into txt if needed
     if(!bamtt.empty()){
         std::ofstream fw(bamtt);
