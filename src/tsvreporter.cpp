@@ -361,7 +361,7 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                 bool keep_as_well = false;
                 TFUSION_FLAG af = gl[i].mFuseGene[j].status & (~FUSION_FLOWAF);
                 TFUSION_FLAG df = gl[i].mFuseGene[j].status & (~FUSION_FLOWDEPTH);
-                if(gl[i].mFuseGene[j].status & FUSION_FNORMALCATDIRECT){
+                if((gl[i].mFuseGene[j].status & FUSION_FINREPORTRNG) && (gl[i].mFuseGene[j].status & FUSION_FNORMALCATDIRECT)){
                     if((gl[i].mFuseGene[j].status & (FUSION_FINDB | FUSION_FMINDB))){
                        if(!(af & mOpt->fuseOpt->mIDBDropMask) || !(df & mOpt->fuseOpt->mIDBDropMask)){
                            if(svs[i]->mSRSupport > 2 * mOpt->fuseOpt->mWhiteFilter.mMinSRSeed &&
