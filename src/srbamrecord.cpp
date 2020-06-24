@@ -12,8 +12,8 @@ void SRBamRecordSet::classifyJunctions(JunctionMap* jctMap){
         for(uint32_t i = 0; i < iter->second.size(); i += 2){
             j = i + 1;
             if(iter->second[i].mSCLen && iter->second[j].mSCLen && 
-               (iter->second[j].mSCLen < iter->second[i].mSeqmatch - mOpt->filterOpt->mMaxReadSep ||
-               iter->second[i].mSCLen < iter->second[j].mSeqmatch - mOpt->filterOpt->mMaxReadSep)){
+               (iter->second[j].mSCLen < iter->second[i].mSeqmatch - mOpt->filterOpt->mMaxReadSep - mOpt->filterOpt->mMaxHomLen ||
+               iter->second[i].mSCLen < iter->second[j].mSeqmatch - mOpt->filterOpt->mMaxReadSep - mOpt->filterOpt->mMaxHomLen)){
                 continue;
             }
             if(iter->second[i].mSCLen > iter->second[j].mSeqmatch){

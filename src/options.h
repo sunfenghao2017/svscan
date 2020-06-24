@@ -103,6 +103,7 @@ struct LibraryInfo{
 struct SVFilter{
     int32_t mMinRefSep = 50;           ///< minimal reference seperation needed for an split alignment used to compute SV
     int32_t mMaxReadSep = 10;          ///< maximal read split alignment position(both from 5') allowed to be used to compute SV
+    int32_t mMaxHomLen = 100;          ///< maximal homologuous length of split reads
     int32_t mMinBpInsLen = 7;          ///< minimal insertion sequence length to consider
     double mFlankQuality = 0.91;       ///< flank identity ratio...
     int32_t mMinFlankSize = 10;        ///< minimal flank length needed for consensus split read length on each side of breakpoint
