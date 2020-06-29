@@ -73,6 +73,10 @@ struct ProdRptOpt{
                 iter->second[i].transcript1 = iter->second[i].transcript1.substr(0, iter->second[i].transcript1.find_last_of(","));
                 iter->second[i].transcript2 = iter->second[i].transcript2.substr(0, iter->second[i].transcript2.find_last_of(","));
                 iter->second[i].outurl = true;
+                // fix YM to YY
+                if(iter->second[i].indb == "Y" && iter->second[i].status == "M"){
+                    iter->second[i].status = "Y";
+                }
                 fwm << iter->second[i];
                 if(iter->second[i].report) fwp << iter->second[i];
             }
