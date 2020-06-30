@@ -77,8 +77,8 @@ struct ProdRptOpt{
                 if(iter->second[i].indb == "Y" && iter->second[i].status == "M"){
                     iter->second[i].status = "Y";
                 }
-                fwm << iter->second[i];
-                if(iter->second[i].report) fwp << iter->second[i];
+                iter->second[i].outrec(fwm);
+                if(iter->second[i].report) iter->second[i].outrec(fwp);
             }
         }
         // close file

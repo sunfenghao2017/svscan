@@ -185,6 +185,28 @@ struct FusionRecord{
        return os;
     }
 
+    /** output an FusionRecord to ostream
+     * @param os reference of ostream
+     */
+    inline void outrec(std::ostream& os){
+        os << fusegene << "\t" << fusionmols << "\t" << totalmols << "\t" << fuserate << "\t";
+        os << indb << "\t" << fusepattern << "\t" << status << "\t" << distance << "\t";
+        os << gene1 << "\t" << chr1 << "\t" << jctpos1 + 1 << "\t" << strand1 << "\t" << transcript1 << "\t";
+        os << gene2 << "\t" << chr2 << "\t" << jctpos2 + 1<< "\t" << strand2 << "\t" << transcript2 << "\t";
+        os << fusionsequence << "\t" << fseqbp + 1 << "\t" << svt << "\t" << svsize << "\t";
+        os << srcount << "\t" << dpcount << "\t" << srrescued << "\t" << dprescued << "\t";
+        os << srrefcount << "\t" << dprefcount << "\t";
+        os << srsrescued << "\t" << srsmalncnt << "\t" << srsmrate << "\t";
+        os << insbp << "\t" << insseq << "\t" << svid << "\t" << svint << "\t" << fsmask << "\t" << fsHits;
+        if(fsmask & FUSION_FCALLFROMRNASEQ){
+            os << "\t" << ts1name << "\t" << ts1pos + 1 << "\t" << ts2name << "\t" << ts2pos + 1 << "\t" << cigar;
+        }else{
+            os << "\t" << exon1 << "\t" << exon2;
+        }
+        if(outurl) os << "\t" << url << "\n";
+        else os << "\n";
+    }
+
     /** get headline of final output
      * @param outurl if true
      * @param rnamode rnamode or not
