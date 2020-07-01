@@ -348,11 +348,13 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
         if(!reported){
             for(uint32_t j = 0; j < gl[i].mFuseGene.size(); ++j){
                 if(gl[i].mFuseGene[j].status & FUSION_FSUPPLEMENTARY){
-                    FusionRecord fsr;
-                    toFuseRec(fsr, svs[i], gl[i], j);
-                    frl.push_back(fsr);
-                    reported = true;
-                    break;
+                    if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
+                        FusionRecord fsr;
+                        toFuseRec(fsr, svs[i], gl[i], j);
+                        frl.push_back(fsr);
+                        reported = true;
+                        break;
+                    }
                 }
             }
         }
@@ -380,10 +382,12 @@ void Stats::reportFusionTSV(const SVSet& svs, GeneInfoList& gl){
                         }
                     }
                     if(keep_as_well){
-                        FusionRecord fsr;
-                        toFuseRec(fsr, svs[i], gl[i], j);
-                        frl.push_back(fsr);
-                        break;
+                        if(mOpt->fuseOpt->hasWhiteGene(gl[i].mFuseGene[j].hgene, gl[i].mFuseGene[j].tgene)){
+                            FusionRecord fsr;
+                            toFuseRec(fsr, svs[i], gl[i], j);
+                            frl.push_back(fsr);
+                            break;
+                        }
                     }
                 }
             }

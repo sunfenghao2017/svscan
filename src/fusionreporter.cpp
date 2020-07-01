@@ -339,8 +339,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
         if(!reported){
             for(uint32_t fi = 0; fi < frl.size(); ++fi){
                 if(frl[fi].fsmask & FUSION_FSUPPLEMENTARY){
-                    fsrl.push_back(frl[fi]);
-                    break;
+                    if(fuseOpt->hasWhiteGene(frl[fi].gene1, frl[fi].gene2)){
+                        fsrl.push_back(frl[fi]);
+                        break;
+                    }
                 }
             }
         }
@@ -368,8 +370,10 @@ void FusionReporter::sv2fsl(FusionRecordList& fsrl){
                         }
                     }
                      if(keep_as_well){
-                         fsrl.push_back(frl[fi]);
-                         break;
+                         if(fuseOpt->hasWhiteGene(frl[fi].gene1, frl[fi].gene2)){
+                             fsrl.push_back(frl[fi]);
+                             break;
+                         }
                      }
                  }
             }
