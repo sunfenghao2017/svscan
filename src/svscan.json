@@ -9,6 +9,7 @@
         "min_ref_sep": 50,
         "max_read_sep": 10,
         "min_flk_len": 10,
+        "max_hom_len": 10,
         "min_map_qual": 1,
         "min_clip_len": 20,
         "min_tra_qual": 1,

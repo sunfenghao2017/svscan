@@ -38,6 +38,7 @@ int main(int argc, char** argv){
     app.add_option("--min_ref_sep", opt->filterOpt->mMinRefSep, "min sv length to compute", true)->group("Threshold Options");
     app.add_option("--max_read_sep", opt->filterOpt->mMaxReadSep, "max read split mapping pos allowed to compute sv", true)->group("Threshold Options");
     app.add_option("--min_flk_len", opt->filterOpt->mMinFlankSize, "min flank length needed on each side of breakpoint", true)->group("Threshold Options");
+    app.add_option("--max_hom_len", opt->filterOpt->mMaxHomLen, "max homologous length between leading/tailing clip sequnce", true)->group("Threshold Options");
     app.add_option("--min_map_qual", opt->filterOpt->minMapQual, "min mapping quality of reads used to compute sv", true)->group("Threshold Options");
     app.add_option("--min_clip_len", opt->filterOpt->minClipLen, "min clip length needed to compute sv", true)->group("Threshold Options");
     app.add_option("--min_tra_qual", opt->filterOpt->mMinTraQual, "min mapping quality of discordant pair used to compute sv", true)->group("Threshold Options");
