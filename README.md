@@ -31,6 +31,12 @@
 #### How does svscan work?  
 ![svscan algorithm](./fig/svscan.svg)
 
+#### svscan makes use of some ideas from other various excellent structural variant calling softwares as below
+|Software    | Reference
+|------------|----------
+|delly       | [src](https://github.com/dellytools/delly), [paper](https://doi.org/10.1093/bioinformatics/bts378)
+|svaba       | [src](https://github.com/walaj/svaba), [paper](https://genome.cshlp.org/content/early/2018/03/13/gr.221028.117)
+
 #### To do list
 - [x] calculate the allele counts more precisely, especially for duplication events.
 - [x] merge same structural events explained by different data.
@@ -48,9 +54,3 @@
 - [ ] use local assembly to assist discover of more complicated structural variants.
 - [ ] use single unmapped reads to capture more structural variants.
 - [x] develop a GUI tool for result recheck.
-
-#### svscan makes use of some ideas from other various excellent structural variant calling softwares as below
-|Software    | Reference
-|------------|----------
-|delly       | [src](https://github.com/dellytools/delly), [paper](https://doi.org/10.1093/bioinformatics/bts378)
-|svaba       | [src](https://github.com/walaj/svaba), [paper](https://genome.cshlp.org/content/early/2018/03/13/gr.221028.117)
