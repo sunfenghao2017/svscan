@@ -24,7 +24,7 @@
 
 #### How is svscan implemented?  
     svscan is implemented totally in C++, it does not need any third part scripts or software to assist its discovery of structural events. 
-    After compilation, it is a standalone binary executable program and can work on its own. During compilation, it only depends on the excellent gorgeous htslib. 
+    After compilation, it is a standalone binary executable program and can work on its own. During compilation, it only depends on the excellent gorgeous [htslib](https://github.com/samtools/htslib).
     svscan supports macos and linux palatform at the moment.  
 
 #### What kind of sample can be fed to svscan?  
@@ -78,4 +78,10 @@
 - [ ] differenctiate ITX(intra chromosome translocation) and DUP(duplication) events.
 - [ ] use local assembly to assist discover of more complicated structural variants.
 - [ ] use single unmapped reads to capture more structural variants.
-- [ ] develop a GUI tool for result recheck.
+- [x] develop a GUI tool for result recheck.
+
+#### svscan makes use of some ideas from other various excellent structural variant calling softwares as below
+|Github      | Reference
+|------------|----------
+[delly](https://github.com/dellytools/delly)|[ref](https://doi.org/10.1093/bioinformatics/bts378)
+|[svaba](https://github.com/walaj/svaba)|[ref](https://genome.cshlp.org/content/early/2018/03/13/gr.221028.117)
