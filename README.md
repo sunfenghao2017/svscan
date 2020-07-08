@@ -81,7 +81,7 @@
 - [x] develop a GUI tool for result recheck.
 
 #### svscan makes use of some ideas from other various excellent structural variant calling softwares as below
-|Github      | Reference
+|Software    | Reference
 |------------|----------
-[delly](https://github.com/dellytools/delly)|[ref](https://doi.org/10.1093/bioinformatics/bts378)
-|[svaba](https://github.com/walaj/svaba)|[ref](https://genome.cshlp.org/content/early/2018/03/13/gr.221028.117)
+|delly       | [git](https://github.com/dellytools/delly), [paper](https://doi.org/10.1093/bioinformatics/bts378)
+|svaba       | [git](https://github.com/walaj/svaba), [paper](https://genome.cshlp.org/content/early/2018/03/13/gr.221028.117)
