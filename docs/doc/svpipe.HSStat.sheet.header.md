@@ -8,4 +8,4 @@
 |mocnt| all molecules supporting gene1->gene2 fusion(```measuered in molecule```)
 
 ### Attention 
-This sheet just list all number of seed read/pair supporting fusion events in COSMIC/ONCOKB, but didn't take the precise breakpoint of fusion event into account. That is to say, there may be multiple breakpoint events of gene1->gene2, and they are summarized together in this sheet, this sheet can give you some clue about gene1->gene2 fusion, but should not be used as final clinical test result.
+This sheet just list all number of seed read/pair supporting fusion events in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv), but didn't take the precise breakpoint of fusion event into account. That is to say, there may be multiple breakpoint events of gene1->gene2, and they are summarized together in this sheet, this sheet can give you some clue about gene1->gene2 fusion, but should not be used as final clinical test result.

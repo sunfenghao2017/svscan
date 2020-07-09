@@ -1,33 +1,23 @@
-svscan报出规则
+# svscan fusion report rules
 
-适用svscan版本：v0.1.11-r1及以后
+```appliable to svscan 0.1.11-r5 and later version```
 
-以下以hgene->tgene融合为例说明，下文常见融合是指在ONCOKB/COSMIC中有记录的融合形式（不考虑断点位置和融合方向）
+```The following rules will take the fusion hgene->tgene as an example.```
 
-1.	hgene和tgene任何一个在黑名单基因列表中，不予报出
-2.	hgene->tgene融合基因对在黑名单融合基因中，不予报出
-3.	hgene->tgene融合在背景池中，不予报出
-4.	hgene->tgene如果有保守融合序列，且hgene->tgene并非常见融合，且保守融合序列是简单重复序列，不予报出。简单重复序列判定规则有两个，任意满足一个即当作简单重复序列。
- 其一：任何两种碱基数量之和高于0.85 * 融合序列总长
- 其二：含有连续至少16个“GT”、或者“TG”、或者、“AC”、或者“CA”5
-5.	hgene和tgene如果相同，且不在预先设定的各panel中的需要检测同一基因内部某种结构变异事件，不予报出
-6.	对应的结构变异事件太小，不予报出，小的标准有三个，满足一个即定义为太小的结构变异：
-(1)	同一个内含子内部
-(2)	同一个外显子内部且长度低于0.8倍的该外显子长度
-(3)	相邻的内含子和外显子
-7.	融合频率: 常见融合不受频率限制，非常见融合频率必须>=0.01
-8.	断点位置深度高于阈值: 常见融合>=30x，非常见融和>=50x
-9.	总的支持数高于阈值: 常见融合>=2分子，非常见融合>=3分子
-10.	种子支持数高于阈值: 常见融合 断裂读段种子>=1或者不一致比对读段对>=2; 非常见融合断裂读段种子>= 3或者不一致比读段对>=3
-11.	总的读段数高于阈值: 常见融合 断裂读段 >=3或者不一致比对读段对>=2; 非常见融合断裂读段>=5或者不一致比对读段对>=5
-12.	当hgene和tgene不同且非RNA检测的时候，结构变异断点位置必须大于2000
-13.	如果不在预定的检测范围（譬如scope的基因，外显子要求），也不报出
-14.	hgene和tgene必须有一个为基因，且必须有一个基因在我们的探针设计panel的范围内
-15.	 如果hgene->tgene不是常见融合且tgene->hgene不是常见融合，如果hgene->tgene有融合保守序列，该序列进行BWT和全基因组比对，出现以下四种情况中任意一种，则不予报出：
-1)	连续比对到基因组上，无断裂比对发生
-2)	发生大于4组断裂比对（包括主要比对和次要比对），断点位置和融合保守序列预先计算的断点位置一致
-3)	大于两组主要断裂比对
-4)	仅一组主要断裂比对，但是断点位置和预先计算的差别太大
-16.	如果hgne->tgene存在多个形式相同或者相反的融合，如果有连接方向正确，且为常见融合方向，且在数据库中的融合，则其他形式和不具备这些性质的tgene->hgene融合不报出。
-17.     再rna检测模式下，NCRNA参与的融合不予报出。
-18.	满足以上条件，或者不违反相应条件的均给予报出（包括非基因区和panel中融合基因的融合）
+1. if hgene or tgene is in the [gene blacklist](http://10.100.35.200:10080/wulj3253/svdb/tree/master/dna/blist/fblack.all.tsv), it will not be reported
+2. if hgene->tgene is in the [fusion blacklist](http://10.100.35.200:10080/wulj3253/svdb/tree/master/dna/blist/fblack.all.tsv), it will not be reported
+3. if hgene->tgene is in the [background pool](http://10.100.35.200:10080/wulj3253/svdb/tree/master/dna/bgbcf/bgbcf.bcf), it will not be reported
+4.	if hgene->tgene is identified from split alignment reads and hgene->tgene is not in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv) and the consensus sequence around breakpoint is some simple repeat sequence is it will not be reported.<br>any sequende met any one of the following two conditions will be defined as simple repeat sequence<br>1) count two base count of ```ATCG``` is greater than 0.85 * total length of the sequence<br>2) the sequence contains at least 16 consecutive ```GT```, ```TG```, ```AC``` or ```CA```
+5.	if hgene tgene are the same gene, and the structural variant type of  hgene->tgene is not in the predefined intra-gene report range([DNA](http://10.100.35.200:10080/wulj3253/svdb/tree/master/dna/slist), [RNA](http://10.100.35.200:10080/wulj3253/svdb/tree/master/rna/slist),) it will not be reported
+6. if structural variant size is too small, it will not be reported<br> structural variant size is too small if one of the following condidions satisfied:<br>1) structural variant is in the same intron of the same gene<br>2) structural variant is in the same exon of the same gene but the distance between two breakpoint is less than 0.8 of the exon length<br>3) if one partner in hgene->tgene is on same chromosome and the distance between two breakpoint is less than 2k
+7. if the fusion is not in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv) and its af is less than 0.01(tissue) or less than 0.005(plasma and hydrothorax), it will not be reported, however i'm considering report some low frequency fusion with ```really good supporting reads``` which mets the following conditions:<br>1) The fusion gene transcript is functional<br>2) Split reads count is 2times of the normal seed requirement<br>3) Rescued split reads count is 2times of the normal seed requirement<br>4) Supporting molecules is 1.5times of the normal support molecules
+8. threshold of breakpoint depth: fusion in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv) must be greater than 30x, other fusions must be greater than 300x(does not applies to RNA fusion)
+9. threshold of supporting molecules: fusion in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv)  must be greater than 2, other fusions must be greater than 3
+10. threshold of seed count: fusion in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv) must has at least 3 split read support or 2 discordant pairr support, other fusions must has at least 3 split read support or 3 discordant pair support
+11. threshold of total read count: fusion in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv)  must has at least 3 split read support or 2 discordant pairs, other fusions must has at least 5 split read support or 5 discordant pair support
+12. if hgene->tgene is not in the predefined report range, it will not be reported
+13. at least one of hgene and tgene is a gene and in the panel probe range
+14. if hgene->tgene is not in [database](http://10.100.35.200:10080/wulj3253/svdb/blob/master/extra/fusedb.tsv) and the consensus sequence does not map well, it will not be reported.<br>if any one of the following 4 conditions satisfied, the consensus sequene mapping is not good<br>1) the consensus sequence is mapped on the reference consecutively without any split<br>2) there are more than 2 pairs of compatible split alignment<br>3) there are more than 2 pairs of primary split alignment<br>4) the only one primary split alignment breakpoint positions conflict with the original positions
+16. if there are multiple pattern of hgene->tgene fusion in on sample, the most reasonable one will be reported
+17. NCRNA gene participated fusion will not be reported in RNA mode
+18. if the target gene partner part of rescued split reads are all in repeat region, it will not be reported

@@ -1,4 +1,4 @@
-# svscan tutorial
+# tutorial of svscan ```v0.1.11-r3```
 
 ## How to run svscan with svscan
 
@@ -46,6 +46,7 @@ execute ```/share/work1/svpapp/gitlab/svpipe/bin/svscan -h``` for help and do wh
    --fusionrpt /share/A30050T/OncDir/vannul/work/svpipe1/guoyushuai712/Z19W05624-B1TA/output/vori/08.sv/pre_Z19W05624-B1TA_C58.fs.tsv
    --genecrdlist /share/work1/wulj/database/svdb/extra/gene.coord.tsv
    -c /share/work1/wulj/database/svdb/dna/regs/fbcreg.86.bed
+   -p /share/work1/wulj/database/svdb/dna/regs/fbpreg.86.bed
    --extraanno /share/work1/wulj/database/svdb/dna/extra/fext.86.bed
    -a /share/work1/wulj/database/svdb/dna/anndb/anno.sort.gz
    -o /share/A30050T/OncDir/vannul/work/svpipe1/guoyushuai712/Z19W05624-B1TA/output/vori/08.sv/pre_Z19W05624-B1TA_C58.sv.bcf
@@ -85,6 +86,7 @@ execute ```/share/work1/svpapp/gitlab/svpipe/bin/svscan -h``` for help and do wh
    --fusionrpt /share/A30050T/OncDir/svpapp/wangx9211/WX0306/output/vori/08.sv/PYZB305R4000_B28.fs.tsv
    --genecrdlist /share/work1/svpapp/database/svdb/extra/gene.coord.tsv
    -c /share/work1/svpapp/database/svdb/rna/regs/fbcreg.105.bed
+   -p /share/work1/svpapp/database/svdb/rna/regs/fbpreg.105.bed
    --extraanno /share/work1/svpapp/database/svdb/rna/extra/fext.105.bed
    -a /share/work1/svpapp/database/svdb/rna/anndb/anno.sort.gz
    -o /share/A30050T/OncDir/svpapp/wangx9211/WX0306/output/vori/08.sv/PYZB305R4000_B28.sv.bcf
@@ -118,6 +120,6 @@ after execution, you will get all the scripts in the outdir, and you can execute
 
 ## How to run svscan with svpapp
 
-Get svpapp of for your system from shared files in QQ group```和瑞研发生信-北京-HYS-```, or download them from server path ```/share/work1/wulj/database/release``` and install it.
+Get svpapp of for your system from [svpapp release repository](http://10.100.35.200:10080/wulj3253/svpapp) and install it.
 
 Open svpapp->Help->Manual for help, you are welcome to run svscan with svapapp, which will save you a lot of valuable lifetime.
